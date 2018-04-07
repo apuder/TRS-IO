@@ -1,8 +1,9 @@
 
 #include "driver/gpio.h"
 
-static uint8_t data = 0;
-static uint8_t switched_to_out = 0;
+#include "../../boot/boot.c"
+#include "../../boot/cosmic.c"
+
 
 #define GPIO_OUTPUT_DISABLE(gpio_num) GPIO.enable_w1tc = 1 << (gpio_num)
 
@@ -52,41 +53,76 @@ static void gpio_setup()
 
 
 
-static void io_cycle()
+static uint8_t read_byte()
 {
-    while (GPIO.in & (1 << GPIO_NUM_23)) ;
+    uint8_t data;
+    uint8_t done = false;
+    
+    while (!done) {
+        while (GPIO.in & (1 << GPIO_NUM_23)) ;
 
-    if (GPIO.in1.data & (1 << (GPIO_NUM_36 - 32))) {
-        // Read data
-        data = GPIO.in >> 12;
-    } else {
-        GPIO_OUTPUT_ENABLE(GPIO_NUM_12);
-        GPIO_OUTPUT_ENABLE(GPIO_NUM_13);
-        GPIO_OUTPUT_ENABLE(GPIO_NUM_14);
-        GPIO_OUTPUT_ENABLE(GPIO_NUM_15);
-        GPIO_OUTPUT_ENABLE(GPIO_NUM_16);
-        GPIO_OUTPUT_ENABLE(GPIO_NUM_17);
-        GPIO_OUTPUT_ENABLE(GPIO_NUM_18);
-        GPIO_OUTPUT_ENABLE(GPIO_NUM_19);
-        switched_to_out = 1;
-        // Write to bus
-        uint32_t d = data << 12;
-        REG_WRITE(GPIO_OUT_W1TS_REG, d);
-        d = d ^ 0b11111111000000000000;
-        REG_WRITE(GPIO_OUT_W1TC_REG, d);
-        data++;
+        if (GPIO.in1.data & (1 << (GPIO_NUM_36 - 32))) {
+            // Read data
+            data = GPIO.in >> 12;
+            done = true;
+        } else {
+            // Ignore write request
+        }
+
+        // Release ESP_WAIT_N
+        GPIO.out_w1ts = (1 << GPIO_NUM_27);
+
+        // Wait for ESP_SEL_N to be de-asserted
+        while (!(GPIO.in & (1 << GPIO_NUM_23))) ;
+
+        // Set SEL_WAIT_N to 0 for next IO command
+        GPIO.out_w1tc = (1 << GPIO_NUM_27);
     }
+    return data;
+}
 
-    // Release ESP_WAIT_N
-    GPIO.out_w1ts = (1 << GPIO_NUM_27);
 
-    // Wait for ESP_SEL_N to be de-asserted
-    while (!(GPIO.in & (1 << GPIO_NUM_23))) ;
+static void write_bytes(uint8_t* data, uint16_t len)
+{
+    for (int i = 0; i < len; i++) {
+        uint8_t ignore = false;
+    
+        while (GPIO.in & (1 << GPIO_NUM_23)) ;
 
-    // Set SEL_WAIT_N to 0 for next IO command
-    GPIO.out_w1tc = (1 << GPIO_NUM_27);
+        if (GPIO.in1.data & (1 << (GPIO_NUM_36 - 32))) {
+            // Ignore read request
+            ignore = true;
+        } else {
+            GPIO_OUTPUT_ENABLE(GPIO_NUM_12);
+            GPIO_OUTPUT_ENABLE(GPIO_NUM_13);
+            GPIO_OUTPUT_ENABLE(GPIO_NUM_14);
+            GPIO_OUTPUT_ENABLE(GPIO_NUM_15);
+            GPIO_OUTPUT_ENABLE(GPIO_NUM_16);
+            GPIO_OUTPUT_ENABLE(GPIO_NUM_17);
+            GPIO_OUTPUT_ENABLE(GPIO_NUM_18);
+            GPIO_OUTPUT_ENABLE(GPIO_NUM_19);
+            // Write to bus
+            uint32_t d = *data << 12;
+            REG_WRITE(GPIO_OUT_W1TS_REG, d);
+            d = d ^ 0b11111111000000000000;
+            REG_WRITE(GPIO_OUT_W1TC_REG, d);
+            data++;
+        }
 
-    if (switched_to_out) {
+        // Release ESP_WAIT_N
+        GPIO.out_w1ts = (1 << GPIO_NUM_27);
+
+        // Wait for ESP_SEL_N to be de-asserted
+        while (!(GPIO.in & (1 << GPIO_NUM_23))) ;
+
+        // Set SEL_WAIT_N to 0 for next IO command
+        GPIO.out_w1tc = (1 << GPIO_NUM_27);
+
+        if (ignore) {
+            i--;
+            continue;
+        }
+        
         GPIO_OUTPUT_DISABLE(GPIO_NUM_12);
         GPIO_OUTPUT_DISABLE(GPIO_NUM_13);
         GPIO_OUTPUT_DISABLE(GPIO_NUM_14);
@@ -95,7 +131,6 @@ static void io_cycle()
         GPIO_OUTPUT_DISABLE(GPIO_NUM_17);
         GPIO_OUTPUT_DISABLE(GPIO_NUM_18);
         GPIO_OUTPUT_DISABLE(GPIO_NUM_19);
-        switched_to_out = 0;
     }
 }
 
@@ -105,7 +140,15 @@ void app_main(void)
     gpio_setup();
     while (true) {
         //gpio_set_level(GPIO_NUM_25, gpio_get_level(GPIO_NUM_22) ? 0 : 1);
-        io_cycle();
+        //io_cycle();
+        uint8_t command = read_byte();
+        if (command == 0) {
+            write_bytes(boot_bin, boot_bin_len);
+        } else if (command == 1) {
+            write_bytes(cosmic_cmd, cosmic_cmd_len);
+        } else {
+            printf("Illegal command: %d", command);
+        }
     }
 }
 
