@@ -2,7 +2,8 @@
 #include "driver/gpio.h"
 
 #include "../../boot/boot.c"
-#include "../../boot/cosmic.c"
+//#include "../../boot/cosmic.c"
+#include "../../boot/defense.c"
 
 
 #define GPIO_OUTPUT_DISABLE(gpio_num) GPIO.enable_w1tc = 1 << (gpio_num)
@@ -145,7 +146,8 @@ void app_main(void)
         if (command == 0) {
             write_bytes(boot_bin, boot_bin_len);
         } else if (command == 1) {
-            write_bytes(cosmic_cmd, cosmic_cmd_len);
+//            write_bytes(cosmic_cmd, cosmic_cmd_len);
+            write_bytes(defense_cmd, defense_cmd_len);
         } else {
             printf("Illegal command: %d", command);
         }
