@@ -1,5 +1,6 @@
 
 #include "driver/gpio.h"
+#include "esp_event.h"
 
 #include "../../boot/boot.c"
 //#include "../../boot/cosmic.c"
@@ -9,6 +10,15 @@
 #define GPIO_OUTPUT_DISABLE(gpio_num) GPIO.enable_w1tc = 1 << (gpio_num)
 
 #define GPIO_OUTPUT_ENABLE(gpio_num) GPIO.enable_w1ts = 1 << (gpio_num)
+
+
+
+static void set_led(bool r, bool g, bool b)
+{
+    gpio_set_level(GPIO_NUM_4, r ? 1 : 0);
+    gpio_set_level(GPIO_NUM_0, g ? 1 : 0);
+    gpio_set_level(GPIO_NUM_21, b ? 1 : 0);
+}
 
 
 
@@ -38,6 +48,13 @@ static void gpio_setup()
     gpioConfig.mode = GPIO_MODE_OUTPUT;
     gpioConfig.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&gpioConfig);
+    
+    // Configure LED
+    gpioConfig.pin_bit_mask = GPIO_SEL_0 | GPIO_SEL_4 | GPIO_SEL_21;
+    gpio_config(&gpioConfig);
+    
+    // Turn LED off
+    set_led(false, false, false);
     
     // Set IOBUSINT_N to 0
     gpio_set_level(GPIO_NUM_25, 0);
@@ -140,6 +157,13 @@ void app_main(void)
 {
     gpio_setup();
     while (true) {
+    set_led(true, false, false);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    set_led(false, true, false);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    set_led(false, false, true);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    continue;
         //gpio_set_level(GPIO_NUM_25, gpio_get_level(GPIO_NUM_22) ? 0 : 1);
         //io_cycle();
         uint8_t command = read_byte();
