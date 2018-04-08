@@ -74,7 +74,7 @@ static void gpio_setup()
 static uint8_t read_byte()
 {
     uint8_t data;
-    uint8_t done = false;
+    bool done = false;
     
     while (!done) {
         while (GPIO.in & (1 << GPIO_NUM_23)) ;
@@ -103,7 +103,7 @@ static uint8_t read_byte()
 static void write_bytes(uint8_t* data, uint16_t len)
 {
     for (int i = 0; i < len; i++) {
-        uint8_t ignore = false;
+        bool ignore = false;
     
         while (GPIO.in & (1 << GPIO_NUM_23)) ;
 
@@ -157,13 +157,15 @@ void app_main(void)
 {
     gpio_setup();
     while (true) {
-    set_led(true, false, false);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    set_led(false, true, false);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    set_led(false, false, true);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    continue;
+#if 0
+        set_led(true, false, false);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        set_led(false, true, false);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        set_led(false, false, true);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        continue;
+#endif
         //gpio_set_level(GPIO_NUM_25, gpio_get_level(GPIO_NUM_22) ? 0 : 1);
         //io_cycle();
         uint8_t command = read_byte();
