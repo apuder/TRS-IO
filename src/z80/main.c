@@ -1,70 +1,48 @@
 
-typedef unsigned char uint8_t;
+#include "retrostore.h"
 
-extern unsigned char console_font_5x8[];
+#define BOOT_LOADER_ADDR 0x4300
+#include "../boot/boot.c"
 
-#define FONT_WIDTH 5
-#define FONT_HEIGHT 8
-#define FONT_HEIGHT_OFFSET 2
-
-static void setPixel(uint8_t x, uint8_t y)
-{
-    __asm
-        pop hl          ; ret
-        pop bc          ; x->c, y->b
-        push bc
-        push hl
-	ld a,b
-	ld b,c
-	ld h,#0x80
-pixel:  push hl
-	push bc
-	ld hl,#dummy
-	jp 0x0150
-dummy:   .ascii    ');'
-    __endasm;
+void copyBootLoader() {
+  int i;
+  uint8_t* p = (uint8_t*) BOOT_LOADER_ADDR;
+  for (i = 0; i < boot_bin_len; i++) {
+    *p++ = boot_bin[i];
+  }
 }
 
-void cls() {
+void jumpToBoot() {
   __asm
-    jp 0x01c9
+    jp BOOT_LOADER_ADDR
   __endasm;
 }
 
-void drawText(uint8_t x, uint8_t y, char* txt) {
-  int i, j;
-  char b;
 
-  while (*txt != '\0') {
-    unsigned int idx = *txt++ * FONT_HEIGHT + FONT_HEIGHT_OFFSET;
-    for (i = 0; i < FONT_HEIGHT - FONT_HEIGHT_OFFSET; i++) {
-      b = console_font_5x8[idx++];
-      for (j = 0; j < FONT_WIDTH; j++) {
-	if (b & (1 << (7 - j))) {
-	  setPixel(x + j, y + i);
-	}
-      }
-    }
-    x += FONT_WIDTH + 1;
-  }
+static menu_t main_menu;
+
+static const char* items[] = {
+  "Browse RetroStore",
+  "Search RetroStore",
+  "Configure WiFi",
+  "Help",
+  "About"};
+
+static const char* menu_get_title() {
+  return "RetroStore";
 }
 
-void drawHorizontalLine(uint8_t x0, uint8_t x1, uint8_t y) {
-  int i;
-  for (i = x0; i < x1; i++) {
-    setPixel(i, y);
-  }
+static uint16_t menu_get_count() {
+  return sizeof(items) / sizeof(const char*);
 }
 
-void showSplashScreen() {
-  cls();
-  drawText(0, 0, "RetroStore");
-  drawHorizontalLine(0, 128, FONT_HEIGHT - FONT_HEIGHT_OFFSET + 1);
+const char* menu_get_item(uint16_t idx) {
+  return items[idx];
 }
 
-void main()
-{
-  showSplashScreen();
-  while (1) ;
-}
 
+void main() {
+  init_menu(&main_menu, menu_get_title, menu_get_count, menu_get_item);
+  menu(&main_menu);
+  while(true);
+}
