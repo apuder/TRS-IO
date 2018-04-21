@@ -28,6 +28,11 @@ void wnd_cr(window_t* wnd) {
   wnd->cy++;
 }
 
+void wnd_goto(window_t* wnd, uint8_t x, uint8_t y) {
+  wnd->cx = x;
+  wnd->cy = y;
+}
+
 void wnd_print(window_t* wnd, bool single_line, const char* str) {
   const char* start_of_word;
   uint8_t len;

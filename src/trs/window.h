@@ -19,5 +19,6 @@ void wnd_cls(window_t* wnd);
 void wnd_scroll_down(window_t* wnd);
 void wnd_scroll_up(window_t* wnd);
 void wnd_cr(window_t* wnd);
+void wnd_goto(window_t* wnd, uint8_t x, uint8_t y);
 
 #endif

@@ -12,8 +12,11 @@ OBJS = \
 	main.rel \
 	key.rel \
 	window.rel \
+	screen.rel \
 	splash.rel \
 	menu.rel \
+	wifi.rel \
+	panic.rel \
         font.rel
 
 %.rel: %.c

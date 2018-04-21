@@ -4,6 +4,7 @@
 #define BOOT_LOADER_ADDR 0x4300
 #include "../boot/boot.c"
 
+
 void copyBootLoader() {
   int i;
   uint8_t* p = (uint8_t*) BOOT_LOADER_ADDR;
@@ -43,6 +44,12 @@ const char* menu_get_item(uint16_t idx) {
 
 void main() {
   init_menu(&main_menu, menu_get_title, menu_get_count, menu_get_item);
-  menu(&main_menu);
-  while(true);
+  while (true) {
+    uint16_t m = menu(&main_menu);
+    switch(m) {
+    case 2: // WiFi
+      init_wifi();
+      break;
+    }
+  }
 }
