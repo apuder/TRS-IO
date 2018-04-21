@@ -1,7 +1,7 @@
 
 MAKE = make
 
-DIRS = esp boot ihex2cmd z80
+DIRS = esp boot ihex2cmd trs
 
 
 all:
