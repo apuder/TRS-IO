@@ -7,31 +7,31 @@ extern unsigned char console_font_5x8[];
 #define FONT_HEIGHT 8
 #define FONT_HEIGHT_OFFSET 2
 
-static void set_pixel(uint8_t x, uint8_t y)
-{
-    __asm
-        pop hl          ; ret
-        pop bc          ; x->c, y->b
-        push bc
-        push hl
-	ld a,b
-	ld b,c
-	ld h,#0x80
-pixel:  push hl
-	push bc
-	ld hl,#dummy
-	jp 0x0150
-dummy:   .ascii    ');'
-    __endasm;
+static void set_pixel(window_t* wnd, uint8_t x, uint8_t y) {
+  uint8_t b, ox, oy;
+  uint8_t* p;
+
+  p = wnd->buffer + (y / 3) * 64 + (x / 2);
+  b = *p;
+  if (b < 128 || b > 191) {
+    b = 128;
+  }
+  ox = x % 2;
+  oy = y % 3;
+  b |= 1 << (ox + oy * 2);
+  *p = b;
 }
 
-void cls() {
-  __asm
-    jp 0x01c9
-  __endasm;
+  
+void cls(window_t* wnd) {
+  uint16_t i;
+  uint8_t* p = wnd->buffer;
+  for (i = 0; i < wnd->w * wnd->h; i++) {
+    *p++ = ' ';
+  }
 }
 
-void draw_text(uint8_t x, uint8_t y, char* txt) {
+void draw_text(window_t* wnd, uint8_t x, uint8_t y, char* txt) {
   int i, j;
   char b;
 
@@ -41,7 +41,7 @@ void draw_text(uint8_t x, uint8_t y, char* txt) {
       b = console_font_5x8[idx++];
       for (j = 0; j < FONT_WIDTH; j++) {
 	if (b & (1 << (7 - j))) {
-	  set_pixel(x + j, y + i);
+	  set_pixel(wnd, x + j, y + i);
 	}
       }
     }
@@ -49,15 +49,15 @@ void draw_text(uint8_t x, uint8_t y, char* txt) {
   }
 }
 
-void draw_horizontal_line(uint8_t x0, uint8_t x1, uint8_t y) {
+void draw_horizontal_line(window_t* wnd, uint8_t x0, uint8_t x1, uint8_t y) {
   int i;
   for (i = x0; i < x1; i++) {
-    set_pixel(i, y);
+    set_pixel(wnd, i, y);
   }
 }
 
-void show_splash_screen(const char* banner) {
-  cls();
-  draw_text(0, 0, banner);
-  draw_horizontal_line(0, 128, FONT_HEIGHT - FONT_HEIGHT_OFFSET + 1);
+void show_splash_screen(window_t* wnd, const char* banner) {
+  cls(wnd);
+  draw_text(wnd, 0, 0, banner);
+  draw_horizontal_line(wnd, 0, 128, FONT_HEIGHT - FONT_HEIGHT_OFFSET + 1);
 }

@@ -2,8 +2,8 @@
 #ifndef __SPLASH_H__
 #define __SPLASH_H__
 
-#include "defs.h"
+#include "window.h"
 
-void show_splash_screen(const char* banner);
+void show_splash_screen(window_t* wnd, const char* banner);
 
 #endif

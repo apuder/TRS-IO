@@ -2,7 +2,7 @@
 #ifndef __MENU_H__
 #define __MENU_H__
 
-#include "defs.h"
+#include "window.h"
 
 #define MENU_EXIT ((uint16_t) 0xffff)
 
@@ -24,6 +24,6 @@ typedef struct {
 
 void init_menu(menu_t* menu,  mn_get_title_t get_title,
 	       mn_get_count_t get_count, mn_get_item_t get_item);
-uint16_t menu(menu_t* menu);
+uint16_t menu(window_t* wnd, menu_t* menu, bool show_from_left);
 
 #endif

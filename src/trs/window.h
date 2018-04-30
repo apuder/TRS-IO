@@ -5,6 +5,7 @@
 #include "defs.h"
 
 typedef struct {
+  uint16_t buffer;
   uint8_t x;
   uint8_t y;
   uint8_t w;
@@ -20,5 +21,7 @@ void wnd_scroll_down(window_t* wnd);
 void wnd_scroll_up(window_t* wnd);
 void wnd_cr(window_t* wnd);
 void wnd_goto(window_t* wnd, uint8_t x, uint8_t y);
+void wnd_switch_to_background(window_t* wnd);
+void wnd_show(window_t* wnd, bool from_left);
 
 #endif

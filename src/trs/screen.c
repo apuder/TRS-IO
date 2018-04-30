@@ -118,6 +118,8 @@ char show_screen(screen_t* screen, window_t* wnd) {
     screen++;
   }
 
+  wnd_show(wnd, false);
+  
   if (num_input_fields != 0) {
     return do_input(wnd, num_input_fields);
   }

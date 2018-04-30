@@ -14,10 +14,11 @@ void init_menu(menu_t* menu,  mn_get_title_t get_title,
   menu->start_idx = 0;
 }
 
-uint16_t menu(menu_t* menu)
+uint16_t menu(window_t* wnd, menu_t* menu, bool show_from_left)
 {
   uint16_t i, count;
-  show_splash_screen(menu->get_title());
+  wnd_switch_to_background(wnd);
+  show_splash_screen(wnd, menu->get_title());
   init_window(&wnd_sel, 0, 3, 2, 0);
   init_window(&wnd_desc, 3, 3, 0, 0);
   wnd_print(&wnd_sel, false, MENU_HIGHLIGHT);
@@ -32,6 +33,10 @@ uint16_t menu(menu_t* menu)
     wnd_print(&wnd_desc, true, menu->get_item(menu->start_idx + i));
     wnd_cr(&wnd_desc);
   }
+  wnd_show(wnd, show_from_left);
+
+  wnd_sel.buffer = wnd->buffer;
+  wnd_desc.buffer = wnd->buffer;
 
   while (true) {
     char ch = get_key();

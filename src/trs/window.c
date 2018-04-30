@@ -1,12 +1,16 @@
 
 #include "window.h"
 
-static uint16_t screen_base = 0x3c00;
-static uint8_t screen_width = 64;
-static uint8_t screen_height = 16;
+static const uint16_t screen_base = 0x3c00;
+static const uint8_t screen_width = 64;
+static const uint8_t screen_height = 16;
+
+static const uint8_t scroll_increment = 3;
+
+static uint8_t background_buffer[64 * 16];
 
 inline uint8_t* get_screen_pos0(window_t* wnd, uint8_t x, uint8_t y) {
-  return (uint8_t*) (screen_base + (wnd->y + y) * screen_width +
+  return (wnd->buffer + (wnd->y + y) * screen_width +
 		     (wnd->x + x));
 }
 
@@ -21,8 +25,81 @@ void init_window(window_t* wnd, uint8_t x, uint8_t y, int8_t w, int8_t h) {
   wnd->y = y;
   wnd->w = (w > 0) ? w : screen_width + w - x;
   wnd->h = (h > 0) ? h : screen_height + h - y;
+  wnd_switch_to_background(wnd);
 }
 
+void wnd_switch_to_background(window_t* wnd) {
+  wnd->buffer = (uint16_t) background_buffer;
+}
+
+static void wnd_show_from_right(window_t* wnd) {
+  uint8_t x, y, cx;
+  int8_t left;
+  uint8_t* from;
+  uint8_t* to;
+  uint8_t* end;
+
+  cx = 0;
+  left = screen_width;
+
+  while (left > 0) {
+    uint8_t d = (left >= scroll_increment) ? scroll_increment : left;
+    for (y = 0; y < screen_height; y++) {
+      to = (uint8_t*) (screen_base + y * screen_width);
+      from = to + d;
+      end = to + (screen_width - d);
+      while (to < end) {
+        *to++ = *from++;
+      }
+
+      from = (uint8_t*) (wnd->buffer + y * screen_width + cx);
+      for (x = 0; x < d; x++) {
+        *to++ = *from++;
+      }
+    }
+    cx += d;
+    left -= scroll_increment;
+  }
+  wnd->buffer = screen_base;
+}
+
+static void wnd_show_from_left(window_t* wnd) {
+  uint8_t x, y;
+  int8_t left;
+  uint8_t* from;
+  uint8_t* to;
+  uint8_t* end;
+
+  left = screen_width;
+
+  while (left > 0) {
+    uint8_t d = (left >= scroll_increment) ? scroll_increment : left;
+    for (y = 0; y < screen_height; y++) {
+      to = (uint8_t*) (screen_base + (y + 1) * screen_width - 1);
+      from = to - d;
+      end = to - screen_width + d;
+      while (to > end) {
+        *to-- = *from--;
+      }
+
+      from = (uint8_t*) (wnd->buffer + y * screen_width + left - 1);
+      for (x = 0; x < d; x++) {
+        *to-- = *from--;
+      }
+    }
+    left -= scroll_increment;
+  }
+  wnd->buffer = screen_base;
+}
+      
+void wnd_show(window_t* wnd, bool from_left) {
+  if (from_left) {
+    wnd_show_from_left(wnd);
+  } else {
+    wnd_show_from_right(wnd);
+  }
+}
+    
 void wnd_cr(window_t* wnd) {
   wnd->cx = 0;
   wnd->cy++;
