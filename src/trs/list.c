@@ -18,7 +18,7 @@ uint16_t list(window_t* wnd, list_t* list, bool show_from_left)
 {
   uint16_t i, count;
   wnd_switch_to_background(wnd);
-  show_splash_screen(wnd, list->get_title());
+  header(wnd, list->get_title());
   init_window(&wnd_sel, 0, 3, 2, 0);
   init_window(&wnd_desc, 3, 3, 0, 0);
   wnd_print(&wnd_sel, false, LIST_HIGHLIGHT);

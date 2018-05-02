@@ -1,16 +1,12 @@
 
 #include "window.h"
 
-static const uint16_t screen_base = 0x3c00;
-static const uint8_t screen_width = 64;
-static const uint8_t screen_height = 16;
-
 static const uint8_t scroll_increment = 5;
 
-static uint8_t background_buffer[64 * 16];
+static uint8_t background_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 
 inline uint8_t* get_screen_pos0(window_t* wnd, uint8_t x, uint8_t y) {
-  return (wnd->buffer + (wnd->y + y) * screen_width +
+  return (wnd->buffer + (wnd->y + y) * SCREEN_WIDTH +
 		     (wnd->x + x));
 }
 
@@ -23,8 +19,8 @@ void init_window(window_t* wnd, uint8_t x, uint8_t y, int8_t w, int8_t h) {
   wnd->cy = 0;
   wnd->x = x;
   wnd->y = y;
-  wnd->w = (w > 0) ? w : screen_width + w - x;
-  wnd->h = (h > 0) ? h : screen_height + h - y;
+  wnd->w = (w > 0) ? w : SCREEN_WIDTH + w - x;
+  wnd->h = (h > 0) ? h : SCREEN_HEIGHT + h - y;
   wnd_switch_to_background(wnd);
 }
 
@@ -40,19 +36,19 @@ static void wnd_show_from_right(window_t* wnd) {
   uint8_t* end;
 
   cx = 0;
-  left = screen_width;
+  left = SCREEN_WIDTH;
 
   while (left > 0) {
     uint8_t d = (left >= scroll_increment) ? scroll_increment : left;
-    for (y = 0; y < screen_height; y++) {
-      to = (uint8_t*) (screen_base + y * screen_width);
+    for (y = 0; y < SCREEN_HEIGHT; y++) {
+      to = (uint8_t*) (SCREEN_BASE + y * SCREEN_WIDTH);
       from = to + d;
-      end = to + (screen_width - d);
+      end = to + (SCREEN_WIDTH - d);
       while (to < end) {
         *to++ = *from++;
       }
 
-      from = (uint8_t*) (wnd->buffer + y * screen_width + cx);
+      from = (uint8_t*) (wnd->buffer + y * SCREEN_WIDTH + cx);
       for (x = 0; x < d; x++) {
         *to++ = *from++;
       }
@@ -60,7 +56,7 @@ static void wnd_show_from_right(window_t* wnd) {
     cx += d;
     left -= scroll_increment;
   }
-  wnd->buffer = screen_base;
+  wnd->buffer = SCREEN_BASE;
 }
 
 static void wnd_show_from_left(window_t* wnd) {
@@ -70,26 +66,26 @@ static void wnd_show_from_left(window_t* wnd) {
   uint8_t* to;
   uint8_t* end;
 
-  left = screen_width;
+  left = SCREEN_WIDTH;
 
   while (left > 0) {
     uint8_t d = (left >= scroll_increment) ? scroll_increment : left;
-    for (y = 0; y < screen_height; y++) {
-      to = (uint8_t*) (screen_base + (y + 1) * screen_width - 1);
+    for (y = 0; y < SCREEN_HEIGHT; y++) {
+      to = (uint8_t*) (SCREEN_BASE + (y + 1) * SCREEN_WIDTH - 1);
       from = to - d;
-      end = to - screen_width + d;
+      end = to - SCREEN_WIDTH + d;
       while (to > end) {
         *to-- = *from--;
       }
 
-      from = (uint8_t*) (wnd->buffer + y * screen_width + left - 1);
+      from = (uint8_t*) (wnd->buffer + y * SCREEN_WIDTH + left - 1);
       for (x = 0; x < d; x++) {
         *to-- = *from--;
       }
     }
     left -= scroll_increment;
   }
-  wnd->buffer = screen_base;
+  wnd->buffer = SCREEN_BASE;
 }
       
 void wnd_show(window_t* wnd, bool from_left) {
@@ -193,7 +189,7 @@ void wnd_scroll_up(window_t* wnd) {
 
   for (y = 0; y < wnd->h - 1; y++) {
     uint8_t* to = get_screen_pos0(wnd, 0, y);
-    uint8_t* from = to + screen_width;
+    uint8_t* from = to + SCREEN_WIDTH;
     clear = from;
     
     for (x = 0; x < wnd->w; x++) {
@@ -215,7 +211,7 @@ void wnd_scroll_down(window_t* wnd) {
 
   for (y = wnd->h - 1; y > 0; y--) {
     uint8_t* to = get_screen_pos0(wnd, 0, y);
-    uint8_t* from = to - screen_width;
+    uint8_t* from = to - SCREEN_WIDTH;
     clear = from;
     
     for (x = 0; x < wnd->w; x++) {

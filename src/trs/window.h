@@ -2,6 +2,7 @@
 #ifndef __WINDOW_H__
 #define __WINDOW_H__
 
+#include "hardware.h"
 #include "defs.h"
 
 typedef struct {

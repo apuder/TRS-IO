@@ -17,6 +17,6 @@ static window_t wnd;
 void init_wifi()
 {
   init_window(&wnd, 0, 3, 0, 0);
-  show_splash_screen(&wnd, "WiFi");
+  header(&wnd, "WiFi");
   show_form(form, &wnd);
 }

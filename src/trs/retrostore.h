@@ -5,7 +5,7 @@
 #include "key.h"
 #include "window.h"
 #include "form.h"
-#include "splash.h"
+#include "header.h"
 #include "list.h"
 #include "menu.h"
 #include "wifi.h"

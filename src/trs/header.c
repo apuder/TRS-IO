@@ -1,5 +1,5 @@
 
-#include "splash.h"
+#include "header.h"
 
 extern unsigned char console_font_5x8[];
 
@@ -22,16 +22,16 @@ static void set_pixel(window_t* wnd, uint8_t x, uint8_t y) {
   *p = b;
 }
 
-  
-void cls(window_t* wnd) {
-  uint16_t i;
+static void cls(window_t* wnd) {
   uint8_t* p = wnd->buffer;
-  for (i = 0; i < wnd->w * wnd->h; i++) {
+  int i;
+
+  for (i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
     *p++ = ' ';
   }
 }
-
-void draw_text(window_t* wnd, uint8_t x, uint8_t y, char* txt) {
+  
+static void draw_text(window_t* wnd, uint8_t x, uint8_t y, char* txt) {
   int i, j;
   char b;
 
@@ -49,14 +49,15 @@ void draw_text(window_t* wnd, uint8_t x, uint8_t y, char* txt) {
   }
 }
 
-void draw_horizontal_line(window_t* wnd, uint8_t x0, uint8_t x1, uint8_t y) {
+static void draw_horizontal_line(window_t* wnd, uint8_t x0, uint8_t x1,
+                                 uint8_t y) {
   int i;
   for (i = x0; i < x1; i++) {
     set_pixel(wnd, i, y);
   }
 }
 
-void show_splash_screen(window_t* wnd, const char* banner) {
+void header(window_t* wnd, const char* banner) {
   cls(wnd);
   draw_text(wnd, 0, 0, banner);
   draw_horizontal_line(wnd, 0, 128, FONT_HEIGHT - FONT_HEIGHT_OFFSET + 1);
