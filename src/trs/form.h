@@ -7,6 +7,9 @@
 #include "key.h"
 #include "panic.h"
 
+#define FORM_OK 0
+#define FORM_ABORT 1
+
 #define FORM_TYPE_END 0
 #define FORM_TYPE_TEXT 1
 #define FORM_TYPE_INPUT 2
@@ -27,6 +30,6 @@ typedef struct {
   } u;
 } form_t;
 
-char show_form(form_t* form, window_t* wnd);
+uint8_t form(window_t* wnd, form_t* form);
 
 #endif

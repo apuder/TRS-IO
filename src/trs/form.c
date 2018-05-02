@@ -91,7 +91,7 @@ static char do_input(window_t* wnd, uint8_t n) {
   return 0;
 }
 
-char show_form(form_t* form, window_t* wnd) {
+uint8_t form(window_t* wnd, form_t* form) {
   char ch;
   int i;
   uint8_t num_input_fields = 0;
@@ -134,5 +134,5 @@ char show_form(form_t* form, window_t* wnd) {
     ch = get_key();
   } while ((ch != KEY_ENTER) && (ch != KEY_BREAK));
 
-  return ch;
+  return (ch == KEY_ENTER) ? FORM_OK : FORM_ABORT;
 }
