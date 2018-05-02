@@ -15,6 +15,7 @@ OBJS = \
 	form.rel \
 	splash.rel \
 	list.rel \
+	menu.rel \
 	wifi.rel \
 	panic.rel \
         font.rel

@@ -19,40 +19,40 @@ void jumpToBoot() {
   __endasm;
 }
 
+#define MENU_BROWSE 0
+#define MENU_SEARCH 1
+#define MENU_WIFI 2
+#define MENU_HELP 3
+#define MENU_ABOUT 4
 
-static list_t main_menu;
+static menu_item_t main_menu_items[] = {
+  {MENU_BROWSE, "Browse RetroStore"},
+  {MENU_SEARCH, "Search RetroStore"},
+  {MENU_WIFI, "Configure WiFi"},
+  {MENU_HELP, "Help"},
+  {MENU_ABOUT, "About"}
+};
 
-static const char* items[] = {
-  "Browse RetroStore",
-  "Search RetroStore",
-  "Configure WiFi",
-  "Help",
-  "About"};
+MENU(main_menu, "RetroStore");
 
-static const char* menu_get_title() {
-  return "RetroStore";
-}
+static menu_item_t main_menu_wifi_items[] = {
+  {MENU_WIFI, "Configure WiFi"},
+  {MENU_HELP, "Help"},
+  {MENU_ABOUT, "About"}
+};
 
-static uint16_t menu_get_count() {
-  return sizeof(items) / sizeof(const char*);
-}
-
-const char* menu_get_item(uint16_t idx) {
-  return items[idx];
-}
-
+MENU(main_menu_wifi, "RetroStore");
 
 static window_t wnd;
 
 void main() {
   bool show_from_left = false;
   init_window(&wnd, 0, 0, 0, 0);
-  init_list(&main_menu, menu_get_title, menu_get_count, menu_get_item);
-  
+
   while (true) {
-    uint16_t m = list(&wnd, &main_menu, show_from_left);
+    uint8_t m = menu(&wnd, &main_menu_wifi, show_from_left);
     switch(m) {
-    case 2: // WiFi
+    case MENU_WIFI:
       init_wifi();
       break;
     }

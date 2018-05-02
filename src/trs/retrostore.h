@@ -7,6 +7,7 @@
 #include "form.h"
 #include "splash.h"
 #include "list.h"
+#include "menu.h"
 #include "wifi.h"
 #include "panic.h"
 
