@@ -12,7 +12,7 @@ OBJS = \
 	main.rel \
 	key.rel \
 	window.rel \
-	screen.rel \
+	form.rel \
 	splash.rel \
 	menu.rel \
 	wifi.rel \

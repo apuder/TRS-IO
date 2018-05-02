@@ -3,7 +3,7 @@
 #define __WIFI_H__
 
 #include "splash.h"
-#include "screen.h"
+#include "form.h"
 
 void init_wifi();
 

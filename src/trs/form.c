@@ -1,5 +1,5 @@
 
-#include "screen.h"
+#include "form.h"
 
 typedef struct {
   uint8_t x, y;
@@ -20,7 +20,7 @@ static void draw_input_field(window_t* wnd, input_t* inp, bool show_cursor) {
   wnd_print(wnd, false, "[");
   wnd_print(wnd, false, inp->buf);
   if (show_cursor) {
-    wnd_print(wnd, false, SCREEN_CURSOR);
+    wnd_print(wnd, false, FORM_CURSOR);
   }
   for (i = inp->idx; i < inp->len - (show_cursor ? 1 : 0); i++) {
     wnd_print(wnd, false, ".");
@@ -86,36 +86,36 @@ static char do_input(window_t* wnd, uint8_t n) {
   }
 }
 
-char show_screen(screen_t* screen, window_t* wnd) {
+char show_form(form_t* form, window_t* wnd) {
   char ch;
   int i;
   uint8_t num_input_fields = 0;
   
   wnd_cls(wnd);
-  while (screen->type != SCREEN_TYPE_END) {
-    if (screen->x != -1 && screen->y != -1) {
-      wnd_goto(wnd, screen->x, screen->y);
+  while (form->type != FORM_TYPE_END) {
+    if (form->x != -1 && form->y != -1) {
+      wnd_goto(wnd, form->x, form->y);
     }
-    switch (screen->type) {
-    case SCREEN_TYPE_TEXT:
-      wnd_print(wnd, false, screen->u.text);
+    switch (form->type) {
+    case FORM_TYPE_TEXT:
+      wnd_print(wnd, false, form->u.text);
       break;
-    case SCREEN_TYPE_INPUT:
+    case FORM_TYPE_INPUT:
       if (num_input_fields == MAX_INPUT_FIELDS) {
 	panic(ERR_TOO_MANY_INPUT_FIELDS);
       }
       i = num_input_fields++;
-      inputs[i].len = screen->u.input.len;
-      inputs[i].buf = screen->u.input.buf;
+      inputs[i].len = form->u.input.len;
+      inputs[i].buf = form->u.input.buf;
       inputs[i].x = wnd->cx;
       inputs[i].y = wnd->cy;
       inputs[i].idx = 0;
       inputs[i].buf[0] = '\0';
       break;
     default:
-      panic(ERR_BAD_SCREEN_TYPE);
+      panic(ERR_BAD_FORM_TYPE);
     }
-    screen++;
+    form++;
   }
 
   wnd_show(wnd, false);
