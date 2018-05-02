@@ -14,7 +14,7 @@ OBJS = \
 	window.rel \
 	form.rel \
 	splash.rel \
-	menu.rel \
+	list.rel \
 	wifi.rel \
 	panic.rel \
         font.rel

@@ -20,7 +20,7 @@ void jumpToBoot() {
 }
 
 
-static menu_t main_menu;
+static list_t main_menu;
 
 static const char* items[] = {
   "Browse RetroStore",
@@ -47,10 +47,10 @@ static window_t wnd;
 void main() {
   bool show_from_left = false;
   init_window(&wnd, 0, 0, 0, 0);
-  init_menu(&main_menu, menu_get_title, menu_get_count, menu_get_item);
+  init_list(&main_menu, menu_get_title, menu_get_count, menu_get_item);
   
   while (true) {
-    uint16_t m = menu(&wnd, &main_menu, show_from_left);
+    uint16_t m = list(&wnd, &main_menu, show_from_left);
     switch(m) {
     case 2: // WiFi
       init_wifi();
