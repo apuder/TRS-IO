@@ -5,7 +5,7 @@ static const uint16_t screen_base = 0x3c00;
 static const uint8_t screen_width = 64;
 static const uint8_t screen_height = 16;
 
-static const uint8_t scroll_increment = 3;
+static const uint8_t scroll_increment = 5;
 
 static uint8_t background_buffer[64 * 16];
 
@@ -117,13 +117,25 @@ void wnd_print(window_t* wnd, bool single_line, const char* str) {
   
   while (*str != '\0') {
     const char* next = str;
+
+    if (*next == '\n') {
+      if (wnd->cy + 1 == wnd->h) {
+        // We are in the last line. Just exit
+        return;
+      }
+      wnd->cx = 0;
+      wnd->cy++;
+      str++;
+      continue;
+    }
+
     while ((*next != '\0') && (*next == ' ')) {
       next++;
     }
 
     start_of_word = next;
 
-    while ((*next != '\0') && (*next != ' ')) {
+    while ((*next != '\0') && (*next != ' ') && (*next != '\n')) {
       next++;
     }
 
@@ -143,8 +155,6 @@ void wnd_print(window_t* wnd, bool single_line, const char* str) {
 	*p++ = '.';
 	*p++ = '.';
 	*p = '.';
-	wnd->cx = 0;
-	wnd->cy++;
 	return;
       }
       // Yes. Continue on next line

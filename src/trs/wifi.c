@@ -7,7 +7,7 @@ static char passwd[32 + 1] = "";
 static form_t form[] = {
   { FORM_TYPE_TEXT, 0, 0, .u.text =   "SSID:     "},
   { FORM_TYPE_INPUT, -1, -1, .u.input.len = 32, .u.input.buf = ssid},
-  { FORM_TYPE_TEXT, 0, 1, .u.text = "Password: "},
+  { FORM_TYPE_TEXT, -1, -1, .u.text = "\nPassword: "},
   { FORM_TYPE_INPUT, -1, -1, .u.input.len = 32, .u.input.buf = passwd},
   { FORM_TYPE_END }
   };
