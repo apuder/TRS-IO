@@ -1,4 +1,5 @@
 
+#include <string.h>
 #include "form.h"
 
 typedef struct {
@@ -50,6 +51,7 @@ static char do_input(window_t* wnd, uint8_t n) {
       ch = get_key();
       switch (ch) {
       case KEY_BREAK:
+        draw_input_field(wnd, inp, false);
 	return ch;
       case KEY_LEFT:
 	if (inp->idx == 0) {
@@ -64,6 +66,7 @@ static char do_input(window_t* wnd, uint8_t n) {
 	break;
       case KEY_ENTER:
 	if (i + 1 == n) {
+          draw_input_field(wnd, inp, false);
 	  return ch;
 	}
 	// Fallthrough
@@ -84,6 +87,8 @@ static char do_input(window_t* wnd, uint8_t n) {
       }
     }
   }
+  // Never reached
+  return 0;
 }
 
 char show_form(form_t* form, window_t* wnd) {
@@ -109,14 +114,15 @@ char show_form(form_t* form, window_t* wnd) {
       inputs[i].buf = form->u.input.buf;
       inputs[i].x = wnd->cx;
       inputs[i].y = wnd->cy;
-      inputs[i].idx = 0;
-      inputs[i].buf[0] = '\0';
+      inputs[i].idx = strlen(inputs[i].buf);
       break;
     default:
       panic(ERR_BAD_FORM_TYPE);
     }
     form++;
   }
+
+  redraw_input_fields(wnd, num_input_fields);
 
   wnd_show(wnd, false);
   

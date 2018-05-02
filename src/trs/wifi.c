@@ -1,8 +1,8 @@
 
 #include "wifi.h"
 
-static char ssid[32 + 1];
-static char passwd[32 + 1];
+static char ssid[32 + 1] = "JujuNET";
+static char passwd[32 + 1] = "";
 
 static form_t form[] = {
   { FORM_TYPE_TEXT, 0, 0, .u.text =   "SSID:     "},
