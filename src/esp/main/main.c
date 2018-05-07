@@ -1,4 +1,9 @@
 
+#include "led.h"
+#include "button.h"
+#include "wifi.h"
+
+#include "storage.h"
 #include "driver/gpio.h"
 #include "esp_event.h"
 
@@ -12,13 +17,6 @@
 #define GPIO_OUTPUT_ENABLE(gpio_num) GPIO.enable_w1ts = 1 << (gpio_num)
 
 
-
-static void set_led(bool r, bool g, bool b)
-{
-    gpio_set_level(GPIO_NUM_4, r ? 1 : 0);
-    gpio_set_level(GPIO_NUM_0, g ? 1 : 0);
-    gpio_set_level(GPIO_NUM_21, b ? 1 : 0);
-}
 
 
 
@@ -49,13 +47,6 @@ static void gpio_setup()
     gpioConfig.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&gpioConfig);
     
-    // Configure LED
-    gpioConfig.pin_bit_mask = GPIO_SEL_0 | GPIO_SEL_4 | GPIO_SEL_21;
-    gpio_config(&gpioConfig);
-    
-    // Turn LED off
-    set_led(false, false, false);
-    
     // Set IOBUSINT_N to 0
     gpio_set_level(GPIO_NUM_25, 0);
     
@@ -67,9 +58,10 @@ static void gpio_setup()
     gpioConfig.mode = GPIO_MODE_INPUT;
     gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&gpioConfig);
+
+    init_led();
+    init_button();
 }
-
-
 
 static uint8_t read_byte()
 {
@@ -155,7 +147,20 @@ static void write_bytes(uint8_t* data, uint16_t len)
 
 void app_main(void)
 {
-    gpio_setup();
+  // Setup GPIO
+  gpio_setup();
+
+  // LED white
+  set_led(true, true, true, true, false);
+
+  init_storage();
+
+  if (is_button_pressed()) {
+    storage_erase();
+  }
+
+  init_wifi();
+
     while (true) {
 #if 0
         set_led(true, false, false);
