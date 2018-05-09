@@ -150,24 +150,20 @@ void app_main(void)
   // Setup GPIO
   gpio_setup();
 
-  // LED white
-  set_led(true, true, true, true, false);
-
   init_storage();
 
   if (is_button_pressed()) {
     storage_erase();
   }
-
   init_wifi();
 
     while (true) {
 #if 0
-        set_led(true, false, false);
+      set_led(true, false, false, false, false);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-        set_led(false, true, false);
+        set_led(false, true, false, false, false);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-        set_led(false, false, true);
+        set_led(false, false, true, false, false);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         continue;
 #endif
