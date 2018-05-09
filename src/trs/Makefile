@@ -29,8 +29,10 @@ OBJS = \
 %.cmd: %.ihx
 	$(IHEX2CMD) $< $@
 
-all: rsclient.cmd
+all: rsclient.c
 
+rsclient.c: rsclient.cmd
+	xxd -i rsclient.cmd rsclient.c
 
 rsclient.ihx : $(OBJS) Makefile
 	$(LD) $(LDFLAGS) -i rsclient.ihx $(OBJS)

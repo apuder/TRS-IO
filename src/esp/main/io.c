@@ -1,10 +1,30 @@
 
 #include "io.h"
+#include "esp_event_loop.h"
+
+#include "../../boot/boot.c"
+#include "../../trs/rsclient.c"
+
 
 #define GPIO_OUTPUT_DISABLE(gpio_num) GPIO.enable_w1tc = 1 << (gpio_num)
 
 #define GPIO_OUTPUT_ENABLE(gpio_num) GPIO.enable_w1ts = 1 << (gpio_num)
 
+
+
+void io_task(void* p)
+{
+  while (true) {
+    uint8_t command = read_byte();
+    if (command == 0) {
+      write_bytes(boot_bin, boot_bin_len);
+    } else if (command == 1) {
+      write_bytes(rsclient_cmd, rsclient_cmd_len);
+    } else {
+      printf("Illegal command: %d", command);
+    }
+  }
+}
 
 void init_io()
 {
@@ -45,6 +65,8 @@ void init_io()
   gpioConfig.mode = GPIO_MODE_INPUT;
   gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
   gpio_config(&gpioConfig);
+
+  xTaskCreatePinnedToCore(io_task, "io", 3000, NULL, 1, NULL, 1);
 }
 
 uint8_t read_byte()
@@ -127,4 +149,3 @@ void write_bytes(uint8_t* data, uint16_t len)
     GPIO_OUTPUT_DISABLE(GPIO_NUM_19);
   }
 }
-
