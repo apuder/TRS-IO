@@ -2,12 +2,22 @@
 CLS: equ 01c9h
 
     org 4300h
-    call CLS
+
+    ld hl,0ffffh
     ld a,56
     out (236),a
     ld a,1
     out (31),a
+    ld a,l
+    out (31),a
+    ld a,h
+    out (31),a
 
+WAIT:
+    in a,(0e0h)
+    and 8
+    jr nz,WAIT
+        
 LOOP:
     in a,(31)
     ld e,a

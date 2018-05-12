@@ -5,6 +5,9 @@
 #include "../../boot/boot.c"
 #include "../../trs/rsclient.c"
 
+extern unsigned char COSMIC_CMD[];
+extern unsigned int COSMIC_CMD_len;
+
 
 #define GPIO_OUTPUT_DISABLE(gpio_num) GPIO.enable_w1tc = 1 << (gpio_num)
 
@@ -19,7 +22,14 @@ void io_task(void* p)
     if (command == 0) {
       write_bytes(boot_bin, boot_bin_len);
     } else if (command == 1) {
-      write_bytes(rsclient_cmd, rsclient_cmd_len);
+      uint16_t id = read_byte() | (read_byte() << 8);
+      if (id == 0xffff) {
+        write_bytes(rsclient_cmd, rsclient_cmd_len);
+      } else if (id == 42) {
+        write_bytes(COSMIC_CMD, COSMIC_CMD_len);
+      } else {
+        //XXX
+      }
     } else {
       printf("Illegal command: %d", command);
     }
@@ -100,6 +110,8 @@ uint8_t read_byte()
 
 void write_bytes(uint8_t* data, uint16_t len)
 {
+  // Assert IOBUSINT to signal TRS80 that we are ready to send
+  REG_WRITE(GPIO_OUT_W1TC_REG, 1 << GPIO_NUM_25);
   for (int i = 0; i < len; i++) {
     bool ignore = false;
     
@@ -109,6 +121,9 @@ void write_bytes(uint8_t* data, uint16_t len)
       // Ignore read request
       ignore = true;
     } else {
+      // De-assert IOBUSINT
+      REG_WRITE(GPIO_OUT_W1TS_REG, 1 << GPIO_NUM_25);
+
       GPIO_OUTPUT_ENABLE(GPIO_NUM_12);
       GPIO_OUTPUT_ENABLE(GPIO_NUM_13);
       GPIO_OUTPUT_ENABLE(GPIO_NUM_14);

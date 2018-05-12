@@ -13,9 +13,11 @@ void copyBootLoader() {
   }
 }
 
-void jumpToBoot() {
+void load_cmd(uint16_t id) {
   __asm
-    jp BOOT_LOADER_ADDR
+    pop bc
+    pop hl
+    jp BOOT_LOADER_ADDR + 3
   __endasm;
 }
 
@@ -54,6 +56,9 @@ void main() {
     switch(m) {
     case MENU_WIFI:
       init_wifi();
+      break;
+    case MENU_ABOUT:
+      load_cmd(42);
       break;
     }
     show_from_left = true;

@@ -15,8 +15,6 @@ static input_t inputs[MAX_INPUT_FIELDS];
 
 static void draw_input_field(window_t* wnd, input_t* inp, bool show_cursor) {
   int8_t i;
-  char txt[2];
-  txt[1] = '\0';
   wnd_goto(wnd, inp->x, inp->y);
   wnd_print(wnd, false, "[");
   wnd_print(wnd, false, inp->buf);
@@ -42,6 +40,7 @@ static char do_input(window_t* wnd, uint8_t n) {
   uint8_t i = 0;
   input_t* inp;
   char ch;
+
   while(true) {
     redraw_input_fields(wnd, n);
     inp = &inputs[i];
@@ -125,7 +124,7 @@ uint8_t form(window_t* wnd, form_t* form) {
   redraw_input_fields(wnd, num_input_fields);
 
   wnd_show(wnd, false);
-  
+
   if (num_input_fields != 0) {
     return do_input(wnd, num_input_fields);
   }
