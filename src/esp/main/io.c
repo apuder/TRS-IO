@@ -8,10 +8,12 @@
 extern unsigned char COSMIC_CMD[];
 extern unsigned int COSMIC_CMD_len;
 
+// GPIO pins 12-19
+#define GPIO_DATA_BUS_MASK 0b11111111000000000000
 
-#define GPIO_OUTPUT_DISABLE(gpio_num) GPIO.enable_w1tc = 1 << (gpio_num)
+#define GPIO_OUTPUT_DISABLE(mask) GPIO.enable_w1tc = (mask)
 
-#define GPIO_OUTPUT_ENABLE(gpio_num) GPIO.enable_w1ts = 1 << (gpio_num)
+#define GPIO_OUTPUT_ENABLE(mask) GPIO.enable_w1ts = (mask)
 
 
 
@@ -23,6 +25,8 @@ void io_task(void* p)
       write_bytes(boot_bin, boot_bin_len);
     } else if (command == 1) {
       uint16_t id = read_byte() | (read_byte() << 8);
+      vTaskDelay(10);
+      //printf("CMD: %d\n", id);
       if (id == 0xffff) {
         write_bytes(rsclient_cmd, rsclient_cmd_len);
       } else if (id == 42) {
@@ -117,25 +121,18 @@ void write_bytes(uint8_t* data, uint16_t len)
     
     while (GPIO.in & (1 << GPIO_NUM_23)) ;
     
+    // De-assert IOBUSINT
+    REG_WRITE(GPIO_OUT_W1TS_REG, 1 << GPIO_NUM_25);
+
     if (GPIO.in1.data & (1 << (GPIO_NUM_36 - 32))) {
       // Ignore read request
       ignore = true;
     } else {
-      // De-assert IOBUSINT
-      REG_WRITE(GPIO_OUT_W1TS_REG, 1 << GPIO_NUM_25);
-
-      GPIO_OUTPUT_ENABLE(GPIO_NUM_12);
-      GPIO_OUTPUT_ENABLE(GPIO_NUM_13);
-      GPIO_OUTPUT_ENABLE(GPIO_NUM_14);
-      GPIO_OUTPUT_ENABLE(GPIO_NUM_15);
-      GPIO_OUTPUT_ENABLE(GPIO_NUM_16);
-      GPIO_OUTPUT_ENABLE(GPIO_NUM_17);
-      GPIO_OUTPUT_ENABLE(GPIO_NUM_18);
-      GPIO_OUTPUT_ENABLE(GPIO_NUM_19);
+      GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
       // Write to bus
       uint32_t d = *data << 12;
       REG_WRITE(GPIO_OUT_W1TS_REG, d);
-      d = d ^ 0b11111111000000000000;
+      d = d ^ GPIO_DATA_BUS_MASK;
       REG_WRITE(GPIO_OUT_W1TC_REG, d);
       data++;
     }
@@ -154,13 +151,6 @@ void write_bytes(uint8_t* data, uint16_t len)
       continue;
     }
     
-    GPIO_OUTPUT_DISABLE(GPIO_NUM_12);
-    GPIO_OUTPUT_DISABLE(GPIO_NUM_13);
-    GPIO_OUTPUT_DISABLE(GPIO_NUM_14);
-    GPIO_OUTPUT_DISABLE(GPIO_NUM_15);
-    GPIO_OUTPUT_DISABLE(GPIO_NUM_16);
-    GPIO_OUTPUT_DISABLE(GPIO_NUM_17);
-    GPIO_OUTPUT_DISABLE(GPIO_NUM_18);
-    GPIO_OUTPUT_DISABLE(GPIO_NUM_19);
+    GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);
   }
 }
