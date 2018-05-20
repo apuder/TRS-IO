@@ -5,7 +5,8 @@
 #include "../boot/boot.c"
 
 
-void copyBootLoader() {
+static void copy_boot_loader()
+{
   int i;
   uint8_t* p = (uint8_t*) BOOT_LOADER_ADDR;
   for (i = 0; i < boot_bin_len; i++) {
@@ -49,6 +50,9 @@ static window_t wnd;
 
 void main() {
   bool show_from_left = false;
+
+  copy_boot_loader();
+  
   init_window(&wnd, 0, 0, 0, 0);
 
   while (true) {
