@@ -8,6 +8,8 @@
 #include "driver/gpio.h"
 #include "esp_event.h"
 
+#include "retrostore.h"
+
 
 void app_main(void)
 {
@@ -21,6 +23,11 @@ void app_main(void)
   }
   init_wifi();
 
+#if 0
+  vTaskDelay(5000 / portTICK_PERIOD_MS);
+  list_apps(0,5);
+#endif
+  
   vTaskSuspend(NULL);
   
   while (true) {
