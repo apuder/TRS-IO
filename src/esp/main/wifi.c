@@ -90,6 +90,7 @@ void mongoose_event_handler(struct mg_connection* nc,
   case MG_EV_CLOSE:
     {
       if (reboot) {
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
         esp_restart();
       }
     }
