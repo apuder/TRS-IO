@@ -1,5 +1,6 @@
 
 #include "window.h"
+#include <string.h>
 
 static const uint8_t scroll_increment = 5;
 
@@ -225,4 +226,25 @@ void wnd_scroll_down(window_t* wnd) {
 
   wnd->cx = 0;
   wnd->cy = 0;
+}
+
+void wnd_popup(window_t* wnd, const char* msg) {
+  int len = strlen(msg) + 2;
+  int cx = (wnd->w - len) / 2;
+  int cy = wnd->h / 2 - 1;
+  uint8_t* p0 = get_screen_pos0(wnd, cx, cy);
+  uint8_t* p1 = get_screen_pos0(wnd, cx, cy + 1);
+  uint8_t* p2 = get_screen_pos0(wnd, cx, cy + 2);
+  int x, y;
+  
+  for (x = 0; x < len; x++) {
+    *p0++ = 176;
+    *p2++ = 131;
+    if (x == 0 || x == len - 1) {
+      *p1 = 191;
+    } else {
+      *p1 = msg[x - 1];
+    }
+    p1++;
+  }
 }

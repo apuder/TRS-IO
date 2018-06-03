@@ -10,8 +10,10 @@ LDFLAGS = -mjwx -b _CODE=0x5200 -l /usr/share/sdcc/lib/z80/z80.lib
 OBJS = \
 	crt0.rel \
 	main.rel \
+	inout.rel \
 	key.rel \
 	window.rel \
+	browse.rel \
 	form.rel \
 	header.rel \
 	list.rel \

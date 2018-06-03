@@ -49,6 +49,7 @@ MENU(main_menu_wifi, "RetroStore");
 static window_t wnd;
 
 void main() {
+  int idx;
   bool show_from_left = false;
 
   copy_boot_loader();
@@ -56,13 +57,21 @@ void main() {
   init_window(&wnd, 0, 0, 0, 0);
 
   while (true) {
-    uint8_t m = menu(&wnd, &main_menu_wifi, show_from_left);
+    uint8_t m = menu(&wnd, &main_menu, show_from_left);
     switch(m) {
+    case MENU_BROWSE:
+      wnd_popup(&wnd, "Loading...");
+      idx = browse_retrostore(&wnd);
+      if (idx == LIST_EXIT) {
+        break;
+      }
+      wnd_popup(&wnd, "Downloading...");
+      load_cmd(idx);
+      break;
     case MENU_WIFI:
       init_wifi();
       break;
     case MENU_ABOUT:
-      load_cmd(42);
       break;
     }
     show_from_left = true;

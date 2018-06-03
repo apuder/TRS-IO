@@ -24,5 +24,6 @@ void wnd_cr(window_t* wnd);
 void wnd_goto(window_t* wnd, uint8_t x, uint8_t y);
 void wnd_switch_to_background(window_t* wnd);
 void wnd_show(window_t* wnd, bool from_left);
+void wnd_popup(window_t* wnd, const char* msg);
 
 #endif

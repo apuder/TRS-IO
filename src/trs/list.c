@@ -32,8 +32,14 @@ uint16_t list(window_t* wnd, list_t* list, bool show_from_left)
     wnd_print(&wnd_desc, true, name);
     wnd_cr(&wnd_desc);
   }
+  if (i == 0) {
+    wnd_popup(wnd, "No items");
+  }
   wnd_show(wnd, show_from_left);
-
+  if (i == 0) {
+    get_key();
+    return LIST_EXIT;
+  }
   wnd_sel.buffer = wnd->buffer;
   wnd_desc.buffer = wnd->buffer;
 
