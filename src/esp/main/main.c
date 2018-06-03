@@ -9,6 +9,7 @@
 #include "esp_event.h"
 
 #include "retrostore.h"
+#include "backend.h"
 
 
 void app_main(void)
@@ -25,7 +26,8 @@ void app_main(void)
 
 #if 0
   vTaskDelay(5000 / portTICK_PERIOD_MS);
-  list_apps(0,5);
+  //list_apps(0,5);
+  printf(">>>%s\n", get_app_title(0));
 #endif
   
   vTaskSuspend(NULL);

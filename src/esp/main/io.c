@@ -1,12 +1,7 @@
 
 #include "io.h"
 #include "esp_event_loop.h"
-
-#include "../../boot/boot.c"
-#include "../../trs/rsclient.c"
-
-extern unsigned char COSMIC_CMD[];
-extern unsigned int COSMIC_CMD_len;
+#include "retrostore.h"
 
 // GPIO pins 12-19
 #define GPIO_DATA_BUS_MASK 0b11111111000000000000
@@ -20,23 +15,13 @@ extern unsigned int COSMIC_CMD_len;
 void io_task(void* p)
 {
   while (true) {
-    uint8_t command = read_byte();
-    if (command == 0) {
-      write_bytes(boot_bin, boot_bin_len);
-    } else if (command == 1) {
-      uint16_t id = read_byte() | (read_byte() << 8);
-      vTaskDelay(10);
-      //printf("CMD: %d\n", id);
-      if (id == 0xffff) {
-        write_bytes(rsclient_cmd, rsclient_cmd_len);
-      } else if (id == 42) {
-        write_bytes(COSMIC_CMD, COSMIC_CMD_len);
-      } else {
-        //XXX
-      }
-    } else {
-      printf("Illegal command: %d", command);
+    if (rs_z80_out(read_byte()) != RS_STATE_SEND) {
+      continue;
     }
+    uint8_t* buf;
+    int size;
+    rs_get_send_buffer(&buf, &size);
+    write_bytes(buf, size);
   }
 }
 
@@ -80,14 +65,14 @@ void init_io()
   gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
   gpio_config(&gpioConfig);
 
-  xTaskCreatePinnedToCore(io_task, "io", 3000, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, 1, NULL, 1);
 }
 
 uint8_t read_byte()
 {
   uint8_t data;
   bool done = false;
-  
+
   while (!done) {
     while (GPIO.in & (1 << GPIO_NUM_23)) ;
     
