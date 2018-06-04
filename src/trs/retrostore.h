@@ -13,4 +13,11 @@
 #include "browse.h"
 #include "panic.h"
 
+#define RS_PORT 31
+
+#define RS_SEND_BOOT 0
+#define RS_SEND_CMD 1
+#define RS_SEND_APP_TITLE 2
+#define RS_SEND_APP_DETAILS 3
+
 #endif

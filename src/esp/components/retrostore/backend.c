@@ -143,8 +143,8 @@ static pb_istream_t pb_istream_from_socket()
   return stream;
 }
 
-static bool pb_app_callback(pb_istream_t* stream, const pb_field_t* field,
-                            void** arg)
+static bool pb_app_title_callback(pb_istream_t* stream, const pb_field_t* field,
+                                  void** arg)
 {
   App app = {};
   
@@ -175,7 +175,7 @@ static bool pb_app_callback(pb_istream_t* stream, const pb_field_t* field,
 bool pb_list_apps_callback()
 {
   ApiResponseApps response = ApiResponseApps_init_zero;
-  response.app.funcs.decode = &pb_app_callback;
+  response.app.funcs.decode = &pb_app_title_callback;
   pb_istream_t stream = pb_istream_from_socket();
   bool status = pb_decode(&stream, ApiResponseApps_fields, &response);
   return status && response.success;
@@ -190,6 +190,40 @@ static bool list_apps(const int page)
   num_apps = 0;
 
   return server_http("/api/listApps", body, pb_list_apps_callback);
+}
+
+static char app_details[1024];
+
+static bool pb_app_details_callback(pb_istream_t* stream,
+                                    const pb_field_t* field,
+                                    void** arg)
+{
+  App app = {};
+  
+  if (!pb_decode(stream, App_fields, &app)) {
+    return false;
+  }
+
+  snprintf(app_details, sizeof(app_details), "%s\nAuthor: %s\n"
+           "Year: %d\n\n%s", app.name,app.author, app.release_year,
+           app.description);
+
+  return true;
+}
+
+bool pb_get_app_callback()
+{
+  ApiResponseApps response = ApiResponseApps_init_zero;
+  response.app.funcs.decode = &pb_app_details_callback;
+  pb_istream_t stream = pb_istream_from_socket();
+  bool status = pb_decode(&stream, ApiResponseApps_fields, &response);
+  return status && response.success;
+}
+
+static bool get_app(const char* app_id)
+{
+  snprintf(body, sizeof(body), "{\"appId\":%s}", app_id);
+  return server_http("/api/getApp", body, pb_get_app_callback);
 }
 
 static pb_byte_t* cmd_bytes = NULL;
@@ -263,6 +297,18 @@ char* get_app_title(int idx)
     return "";
   }
   return app->title;
+}
+
+char* get_app_details(int idx)
+{
+  app_title_t* app = get_app_from_cache(idx);
+  if (app == NULL) {
+    return "";
+  }
+  if (!get_app(app->id)) {
+    return "";
+  }
+  return app_details;
 }
 
 bool get_app_cmd(int idx, unsigned char** buf, int* size)

@@ -14,6 +14,7 @@
 #define RS_SEND_BOOT 0
 #define RS_SEND_CMD 1
 #define RS_SEND_APP_TITLE 2
+#define RS_SEND_APP_DETAILS 3
 
 int rs_z80_out(int value);
 int rs_z80_in();

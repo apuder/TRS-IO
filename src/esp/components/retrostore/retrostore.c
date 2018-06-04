@@ -50,6 +50,12 @@ static void command_send_app_title(uint16_t idx)
   send((uint8_t*) title, strlen(title) + 1);
 }
 
+static void command_send_app_details(uint16_t idx)
+{
+  char* details = get_app_details(idx);
+  send((uint8_t*) details, strlen(details) + 1);
+}
+
 
 typedef void (*proc_t)(uint16_t);
 
@@ -61,7 +67,8 @@ typedef struct {
 static command_t commands[] = {
   {false, command_send_boot},
   {true, command_send_cmd},
-  {true, command_send_app_title}
+  {true, command_send_app_title},
+  {true, command_send_app_details}
 };
 
 int rs_z80_out(int value)
