@@ -30,6 +30,7 @@ typedef struct {
   } u;
 } form_t;
 
-uint8_t form(window_t* wnd, form_t* form);
+uint8_t form(window_t* wnd, const char* title, form_t* form,
+             bool show_from_left);
 
 #endif

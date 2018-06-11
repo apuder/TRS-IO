@@ -9,6 +9,7 @@
 
 #include "ApiProtos.pb.h"
 #include "pb_decode.h"
+#include "cJSON.h"
 
 #define LOG(msg) printf("%s\n", msg)
 
@@ -17,7 +18,6 @@ static const char* RETROSTORE_HOST = "retrostore.org";
 static const int RETROSTORE_PORT = 80;
 
 static char header[512];
-static char body[64];
 static int fd;
 
 #define SIZE_APP_PAGE 16
@@ -30,6 +30,13 @@ typedef struct {
 static app_title_t apps[SIZE_APP_PAGE];
 static int current_page = 0;
 static int num_apps  = 0;
+
+static const char* search_terms = "";
+
+void set_search_terms(const char* search_terms_)
+{
+  search_terms = search_terms_;
+}
 
 static bool connect_server(const char* host, int port)
 {
@@ -81,14 +88,16 @@ static bool skip_to_body()
   return true;
 }
 
-static bool server_http(const char* path, const char* body,
+static bool server_http(const char* path, cJSON* params,
                         bool (*parse_callback)())
 {
   if (!connect_server(RETROSTORE_HOST, RETROSTORE_PORT)) {
     LOG("ERROR: Connection failed");
+    cJSON_Delete(params);
     return false;
   }
 
+  char* body = cJSON_PrintUnformatted(params);
   snprintf(header, sizeof(header), "POST %s HTTP/1.1\r\n"
            "Host: %s\r\n"
            "Content-type: application/x-www-form-urlencoded\r\n"
@@ -97,7 +106,9 @@ static bool server_http(const char* path, const char* body,
            (int) strlen(body));
   write(fd, header, strlen(header));
   write(fd, body, strlen(body));
-  
+  free(body);
+  cJSON_Delete(params);
+
   if (!skip_to_body()) {
     return false;
   }
@@ -183,13 +194,17 @@ bool pb_list_apps_callback()
 
 static bool list_apps(const int page)
 {
-  snprintf(body, sizeof(body), "{\"start\":%d,\"num\":%d}",
-           page * SIZE_APP_PAGE, SIZE_APP_PAGE);
+  cJSON* params = cJSON_CreateObject();
+  cJSON_AddNumberToObject(params, "start", page * SIZE_APP_PAGE);
+  cJSON_AddNumberToObject(params, "num", SIZE_APP_PAGE);
+  if (search_terms[0] != '\0') {
+    cJSON_AddStringToObject(params, "searchTerms", search_terms);
+  }
 
   current_page = page;
   num_apps = 0;
 
-  return server_http("/api/listApps", body, pb_list_apps_callback);
+  return server_http("/api/listApps", params, pb_list_apps_callback);
 }
 
 static char app_details[1024];
@@ -222,8 +237,9 @@ bool pb_get_app_callback()
 
 static bool get_app(const char* app_id)
 {
-  snprintf(body, sizeof(body), "{\"appId\":%s}", app_id);
-  return server_http("/api/getApp", body, pb_get_app_callback);
+  cJSON* params = cJSON_CreateObject();
+  cJSON_AddStringToObject(params, "appId", app_id);
+  return server_http("/api/getApp", params, pb_get_app_callback);
 }
 
 static pb_byte_t* cmd_bytes = NULL;
@@ -270,8 +286,9 @@ static bool pb_fetch_media_images_callback()
 
 static bool fetch_media_images(const char* app_id)
 {
-  snprintf(body, sizeof(body), "{\"appId\":%s}", app_id);
-  return server_http("/api/fetchMediaImages", body,
+  cJSON* params = cJSON_CreateObject();
+  cJSON_AddStringToObject(params, "appId", app_id);
+  return server_http("/api/fetchMediaImages", params,
                      pb_fetch_media_images_callback);
 }
 

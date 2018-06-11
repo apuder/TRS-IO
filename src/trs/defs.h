@@ -2,6 +2,8 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
+#include <string.h>
+
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef signed int int16_t;

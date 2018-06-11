@@ -61,7 +61,15 @@ void main() {
     switch(m) {
     case MENU_BROWSE:
       wnd_popup(&wnd, "Loading...");
-      idx = browse_retrostore(&wnd);
+      idx = browse_retrostore(&wnd, false);
+      if (idx == LIST_EXIT) {
+        break;
+      }
+      wnd_popup(&wnd, "Downloading...");
+      load_cmd(idx);
+      break;
+    case MENU_SEARCH:
+      idx = search_retrostore(&wnd);
       if (idx == LIST_EXIT) {
         break;
       }

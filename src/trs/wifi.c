@@ -16,7 +16,6 @@ static window_t wnd;
 
 void init_wifi()
 {
-  init_window(&wnd, 0, 3, 0, 0);
-  header(&wnd, "WiFi");
-  form(&wnd, form_wifi);
+  init_window(&wnd, 0, 0, 0, 0);
+  form(&wnd, "WiFi", form_wifi, false);
 }

@@ -7,9 +7,11 @@
 #define RS_PORT 31
 
 #define RS_STATE_READY 0
-#define RS_STATE_NEED_2B 1
-#define RS_STATE_NEED_1B 2
-#define RS_STATE_SEND 3
+#define RS_STATE_PARSE_PARAMS 1
+#define RS_STATE_NEED_STRING 2
+#define RS_STATE_NEED_2B 3
+#define RS_STATE_NEED_1B 4
+#define RS_STATE_SEND 5
 
 #define RS_SEND_BOOT 0
 #define RS_SEND_CMD 1
