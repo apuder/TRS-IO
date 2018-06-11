@@ -197,6 +197,7 @@ static bool list_apps(const int page)
   cJSON* params = cJSON_CreateObject();
   cJSON_AddNumberToObject(params, "start", page * SIZE_APP_PAGE);
   cJSON_AddNumberToObject(params, "num", SIZE_APP_PAGE);
+  cJSON_AddNumberToObject(params, "mediaTypes", (1 << 3));
   if (search_terms[0] != '\0') {
     cJSON_AddStringToObject(params, "searchTerms", search_terms);
   }
