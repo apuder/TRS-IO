@@ -196,10 +196,15 @@ bool pb_list_apps_callback()
 
 static bool list_apps(const int page)
 {
+  static const char* types[] = {"COMMAND"};
+  
   cJSON* params = cJSON_CreateObject();
   cJSON_AddNumberToObject(params, "start", page * SIZE_APP_PAGE);
   cJSON_AddNumberToObject(params, "num", SIZE_APP_PAGE);
-  cJSON_AddNumberToObject(params, "mediaTypes", (1 << 3));
+  cJSON* mediaTypes = cJSON_CreateStringArray(types, 1);
+  cJSON* trs80 = cJSON_CreateObject();
+  cJSON_AddItemToObject(trs80, "mediaTypes", mediaTypes);
+  cJSON_AddItemToObject(params, "trs80", trs80);
   if (query[0] != '\0') {
     cJSON_AddStringToObject(params, "query", query);
   }
