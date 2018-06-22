@@ -17,10 +17,14 @@
 #define RS_SEND_CMD 1
 #define RS_SEND_APP_TITLE 2
 #define RS_SEND_APP_DETAILS 3
+#define RS_SEND_STATUS 4
+#define RS_CMD_CONFIGURE_WIFI 5
+#define RS_CMD_SET_QUERY 6
+
 
 int rs_z80_out(int value);
 int rs_z80_in();
 void rs_get_send_buffer(uint8_t** buf, int* size);
-
+void set_wifi_credentials(const char* ssid, const char* passwd);
 
 #endif

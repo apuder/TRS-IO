@@ -14,6 +14,7 @@ GEN = boot.c
 	xxd -i $< $@
 
 all: $(GEN)
+	cp $(GEN) ../esp/components/retrostore/
 
 clean:
 	rm -f *.bin *.c

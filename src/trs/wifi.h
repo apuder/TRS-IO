@@ -5,6 +5,6 @@
 #include "header.h"
 #include "form.h"
 
-void init_wifi();
+void configure_wifi();
 
 #endif

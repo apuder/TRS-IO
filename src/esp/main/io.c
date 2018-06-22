@@ -75,7 +75,7 @@ uint8_t read_byte()
 
   while (!done) {
     while (GPIO.in & (1 << GPIO_NUM_23)) ;
-    
+
     if (GPIO.in1.data & (1 << (GPIO_NUM_36 - 32))) {
       // Read data
       data = GPIO.in >> 12;
@@ -100,14 +100,22 @@ uint8_t read_byte()
 void write_bytes(uint8_t* data, uint16_t len)
 {
   // Assert IOBUSINT to signal TRS80 that we are ready to send
-  REG_WRITE(GPIO_OUT_W1TC_REG, 1 << GPIO_NUM_25);
+  REG_WRITE(GPIO_OUT_W1TS_REG, 1 << GPIO_NUM_25);
+  
+  if (len == 0) {
+    for (volatile int i = 0; i < 1000; i++) ;
+    // De-assert IOBUSINT
+    REG_WRITE(GPIO_OUT_W1TC_REG, 1 << GPIO_NUM_25);
+    return;
+  }
+  
   for (int i = 0; i < len; i++) {
     bool ignore = false;
     
     while (GPIO.in & (1 << GPIO_NUM_23)) ;
     
     // De-assert IOBUSINT
-    REG_WRITE(GPIO_OUT_W1TS_REG, 1 << GPIO_NUM_25);
+    REG_WRITE(GPIO_OUT_W1TC_REG, 1 << GPIO_NUM_25);
 
     if (GPIO.in1.data & (1 << (GPIO_NUM_36 - 32))) {
       // Ignore read request

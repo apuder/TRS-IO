@@ -31,11 +31,13 @@ static app_title_t apps[SIZE_APP_PAGE];
 static int current_page = 0;
 static int num_apps  = 0;
 
-static const char* search_terms = "";
+static const char* query = "";
 
-void set_search_terms(const char* search_terms_)
+void set_query(const char* query_)
 {
-  search_terms = search_terms_;
+  query = query_;
+  current_page = 0;
+  num_apps = 0;
 }
 
 static bool connect_server(const char* host, int port)
@@ -198,8 +200,8 @@ static bool list_apps(const int page)
   cJSON_AddNumberToObject(params, "start", page * SIZE_APP_PAGE);
   cJSON_AddNumberToObject(params, "num", SIZE_APP_PAGE);
   cJSON_AddNumberToObject(params, "mediaTypes", (1 << 3));
-  if (search_terms[0] != '\0') {
-    cJSON_AddStringToObject(params, "searchTerms", search_terms);
+  if (query[0] != '\0') {
+    cJSON_AddStringToObject(params, "query", query);
   }
 
   current_page = page;

@@ -1,5 +1,6 @@
 
 #include "inout.h"
+#include "hardware.h"
 
 void out(uint8_t port, uint8_t val)
 {
@@ -22,3 +23,5 @@ uint8_t in(uint8_t port)
     in  l,(c)
   __endasm;
 }
+
+

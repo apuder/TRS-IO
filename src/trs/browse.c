@@ -9,7 +9,6 @@
 #define MAX_SEARCH_TERMS_LEN 50
 
 static char search_terms[MAX_SEARCH_TERMS_LEN + 1] = "";
-static bool use_search_terms = false;
 
 static form_t form_search[] = {
   { FORM_TYPE_TEXT, 0, 1, .u.text =   "Search: "},
@@ -26,25 +25,34 @@ static const char* get_title() {
 
 static char response[1024];
 
+static void wait_for_esp()
+{
+  while (in(0xe0) & 8) ;
+}
+
+static void set_query(const char* query)
+{
+  int i = 0;
+  
+  out(RS_PORT, RS_CMD_SET_QUERY);
+  while (query != NULL && query[i] != '\0') {
+    out(RS_PORT, query[i++]);
+  }
+  out(RS_PORT, 0);
+
+  wait_for_esp();
+}
+
 static bool get_response(uint8_t cmd, uint16_t idx, const char** resp)
 {
   int i;
   uint8_t ch;
-
+  
   out(RS_PORT, cmd);
   out(RS_PORT, idx & 0xff);
   out(RS_PORT, idx >> 8);
 
-  if (use_search_terms) {
-    i = 0;
-    do {
-      out(RS_PORT, search_terms[i]);
-    } while (search_terms[i++] != '\0');
-  } else {
-    out(RS_PORT, 0);
-  }
-  
-  while (in(0xe0) & 8) ;
+  wait_for_esp();
 
   i = 0;
   while (true) {
@@ -92,12 +100,12 @@ static uint16_t show_details(uint16_t idx)
   return (key == KEY_BREAK || key == KEY_CLEAR) ? LIST_EXIT : idx;
 }
 
-uint16_t browse_retrostore(window_t* wnd, bool use_search_terms_)
+uint16_t browse_retrostore(window_t* wnd, const char* query)
 {
   bool show_from_left = false;
   uint16_t idx;
 
-  use_search_terms = use_search_terms_;
+  set_query(query);
   init_list(&list_apps, get_title, get_item);
   while (true) {
     idx = list(wnd, &list_apps, show_from_left);
@@ -117,5 +125,5 @@ uint16_t search_retrostore(window_t* wnd)
   wnd_popup(wnd, "Searching...");
   wnd_switch_to_background(wnd);
   wnd_cls(wnd);
-  return browse_retrostore(wnd, true);
+  return browse_retrostore(wnd, search_terms);
 }

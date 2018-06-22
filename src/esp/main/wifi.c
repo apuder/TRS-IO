@@ -1,4 +1,6 @@
 
+#include "retrostore.h"
+#include "wifi.h"
 #include "led.h"
 #include "storage.h"
 #include "esp_wifi.h"
@@ -21,6 +23,10 @@ extern unsigned int index_html_len;
 extern unsigned char status_html[];
 extern unsigned int status_html_len;
 
+static uint8_t status = RS_STATUS_WIFI_CONNECTING;
+
+uint8_t* wifi_status = &status;
+
 static char ssid[32];
 static char passwd[32];
 
@@ -35,6 +41,7 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
   case SYSTEM_EVENT_STA_GOT_IP:
     ESP_LOGI(TAG, "got ip:%s",
              ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+    status = RS_STATUS_WIFI_CONNECTED;
     set_led(false, true, false, false, true);
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
@@ -46,8 +53,10 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d",
              MAC2STR(event->event_info.sta_disconnected.mac),
              event->event_info.sta_disconnected.aid);
+    status = RS_STATUS_WIFI_NOT_CONNECTED;
     break;
   case SYSTEM_EVENT_STA_DISCONNECTED:
+    status = RS_STATUS_WIFI_NOT_CONNECTED;
     esp_wifi_connect();
     set_led(true, false, false, false, false);
     break;
@@ -55,6 +64,14 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     break;
   }
   return ESP_OK;
+}
+
+void set_wifi_credentials(const char* ssid, const char* passwd)
+{
+  // Store credentials and reboot
+  storage_set(WIFI_KEY_SSID, ssid);
+  storage_set(WIFI_KEY_PASSWD, passwd);
+  esp_restart();
 }
 
 void mongoose_event_handler(struct mg_connection* nc,
@@ -74,7 +91,6 @@ void mongoose_event_handler(struct mg_connection* nc,
         printf("ssid: %s\n", ssid);
         printf("passwd: %s\n", passwd);
         if ((l1 >= 0) && (l2 >= 0)) {
-          // Store credentials and reboot
           storage_set(WIFI_KEY_SSID, ssid);
           storage_set(WIFI_KEY_PASSWD, passwd);
           response = status_html;

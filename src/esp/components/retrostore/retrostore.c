@@ -10,6 +10,8 @@
 
 static int state = RS_STATE_READY;
 
+extern uint8_t* wifi_status;
+
 static const char* param_types;
 static int cmd;
 static char str[MAX_STRING_LEN + 1];
@@ -27,12 +29,12 @@ static void send(uint8_t* b, int len)
   state = RS_STATE_SEND;
 }
 
-static void command_send_boot(uint16_t idx, const char* str)
+static void command_send_boot(uint16_t idx, const char* dummy)
 {
   send(boot_bin, boot_bin_len);
 }
 
-static void command_send_cmd(uint16_t idx, const char* str)
+static void command_send_cmd(uint16_t idx, const char* dummy)
 {
   if (idx == 0xffff) {
     send(rsclient_cmd, rsclient_cmd_len);
@@ -48,18 +50,40 @@ static void command_send_cmd(uint16_t idx, const char* str)
   }
 }
 
-static void command_send_app_title(uint16_t idx, const char* search_terms)
+static void command_send_app_title(uint16_t idx, const char* dummy)
 {
-  set_search_terms(search_terms);
   char* title = get_app_title(idx);
   send((uint8_t*) title, strlen(title) + 1);
 }
 
-static void command_send_app_details(uint16_t idx, const char* search_terms)
+static void command_send_app_details(uint16_t idx, const char* dummy)
 {
-  set_search_terms(search_terms);
   char* details = get_app_details(idx);
   send((uint8_t*) details, strlen(details) + 1);
+}
+
+static void command_send_status(uint16_t idx, const char* dummy)
+{
+  send(wifi_status, 1);
+}
+
+static void command_cmd_configure_wifi(uint16_t idx, const char* cred)
+{
+  const char* ssid = cred;
+  const char* passwd = cred;
+  while (*passwd != '\t') {
+    passwd++;
+  }
+  *((char*) passwd) = '\0';
+  passwd++;
+  set_wifi_credentials(ssid, passwd);
+  send(NULL, 0);
+}
+
+static void command_cmd_set_query(uint16_t idx, const char* query)
+{
+  set_query(query);
+  send(NULL, 0);
 }
 
 typedef void (*proc_t)(uint16_t, const char*);
@@ -72,14 +96,18 @@ typedef struct {
 static command_t commands[] = {
   {"", command_send_boot},
   {"I", command_send_cmd},
-  {"IS", command_send_app_title},
-  {"IS", command_send_app_details}
+  {"I", command_send_app_title},
+  {"I", command_send_app_details},
+  {"", command_send_status},
+  {"S", command_cmd_configure_wifi},
+  {"S", command_cmd_set_query}
 };
 
 int rs_z80_out(int value)
 {
   switch(state) {
   case RS_STATE_READY:
+  case RS_STATE_SEND: // Discard previous send buffer
     cmd = value;
     str_idx = 0;
     param_types = commands[cmd].param_types;

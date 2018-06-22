@@ -29,6 +29,10 @@ void wnd_switch_to_background(window_t* wnd) {
   wnd->buffer = (uint16_t) background_buffer;
 }
 
+void wnd_switch_to_foreground(window_t* wnd) {
+  wnd->buffer = SCREEN_BASE;
+}
+
 static void wnd_show_from_right(window_t* wnd) {
   uint8_t x, y, cx;
   int8_t left;

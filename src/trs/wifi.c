@@ -1,7 +1,9 @@
 
 #include "wifi.h"
+#include "inout.h"
+#include "retrostore.h"
 
-static char ssid[32 + 1] = "JujuNET";
+static char ssid[32 + 1] = "";
 static char passwd[32 + 1] = "";
 
 static form_t form_wifi[] = {
@@ -14,8 +16,33 @@ static form_t form_wifi[] = {
 
 static window_t wnd;
 
-void init_wifi()
+void configure_wifi()
 {
+  uint16_t i, j;
+  
   init_window(&wnd, 0, 0, 0, 0);
-  form(&wnd, "WiFi", form_wifi, false);
+  if (form(&wnd, "Configure WiFi", form_wifi, false) == FORM_ABORT) {
+    return;
+  }
+  if (ssid[0] == '\0') {
+    // No SSID provided. Exit
+    return;
+  }
+  out(RS_PORT, RS_CMD_CONFIGURE_WIFI);
+  i = 0;
+  while (ssid[i] != '\0') {
+    out(RS_PORT, ssid[i++]);
+  }
+  out(RS_PORT, '\t');
+  i = 0;
+  while (passwd[i] != '\0') {
+    out(RS_PORT, passwd[i++]);
+  }
+  out(RS_PORT, '\0');
+  wnd_popup(&wnd, "Reconfiguring WiFi...");
+  for (i = 0; i < 10; i++) {
+    for (j = 0; j < 65000; j++) {
+      if(0);
+    }
+  }
 }

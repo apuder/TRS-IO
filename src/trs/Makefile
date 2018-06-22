@@ -35,6 +35,7 @@ all: rsclient.c
 
 rsclient.c: rsclient.cmd
 	xxd -i rsclient.cmd rsclient.c
+	cp rsclient.c ../esp/components/retrostore/
 
 rsclient.ihx : $(OBJS) Makefile
 	$(LD) $(LDFLAGS) -i rsclient.ihx $(OBJS)
