@@ -3,6 +3,7 @@
 #define __MENU_H__
 
 #include "window.h"
+#include "list.h"
 
 #define MENU_EXIT 0xff
 
@@ -10,7 +11,8 @@
   static menu_t name = { \
     title, \
     sizeof(name ## _items) / sizeof(menu_item_t), \
-    name ## _items \
+    name ## _items, \
+    false \
   }
   
 typedef struct {
@@ -22,6 +24,8 @@ typedef struct {
   const char* title;
   uint8_t num;
   menu_item_t* items;
+  bool list_initialized;
+  list_t list;
 } menu_t;
 
 uint8_t menu(window_t* wnd, menu_t* menu, bool show_from_left, bool can_abort);
