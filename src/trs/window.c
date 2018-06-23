@@ -34,11 +34,10 @@ void wnd_switch_to_foreground(window_t* wnd) {
 }
 
 static void wnd_show_from_right(window_t* wnd) {
-  uint8_t x, y, cx;
+  uint8_t y, cx;
   int8_t left;
   uint8_t* from;
   uint8_t* to;
-  uint8_t* end;
 
   cx = 0;
   left = SCREEN_WIDTH;
@@ -48,15 +47,11 @@ static void wnd_show_from_right(window_t* wnd) {
     for (y = 0; y < SCREEN_HEIGHT; y++) {
       to = (uint8_t*) (SCREEN_BASE + y * SCREEN_WIDTH);
       from = to + d;
-      end = to + (SCREEN_WIDTH - d);
-      while (to < end) {
-        *to++ = *from++;
-      }
+      memmove(to, from, SCREEN_WIDTH - d);
 
+      to = (uint8_t*) (SCREEN_BASE + (y + 1) * SCREEN_WIDTH - d);
       from = (uint8_t*) (wnd->buffer + y * SCREEN_WIDTH + cx);
-      for (x = 0; x < d; x++) {
-        *to++ = *from++;
-      }
+      memmove(to, from, d);
     }
     cx += d;
     left -= scroll_increment;
@@ -65,28 +60,23 @@ static void wnd_show_from_right(window_t* wnd) {
 }
 
 static void wnd_show_from_left(window_t* wnd) {
-  uint8_t x, y;
+  uint8_t y;
   int8_t left;
   uint8_t* from;
   uint8_t* to;
-  uint8_t* end;
 
   left = SCREEN_WIDTH;
 
   while (left > 0) {
     uint8_t d = (left >= scroll_increment) ? scroll_increment : left;
     for (y = 0; y < SCREEN_HEIGHT; y++) {
-      to = (uint8_t*) (SCREEN_BASE + (y + 1) * SCREEN_WIDTH - 1);
-      from = to - d;
-      end = to - SCREEN_WIDTH + d;
-      while (to > end) {
-        *to-- = *from--;
-      }
+      from = (uint8_t*) (SCREEN_BASE + y * SCREEN_WIDTH);
+      to = from + d;
+      memmove(to, from, SCREEN_WIDTH - d);
 
-      from = (uint8_t*) (wnd->buffer + y * SCREEN_WIDTH + left - 1);
-      for (x = 0; x < d; x++) {
-        *to-- = *from--;
-      }
+      from = (uint8_t*) (wnd->buffer + y * SCREEN_WIDTH + left - d);
+      to = (uint8_t*) (SCREEN_BASE + y * SCREEN_WIDTH);
+      memmove(to, from, d);
     }
     left -= scroll_increment;
   }
