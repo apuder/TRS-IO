@@ -19,12 +19,6 @@ static form_t form_search[] = {
 
 static list_t list_apps;
 
-static const char* title;
-
-static const char* get_title() {
-  return title;
-}
-
 static char response[1024];
 
 static void wait_for_esp()
@@ -103,15 +97,14 @@ static uint16_t show_details(uint16_t idx)
 }
 
 static uint16_t show_app_list(window_t* wnd,
-                              const char* title_,
+                              const char* title,
                               const char* query)
 {
   bool show_from_left = false;
   uint16_t idx;
 
-  title = title_;
   set_query(query);
-  init_list(&list_apps, get_title, get_item);
+  init_list(&list_apps, title, get_item);
   while (true) {
     idx = list(wnd, &list_apps, show_from_left);
     if (idx == LIST_EXIT || show_details(idx) != LIST_EXIT) {

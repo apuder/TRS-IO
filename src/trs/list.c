@@ -5,9 +5,9 @@
 static window_t wnd_sel;
 static window_t wnd_desc;
 
-void init_list(list_t* list,  list_get_title_t get_title,
+void init_list(list_t* list, const char* title,
 	       list_get_item_t get_item) {
-  list->get_title = get_title;
+  list->title = title;
   list->get_item = get_item;
   list->sel = 0;
   list->start_idx = 0;
@@ -18,7 +18,7 @@ uint16_t list(window_t* wnd, list_t* list, bool show_from_left)
   const char* name;
   uint16_t i;
   wnd_switch_to_background(wnd);
-  header(wnd, list->get_title());
+  header(wnd, list->title);
   init_window(&wnd_sel, 0, 3, 2, 0);
   init_window(&wnd_desc, 3, 3, 0, 0);
   wnd_print(&wnd_sel, false, LIST_HIGHLIGHT);
