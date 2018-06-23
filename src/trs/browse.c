@@ -107,7 +107,12 @@ static uint16_t show_app_list(window_t* wnd,
   init_list(&list_apps, title, get_item);
   while (true) {
     idx = list(wnd, &list_apps, show_from_left, true);
-    if (idx == LIST_EXIT || show_details(idx) != LIST_EXIT) {
+    if (idx == LIST_EXIT) {
+      return LIST_EXIT;
+    }
+    wnd_popup(wnd, "Loading details...");
+    idx = show_details(idx);
+    if (idx != LIST_EXIT) {
       return idx;
     }
     show_from_left = true;
