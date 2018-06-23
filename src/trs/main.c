@@ -113,7 +113,7 @@ void main() {
     switch (status) {
     case MENU_BROWSE:
       wnd_popup(&wnd, "Loading...");
-      idx = browse_retrostore(&wnd, NULL);
+      idx = browse_retrostore(&wnd);
       if (idx == LIST_EXIT) {
         break;
       }

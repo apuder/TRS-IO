@@ -19,8 +19,10 @@ static form_t form_search[] = {
 
 static list_t list_apps;
 
+static const char* title;
+
 static const char* get_title() {
-  return "Browse RetroApps";
+  return title;
 }
 
 static char response[1024];
@@ -100,11 +102,14 @@ static uint16_t show_details(uint16_t idx)
   return (key == KEY_BREAK || key == KEY_CLEAR) ? LIST_EXIT : idx;
 }
 
-uint16_t browse_retrostore(window_t* wnd, const char* query)
+static uint16_t show_app_list(window_t* wnd,
+                              const char* title_,
+                              const char* query)
 {
   bool show_from_left = false;
   uint16_t idx;
 
+  title = title_;
   set_query(query);
   init_list(&list_apps, get_title, get_item);
   while (true) {
@@ -117,13 +122,18 @@ uint16_t browse_retrostore(window_t* wnd, const char* query)
   return LIST_EXIT;
 }
 
+uint16_t browse_retrostore(window_t* wnd)
+{
+  return show_app_list(wnd, "Browse RetroStore", NULL);
+}
+
 uint16_t search_retrostore(window_t* wnd)
 {
-  if (form(wnd, "Search RetroApps", form_search, false) == FORM_ABORT) {
+  if (form(wnd, "Search RetroStore", form_search, false) == FORM_ABORT) {
     return LIST_EXIT;
   }
   wnd_popup(wnd, "Searching...");
   wnd_switch_to_background(wnd);
   wnd_cls(wnd);
-  return browse_retrostore(wnd, search_terms);
+  return show_app_list(wnd, "Search Results", search_terms);
 }
