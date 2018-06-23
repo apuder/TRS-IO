@@ -20,6 +20,6 @@ typedef struct {
 } list_t;
 
 void init_list(list_t* menu, const char* title, list_get_item_t get_item);
-uint16_t list(window_t* wnd, list_t* list, bool show_from_left);
+uint16_t list(window_t* wnd, list_t* list, bool show_from_left, bool can_abort);
 
 #endif

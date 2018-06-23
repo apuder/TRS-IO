@@ -109,7 +109,7 @@ void main() {
       break;
     }
   
-    status = menu(&wnd, the_menu, show_from_left);
+    status = menu(&wnd, the_menu, show_from_left, false);
     switch (status) {
     case MENU_BROWSE:
       wnd_popup(&wnd, "Loading...");

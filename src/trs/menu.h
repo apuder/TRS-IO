@@ -24,7 +24,7 @@ typedef struct {
   menu_item_t* items;
 } menu_t;
 
-uint8_t menu(window_t* wnd, menu_t* menu, bool show_from_left);
+uint8_t menu(window_t* wnd, menu_t* menu, bool show_from_left, bool can_abort);
 
 
 #endif

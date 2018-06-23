@@ -13,7 +13,10 @@ void init_list(list_t* list, const char* title,
   list->start_idx = 0;
 }
 
-uint16_t list(window_t* wnd, list_t* list, bool show_from_left)
+uint16_t list(window_t* wnd,
+              list_t* list,
+              bool show_from_left,
+              bool can_abort)
 {
   const char* name;
   uint16_t i;
@@ -49,7 +52,10 @@ uint16_t list(window_t* wnd, list_t* list, bool show_from_left)
     case KEY_BREAK:
     case KEY_LEFT:
     case KEY_CLEAR:
-      return LIST_EXIT;
+      if (can_abort) {
+        return LIST_EXIT;
+      }
+      break;
     case KEY_ENTER:
     case KEY_RIGHT:
       return list->start_idx + list->sel;
