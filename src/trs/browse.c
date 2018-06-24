@@ -92,8 +92,11 @@ static uint16_t show_details(uint16_t idx)
   header(&wnd, details);
   wnd_print(&wnd, false, descr);
   wnd_show(&wnd, false);
-  key = get_key();
-  return (key == KEY_BREAK || key == KEY_CLEAR) ? LIST_EXIT : idx;
+  do {
+    key = get_key();
+  } while (key != KEY_BREAK && key != KEY_CLEAR && key != KEY_LEFT &&
+           key != KEY_ENTER);
+  return (key == KEY_ENTER) ? idx : LIST_EXIT;
 }
 
 static uint16_t show_app_list(window_t* wnd,
