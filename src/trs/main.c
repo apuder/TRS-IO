@@ -22,30 +22,30 @@ void load_cmd(uint16_t id) {
   __endasm;
 }
 
-static uint8_t scan(window_t* wnd) {
+static uint8_t check(window_t* wnd) {
   static bool first_time = true;
-  uint16_t i = 0;
   uint8_t status;
-
+  uint16_t version;
+  
   wnd_switch_to_foreground(wnd);
   if (first_time) {
     wnd_popup(wnd, "Scanning...");
   }
   first_time = false;
-  
-  out(RS_PORT, RS_SEND_STATUS);
 
-  while (++i != 0) {
-    status = in(RS_PORT);
-    if (status == RS_STATUS_NO_RETROSTORE_CARD) {
-      wnd_popup(wnd, "No RetroStore card found!");
-      while(1);
-    }
-    if (status == RS_STATUS_WIFI_NOT_NEEDED ||
-        status == RS_STATUS_WIFI_CONNECTED) {
-      break;
-    }
+  status = scan();
+  
+  if (status == RS_STATUS_NO_RETROSTORE_CARD) {
+    wnd_popup(wnd, "No RetroStore card found!");
+    while(1);
   }
+
+  version = get_version();
+  if ((version >> 8) != RS_CLIENT_VERSION_MAJOR) {
+    wnd_popup(wnd, "Incompatible RetroStore card version!");
+    while(1);
+  }
+  
   wnd_switch_to_background(wnd);
   return status;
 }
@@ -97,7 +97,7 @@ void main() {
   init_window(&wnd, 0, 0, 0, 0);
 
   while (true) {
-    switch (scan(&wnd)) {
+    switch (check(&wnd)) {
     case RS_STATUS_WIFI_NOT_NEEDED:
       the_menu = &main_menu_wifi_not_needed;
       break;
@@ -132,6 +132,7 @@ void main() {
       configure_wifi();
       break;
     case MENU_ABOUT:
+      about();
       break;
     }
     show_from_left = true;

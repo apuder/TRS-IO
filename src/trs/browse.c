@@ -5,6 +5,7 @@
 #include "header.h"
 #include "key.h"
 #include "inout.h"
+#include "esp.h"
 
 #define MAX_SEARCH_TERMS_LEN 50
 
@@ -20,11 +21,6 @@ static form_t form_search[] = {
 static list_t list_apps;
 
 static char response[1024];
-
-static void wait_for_esp()
-{
-  while (in(0xe0) & 8) ;
-}
 
 static void set_query(const char* query)
 {

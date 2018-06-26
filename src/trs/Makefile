@@ -19,6 +19,8 @@ OBJS = \
 	list.rel \
 	menu.rel \
 	wifi.rel \
+	esp.rel \
+	about.rel \
 	panic.rel \
         font.rel
 

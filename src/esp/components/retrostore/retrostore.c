@@ -1,5 +1,6 @@
 
 #include "retrostore.h"
+#include "version.h"
 #include "backend.h"
 #include "boot.c"
 #include "rsclient.c"
@@ -86,6 +87,13 @@ static void command_cmd_set_query(uint16_t idx, const char* query)
   send(NULL, 0);
 }
 
+static void command_send_version(uint16_t idx, const char* query)
+{
+  static uint8_t version[2] = {RS_RETROCARD_VERSION_MAJOR,
+                               RS_RETROCARD_VERSION_MINOR};
+  send(version, sizeof(version));
+}
+
 typedef void (*proc_t)(uint16_t, const char*);
 
 typedef struct {
@@ -100,7 +108,8 @@ static command_t commands[] = {
   {"I", command_send_app_details},
   {"", command_send_status},
   {"S", command_cmd_configure_wifi},
-  {"S", command_cmd_set_query}
+  {"S", command_cmd_set_query},
+  {"", command_send_version}
 };
 
 int rs_z80_out(int value)

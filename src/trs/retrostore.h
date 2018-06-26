@@ -11,7 +11,10 @@
 #include "menu.h"
 #include "wifi.h"
 #include "browse.h"
+#include "about.h"
 #include "panic.h"
+#include "esp.h"
+#include "version.h"
 
 #define RS_PORT 31
 
@@ -22,11 +25,6 @@
 #define RS_SEND_STATUS 4
 #define RS_CMD_CONFIGURE_WIFI 5
 #define RS_CMD_SET_QUERY 6
-
-#define RS_STATUS_WIFI_NOT_NEEDED 0
-#define RS_STATUS_WIFI_CONNECTING 1
-#define RS_STATUS_WIFI_CONNECTED 2
-#define RS_STATUS_WIFI_NOT_CONNECTED 3
-#define RS_STATUS_NO_RETROSTORE_CARD 0xff
+#define RS_SEND_VERSION 7
 
 #endif

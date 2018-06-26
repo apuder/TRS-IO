@@ -164,6 +164,21 @@ void wnd_print(window_t* wnd, bool single_line, const char* str) {
   }
 } 
 
+void wnd_print_int(window_t* wnd, uint16_t v) {
+  char buf[10];
+  int i = sizeof(buf);
+
+  buf[--i] = '\0';
+  while (v != 0) {
+    buf[--i] = v % 10 + '0';
+    v = v / 10;
+  }
+  if (i == sizeof(buf) - 1) {
+    buf[--i] = '0';
+  }
+  wnd_print(wnd, false, buf + i);
+}
+
 void wnd_cls(window_t* wnd) {
   uint8_t x, y;
 

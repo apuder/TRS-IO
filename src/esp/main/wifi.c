@@ -182,8 +182,10 @@ void init_wifi()
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
   if (storage_has_key(WIFI_KEY_SSID) && storage_has_key(WIFI_KEY_PASSWD)) {
+    status = RS_STATUS_WIFI_CONNECTING;
     wifi_init_sta();
   } else {
+    status = RS_STATUS_WIFI_NOT_CONFIGURED;
     set_led(false, true, true, true, false);
     wifi_init_ap();
     xTaskCreatePinnedToCore(mg_task, "mg", 3000, NULL, 1, NULL, 0);
