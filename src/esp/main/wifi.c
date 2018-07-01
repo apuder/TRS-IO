@@ -1,6 +1,7 @@
 
 #include "retrostore.h"
 #include "wifi.h"
+#include "ota.h"
 #include "led.h"
 #include "storage.h"
 #include "esp_wifi.h"
@@ -42,6 +43,7 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     ESP_LOGI(TAG, "got ip:%s",
              ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
     status = RS_STATUS_WIFI_CONNECTED;
+    trigger_ota_check();
     set_led(false, true, false, false, true);
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
@@ -69,8 +71,8 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
 void set_wifi_credentials(const char* ssid, const char* passwd)
 {
   // Store credentials and reboot
-  storage_set(WIFI_KEY_SSID, ssid);
-  storage_set(WIFI_KEY_PASSWD, passwd);
+  storage_set_str(WIFI_KEY_SSID, ssid);
+  storage_set_str(WIFI_KEY_PASSWD, passwd);
   esp_restart();
 }
 
@@ -91,8 +93,8 @@ void mongoose_event_handler(struct mg_connection* nc,
         printf("ssid: %s\n", ssid);
         printf("passwd: %s\n", passwd);
         if ((l1 >= 0) && (l2 >= 0)) {
-          storage_set(WIFI_KEY_SSID, ssid);
-          storage_set(WIFI_KEY_PASSWD, passwd);
+          storage_set_str(WIFI_KEY_SSID, ssid);
+          storage_set_str(WIFI_KEY_PASSWD, passwd);
           response = status_html;
           response_len = status_html_len;
           reboot = true;
@@ -159,8 +161,8 @@ static void wifi_init_sta()
     .sta = {},
   };
 
-  storage_get(WIFI_KEY_SSID, ssid, sizeof(ssid));
-  storage_get(WIFI_KEY_PASSWD, passwd, sizeof(passwd));
+  storage_get_str(WIFI_KEY_SSID, ssid, sizeof(ssid));
+  storage_get_str(WIFI_KEY_PASSWD, passwd, sizeof(passwd));
   
   ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", ssid);
   ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", passwd);

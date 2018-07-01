@@ -1,23 +1,13 @@
 #include "retrostore.h"
 
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
 
 #include "ApiProtos.pb.h"
 #include "pb_decode.h"
 #include "cJSON.h"
 
-#define LOG(msg) printf("%s\n", msg)
-
-
-static const char* RETROSTORE_HOST = "retrostore.org";
-static const int RETROSTORE_PORT = 80;
-
-static char header[512];
 static int fd;
 
 #define SIZE_APP_PAGE 16
@@ -40,67 +30,18 @@ void set_query(const char* query_)
   num_apps = 0;
 }
 
-static bool connect_server(const char* host, int port)
-{
-  struct sockaddr_in serv_addr;
-  struct hostent* server;
-  
-  fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (fd < 0) {
-    // Error opening socket
-    return false;
-  }
-  server = gethostbyname(host);
-  if (server == NULL) {
-    // No such host
-    return false;
-  }
-  bzero((char*) &serv_addr, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  bcopy((char*) server->h_addr,
-        (char*) &serv_addr.sin_addr.s_addr,
-        server->h_length);
-  serv_addr.sin_port = htons(port);
-  if (connect(fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-    // Error connecting
-    return false;
-  }
-  return true;
-}
-  
-static bool skip_to_body()
-{
-  char buf[3];
-  while (true) {
-    int result = recv(fd, buf, 1, MSG_WAITALL);
-    if (result < 1) {
-      return false;
-    }
-    if (buf[0] != '\r') {
-      continue;
-    }
-    result = recv(fd, buf, 3, MSG_WAITALL);
-    if (result < 3) {
-      return false;
-    }
-    if (buf[0] == '\n' && buf[1] == '\r' && buf[2] == '\n') {
-      break;
-    }
-  }
-  return true;
-}
-
 static bool server_http(const char* path, cJSON* params,
                         bool (*parse_callback)())
 {
-  if (!connect_server(RETROSTORE_HOST, RETROSTORE_PORT)) {
+  if (!connect_server(&fd)) {
     LOG("ERROR: Connection failed");
     cJSON_Delete(params);
     return false;
   }
 
+  char* header = (char*) malloc(512);
   char* body = cJSON_PrintUnformatted(params);
-  snprintf(header, sizeof(header), "POST %s HTTP/1.1\r\n"
+  snprintf(header, 512, "POST %s HTTP/1.1\r\n"
            "Host: %s\r\n"
            "Content-type: application/x-www-form-urlencoded\r\n"
            "Content-Length: %d\r\n"
@@ -108,10 +49,11 @@ static bool server_http(const char* path, cJSON* params,
            (int) strlen(body));
   write(fd, header, strlen(header));
   write(fd, body, strlen(body));
+  free(header);
   free(body);
   cJSON_Delete(params);
 
-  if (!skip_to_body()) {
+  if (!skip_to_body(fd)) {
     return false;
   }
 

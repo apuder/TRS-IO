@@ -3,6 +3,7 @@
 #include "led.h"
 #include "button.h"
 #include "wifi.h"
+#include "ota.h"
 #include "storage.h"
 #include "esp_task.h"
 #include "driver/gpio.h"
@@ -20,30 +21,25 @@ void app_main(void)
   init_storage();
 
   if (is_button_pressed()) {
-    storage_erase();
+    switch_to_factory();
   }
+  
+  init_ota();
   init_wifi();
 
-#if 0
-  vTaskDelay(5000 / portTICK_PERIOD_MS);
-  //list_apps(0,5);
-  printf(">>>%s\n", get_app_title(0));
-#endif
-  
-  vTaskSuspend(NULL);
-  
   while (true) {
-#if 0
-    set_led(true, false, false, false, false);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    set_led(false, true, false, false, false);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    set_led(false, false, true, false, false);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    continue;
-#endif
-    //gpio_set_level(GPIO_NUM_25, gpio_get_level(GPIO_NUM_22) ? 0 : 1);
-    //io_cycle();
+    while (!is_button_pressed()) {
+      vTaskDelay(1);
+    }
+    int64_t then = esp_timer_get_time();
+    while (is_button_pressed()) {
+      vTaskDelay(1);
+    }
+    int64_t now = esp_timer_get_time();
+    if ((now - then) / (1000 * 1000) >= 3) {
+      storage_erase();
+      esp_restart();
+    }
   }
 }
 

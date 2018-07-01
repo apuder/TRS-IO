@@ -29,17 +29,33 @@ void storage_erase()
 bool storage_has_key(const char* key)
 {
   size_t len = 0;
-  esp_err_t err = nvs_get_str(storage, key, NULL, &len);
-  return err != ESP_ERR_NVS_NOT_FOUND;
+  if (nvs_get_str(storage, key, NULL, &len) == ESP_ERR_NVS_NOT_FOUND) {
+    int32_t dummy_i32;
+    return nvs_get_i32(storage, key, &dummy_i32) != ESP_ERR_NVS_NOT_FOUND;
+  }
+  return true;
 }
 
-void storage_get(const char* key, char* out, size_t len)
+void storage_get_str(const char* key, char* out, size_t len)
 {
   ESP_ERROR_CHECK(nvs_get_str(storage, key, out, &len));
 }
 
-void storage_set(const char* key, const char* value)
+void storage_set_str(const char* key, const char* value)
 {
   ESP_ERROR_CHECK(nvs_set_str(storage, key, value));
+  ESP_ERROR_CHECK(nvs_commit(storage));
+}
+
+int32_t storage_get_i32(const char* key)
+{
+  int32_t value;
+  ESP_ERROR_CHECK(nvs_get_i32(storage, key, &value));
+  return value;
+}
+
+void storage_set_i32(const char* key, int32_t value)
+{
+  ESP_ERROR_CHECK(nvs_set_i32(storage, key, value));
   ESP_ERROR_CHECK(nvs_commit(storage));
 }
