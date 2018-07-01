@@ -15,10 +15,10 @@
 #define WIFI_KEY_SSID "ssid"
 #define WIFI_KEY_PASSWD "passwd"
 
-#define SSID "RetroStore"
-#define MDNS_NAME "retrostore"
+#define SSID "RetroStoreCard"
+#define MDNS_NAME "rsc"
 
-static const char* TAG = "RetroStore";
+static const char* TAG = "RetroStoreCard";
 
 extern unsigned char index_html[];
 extern unsigned int index_html_len;
