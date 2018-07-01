@@ -20,6 +20,7 @@ OBJS = \
 	menu.rel \
 	wifi.rel \
 	esp.rel \
+	help.rel \
 	about.rel \
 	panic.rel \
         font.rel

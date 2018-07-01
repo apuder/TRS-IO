@@ -132,6 +132,9 @@ void main() {
     case MENU_WIFI:
       configure_wifi();
       break;
+    case MENU_HELP:
+      help();
+      break;
     case MENU_ABOUT:
       about();
       break;

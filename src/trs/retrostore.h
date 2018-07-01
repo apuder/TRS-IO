@@ -12,6 +12,7 @@
 #include "wifi.h"
 #include "browse.h"
 #include "about.h"
+#include "help.h"
 #include "panic.h"
 #include "esp.h"
 #include "version.h"
