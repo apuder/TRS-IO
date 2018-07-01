@@ -19,14 +19,15 @@ uint8_t scan()
   return status;
 }
 
-uint16_t get_version()
+void get_version(uint8_t* revision, uint16_t* version)
 {
   uint8_t version_minor;
   uint8_t version_major;
 
   out(RS_PORT, RS_SEND_VERSION);
   wait_for_esp();
+  *revision = in(RS_PORT);
   version_major = in(RS_PORT);
   version_minor = in(RS_PORT);
-  return (version_major << 8) | version_minor;
+  *version = (version_major << 8) | version_minor;
 }

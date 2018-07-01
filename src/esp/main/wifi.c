@@ -5,6 +5,7 @@
 #include "led.h"
 #include "storage.h"
 #include "esp_wifi.h"
+#include "esp_mock.h"
 #include "mdns.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
@@ -26,12 +27,30 @@ extern unsigned int status_html_len;
 
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
-uint8_t* wifi_status = &status;
-
-static char ssid[32];
-static char passwd[32];
+static char ssid[33];
+static char passwd[33];
 
 static bool reboot;
+
+uint8_t* get_wifi_status()
+{
+  return &status;
+}
+
+const char* get_wifi_ssid()
+{
+  static char ssid[33];
+  
+  storage_get_str(WIFI_KEY_SSID, ssid, sizeof(ssid));
+  return ssid;
+}
+
+static char* ip = "-";
+
+const char* get_wifi_ip()
+{
+  return ip;
+}
 
 static esp_err_t event_handler(void* ctx, system_event_t* event)
 {
@@ -40,8 +59,8 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     esp_wifi_connect();
     break;
   case SYSTEM_EVENT_STA_GOT_IP:
-    ESP_LOGI(TAG, "got ip:%s",
-             ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+    ip = ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip);
+    ESP_LOGI(TAG, "got ip:%s", ip);
     status = RS_STATUS_WIFI_CONNECTED;
     trigger_ota_check();
     set_led(false, true, false, false, true);

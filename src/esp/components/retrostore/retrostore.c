@@ -2,6 +2,7 @@
 #include "retrostore.h"
 #include "version.h"
 #include "backend.h"
+#include "esp_mock.h"
 #include "boot.c"
 #include "rsclient.c"
 
@@ -10,8 +11,6 @@
 #define MAX_STRING_LEN 100
 
 static int state = RS_STATE_READY;
-
-extern uint8_t* wifi_status;
 
 static const char* param_types;
 static int cmd;
@@ -65,7 +64,7 @@ static void command_send_app_details(uint16_t idx, const char* dummy)
 
 static void command_send_status(uint16_t idx, const char* dummy)
 {
-  send(wifi_status, 1);
+  send(get_wifi_status(), 1);
 }
 
 static void command_cmd_configure_wifi(uint16_t idx, const char* cred)
@@ -87,11 +86,24 @@ static void command_cmd_set_query(uint16_t idx, const char* query)
   send(NULL, 0);
 }
 
-static void command_send_version(uint16_t idx, const char* query)
+static void command_send_version(uint16_t idx, const char* dummy)
 {
-  static uint8_t version[2] = {RS_RETROCARD_VERSION_MAJOR,
+  static uint8_t version[3] = {RS_RETROCARD_REVISION,
+                               RS_RETROCARD_VERSION_MAJOR,
                                RS_RETROCARD_VERSION_MINOR};
   send(version, sizeof(version));
+}
+
+static void command_send_wifi_ssid(uint16_t idx, const char* dummy)
+{
+  const char* ssid = get_wifi_ssid();
+  send((uint8_t*) ssid, strlen(ssid) + 1);
+}
+
+static void command_send_wifi_ip(uint16_t idx, const char* dummy)
+{
+  const char* ip = get_wifi_ip();
+  send((uint8_t*) ip, strlen(ip) + 1);
 }
 
 typedef void (*proc_t)(uint16_t, const char*);
@@ -109,7 +121,9 @@ static command_t commands[] = {
   {"", command_send_status},
   {"S", command_cmd_configure_wifi},
   {"S", command_cmd_set_query},
-  {"", command_send_version}
+  {"", command_send_version},
+  {"", command_send_wifi_ssid},
+  {"", command_send_wifi_ip}
 };
 
 int rs_z80_out(int value)

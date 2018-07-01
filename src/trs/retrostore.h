@@ -26,5 +26,7 @@
 #define RS_CMD_CONFIGURE_WIFI 5
 #define RS_CMD_SET_QUERY 6
 #define RS_SEND_VERSION 7
+#define RS_SEND_WIFI_SSID 8
+#define RS_SEND_WIFI_IP 9
 
 #endif
