@@ -85,7 +85,8 @@ The status LED indicates the state of the RetroStoreCard:
  ### Launching the native RetroStore Client
  
  Once the RetroStoreCard is connected and configured, it is ready for use. The next step is to run a program
- on the TRS-80 that interfaces with the RetroStoreCard. This program is available as a regular CMD executable.
+ on the TRS-80 that interfaces with the RetroStoreCard. This program is available as a regular
+ <a href="https://github.com/apuder/tpk/raw/master/src/main/resources/apps/rsclient/RSCLIENT.CMD">CMD</a> executable.
  For TRS-80 machines with attached physical floppy disks, this CMD executable can be copied to a floppy disk
  and launched the usual way. For TRS-80 machines that have neither floppy disk drives nor cassette tapes, it
  is also possible to bootstrap the native client via the following short BASIC program:
