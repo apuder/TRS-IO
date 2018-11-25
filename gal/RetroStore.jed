@@ -1,7 +1,7 @@
 
 CUPL(WM)        5.0a  Serial# 60008009
 Device          g16v8as  Library DLIB-h-40-2
-Created         Wed Apr 04 19:13:11 2018
+Created         Sun Nov 25 11:30:43 2018
 Name            RetroStore
 Partno          ATF16V8B
 Revision        01
@@ -23,4 +23,4 @@ Location        None
 *L02144 11111111111111111111111111111111
 *L02176 111111111111111110
 *C1420
-*8C78
+*8C9D
