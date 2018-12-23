@@ -1,4 +1,4 @@
-
+#include <strings.h>
 #include "utils.h"
 
 bool connect_server(int* fd)
