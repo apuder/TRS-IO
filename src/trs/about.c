@@ -3,7 +3,7 @@
 
 static window_t wnd;
 
-static print_details(window_t* wnd, uint8_t cmd, const char* label)
+static void print_details(window_t* wnd, uint8_t cmd, const char* label)
 {
   char ch[2] = ".";
   

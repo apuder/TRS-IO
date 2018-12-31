@@ -4,9 +4,9 @@
 
 using namespace std;
 
-#define CHECK(condition, errno) \
+#define CMD_CHECK(condition, errno) \
   if (!(condition)) { \
-    error(errno); \
+    cmd_error(errno); \
   }
 
 /*
@@ -26,8 +26,8 @@ private:
   int entry_addr_msb;
   int entry_addr_lsb;
 
-  void error(int errno) {
-    switch (errno) {
+  void cmd_error(int errnum) {
+    switch (errnum) {
     case -1:
       throw "Usage: ihex2cmd <input> <output>";
     case -2:
@@ -42,13 +42,13 @@ private:
   }
   
   void parse_args() {
-    CHECK(argc == 3, -1);
+    CMD_CHECK(argc == 3, -1);
   }
 
   unsigned char next_nibble() {
-    CHECK(pos != rec.length(), -4);
+    CMD_CHECK(pos != rec.length(), -4);
     char ch = rec[pos++];
-    CHECK((ch >= '0' && ch <='9') || (ch >= 'A' && ch <= 'F'), -4);
+    CMD_CHECK((ch >= '0' && ch <='9') || (ch >= 'A' && ch <= 'F'), -4);
     ch -= '0';
     if (ch > 9) {
       ch -= 'A' - '0' - 10;
@@ -72,7 +72,7 @@ private:
       entry_addr_msb = header[3];
     }
     char type = next_byte();
-    CHECK((type == 0) || (type == 1), -4);
+    CMD_CHECK((type == 0) || (type == 1), -4);
     if (type == 1) {
       // Entry address
       char entry[4];
@@ -95,7 +95,7 @@ private:
     
   void parse_ihex() {
     while (ihex >> rec) {
-      CHECK(rec.length() > 10 && rec[0] == ':', -4);
+      CMD_CHECK(rec.length() > 10 && rec[0] == ':', -4);
       pos = 1;
       parse_record();
     }
@@ -112,7 +112,7 @@ public:
       entry_addr_lsb = 256;
       parse_args();
       ihex.open(argv[1]);
-      CHECK(ihex, -2);
+      CMD_CHECK(ihex, -2);
       cmd.open(argv[2], ios::out | ios::binary);
       parse_ihex();
       ihex.close();

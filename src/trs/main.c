@@ -105,7 +105,7 @@ void main() {
     case RS_STATUS_WIFI_CONNECTED:
       the_menu = &main_menu;
       break;
-    defaul:
+    default:
       the_menu = &main_menu_not_connected;
       break;
     }
