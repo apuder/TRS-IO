@@ -17,7 +17,7 @@
 static const char* TAG = "OTA";
 
 static TaskHandle_t task_handle;
-static EventGroupHandle_t event_group;
+static EventGroupHandle_t event_group = NULL;
 
 #define BUFFSIZE 1024
 
@@ -171,7 +171,8 @@ static void ota_task(void* p)
 
 void trigger_ota_check()
 {
-  xEventGroupSetBits(event_group, BIT_CHECK_OTA);
+  if ( event_group != NULL )
+  	xEventGroupSetBits(event_group, BIT_CHECK_OTA);
 }
 
 void switch_to_factory()
