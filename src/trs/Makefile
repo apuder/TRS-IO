@@ -5,7 +5,7 @@ LD = sdldz80
 IHEX2CMD = ../ihex2cmd/ihex2cmd
 CFLAGS = -mz80 --std-sdcc99 --opt-code-size
 ASFLAGS = -l
-LDFLAGS = -mjwx -b _CODE=0x5200 -l /usr/share/sdcc/lib/z80/z80.lib
+LDFLAGS = -mjwx -b _CODE=0x5200 -l $(SDCC_PATH)/lib/z80/z80.lib
 
 OBJS = \
 	crt0.rel \

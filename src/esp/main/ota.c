@@ -1,4 +1,4 @@
-
+#include <string.h>
 #include "retrostore.h"
 #include "storage.h"
 #include "led.h"
