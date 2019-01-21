@@ -3,8 +3,9 @@
 #include "version.h"
 #include "backend.h"
 #include "esp_mock.h"
-#include "boot.c"
+#include "loader_cmd.c"
 #include "rsclient.c"
+#include "loader_basic.c"
 
 #include <string.h>
 
@@ -29,9 +30,9 @@ static void send(uint8_t* b, int len)
   state = RS_STATE_SEND;
 }
 
-static void command_send_boot(uint16_t idx, const char* dummy)
+static void command_send_loader_cmd(uint16_t idx, const char* dummy)
 {
-  send(boot_bin, boot_bin_len);
+  send(loader_cmd_bin, loader_cmd_bin_len);
 }
 
 static void command_send_cmd(uint16_t idx, const char* dummy)
@@ -39,13 +40,20 @@ static void command_send_cmd(uint16_t idx, const char* dummy)
   if (idx == 0xffff) {
     send(rsclient_cmd, rsclient_cmd_len);
   } else {
+    int type;
     unsigned char* buf;
     int size;
-    if (get_app_cmd(idx, &buf, &size)) {
-      send(buf, size);
-    } else {
+    bool ok = get_app_code(idx, &type, &buf, &size);
+    if (!ok) {
       // Error happened. Just send rsclient again so we send something legal
       send(rsclient_cmd, rsclient_cmd_len);
+    } else {
+      if (type == 3 /* CMD */) {
+        send(buf, size);
+      } else {
+        // BASIC loader
+        send(loader_basic_cmd, loader_basic_cmd_len);
+      }
     }      
   }
 }
@@ -106,6 +114,14 @@ static void command_send_wifi_ip(uint16_t idx, const char* dummy)
   send((uint8_t*) ip, strlen(ip) + 1);
 }
 
+static void command_send_basic(uint16_t idx, const char* dummy)
+{
+  unsigned char* buf;
+  int size;
+  get_last_app_code(&buf, &size);
+  send(buf, size);
+}
+
 typedef void (*proc_t)(uint16_t, const char*);
 
 typedef struct {
@@ -114,7 +130,7 @@ typedef struct {
 } command_t;
 
 static command_t commands[] = {
-  {"", command_send_boot},
+  {"", command_send_loader_cmd},
   {"I", command_send_cmd},
   {"I", command_send_app_title},
   {"I", command_send_app_details},
@@ -123,7 +139,8 @@ static command_t commands[] = {
   {"S", command_cmd_set_query},
   {"", command_send_version},
   {"", command_send_wifi_ssid},
-  {"", command_send_wifi_ip}
+  {"", command_send_wifi_ip},
+  {"", command_send_basic}
 };
 
 int rs_z80_out(int value)

@@ -11,4 +11,5 @@
 void set_query(const char* query);
 char* get_app_title(int idx);
 char* get_app_details(int idx);
-bool get_app_cmd(int idx, unsigned char** buf, int* size);
+bool get_app_code(int idx, int* type, unsigned char** buf, int* size);
+void get_last_app_code(unsigned char** buf, int* size);

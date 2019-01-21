@@ -1,7 +1,7 @@
 
 MAKE = make
 
-DIRS = boot ihex2cmd trs esp
+DIRS = ihex2cmd loader trs esp
 
 
 all:

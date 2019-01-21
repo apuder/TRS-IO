@@ -23,6 +23,7 @@
 #define RS_SEND_VERSION 7
 #define RS_SEND_WIFI_SSID 8
 #define RS_SEND_WIFI_IP 9
+#define RS_SEND_BASIC 10
 
 
 int rs_z80_out(int value);

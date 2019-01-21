@@ -2,15 +2,15 @@
 #include "retrostore.h"
 
 #define BOOT_LOADER_ADDR 0x4300
-#include "../boot/boot.c"
+#include "../loader/cmd/loader_cmd.c"
 
 
 static void copy_boot_loader()
 {
   int i;
   uint8_t* p = (uint8_t*) BOOT_LOADER_ADDR;
-  for (i = 0; i < boot_bin_len; i++) {
-    *p++ = boot_bin[i];
+  for (i = 0; i < loader_cmd_bin_len; i++) {
+    *p++ = loader_cmd_bin[i];
   }
 }
 

@@ -80,4 +80,5 @@ enum MediaType {
     DISK = 1;
     CASSETTE = 2;
     COMMAND = 3;
+    BASIC = 4;
 }

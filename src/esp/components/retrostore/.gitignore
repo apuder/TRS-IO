@@ -1,1 +1,3 @@
 rsclient.c
+loader_cmd.c
+loader_basic.c

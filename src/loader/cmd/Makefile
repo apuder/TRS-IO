@@ -5,7 +5,7 @@
 %.c: %.bin
 
 
-GEN = boot.c
+GEN = loader_cmd.c
 
 %.bin: %.asm
 	z80asm -i $< -o $@
@@ -14,7 +14,7 @@ GEN = boot.c
 	xxd -i $< $@
 
 all: $(GEN)
-	cp $(GEN) ../esp/components/retrostore/
+	cp $(GEN) ../../esp/components/retrostore/
 
 clean:
 	rm -f *.bin *.c
