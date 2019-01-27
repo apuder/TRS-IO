@@ -1,5 +1,6 @@
 #include <strings.h>
 #include "utils.h"
+#include <strings.h>
 
 bool connect_server(int* fd)
 {
