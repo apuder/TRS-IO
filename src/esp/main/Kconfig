@@ -1,0 +1,7 @@
+config ENABLE_TRSIO_OTA
+    bool "Enable OTA for TrsIO."
+    default "n"
+    help
+        Select this if the OTA mechanism should be enabled.
+        This might immediately overwrite the flashed firmware.
+        Should be disabled during development.

@@ -1,5 +1,5 @@
 
-PROJECT_NAME := retro-store
+PROJECT_NAME := trs-io
 
 include $(IDF_PATH)/make/project.mk
 
