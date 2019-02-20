@@ -19,6 +19,8 @@
 
 #define RS_PORT 31
 
+#define TRSIO_RETROSTORE_MODULE_ID 3
+
 #define RS_SEND_BOOT 0
 #define RS_SEND_CMD 1
 #define RS_SEND_APP_TITLE 2

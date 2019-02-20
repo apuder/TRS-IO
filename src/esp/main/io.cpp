@@ -1,4 +1,5 @@
 
+#include "trs-io.h"
 #include "io.h"
 #include "esp_event_loop.h"
 #include "tcpip.h"
@@ -6,7 +7,6 @@
 #include <string.h>
 #include "esp_system.h"
 #include "esp_log.h"
-static const char *TAG="io";
 
 // GPIO pins 12-19
 #define GPIO_DATA_BUS_MASK 0b11111111000000000000
@@ -15,77 +15,18 @@ static const char *TAG="io";
 
 #define GPIO_OUTPUT_ENABLE(mask) GPIO.enable_w1ts = (mask)
 
-/**
-The first byte of every request is the protocol identifier.
-The values are assigned defined ranges as follows
-
-0-19 	Reserved
-20-99	Core Protocols
-100-199	Custom Protocols
-200-255	Reserved
-
-*/
-
-#define PROTOCOL_PREFIX_TCPIP	20
-#define PROTOCOL_PREFIX_RS		100
 
 void io_task(void* p)
 {
   
   while (true) {
-
-    uint8_t* buf;
-    int size;
-    
-    uint8_t protocol = read_byte();
-
-    switch( protocol ) {
-    
-      case PROTOCOL_PREFIX_TCPIP:
-        while (tcp_z80_out(read_byte()) != IP_STATE_SEND_TO_Z80);
-        tcp_get_send_buffer(&buf, &size);
-        break;
-      default:
-        if ( rs_z80_out(protocol) != RS_STATE_SEND )
-          while (rs_z80_out(read_byte()) != RS_STATE_SEND);
-        rs_get_send_buffer(&buf, &size);
-        break;
-    }
-
+    while (TrsIO::outZ80(read_byte())) ;
+    int size = TrsIO::getSendBufferLen();
+    uint8_t* buf = TrsIO::getSendBuffer();
+    TrsIO::reset();
     write_bytes(buf, size);
   }
 
-}
-
-
-void io_task_2(void* p)
-{
-  
-  while (true) {
-
-    uint8_t* buf;
-    int size;
-
-    uint8_t protocol = read_byte();
-
-    switch( protocol ) {
-      case PROTOCOL_PREFIX_TCPIP:
-        while (tcp_z80_out(read_byte()) != IP_STATE_SEND_TO_Z80);
-        tcp_get_send_buffer(&buf, &size);
-        break;
-      case PROTOCOL_PREFIX_RS:
-        while (rs_z80_out(read_byte()) != RS_STATE_SEND);
-        rs_get_send_buffer(&buf, &size);
-        break;
-      default:
-        ESP_LOGE(TAG, "Unknown protocol %d", protocol);
-        continue;
-        break;
-    }
-
-    write_bytes(buf, size);
-
-  }
 }
 
 void init_io()

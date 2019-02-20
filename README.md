@@ -92,9 +92,11 @@ The status LED indicates the state of the RetroStoreCard:
  is also possible to bootstrap the native client via the following short BASIC program:
  
  ```BASIC
- 10 OUT236,56
- 20 OUT31,0
- 30 FOR X=0TO100:POKE17152+X,INP(31):NEXT
+ 10 OUT236,16
+ 20 OUT31,3
+ 30 OUT31,0
+ 40 N=INP(31)+256*INP(31)
+ 50 FOR X=1 TO N:POKE17151+X,INP(31):NEXT
  RUN
  SYSTEM
  *? /17152

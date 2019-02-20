@@ -21,11 +21,15 @@ static app_title_t apps[SIZE_APP_PAGE];
 static int current_page = 0;
 static int num_apps  = 0;
 
-static const char* query = "";
+static char* query = NULL;
 
 void set_query(const char* query_)
 {
-  query = query_;
+  if (query != NULL) {
+    free(query);
+  }
+  query = (char*) malloc(strlen(query_) + 1);
+  memcpy(query, query_, strlen(query_) + 1);
   current_page = 0;
   num_apps = 0;
 }
@@ -147,7 +151,7 @@ static bool list_apps(const int page)
   cJSON* trs80 = cJSON_CreateObject();
   cJSON_AddItemToObject(trs80, "mediaTypes", mediaTypes);
   cJSON_AddItemToObject(params, "trs80", trs80);
-  if (query[0] != '\0') {
+  if (query != NULL) {
     cJSON_AddStringToObject(params, "query", query);
   }
 

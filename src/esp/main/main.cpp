@@ -11,10 +11,16 @@
 
 #include "retrostore.h"
 #include "backend.h"
+#include "trs-io.h"
 
+
+extern "C" {
+  void app_main(void);
+}
 
 void app_main(void)
 {
+  TrsIO::initModules();
   init_io();
   init_led();
   init_button();

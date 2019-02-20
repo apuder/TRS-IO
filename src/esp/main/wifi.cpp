@@ -157,15 +157,13 @@ void mg_task(void* p)
 
 void wifi_init_ap()
 {
-  wifi_config_t wifi_config = {
-    .ap = {
-      .ssid = SSID,
-      .ssid_len = strlen(SSID),
-      .password = "",
-      .max_connection = 1,
-      .authmode = WIFI_AUTH_OPEN
-    },
-  };
+  wifi_config_t wifi_config;
+  
+  strcpy((char*) wifi_config.ap.ssid, SSID);
+  wifi_config.ap.ssid_len = strlen(SSID);
+  strcpy((char*) wifi_config.ap.password, "");
+  wifi_config.ap.max_connection = 1;
+  wifi_config.ap.authmode = WIFI_AUTH_OPEN;
   
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));

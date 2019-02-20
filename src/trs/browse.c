@@ -26,6 +26,7 @@ static void set_query(const char* query)
 {
   int i = 0;
   
+  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
   out(RS_PORT, RS_CMD_SET_QUERY);
   while (query != NULL && query[i] != '\0') {
     out(RS_PORT, query[i++]);
@@ -40,6 +41,7 @@ static bool get_response(uint8_t cmd, uint16_t idx, const char** resp)
   int i;
   uint8_t ch;
   
+  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
   out(RS_PORT, cmd);
   out(RS_PORT, idx & 0xff);
   out(RS_PORT, idx >> 8);

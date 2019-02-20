@@ -11,7 +11,8 @@
 #define ARRAY_START 0x40fb
 #define MEM_START 0x40fd
 
-#define RS_PORT 31
+#define TRSIO_RETROSTORE_MODULE_ID 3
+#define TRSIO_PORT 31
 
 #define RS_SEND_BASIC 10
 
@@ -102,23 +103,27 @@ void main()
 
   di();
   init_ram();
-  out(RS_PORT, RS_SEND_BASIC);
+  out(TRSIO_PORT, TRSIO_RETROSTORE_MODULE_ID);
+  out(TRSIO_PORT, RS_SEND_BASIC);
   wait_for_esp();
-  b = in(RS_PORT);
+  // Ignore blob length
+  in(TRSIO_PORT);
+  in(TRSIO_PORT);
+  b = in(TRSIO_PORT);
   while (b != 0xff) ;
   last_line = PEEK_W(BAS_BEGIN);
   p = last_line;
   while (1) {
-    w = in(RS_PORT) | (in(RS_PORT) << 8);
+    w = in(TRSIO_PORT) | (in(TRSIO_PORT) << 8);
     if (w == 0) {
       break;
     }
     p++;
     p++;
-    *p++ = in(RS_PORT);
-    *p++ = in(RS_PORT);
+    *p++ = in(TRSIO_PORT);
+    *p++ = in(TRSIO_PORT);
     do {
-      b = in(RS_PORT);
+      b = in(TRSIO_PORT);
       *p++ = b;
     } while (b != 0);
     POKE_W(last_line, p);

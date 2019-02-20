@@ -6,6 +6,8 @@ CLS: equ 01c9h
     ld hl,0ffffh
     ld a,56
     out (236),a
+    ld a,3
+    out (31),a
     ld a,1
     out (31),a
     ld a,l
@@ -17,7 +19,8 @@ WAIT:
     in a,(0e0h)
     and 8
     jr nz,WAIT
-        
+    in a,(31)
+    in a,(31)
 LOOP:
     in a,(31)
     ld e,a

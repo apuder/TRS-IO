@@ -26,9 +26,6 @@
 #define RS_SEND_BASIC 10
 
 
-int rs_z80_out(int value);
-int rs_z80_in();
-void rs_get_send_buffer(uint8_t** buf, int* size);
 void set_wifi_credentials(const char* ssid, const char* passwd);
 
 #endif

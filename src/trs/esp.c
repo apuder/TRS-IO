@@ -11,6 +11,7 @@ uint8_t scan()
   uint16_t i = 0;
   uint8_t status = RS_STATUS_NO_RETROSTORE_CARD;
 
+  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
   out(RS_PORT, RS_SEND_STATUS);
 
   while (++i != 0 && status == RS_STATUS_NO_RETROSTORE_CARD) {
@@ -24,6 +25,7 @@ void get_version(uint8_t* revision, uint16_t* version)
   uint8_t version_minor;
   uint8_t version_major;
 
+  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
   out(RS_PORT, RS_SEND_VERSION);
   wait_for_esp();
   *revision = in(RS_PORT);

@@ -8,6 +8,7 @@ static void print_details(window_t* wnd, uint8_t cmd, const char* label)
   char ch[2] = ".";
   
   wnd_print(wnd, false, label);
+  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
   out(RS_PORT, cmd);
   wait_for_esp();
   while (true) {
