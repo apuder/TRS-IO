@@ -38,13 +38,13 @@ public:
   }
 
   static void command_send_loader_cmd() {
-    addBlob(loader_cmd_bin, loader_cmd_bin_len);
+    addBlob16(loader_cmd_bin, loader_cmd_bin_len);
   }
 
   static void command_send_cmd() {
     uint16_t idx = I(0);
     if (idx == 0xffff) {
-      addBlob(rsclient_cmd, rsclient_cmd_len);
+      addBlob16(rsclient_cmd, rsclient_cmd_len);
     } else {
       int type;
       unsigned char* buf;
@@ -52,13 +52,13 @@ public:
       bool ok = get_app_code(idx, &type, &buf, &size);
       if (!ok) {
         // Error happened. Just send rsclient again so we send something legal
-        addBlob(rsclient_cmd, rsclient_cmd_len);
+        addBlob16(rsclient_cmd, rsclient_cmd_len);
       } else {
         if (type == 3 /* CMD */) {
-          addBlob(buf, size);
+          addBlob16(buf, size);
         } else {
           // BASIC loader
-          addBlob(loader_basic_cmd, loader_basic_cmd_len);
+          addBlob16(loader_basic_cmd, loader_basic_cmd_len);
         }
       }  
     }
@@ -110,7 +110,7 @@ public:
     unsigned char* buf;
     int size;
     get_last_app_code(&buf, &size);
-    addBlob(buf, size);
+    addBlob16(buf, size);
   }
   
 };

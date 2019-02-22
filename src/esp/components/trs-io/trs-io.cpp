@@ -16,7 +16,7 @@ TrsIO* TrsIO::currentModule;
 
 uint8_t TrsIO::cmd;
 state_t TrsIO::state;
-uint16_t TrsIO::bytesToRead;
+uint32_t TrsIO::bytesToRead;
 
 const char* TrsIO::signatureParams;
 
@@ -24,22 +24,32 @@ uint8_t* TrsIO::paramBytes[TRSIO_MAX_PARAMETERS_PER_TYPE];
 uint8_t* TrsIO::paramInts[TRSIO_MAX_PARAMETERS_PER_TYPE];
 uint8_t* TrsIO::paramLongs[TRSIO_MAX_PARAMETERS_PER_TYPE];
 uint8_t* TrsIO::paramStrs[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint8_t* TrsIO::paramBlobs[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint16_t TrsIO::paramBlobsLen[TRSIO_MAX_PARAMETERS_PER_TYPE];
+uint8_t* TrsIO::paramBlobs16[TRSIO_MAX_PARAMETERS_PER_TYPE];
+uint16_t TrsIO::paramBlobs16Len[TRSIO_MAX_PARAMETERS_PER_TYPE];
+uint8_t* TrsIO::paramBlobs32[TRSIO_MAX_PARAMETERS_PER_TYPE];
+uint32_t TrsIO::paramBlobs32Len[TRSIO_MAX_PARAMETERS_PER_TYPE];
 
-uint16_t* TrsIO::blob;
+uint16_t* TrsIO::blob16;
+uint32_t* TrsIO::blob32;
 
 uint16_t TrsIO::numParamByte;
 uint16_t TrsIO::numParamInt;
 uint16_t TrsIO::numParamLong;
 uint16_t TrsIO::numParamStr;
-uint16_t TrsIO::numParamBlob;
+uint16_t TrsIO::numParamBlob16;
+uint16_t TrsIO::numParamBlob32;
 
-void TrsIO::initModules() {
+extern "C" {
+    void init_trs_io() {
+        TrsIO::init();
+    }
+}
+
+void TrsIO::init() {
     for (auto &module : modules) {
         TrsIO* mod = module;
         if (mod != nullptr) {
-            module->init();
+            module->initModule();
         }
     }
     reset();
@@ -51,13 +61,20 @@ void TrsIO::reset() {
     numParamInt = 0;
     numParamLong = 0;
     numParamStr = 0;
-    numParamBlob = 0;
+    numParamBlob16 = 0;
+    numParamBlob32 = 0;
+    blob16 = nullptr;
+    blob32 = nullptr;
     receivePtr = receiveBuffer;
-    blob = nullptr;
 }
 
 bool TrsIO::outZ80(uint8_t byte) {
-    static uint8_t last_byte;
+    static union {
+        uint8_t b[sizeof(uint32_t)];
+        uint16_t i;
+        uint32_t l;
+    } len;
+    static uint8_t count;
 
     switch (state) {
         case STATE_NEXT_MODULE:
@@ -87,15 +104,20 @@ bool TrsIO::outZ80(uint8_t byte) {
                 break;
             }
             return true;
-        case STATE_ACCEPT_BLOCK_LEN_1:
-            last_byte = byte;
-            state = STATE_ACCEPT_BLOCK_LEN_2;
-            return true;
-        case STATE_ACCEPT_BLOCK_LEN_2:
-            bytesToRead = last_byte | (byte << 8);
-            paramBlobsLen[numParamBlob] = bytesToRead;
-            paramBlobs[numParamBlob++] = receivePtr;
-            state = STATE_ACCEPT_FIXED_LENGTH_PARAM;
+        case STATE_ACCEPT_BLOB_LEN:
+            len.b[count++] = byte;
+            if (count == bytesToRead) {
+                if (bytesToRead == sizeof(uint16_t)) {
+                    bytesToRead = len.i;
+                    paramBlobs16Len[numParamBlob16] = len.i;
+                    paramBlobs16[numParamBlob16++] = receivePtr;
+                } else {
+                    bytesToRead = len.l;
+                    paramBlobs32Len[numParamBlob32] = len.l;
+                    paramBlobs32[numParamBlob32++] = receivePtr;
+                }
+                state = STATE_ACCEPT_FIXED_LENGTH_PARAM;
+            }
             return true;
         case STATE_SEND:
             reset();
@@ -130,7 +152,14 @@ bool TrsIO::outZ80(uint8_t byte) {
             state = STATE_ACCEPT_STRING_PARAM;
             break;
         case 'Z':
-            state = STATE_ACCEPT_BLOCK_LEN_1;
+            bytesToRead = sizeof(uint16_t);
+            count = 0;
+            state = STATE_ACCEPT_BLOB_LEN;
+            break;
+        case 'X':
+            bytesToRead = sizeof(uint32_t);
+            count = 0;
+            state = STATE_ACCEPT_BLOB_LEN;
             break;
         default:
             // bad signature string

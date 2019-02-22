@@ -10,6 +10,9 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 
+#define IP_VERSION_MAJOR 1
+#define IP_VERSION_MINOR 0
+
 #define IP_COMMAND_SUCCESS  0
 #define IP_COMMAND_ERROR    1
 

@@ -26,8 +26,7 @@ enum state_t {
     STATE_NEXT_CMD,
     STATE_ACCEPT_FIXED_LENGTH_PARAM,
     STATE_ACCEPT_STRING_PARAM,
-    STATE_ACCEPT_BLOCK_LEN_1,
-    STATE_ACCEPT_BLOCK_LEN_2,
+    STATE_ACCEPT_BLOB_LEN,
     STATE_SEND
 };
 
@@ -45,7 +44,7 @@ private:
 
     static uint8_t cmd;
     static state_t state;
-    static uint16_t bytesToRead;
+    static uint32_t bytesToRead;
 
     static const char* signatureParams;
 
@@ -53,16 +52,20 @@ private:
     static uint8_t* paramInts[];
     static uint8_t* paramLongs[];
     static uint8_t* paramStrs[];
-    static uint8_t* paramBlobs[];
-    static uint16_t paramBlobsLen[];
+    static uint8_t* paramBlobs16[];
+    static uint16_t paramBlobs16Len[];
+    static uint8_t* paramBlobs32[];
+    static uint32_t paramBlobs32Len[];
 
-    static uint16_t* blob;
+    static uint16_t* blob16;
+    static uint32_t* blob32;
 
     static uint16_t numParamByte;
     static uint16_t numParamInt;
     static uint16_t numParamLong;
     static uint16_t numParamStr;
-    static uint16_t numParamBlob;
+    static uint16_t numParamBlob16;
+    static uint16_t numParamBlob32;
 
     uint16_t numCommands;
     command_t commands[TRSIO_MAX_COMMANDS];
@@ -83,7 +86,7 @@ public:
         numCommands = 0;
     }
 
-    static void initModules();
+    static void init();
 
     inline static TrsIO* getModule(int id) {
         assert(id < TRSIO_MAX_MODULES);
@@ -91,7 +94,7 @@ public:
         return currentModule;
     }
 
-    virtual void init() {
+    virtual void initModule() {
         // Do nothing in base class
     }
 
@@ -121,13 +124,29 @@ protected:
     }
 
     inline static uint8_t* Z(uint8_t idx) {
-        assert(idx < numParamBlob);
-        return paramBlobs[idx];
+        assert(idx < numParamBlob16);
+        return paramBlobs16[idx];
     }
 
     inline static uint16_t ZL(uint8_t idx) {
-        assert(idx < numParamBlob);
-        return paramBlobsLen[idx];
+        assert(idx < numParamBlob16);
+        return paramBlobs16Len[idx];
+    }
+
+    inline static uint8_t* X(uint8_t idx) {
+        assert(idx < numParamBlob32);
+        return paramBlobs32[idx];
+    }
+
+    inline static uint32_t XL(uint8_t idx) {
+        assert(idx < numParamBlob32);
+        return paramBlobs32Len[idx];
+    }
+
+    inline static void rewind() {
+        sendPtr = sendBuffer;
+        blob16 = nullptr;
+        blob32 = nullptr;
     }
 
     inline static void addByte(uint8_t b) {
@@ -154,29 +173,62 @@ protected:
         } while (*str++ != '\0');
     }
 
-    inline static void addBlob(void* blob, uint16_t len) {
+    inline static void addBlob16(void *blob, uint16_t len) {
         assert(sendPtr + sizeof(uint16_t) + len <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
         auto p = (uint8_t*) blob;
         addInt(len);
-        for (int i = 0; i < len; i++) {
+        for (uint16_t i = 0; i < len; i++) {
             addByte(*p++);
         }
     }
 
-    inline static void startBlob() {
-        assert(sendPtr + 2 <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
-        assert(blob == nullptr);
-        blob = (uint16_t*) sendPtr;
-        sendPtr += 2;
+    inline static void addBlob32(void *blob, uint32_t len) {
+        assert(sendPtr + sizeof(uint32_t) + len <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        auto p = (uint8_t*) blob;
+        addLong(len);
+        for (uint32_t i = 0; i < len; i++) {
+            addByte(*p++);
+        }
     }
 
-    inline static void endBlob() {
-        assert(blob != nullptr);
-        *blob = (uint16_t) (sendPtr - ((uint8_t*) blob) - 2);
-        blob = nullptr;
+    inline static void skip(uint32_t len) {
+        assert(sendPtr + len <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        sendPtr += len;
+    }
+
+    inline static uint8_t* startBlob16() {
+        assert(sendPtr + sizeof(uint16_t) <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(blob16 == nullptr);
+        blob16 = (uint16_t*) sendPtr;
+        sendPtr += sizeof(uint16_t);
+        return sendPtr;
+    }
+
+    inline static void endBlob16() {
+        assert(blob16 != nullptr);
+        *blob16 = (uint16_t) (sendPtr - ((uint8_t*) blob16) - sizeof(uint16_t));
+        blob16 = nullptr;
+    }
+
+    inline static uint8_t* startBlob32() {
+        assert(sendPtr + sizeof(uint32_t) <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(blob32 == nullptr);
+        blob32 = (uint32_t*) sendPtr;
+        sendPtr += sizeof(uint32_t);
+        return sendPtr;
+    }
+
+    inline static void endBlob32() {
+        assert(blob32 != nullptr);
+        *blob32 = (uint32_t) (sendPtr - ((uint8_t*) blob32) - sizeof(uint32_t));
+        blob32 = nullptr;
     }
 
 public:
+    static unsigned long getSendBufferFreeSize() {
+        return (sendBuffer + TRSIO_MAX_SEND_BUFFER) - sendPtr;
+    }
+    
     static unsigned long getSendBufferLen() {
         return sendPtr - sendBuffer;
     }
