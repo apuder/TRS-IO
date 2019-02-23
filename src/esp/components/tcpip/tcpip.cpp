@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <string.h>    //strlen
+#include <string.h>
+#include <unordered_map>
 
 #include "trs-io.h"
 #include "tcpip.h"
@@ -45,16 +46,30 @@ For TCP: (each <item> represents a single byte)
 
 ****/
 
+using namespace std;
+
+
+typedef struct {
+  int fd;
+  int family;
+} SocketInfo;
 
 #define TCPIP_MODULE_ID 1
 
 class TCPIPModule : public virtual TrsIO {
+private:
+  static uint8_t clientVersionMajor;
+  static uint8_t clientVersionMinor;
+  
+  static uint8_t nextSocketFd;
+  static unordered_map<uint8_t, SocketInfo> socketMap;
+  
 public:
- TCPIPModule(int id) : TrsIO(id) {
-    addCommand(doVersion, "");
+  TCPIPModule(int id) : TrsIO(id) {
+    addCommand(doVersion, "BB");
     addCommand(doSocket, "BB");
     addCommand(doConnectIP, "BBBBBI");
-    addCommand(doConnectHost, "BBSI");
+    addCommand(doConnectHost, "BSI");
     addCommand(doSend, "BX");
     addCommand(doSendTo, "");
     addCommand(doRecv, "BBL");
@@ -63,6 +78,8 @@ public:
   }
 
   static void doVersion() {
+    clientVersionMajor = B(0);
+    clientVersionMinor = B(1);
     addByte(IP_VERSION_MAJOR);
     addByte(IP_VERSION_MINOR);
   }
@@ -86,7 +103,7 @@ public:
     }
     return -1;
   }
-    
+
   static void doSocket() {
     int ipSocketFamily = getSocketFamily(B(0)); 
     int ipSocketType = getSocketType(B(1));
@@ -96,14 +113,17 @@ public:
       addByte(IP_COMMAND_ERROR);
       addByte(errno);
     } else {
+      uint8_t fd = nextSocketFd++;
+      socketMap[fd].fd = socketFd;
+      socketMap[fd].family = ipSocketFamily;
       addByte(IP_COMMAND_SUCCESS);
-      addByte(socketFd);
+      addByte(fd);
     }
   }
 
   static void doConnectHost() {
-    int socketFd = B(0);
-    int ipSocketFamily = getSocketFamily(B(1)); 
+    int socketFd = socketMap[B(0)].fd;
+    int ipSocketFamily = socketMap[B(0)].family;
     const char* hostname = S(0);
     short port = I(0);
     
@@ -131,8 +151,8 @@ public:
   }
 
   static void doConnectIP() {
-    int socketFd = B(0);
-    int ipSocketFamily = getSocketFamily(B(1)); 
+    int socketFd = socketMap[B(0)].fd;
+    int ipSocketFamily = socketMap[B(0)].family;
     short port = I(0);
 
     char ipAddress[16];
@@ -152,7 +172,7 @@ public:
   }
   
   static void doSend() {
-    int socketFd = B(0);
+    int socketFd = socketMap[B(0)].fd;
     uint32_t dataLength = XL(0);
     uint8_t* buffer = X(0);
 
@@ -177,7 +197,7 @@ public:
   }
   
   static void doRecv() {
-    int socketFd = B(0);
+    int socketFd = socketMap[B(0)].fd;
     int recvOption = B(1);
     uint32_t length = L(0);
   
@@ -219,7 +239,9 @@ public:
   }
   
   static void doClose() {
-    int c = close(B(0));
+    int socketFd = socketMap[B(0)].fd;
+    socketMap.erase(B(0));
+    int c = close(socketFd);
     if (c == -1) {
       addByte(IP_COMMAND_ERROR);
       addByte(errno);
@@ -228,5 +250,12 @@ public:
     addByte(IP_COMMAND_SUCCESS);
   }
 };
+
+uint8_t TCPIPModule::clientVersionMajor = 0;
+uint8_t TCPIPModule::clientVersionMinor = 0;
+
+uint8_t TCPIPModule::nextSocketFd = 0;
+unordered_map<uint8_t, SocketInfo> TCPIPModule::socketMap;
+
 
 static TCPIPModule theTCPIPModule(TCPIP_MODULE_ID);
