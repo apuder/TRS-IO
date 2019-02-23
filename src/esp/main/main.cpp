@@ -20,7 +20,7 @@ extern "C" {
 
 void app_main(void)
 {
-  TrsIO::initModules();
+  init_trs_io();
   init_io();
   init_led();
   init_button();

@@ -14,6 +14,8 @@
 #define TRSIO_MAX_SEND_BUFFER (48 * 1024)
 #define TRSIO_MAX_PARAMETERS_PER_TYPE 5
 
+extern "C" void init_trs_io();
+
 typedef void (*proc_t)();
 
 typedef struct {
