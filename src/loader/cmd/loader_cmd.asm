@@ -8,7 +8,6 @@ CLS: equ 01c9h
     out (236),a
     ld a,3
     out (31),a
-    ld a,1
     out (31),a
     ld a,l
     out (31),a

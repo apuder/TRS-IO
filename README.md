@@ -1,4 +1,4 @@
-# RetroStoreCard
+# TRS-IO
 
 The RetroStoreCard connects a TRS-80 Model III to the <a href="https://retrostore.org">RetroStore</a>.
 The <a href="https://retrostore.org">RetroStore</a> hosts applications for the Tandy Radio Shack vintage computers
@@ -94,7 +94,7 @@ The status LED indicates the state of the RetroStoreCard:
  ```BASIC
  10 OUT236,16
  20 OUT31,3
- 30 OUT31,0
+ 30 OUT31,1
  40 N=INP(31)+256*INP(31)
  50 FOR X=1 TO N:POKE17151+X,INP(31):NEXT
  RUN

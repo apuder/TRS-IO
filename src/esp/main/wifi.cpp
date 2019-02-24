@@ -15,10 +15,10 @@
 #define WIFI_KEY_SSID "ssid"
 #define WIFI_KEY_PASSWD "passwd"
 
-#define SSID "RetroStoreCard"
-#define MDNS_NAME "rsc"
+#define SSID "TRS-IO"
+#define MDNS_NAME "trs-io"
 
-static const char* TAG = "RetroStoreCard";
+static const char* TAG = "TRS-IO";
 
 extern unsigned char index_html[];
 extern unsigned int index_html_len;
@@ -109,8 +109,6 @@ void mongoose_event_handler(struct mg_connection* nc,
       if (strncmp(uri, "/config", 7) == 0) {
         int l1 = mg_get_http_var(&message->body, "ssid", ssid, sizeof(ssid));
         int l2 = mg_get_http_var(&message->body, "passwd", passwd, sizeof(passwd));
-        printf("ssid: %s\n", ssid);
-        printf("passwd: %s\n", passwd);
         if ((l1 >= 0) && (l2 >= 0)) {
           storage_set_str(WIFI_KEY_SSID, ssid);
           storage_set_str(WIFI_KEY_PASSWD, passwd);

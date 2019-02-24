@@ -8,11 +8,23 @@
 #include <string.h>
 #include <assert.h>
 
-#define TRSIO_MAX_MODULES 5
-#define TRSIO_MAX_COMMANDS 15
-#define TRSIO_MAX_RECEIVE_BUFFER (48 * 1024)
-#define TRSIO_MAX_SEND_BUFFER (48 * 1024)
-#define TRSIO_MAX_PARAMETERS_PER_TYPE 5
+#define TRS_IO_PORT 31
+
+#define TRS_IO_CORE_MODULE_ID 0
+
+#define TRS_IO_SEND_VERSION 0
+#define TRS_IO_SEND_STATUS 1
+#define TRS_IO_CMD_CONFIGURE_WIFI 2
+#define TRS_IO_SEND_WIFI_SSID 3
+#define TRS_IO_SEND_WIFI_IP 4
+
+#define TRS_IO_MAX_MODULES 5
+#define TRS_IO_MAX_COMMANDS 15
+#define TRS_IO_MAX_RECEIVE_BUFFER (48 * 1024)
+#define TRS_IO_MAX_SEND_BUFFER (48 * 1024)
+#define TRS_IO_MAX_PARAMETERS_PER_TYPE 5
+
+extern "C" void init_trs_io();
 
 class TrsIO;
 
@@ -71,11 +83,11 @@ private:
     static uint16_t numParamBlob32;
 
     uint16_t numCommands;
-    command_t commands[TRSIO_MAX_COMMANDS];
+    command_t commands[TRS_IO_MAX_COMMANDS];
 
 protected:
     void addCommand(cmd_t proc, const char* signature) {
-        assert(numCommands != TRSIO_MAX_COMMANDS);
+        assert(numCommands != TRS_IO_MAX_COMMANDS);
         commands[numCommands].mod = this;
         commands[numCommands].cmd = proc;
         commands[numCommands].signature = signature;
@@ -84,7 +96,7 @@ protected:
 public:
 
     explicit TrsIO(int id) {
-        assert(id < TRSIO_MAX_MODULES);
+        assert(id < TRS_IO_MAX_MODULES);
         assert(modules[id] == nullptr);
         modules[id] = this;
         numCommands = 0;
@@ -93,7 +105,7 @@ public:
     static void init();
 
     inline static TrsIO* getModule(int id) {
-        assert(id < TRSIO_MAX_MODULES);
+        assert(id < TRS_IO_MAX_MODULES);
         currentModule = modules[id];
         return currentModule;
     }
@@ -154,31 +166,31 @@ protected:
     }
 
     inline static void addByte(uint8_t b) {
-        assert(sendPtr + sizeof(uint8_t) <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + sizeof(uint8_t) <= sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         *sendPtr++ = b;
     }
 
     inline static void addInt(uint16_t i) {
-        assert(sendPtr + sizeof(uint16_t) <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + sizeof(uint16_t) <= sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         *((uint16_t*) sendPtr) = i;
         sendPtr += sizeof(uint16_t);
     }
 
     inline static void addLong(uint32_t l) {
-        assert(sendPtr + sizeof(uint32_t) <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + sizeof(uint32_t) <= sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         *((uint32_t*) sendPtr) = l;
         sendPtr += sizeof(uint32_t);
     }
 
     inline static void addStr(const char* str) {
-        assert(sendPtr + strlen(str) < sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + strlen(str) < sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         do {
             addByte((uint8_t) *str);
         } while (*str++ != '\0');
     }
 
     inline static void addBlob16(void *blob, uint16_t len) {
-        assert(sendPtr + sizeof(uint16_t) + len <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + sizeof(uint16_t) + len <= sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         auto p = (uint8_t*) blob;
         addInt(len);
         for (uint16_t i = 0; i < len; i++) {
@@ -187,7 +199,7 @@ protected:
     }
 
     inline static void addBlob32(void *blob, uint32_t len) {
-        assert(sendPtr + sizeof(uint32_t) + len <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + sizeof(uint32_t) + len <= sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         auto p = (uint8_t*) blob;
         addLong(len);
         for (uint32_t i = 0; i < len; i++) {
@@ -196,12 +208,12 @@ protected:
     }
 
     inline static void skip(uint32_t len) {
-        assert(sendPtr + len <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + len <= sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         sendPtr += len;
     }
 
     inline static uint8_t* startBlob16() {
-        assert(sendPtr + sizeof(uint16_t) <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + sizeof(uint16_t) <= sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         assert(blob16 == nullptr);
         blob16 = (uint16_t*) sendPtr;
         sendPtr += sizeof(uint16_t);
@@ -215,7 +227,7 @@ protected:
     }
 
     inline static uint8_t* startBlob32() {
-        assert(sendPtr + sizeof(uint32_t) <= sendBuffer + TRSIO_MAX_SEND_BUFFER);
+        assert(sendPtr + sizeof(uint32_t) <= sendBuffer + TRS_IO_MAX_SEND_BUFFER);
         assert(blob32 == nullptr);
         blob32 = (uint32_t*) sendPtr;
         sendPtr += sizeof(uint32_t);
@@ -230,7 +242,7 @@ protected:
 
 public:
     static unsigned long getSendBufferFreeSize() {
-        return (sendBuffer + TRSIO_MAX_SEND_BUFFER) - sendPtr;
+        return (sendBuffer + TRS_IO_MAX_SEND_BUFFER) - sendPtr;
     }
 
     static unsigned long getSendBufferLen() {

@@ -8,11 +8,11 @@ static void print_details(window_t* wnd, uint8_t cmd, const char* label)
   char ch[2] = ".";
   
   wnd_print(wnd, false, label);
-  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
-  out(RS_PORT, cmd);
+  out(TRS_IO_PORT, TRS_IO_CORE_MODULE_ID);
+  out(TRS_IO_PORT, cmd);
   wait_for_esp();
   while (true) {
-    ch[0] = in(RS_PORT);
+    ch[0] = in(TRS_IO_PORT);
     if (ch[0] == '\0') {
       break;
     }
@@ -30,16 +30,11 @@ void about()
   
   init_window(&wnd, 0, 3, 0, 0);
   header(&wnd, "About");
-  wnd_print(&wnd, false, "RetroStore client version       : ");
-  wnd_print_int(&wnd, RS_CLIENT_VERSION_MAJOR);
-  wnd_print(&wnd, false, ".");
-  wnd_print_int(&wnd, RS_CLIENT_VERSION_MINOR);
-  wnd_cr(&wnd);
 
   scan_result = scan();
-  get_version(&revision, &version);
+  get_trs_io_version(&revision, &version);
 
-  wnd_print(&wnd, false, "RetroStoreCard hardware revision: ");
+  wnd_print(&wnd, false, "TRS-IO hardware revision    : ");
   if (scan_result == RS_STATUS_NO_RETROSTORE_CARD) {
     wnd_print(&wnd, false, "not present");
   } else {
@@ -47,7 +42,7 @@ void about()
   }
   wnd_cr(&wnd);
   
-  wnd_print(&wnd, false, "RetroStoreCard software version : ");
+  wnd_print(&wnd, false, "TRS-IO core module version  : ");
   if (scan_result == RS_STATUS_NO_RETROSTORE_CARD) {
     wnd_print(&wnd, false, "-");
   } else {
@@ -55,6 +50,23 @@ void about()
     wnd_print(&wnd, false, ".");
     wnd_print_int(&wnd, version & 0xff);
   }
+  wnd_cr(&wnd);
+
+  get_retrostore_version(&version);
+  wnd_print(&wnd, false, "RetroStore module version   : ");
+  if (scan_result == RS_STATUS_NO_RETROSTORE_CARD) {
+    wnd_print(&wnd, false, "-");
+  } else {
+    wnd_print_int(&wnd, version >> 8);
+    wnd_print(&wnd, false, ".");
+    wnd_print_int(&wnd, version & 0xff);
+  }
+  wnd_cr(&wnd);
+
+  wnd_print(&wnd, false, "RetroStore client version   : ");
+  wnd_print_int(&wnd, RS_CLIENT_VERSION_MAJOR);
+  wnd_print(&wnd, false, ".");
+  wnd_print_int(&wnd, RS_CLIENT_VERSION_MINOR);
   wnd_cr(&wnd);
 
   switch(scan_result) {
@@ -79,12 +91,12 @@ void about()
   default:
     status = "";
   }
-  wnd_print(&wnd, false, "RetroStoreCard online status    : ");
+  wnd_print(&wnd, false, "TRS-IO online status        : ");
   wnd_print(&wnd, false, status);
   wnd_cr(&wnd);
 
-  print_details(&wnd, RS_SEND_WIFI_SSID, "WiFi SSID: ");
-  print_details(&wnd, RS_SEND_WIFI_IP, "WiFi IP  : ");
+  print_details(&wnd, TRS_IO_SEND_WIFI_SSID, "WiFi SSID: ");
+  print_details(&wnd, TRS_IO_SEND_WIFI_IP, "WiFi IP  : ");
   
   wnd_show(&wnd, false);
   get_key();

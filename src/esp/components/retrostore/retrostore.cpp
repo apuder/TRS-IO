@@ -19,26 +19,32 @@ extern unsigned char rsclient_cmd[];
 extern unsigned int rsclient_cmd_len;
 
 
-#define RETROSTORE_MODULE_ID 3
-
 class RetroStoreModule : public TrsIO {
 public:
   RetroStoreModule(int id) : TrsIO(id) {
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendVersion), "");
     addCommand(static_cast<cmd_t>(&RetroStoreModule::sendLoaderCMD), "");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendBASIC), "");
     addCommand(static_cast<cmd_t>(&RetroStoreModule::sendCMD), "I");
     addCommand(static_cast<cmd_t>(&RetroStoreModule::sendAppTitle), "I");
     addCommand(static_cast<cmd_t>(&RetroStoreModule::sendAppDetails), "I");
-    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendStatus), "");
-    addCommand(static_cast<cmd_t>(&RetroStoreModule::configureWifi), "SS");
     addCommand(static_cast<cmd_t>(&RetroStoreModule::setQuery), "S");
-    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendVersion), "");
-    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendWifiSSID), "");
-    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendWifiIP), "");
-    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendBASIC), "");
+  }
+
+  void sendVersion() {
+    addByte(RS_VERSION_MAJOR);
+    addByte(RS_VERSION_MINOR);
   }
 
   void sendLoaderCMD() {
     addBlob16(loader_cmd_bin, loader_cmd_bin_len);
+  }
+
+  void sendBASIC() {
+    unsigned char* buf;
+    int size;
+    get_last_app_code(&buf, &size);
+    addBlob16(buf, size);
   }
 
   void sendCMD() {
@@ -76,43 +82,9 @@ public:
     addStr(details);
   }
 
-  void sendStatus() {
-    addByte(*get_wifi_status());
-  }
-
-  void configureWifi() {
-    const char* ssid = S(0);
-    const char* passwd = S(1);
-    set_wifi_credentials(ssid, passwd);
-  }
-
   void setQuery() {
     set_query(S(0));
-  }
-
-  void sendVersion() {
-    addByte(RS_RETROCARD_REVISION);
-    addByte(RS_RETROCARD_VERSION_MAJOR);
-    addByte(RS_RETROCARD_VERSION_MINOR);
-  }
-
-  void sendWifiSSID() {
-    const char* ssid = get_wifi_ssid();
-    addStr(ssid);
-  }
-
-  void sendWifiIP() {
-    const char* ip = get_wifi_ip();
-    addStr(ip);
-  }
-
-  void sendBASIC() {
-    unsigned char* buf;
-    int size;
-    get_last_app_code(&buf, &size);
-    addBlob16(buf, size);
-  }
-  
+  }  
 };
 
 static RetroStoreModule theRetroStoreModule(RETROSTORE_MODULE_ID);

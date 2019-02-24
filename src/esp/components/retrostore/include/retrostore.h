@@ -4,28 +4,17 @@
 
 #include "defs.h"
 
-#define RS_PORT 31
+#define RS_VERSION_MAJOR 2
+#define RS_VERSION_MINOR 0
 
-#define RS_STATE_READY 0
-#define RS_STATE_PARSE_PARAMS 1
-#define RS_STATE_NEED_STRING 2
-#define RS_STATE_NEED_2B 3
-#define RS_STATE_NEED_1B 4
-#define RS_STATE_SEND 5
+#define RETROSTORE_MODULE_ID 3
 
-#define RS_SEND_BOOT 0
-#define RS_SEND_CMD 1
-#define RS_SEND_APP_TITLE 2
-#define RS_SEND_APP_DETAILS 3
-#define RS_SEND_STATUS 4
-#define RS_CMD_CONFIGURE_WIFI 5
+#define RS_SEND_VERSION 0
+#define RS_SEND_LOADER_CMD 1
+#define RS_SEND_BASIC 2
+#define RS_SEND_CMD 3
+#define RS_SEND_APP_TITLE 4
+#define RS_SEND_APP_DETAILS 5
 #define RS_CMD_SET_QUERY 6
-#define RS_SEND_VERSION 7
-#define RS_SEND_WIFI_SSID 8
-#define RS_SEND_WIFI_IP 9
-#define RS_SEND_BASIC 10
-
-
-void set_wifi_credentials(const char* ssid, const char* passwd);
 
 #endif

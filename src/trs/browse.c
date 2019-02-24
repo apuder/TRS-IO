@@ -26,12 +26,12 @@ static void set_query(const char* query)
 {
   int i = 0;
   
-  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
-  out(RS_PORT, RS_CMD_SET_QUERY);
+  out(TRS_IO_PORT, RETROSTORE_MODULE_ID);
+  out(TRS_IO_PORT, RS_CMD_SET_QUERY);
   while (query != NULL && query[i] != '\0') {
-    out(RS_PORT, query[i++]);
+    out(TRS_IO_PORT, query[i++]);
   }
-  out(RS_PORT, 0);
+  out(TRS_IO_PORT, 0);
 
   wait_for_esp();
 }
@@ -41,10 +41,10 @@ static bool get_response(uint8_t cmd, uint16_t idx, const char** resp)
   int i;
   uint8_t ch;
   
-  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
-  out(RS_PORT, cmd);
-  out(RS_PORT, idx & 0xff);
-  out(RS_PORT, idx >> 8);
+  out(TRS_IO_PORT, RETROSTORE_MODULE_ID);
+  out(TRS_IO_PORT, cmd);
+  out(TRS_IO_PORT, idx & 0xff);
+  out(TRS_IO_PORT, idx >> 8);
 
   wait_for_esp();
 
@@ -53,7 +53,7 @@ static bool get_response(uint8_t cmd, uint16_t idx, const char** resp)
     if (i == sizeof(response) - 1) {
       break;
     }
-    ch = in(RS_PORT);
+    ch = in(TRS_IO_PORT);
     if (ch == '\0') {
       break;
     }

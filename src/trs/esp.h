@@ -13,6 +13,7 @@
 
 void wait_for_esp();
 uint8_t scan();
-void get_version(uint8_t* revision, uint16_t* version);
+void get_trs_io_version(uint8_t* revision, uint16_t* version);
+void get_retrostore_version(uint16_t* version);
 
 #endif

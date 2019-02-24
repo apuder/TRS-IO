@@ -25,7 +25,6 @@ void load_cmd(uint16_t id) {
 static uint8_t check(window_t* wnd) {
   static bool first_time = true;
   uint8_t status;
-  uint8_t revision;
   uint16_t version;
   
   wnd_switch_to_foreground(wnd);
@@ -41,7 +40,7 @@ static uint8_t check(window_t* wnd) {
     while(1);
   }
 
-  get_version(&revision, &version);
+  get_retrostore_version(&version);
   if ((version >> 8) != RS_CLIENT_VERSION_MAJOR) {
     wnd_popup(wnd, "Incompatible RetroStore card version!");
     while(1);

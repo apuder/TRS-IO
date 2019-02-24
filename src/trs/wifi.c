@@ -28,15 +28,15 @@ void configure_wifi()
     // No SSID provided. Exit
     return;
   }
-  out(RS_PORT, TRSIO_RETROSTORE_MODULE_ID);
-  out(RS_PORT, RS_CMD_CONFIGURE_WIFI);
+  out(TRS_IO_PORT, TRS_IO_CORE_MODULE_ID);
+  out(TRS_IO_PORT, TRS_IO_CMD_CONFIGURE_WIFI);
   i = 0;
   do {
-    out(RS_PORT, ssid[i]);
+    out(TRS_IO_PORT, ssid[i]);
   } while (ssid[i++] != '\0');
   i = 0;
   do {
-    out(RS_PORT, passwd[i]);
+    out(TRS_IO_PORT, passwd[i]);
   } while (passwd[i++] != '\0');
   wnd_popup(&wnd, "Reconfiguring WiFi...");
   for (i = 0; i < 10; i++) {

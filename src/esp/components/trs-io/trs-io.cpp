@@ -4,14 +4,14 @@
 
 using namespace std;
 
-uint8_t TrsIO::sendBuffer[TRSIO_MAX_SEND_BUFFER];
+uint8_t TrsIO::sendBuffer[TRS_IO_MAX_SEND_BUFFER];
 uint8_t* TrsIO::sendPtr;
 uint8_t* TrsIO::nextByteToSend;
 
-uint8_t TrsIO::receiveBuffer[TRSIO_MAX_RECEIVE_BUFFER];
+uint8_t TrsIO::receiveBuffer[TRS_IO_MAX_RECEIVE_BUFFER];
 uint8_t* TrsIO::receivePtr;
 
-TrsIO* TrsIO::modules[TRSIO_MAX_MODULES];
+TrsIO* TrsIO::modules[TRS_IO_MAX_MODULES];
 TrsIO* TrsIO::currentModule;
 
 uint8_t TrsIO::cmd;
@@ -20,14 +20,14 @@ uint32_t TrsIO::bytesToRead;
 
 const char* TrsIO::signatureParams;
 
-uint8_t* TrsIO::paramBytes[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint8_t* TrsIO::paramInts[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint8_t* TrsIO::paramLongs[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint8_t* TrsIO::paramStrs[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint8_t* TrsIO::paramBlobs16[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint16_t TrsIO::paramBlobs16Len[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint8_t* TrsIO::paramBlobs32[TRSIO_MAX_PARAMETERS_PER_TYPE];
-uint32_t TrsIO::paramBlobs32Len[TRSIO_MAX_PARAMETERS_PER_TYPE];
+uint8_t* TrsIO::paramBytes[TRS_IO_MAX_PARAMETERS_PER_TYPE];
+uint8_t* TrsIO::paramInts[TRS_IO_MAX_PARAMETERS_PER_TYPE];
+uint8_t* TrsIO::paramLongs[TRS_IO_MAX_PARAMETERS_PER_TYPE];
+uint8_t* TrsIO::paramStrs[TRS_IO_MAX_PARAMETERS_PER_TYPE];
+uint8_t* TrsIO::paramBlobs16[TRS_IO_MAX_PARAMETERS_PER_TYPE];
+uint16_t TrsIO::paramBlobs16Len[TRS_IO_MAX_PARAMETERS_PER_TYPE];
+uint8_t* TrsIO::paramBlobs32[TRS_IO_MAX_PARAMETERS_PER_TYPE];
+uint32_t TrsIO::paramBlobs32Len[TRS_IO_MAX_PARAMETERS_PER_TYPE];
 
 uint16_t* TrsIO::blob16;
 uint32_t* TrsIO::blob32;
@@ -78,7 +78,7 @@ bool TrsIO::outZ80(uint8_t byte) {
 
     switch (state) {
         case STATE_NEXT_MODULE:
-            if (byte >= TRSIO_MAX_MODULES || modules[byte] == nullptr) {
+            if (byte >= TRS_IO_MAX_MODULES || modules[byte] == nullptr) {
                 return true;
             }
             currentModule = modules[byte];
