@@ -182,5 +182,7 @@ uint8_t TrsIO::inZ80() {
 
 void TrsIO::process() {
     sendPtr = sendBuffer;
-    commands[cmd].proc();
+    TrsIO* mod = commands[cmd].mod;
+    cmd_t p = commands[cmd].cmd;
+    (mod->*(p))();
 }

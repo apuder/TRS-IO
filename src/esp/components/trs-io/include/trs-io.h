@@ -14,12 +14,13 @@
 #define TRSIO_MAX_SEND_BUFFER (48 * 1024)
 #define TRSIO_MAX_PARAMETERS_PER_TYPE 5
 
-extern "C" void init_trs_io();
+class TrsIO;
 
-typedef void (*proc_t)();
+typedef void (TrsIO::*cmd_t)();
 
 typedef struct {
-    proc_t proc;
+    TrsIO* mod;
+    cmd_t cmd;
     const char* signature;
 } command_t;
 
@@ -73,9 +74,10 @@ private:
     command_t commands[TRSIO_MAX_COMMANDS];
 
 protected:
-    void addCommand(proc_t proc, const char* signature) {
+    void addCommand(cmd_t proc, const char* signature) {
         assert(numCommands != TRSIO_MAX_COMMANDS);
-        commands[numCommands].proc = proc;
+        commands[numCommands].mod = this;
+        commands[numCommands].cmd = proc;
         commands[numCommands].signature = signature;
         numCommands++;
     }
@@ -230,7 +232,7 @@ public:
     static unsigned long getSendBufferFreeSize() {
         return (sendBuffer + TRSIO_MAX_SEND_BUFFER) - sendPtr;
     }
-    
+
     static unsigned long getSendBufferLen() {
         return sendPtr - sendBuffer;
     }

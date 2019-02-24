@@ -21,27 +21,27 @@ extern unsigned int rsclient_cmd_len;
 
 #define RETROSTORE_MODULE_ID 3
 
-class RetroStoreModule : public virtual TrsIO {
+class RetroStoreModule : public TrsIO {
 public:
- RetroStoreModule(int id) : TrsIO(id) {
-    addCommand(command_send_loader_cmd, "");
-    addCommand(command_send_cmd, "I");
-    addCommand(command_send_app_title, "I");
-    addCommand(command_send_app_details, "I");
-    addCommand(command_send_status, "");
-    addCommand(command_cmd_configure_wifi, "SS");
-    addCommand(command_cmd_set_query, "S");
-    addCommand(command_send_version, "");
-    addCommand(command_send_wifi_ssid, "");
-    addCommand(command_send_wifi_ip, "");
-    addCommand(command_send_basic, "");
+  RetroStoreModule(int id) : TrsIO(id) {
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendLoaderCMD), "");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendCMD), "I");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendAppTitle), "I");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendAppDetails), "I");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendStatus), "");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::configureWifi), "SS");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::setQuery), "S");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendVersion), "");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendWifiSSID), "");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendWifiIP), "");
+    addCommand(static_cast<cmd_t>(&RetroStoreModule::sendBASIC), "");
   }
 
-  static void command_send_loader_cmd() {
+  void sendLoaderCMD() {
     addBlob16(loader_cmd_bin, loader_cmd_bin_len);
   }
 
-  static void command_send_cmd() {
+  void sendCMD() {
     uint16_t idx = I(0);
     if (idx == 0xffff) {
       addBlob16(rsclient_cmd, rsclient_cmd_len);
@@ -64,49 +64,49 @@ public:
     }
   }
 
-  static void command_send_app_title() {
+  void sendAppTitle() {
     uint16_t idx = I(0);
     char* title = get_app_title(idx);
     addStr(title);
   }
 
-  static void command_send_app_details() {
+  void sendAppDetails() {
     uint16_t idx = I(0);
     char* details = get_app_details(idx);
     addStr(details);
   }
 
-  static void command_send_status() {
+  void sendStatus() {
     addByte(*get_wifi_status());
   }
 
-  static void command_cmd_configure_wifi() {
+  void configureWifi() {
     const char* ssid = S(0);
     const char* passwd = S(1);
     set_wifi_credentials(ssid, passwd);
   }
 
-  static void command_cmd_set_query() {
+  void setQuery() {
     set_query(S(0));
   }
 
-  static void command_send_version() {
+  void sendVersion() {
     addByte(RS_RETROCARD_REVISION);
     addByte(RS_RETROCARD_VERSION_MAJOR);
     addByte(RS_RETROCARD_VERSION_MINOR);
   }
 
-  static void command_send_wifi_ssid() {
+  void sendWifiSSID() {
     const char* ssid = get_wifi_ssid();
     addStr(ssid);
   }
 
-  static void command_send_wifi_ip() {
+  void sendWifiIP() {
     const char* ip = get_wifi_ip();
     addStr(ip);
   }
 
-  static void command_send_basic() {
+  void sendBASIC() {
     unsigned char* buf;
     int size;
     get_last_app_code(&buf, &size);
@@ -115,4 +115,4 @@ public:
   
 };
 
-RetroStoreModule theRetroStoreModule(RETROSTORE_MODULE_ID);
+static RetroStoreModule theRetroStoreModule(RETROSTORE_MODULE_ID);

@@ -56,35 +56,35 @@ typedef struct {
 
 #define TCPIP_MODULE_ID 1
 
-class TCPIPModule : public virtual TrsIO {
+class TCPIPModule : public TrsIO {
 private:
-  static uint8_t clientVersionMajor;
-  static uint8_t clientVersionMinor;
+  uint8_t clientVersionMajor;
+  uint8_t clientVersionMinor;
   
-  static uint8_t nextSocketFd;
-  static unordered_map<uint8_t, SocketInfo> socketMap;
+  uint8_t nextSocketFd;
+  unordered_map<uint8_t, SocketInfo> socketMap;
   
 public:
   TCPIPModule(int id) : TrsIO(id) {
-    addCommand(doVersion, "BB");
-    addCommand(doSocket, "BB");
-    addCommand(doConnectIP, "BBBBBI");
-    addCommand(doConnectHost, "BSI");
-    addCommand(doSend, "BX");
-    addCommand(doSendTo, "");
-    addCommand(doRecv, "BBL");
-    addCommand(doRecvFrom, "");
-    addCommand(doClose, "B");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doVersion), "BB");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doSocket), "BB");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doConnectIP), "BBBBBI");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doConnectHost), "BSI");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doSend), "BX");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doSendTo), "");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doRecv), "BBL");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doRecvFrom), "");
+    addCommand(static_cast<cmd_t>(&TCPIPModule::doClose), "B");
   }
 
-  static void doVersion() {
+  void doVersion() {
     clientVersionMajor = B(0);
     clientVersionMinor = B(1);
     addByte(IP_VERSION_MAJOR);
     addByte(IP_VERSION_MINOR);
   }
 
-  static int getSocketFamily(uint8_t t) {
+  int getSocketFamily(uint8_t t) {
     switch (t) {
     case IP_SOCKET_FAMILY_AF_INET:
       return AF_INET;
@@ -94,7 +94,7 @@ public:
     return -1;
   }
 
-  static int getSocketType(uint8_t t) {
+  int getSocketType(uint8_t t) {
     switch(t) {
     case IP_SOCKET_TYPE_SOCK_STREAM:
       return SOCK_STREAM;
@@ -104,7 +104,7 @@ public:
     return -1;
   }
 
-  static void doSocket() {
+  void doSocket() {
     int ipSocketFamily = getSocketFamily(B(0)); 
     int ipSocketType = getSocketType(B(1));
     int socketFd = socket(ipSocketFamily, ipSocketType, 0);
@@ -121,7 +121,7 @@ public:
     }
   }
 
-  static void doConnectHost() {
+  void doConnectHost() {
     int socketFd = socketMap[B(0)].fd;
     int ipSocketFamily = socketMap[B(0)].family;
     const char* hostname = S(0);
@@ -150,7 +150,7 @@ public:
     }
   }
 
-  static void doConnectIP() {
+  void doConnectIP() {
     int socketFd = socketMap[B(0)].fd;
     int ipSocketFamily = socketMap[B(0)].family;
     short port = I(0);
@@ -171,7 +171,7 @@ public:
     }
   }
   
-  static void doSend() {
+  void doSend() {
     int socketFd = socketMap[B(0)].fd;
     uint32_t dataLength = XL(0);
     uint8_t* buffer = X(0);
@@ -192,11 +192,11 @@ public:
     addLong(dataLength);
   }
 
-  static void doSendTo() {
+  void doSendTo() {
     assert(0);
   }
   
-  static void doRecv() {
+  void doRecv() {
     int socketFd = socketMap[B(0)].fd;
     int recvOption = B(1);
     uint32_t length = L(0);
@@ -234,11 +234,11 @@ public:
     endBlob32();
   }
 
-  static void doRecvFrom() {
+  void doRecvFrom() {
     assert(0);
   }
   
-  static void doClose() {
+  void doClose() {
     int socketFd = socketMap[B(0)].fd;
     socketMap.erase(B(0));
     int c = close(socketFd);
@@ -250,12 +250,5 @@ public:
     addByte(IP_COMMAND_SUCCESS);
   }
 };
-
-uint8_t TCPIPModule::clientVersionMajor = 0;
-uint8_t TCPIPModule::clientVersionMinor = 0;
-
-uint8_t TCPIPModule::nextSocketFd = 0;
-unordered_map<uint8_t, SocketInfo> TCPIPModule::socketMap;
-
 
 static TCPIPModule theTCPIPModule(TCPIP_MODULE_ID);
