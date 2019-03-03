@@ -5,3 +5,4 @@ kicad/*-cache.lib
 kicad/*.net
 kicad/*.bak
 kicad/*.kicad_pcb-bak
+kicad/sym-lib-table

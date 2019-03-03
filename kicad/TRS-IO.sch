@@ -36,100 +36,15 @@ F 3 "" H 5550 3750 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L Connector_Generic:Conn_02x25_Odd_Even J1
-U 1 1 5C6F3037
-P 6000 5550
-F 0 "J1" V 6004 4263 50  0000 R CNN
-F 1 "TRS-80" V 6095 4263 50  0000 R CNN
-F 2 "Connector_IDC:IDC-Header_2x25_P2.54mm_Vertical" H 6000 5550 50  0001 C CNN
-F 3 "~" H 6000 5550 50  0001 C CNN
-	1    6000 5550
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	7800 5850 7200 5850
-Wire Wire Line
-	7200 5850 7100 5850
-Connection ~ 7200 5850
-Wire Wire Line
-	7100 5850 7000 5850
-Connection ~ 7100 5850
-Wire Wire Line
-	7000 5850 6900 5850
-Connection ~ 7000 5850
-Connection ~ 6900 5850
-Connection ~ 6800 5850
-Wire Wire Line
-	6800 5850 6900 5850
-Wire Wire Line
-	6700 5850 6800 5850
-Wire Wire Line
-	6700 5850 6600 5850
-Connection ~ 6700 5850
-Wire Wire Line
-	6600 5850 6500 5850
-Connection ~ 6600 5850
-Wire Wire Line
-	6500 5850 6400 5850
-Connection ~ 6500 5850
-Wire Wire Line
-	6400 5850 6300 5850
-Connection ~ 6400 5850
-Wire Wire Line
-	6200 5850 6300 5850
-Connection ~ 6300 5850
-Wire Wire Line
-	6200 5850 6100 5850
-Connection ~ 6200 5850
-Wire Wire Line
-	6100 5850 6000 5850
-Connection ~ 6100 5850
-Wire Wire Line
-	6000 5850 5900 5850
-Connection ~ 6000 5850
-Wire Wire Line
-	5900 5850 5800 5850
-Connection ~ 5900 5850
-Wire Wire Line
-	5700 5850 5800 5850
-Connection ~ 5800 5850
-Wire Wire Line
-	5700 5850 5600 5850
-Connection ~ 5700 5850
-Wire Wire Line
-	5600 5850 5500 5850
-Connection ~ 5600 5850
-Wire Wire Line
-	5500 5850 5400 5850
-Connection ~ 5500 5850
-Wire Wire Line
-	5400 5850 5300 5850
-Connection ~ 5400 5850
-Wire Wire Line
-	5300 5850 5200 5850
-Connection ~ 5300 5850
-Wire Wire Line
-	5200 5850 5100 5850
-Connection ~ 5200 5850
-Wire Wire Line
-	5100 5850 5000 5850
-Connection ~ 5100 5850
-Wire Wire Line
-	5000 5850 4900 5850
-Connection ~ 5000 5850
-Wire Wire Line
-	4900 5850 4800 5850
-Connection ~ 4900 5850
-$Comp
 L power:GND #PWR0101
 U 1 1 5C6F8083
-P 7800 5850
-F 0 "#PWR0101" H 7800 5600 50  0001 C CNN
-F 1 "GND" H 7805 5677 50  0000 C CNN
-F 2 "" H 7800 5850 50  0001 C CNN
-F 3 "" H 7800 5850 50  0001 C CNN
-	1    7800 5850
-	0    -1   -1   0   
+P 4600 6400
+F 0 "#PWR0101" H 4600 6150 50  0001 C CNN
+F 1 "GND" H 4605 6227 50  0000 C CNN
+F 2 "" H 4600 6400 50  0001 C CNN
+F 3 "" H 4600 6400 50  0001 C CNN
+	1    4600 6400
+	1    0    0    -1  
 $EndComp
 $Comp
 L power:GND #PWR0102
@@ -731,14 +646,91 @@ Wire Wire Line
 	7650 2250 7650 2450
 Wire Wire Line
 	7550 2250 7550 2500
-Text Notes 7200 5350 0    50   ~ 0
-D0
-Text Notes 6500 5350 0    50   ~ 0
-D7
-Text Notes 6400 5350 0    50   ~ 0
-A0
-Text Notes 5700 5350 0    50   ~ 0
-A7
 Text Notes 8200 7650 0    50   ~ 0
 20190302
+$Comp
+L TRS-80-exp:TRS-80-IO J1
+U 1 1 5C7E5B69
+P 6000 5550
+F 0 "J1" V 6279 6838 50  0000 L CNN
+F 1 "TRS-80-IO" V 6370 6838 50  0000 L CNN
+F 2 "Connector_IDC:IDC-Header_2x25_P2.54mm_Vertical" H 6300 6950 50  0001 C CNN
+F 3 "" H 6000 5550 50  0001 C CNN
+	1    6000 5550
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	4600 6400 4800 6400
+Wire Wire Line
+	4800 6400 4900 6400
+Connection ~ 4800 6400
+Wire Wire Line
+	4900 6400 5000 6400
+Connection ~ 4900 6400
+Wire Wire Line
+	5000 6400 5100 6400
+Connection ~ 5000 6400
+Wire Wire Line
+	5200 6400 5100 6400
+Connection ~ 5100 6400
+Wire Wire Line
+	5200 6400 5300 6400
+Connection ~ 5200 6400
+Wire Wire Line
+	5300 6400 5400 6400
+Connection ~ 5300 6400
+Wire Wire Line
+	5400 6400 5500 6400
+Connection ~ 5400 6400
+Wire Wire Line
+	5500 6400 5600 6400
+Connection ~ 5500 6400
+Wire Wire Line
+	5600 6400 5700 6400
+Connection ~ 5600 6400
+Wire Wire Line
+	5700 6400 5800 6400
+Connection ~ 5700 6400
+Wire Wire Line
+	5800 6400 5900 6400
+Connection ~ 5800 6400
+Wire Wire Line
+	5900 6400 6000 6400
+Connection ~ 5900 6400
+Wire Wire Line
+	6000 6400 6100 6400
+Connection ~ 6000 6400
+Wire Wire Line
+	6100 6400 6200 6400
+Connection ~ 6100 6400
+Wire Wire Line
+	6200 6400 6300 6400
+Connection ~ 6200 6400
+Wire Wire Line
+	6300 6400 6400 6400
+Connection ~ 6300 6400
+Wire Wire Line
+	6400 6400 6500 6400
+Connection ~ 6400 6400
+Wire Wire Line
+	6500 6400 6600 6400
+Connection ~ 6500 6400
+Wire Wire Line
+	6600 6400 6700 6400
+Connection ~ 6600 6400
+Wire Wire Line
+	6700 6400 6800 6400
+Connection ~ 6700 6400
+Wire Wire Line
+	6800 6400 6900 6400
+Connection ~ 6800 6400
+Wire Wire Line
+	6900 6400 7000 6400
+Connection ~ 6900 6400
+Wire Wire Line
+	7000 6400 7100 6400
+Connection ~ 7000 6400
+Wire Wire Line
+	7100 6400 7200 6400
+Connection ~ 7100 6400
 $EndSCHEMATC
