@@ -1,7 +1,7 @@
 
 MAKE = make
 
-DIRS = ihex2cmd loader trs esp
+DIRS = ihex2cmd loader trs esp modules
 
 
 all:

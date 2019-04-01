@@ -120,4 +120,19 @@ The status LED indicates the state of the RetroStoreCard:
  * Cursor up/down: toggle menu selection
  * ENTER: select current menu selection
  * BREAK/CLEAR: exit to previous screen
+
+ ### FreHD
+
+TRS-IO is compatible with the popular FreHD hard disk emulator.
+ 
+ ```BASIC
+ 10 OUT236,16
+ 20 OUT197,3
+ 30 B=INP(196):REM B == 0xFE
+ 40 FOR X=0 TO 255:POKE20480+X,INP(196):NEXT
+ 50 POKE16526,0
+ 60 POKE16527,80
+ 70 PRINT USR(0)
+RUN
+ ```
  

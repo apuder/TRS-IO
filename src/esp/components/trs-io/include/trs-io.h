@@ -245,13 +245,5 @@ public:
         return (sendBuffer + TRS_IO_MAX_SEND_BUFFER) - sendPtr;
     }
 
-    static unsigned long getSendBufferLen() {
-        return sendPtr - sendBuffer;
-    }
-
-    static uint8_t* getSendBuffer() {
-        return sendBuffer;
-    }
-
     void process();
 };

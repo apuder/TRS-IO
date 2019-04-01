@@ -1,6 +1,8 @@
 
 #include "trs-io.h"
+#include "frehd.h"
 #include "io.h"
+#include "esp_task.h"
 #include "esp_event_loop.h"
 #include "tcpip.h"
 #include "retrostore.h"
@@ -8,29 +10,114 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
+
 // GPIO pins 12-19
 #define GPIO_DATA_BUS_MASK 0b11111111000000000000
+
+// GPIO(23): ESP_SEL_N (TRS-IO or Frehd)
+#define ESP_SEL_N 23
+#define ESP_SEL_TRS_IO 39
+#define WAIT_N 27
+#define IOBUSINT_N 25
+#define RD_N 36
+
+#define ADJUST(x) ((x) < 32 ? (x) : (x) - 32)
+
+#define MASK_ESP_SEL_N (1 << ADJUST(ESP_SEL_N))
+#define MASK64_ESP_SEL_N (1ULL << ESP_SEL_N)
+#define MASK_ESP_SEL_TRS_IO (1 << ADJUST(ESP_SEL_TRS_IO))
+#define MASK64_ESP_SEL_TRS_IO (1ULL << ESP_SEL_TRS_IO)
+#define MASK_WAIT_N (1 << ADJUST(WAIT_N))
+#define MASK64_WAIT_N (1ULL << WAIT_N)
+#define MASK_IOBUSINT_N (1 << ADJUST(IOBUSINT_N))
+#define MASK64_IOBUSINT_N (1ULL << IOBUSINT_N)
+#define MASK_RD_N (1 << ADJUST(RD_N))
+#define MASK64_RD_N (1ULL << RD_N)
 
 #define GPIO_OUTPUT_DISABLE(mask) GPIO.enable_w1tc = (mask)
 
 #define GPIO_OUTPUT_ENABLE(mask) GPIO.enable_w1ts = (mask)
 
 
+static inline void trs_io_read() {
+  uint8_t data = GPIO.in >> 12;
+  if (!TrsIO::outZ80(data)) {
+    REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
+  }
+}
+
+static inline void trs_io_write() {
+  REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
+  GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
+  uint32_t d = TrsIO::inZ80() << 12;
+  REG_WRITE(GPIO_OUT_W1TS_REG, d);
+  d = d ^ GPIO_DATA_BUS_MASK;
+  REG_WRITE(GPIO_OUT_W1TC_REG, d);
+}
+
+static inline void frehd_read() {
+  uint8_t port = GPIO.in1.data & 0x0f;
+  uint8_t data = GPIO.in >> 12;
+  frehd_out(port, data);
+}
+
+static inline void frehd_write() {
+  uint8_t port = GPIO.in1.data & 0x0f;
+  uint32_t d = frehd_in(port) << 12;
+
+  GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
+  REG_WRITE(GPIO_OUT_W1TS_REG, d);
+  d = d ^ GPIO_DATA_BUS_MASK;
+  REG_WRITE(GPIO_OUT_W1TC_REG, d);
+}
+
 void io_task(void* p)
 {
-  
-  while (true) {
-    while (TrsIO::outZ80(read_byte())) ;
-    int size = TrsIO::getSendBufferLen();
-    uint8_t* buf = TrsIO::getSendBuffer();
-    TrsIO::reset();
-    write_bytes(buf, size);
-  }
+  while(true) {
+    // Wait for access to ports 31 or 0xC0-0xCF
+    while (GPIO.in & MASK_ESP_SEL_N) ;
 
+    if (GPIO.in1.data & MASK_RD_N) {
+      // Read data
+      if (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) {
+        trs_io_read();
+      } else {
+        frehd_read();
+      }
+    } else {
+      // Write data
+      if (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) {
+        trs_io_write();
+      } else {
+        frehd_write();
+      }
+    }
+    
+    // Release WAIT_N
+    GPIO.out_w1ts = MASK_WAIT_N;
+
+    // Wait for ESP_SEL_N to be de-asserted
+    while (!(GPIO.in & MASK_ESP_SEL_N)) ;
+    
+    // Set WAIT_N to 0 for next IO command
+    GPIO.out_w1tc = MASK_WAIT_N;
+
+    GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);
+  }
+}
+
+void action_task(void* p)
+{
+  while (true) {
+    frehd_check_action();
+    vTaskDelay(1);
+  }
 }
 
 void init_io()
 {
+  init_frehd();
+
   gpio_config_t gpioConfig;
 
   // GPIO pins 12-19 (8 pins) are used for data bus
@@ -42,112 +129,36 @@ void init_io()
   gpioConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
-  
+
+  // GPIO pins 32-35 are use for A0-A3
+  gpioConfig.pin_bit_mask = GPIO_SEL_32 | GPIO_SEL_33 | GPIO_SEL_34 |
+    GPIO_SEL_35;
+  gpio_config(&gpioConfig);
+
   // Configure RD_N
-  gpioConfig.pin_bit_mask = GPIO_SEL_36;
+  gpioConfig.pin_bit_mask = MASK64_RD_N;
   gpio_config(&gpioConfig);
   
   // Configure ESP_SEL_N
-  gpioConfig.pin_bit_mask = GPIO_SEL_23;
+  gpioConfig.pin_bit_mask = MASK64_ESP_SEL_N;
+  gpio_config(&gpioConfig);
+
+  // Configure ESP_SEL_TRS_IO
+  gpioConfig.pin_bit_mask = MASK64_ESP_SEL_TRS_IO;
   gpio_config(&gpioConfig);
   
-  // Configure IOBUSINT_N & ESP_WAIT_N
-  gpioConfig.pin_bit_mask = GPIO_SEL_25 | GPIO_SEL_27;
+  // Configure IOBUSINT_N & WAIT_N
+  gpioConfig.pin_bit_mask = MASK64_IOBUSINT_N | MASK64_WAIT_N;
   gpioConfig.mode = GPIO_MODE_OUTPUT;
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
   
   // Set IOBUSINT_N to 0
-  gpio_set_level(GPIO_NUM_25, 0);
+  gpio_set_level((gpio_num_t) IOBUSINT_N, 0);
   
   // Set ESP_WAIT_N to 0
-  gpio_set_level(GPIO_NUM_27, 0);
-  
-  // Configure push button
-  gpioConfig.pin_bit_mask = GPIO_SEL_22;
-  gpioConfig.mode = GPIO_MODE_INPUT;
-  gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
-  gpio_config(&gpioConfig);
+  gpio_set_level((gpio_num_t) WAIT_N, 0);
 
   xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, 1, NULL, 1);
-}
-
-uint8_t read_byte()
-{
-  uint8_t data;
-  bool done = false;
-
-  while (!done) {
-    while (GPIO.in & (1 << GPIO_NUM_23)) ;
-
-    if (GPIO.in1.data & (1 << (GPIO_NUM_36 - 32))) {
-      // Read data
-      data = GPIO.in >> 12;
-      done = true;
-    } else {
-      // Ignore write request
-    }
-    
-    // Release ESP_WAIT_N
-    GPIO.out_w1ts = (1 << GPIO_NUM_27);
-    
-    // Wait for ESP_SEL_N to be de-asserted
-    while (!(GPIO.in & (1 << GPIO_NUM_23))) ;
-    
-    // Set SEL_WAIT_N to 0 for next IO command
-    GPIO.out_w1tc = (1 << GPIO_NUM_27);
-  }
-  return data;
-}
-
-
-void write_bytes(uint8_t* data, uint16_t len)
-{
-  // Assert IOBUSINT to signal TRS80 that we are ready to send
-  REG_WRITE(GPIO_OUT_W1TS_REG, 1 << GPIO_NUM_25);
-  
-  if (len == 0) {
-    for (volatile int i = 0; i < 1000; i++) ;
-    // De-assert IOBUSINT
-    REG_WRITE(GPIO_OUT_W1TC_REG, 1 << GPIO_NUM_25);
-    return;
-  }
-  
-  for (int i = 0; i < len; i++) {
-    bool ignore = false;
-    
-    while (GPIO.in & (1 << GPIO_NUM_23)) ;
-    
-    // De-assert IOBUSINT
-    REG_WRITE(GPIO_OUT_W1TC_REG, 1 << GPIO_NUM_25);
-
-    if (GPIO.in1.data & (1 << (GPIO_NUM_36 - 32))) {
-      // Ignore read request
-      ignore = true;
-    } else {
-      GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
-      // Write to bus
-      uint32_t d = *data << 12;
-      REG_WRITE(GPIO_OUT_W1TS_REG, d);
-      d = d ^ GPIO_DATA_BUS_MASK;
-      REG_WRITE(GPIO_OUT_W1TC_REG, d);
-      data++;
-    }
-    
-    // Release ESP_WAIT_N
-    GPIO.out_w1ts = (1 << GPIO_NUM_27);
-    
-    // Wait for ESP_SEL_N to be de-asserted
-    while (!(GPIO.in & (1 << GPIO_NUM_23))) ;
-    
-    // Set SEL_WAIT_N to 0 for next IO command
-    GPIO.out_w1tc = (1 << GPIO_NUM_27);
-    
-    if (ignore) {
-      i--;
-      continue;
-    }
-    
-    GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);
-  }
+  xTaskCreatePinnedToCore(action_task, "action", 6000, NULL, 1, NULL, 0);
 }
