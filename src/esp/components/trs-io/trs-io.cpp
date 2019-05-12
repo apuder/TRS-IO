@@ -126,8 +126,6 @@ bool TrsIO::outZ80(uint8_t byte) {
 
     if (*signatureParams == '\0') {
         state = STATE_SEND;
-        currentModule->process();
-        nextByteToSend = sendBuffer;
         return false;
     }
 
@@ -178,6 +176,11 @@ uint8_t TrsIO::inZ80() {
         return 0xff;
     }
     return *nextByteToSend++;
+}
+
+void TrsIO::processInBackground() {
+  currentModule->process();
+  nextByteToSend = sendBuffer;
 }
 
 void TrsIO::process() {

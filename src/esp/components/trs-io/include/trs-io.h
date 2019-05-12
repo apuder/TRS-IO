@@ -240,10 +240,11 @@ protected:
         blob32 = nullptr;
     }
 
+    void process();
+
 public:
+    static void processInBackground();
     static unsigned long getSendBufferFreeSize() {
         return (sendBuffer + TRS_IO_MAX_SEND_BUFFER) - sendPtr;
     }
-
-    void process();
 };

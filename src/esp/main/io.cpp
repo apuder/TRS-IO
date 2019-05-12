@@ -39,18 +39,23 @@
 
 #define GPIO_OUTPUT_ENABLE(mask) GPIO.enable_w1ts = (mask)
 
+static volatile bool trigger_trs_io_action = false;
 
 static inline void trs_io_read() {
-  uint8_t data = GPIO.in >> 12;
-  if (!TrsIO::outZ80(data)) {
-    REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
+  REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
+  if (!trigger_trs_io_action) {
+    uint8_t data = GPIO.in >> 12;
+    if (!TrsIO::outZ80(data)) {
+      trigger_trs_io_action = true;
+    }
   }
 }
 
 static inline void trs_io_write() {
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
   GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
-  uint32_t d = TrsIO::inZ80() << 12;
+  uint32_t d = trigger_trs_io_action ? 0xff : TrsIO::inZ80();
+  d <<= 12;
   REG_WRITE(GPIO_OUT_W1TS_REG, d);
   d = d ^ GPIO_DATA_BUS_MASK;
   REG_WRITE(GPIO_OUT_W1TC_REG, d);
@@ -111,6 +116,13 @@ void action_task(void* p)
 {
   while (true) {
     frehd_check_action();
+
+    if (trigger_trs_io_action) {
+      TrsIO::processInBackground();
+      trigger_trs_io_action = false;
+      REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
+    }
+      
     vTaskDelay(1);
   }
 }
