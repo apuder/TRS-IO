@@ -1,13 +1,15 @@
 
 #include "serial-io.h"
 #include "driver/uart.h"
+#include "driver/gpio.h"
 
-#define ECHO_TEST_TXD  (GPIO_NUM_1)
-#define ECHO_TEST_RXD  (GPIO_NUM_3)
-#define ECHO_TEST_RTS  (UART_PIN_NO_CHANGE)
-#define ECHO_TEST_CTS  (UART_PIN_NO_CHANGE)
 
-#define BUF_SIZE (1024)
+#define SERIAL_IO_TXD  GPIO_NUM_1
+#define SERIAL_IO_RXD  GPIO_NUM_3
+#define SERIAL_IO_RTS  (UART_PIN_NO_CHANGE)
+#define SERIAL_IO_CTS  (UART_PIN_NO_CHANGE)
+
+#define BUF_SIZE 1024
 
 int16_t read_byte() {
   int len;
@@ -48,7 +50,7 @@ void init_serial_io() {
     .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
   };
   uart_param_config(UART_NUM_0, &uart_config);
-  uart_set_pin(UART_NUM_0, ECHO_TEST_TXD, ECHO_TEST_RXD, ECHO_TEST_RTS, ECHO_TEST_CTS);
+  uart_set_pin(UART_NUM_0, SERIAL_IO_TXD, SERIAL_IO_RXD, SERIAL_IO_RTS, SERIAL_IO_CTS);
   uart_driver_install(UART_NUM_0, BUF_SIZE * 2, 0, 0, NULL, 0);
 }
 
