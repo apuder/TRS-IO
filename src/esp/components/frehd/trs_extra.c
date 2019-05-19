@@ -23,6 +23,8 @@
 #include "action.h"
 #include "trs_hard.h"
 #include "trs_extra.h"
+#include <time.h>
+#include <sys/time.h>
 //#include "ds1307.h"
 //#include "eeprom.h"
 //#include "bootloader.inc"
@@ -89,19 +91,21 @@ UCHAR trs_extra_version(UCHAR step)
  */
 UCHAR trs_extra_gettime(UCHAR step)
 {
-	state_size2 = 6;
-	//INTCONbits.GIEL = 0;
-#if 0
-    extra_buffer[TRS80_SEC] = time[DS1307_SEC];
-    extra_buffer[TRS80_MIN] = time[DS1307_MIN];
-    extra_buffer[TRS80_HOUR] = time[DS1307_HOUR];
-    extra_buffer[TRS80_YEAR] = time[DS1307_YEAR];
-    extra_buffer[TRS80_DAY] = time[DS1307_DAY];
-    extra_buffer[TRS80_MONTH] = time[DS1307_MONTH];
-#endif
-    //INTCONbits.GIEL = 1;
-		
-	return DEFAULT_STATUS;	
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+  localtime_r(&now, &timeinfo);
+
+  state_size2 = 6;
+
+  extra_buffer[TRS80_SEC] = timeinfo.tm_sec;
+  extra_buffer[TRS80_MIN] = timeinfo.tm_min;
+  extra_buffer[TRS80_HOUR] = timeinfo.tm_hour;
+  extra_buffer[TRS80_YEAR] = (timeinfo.tm_year - 100) & 0xff;
+  extra_buffer[TRS80_DAY] = timeinfo.tm_mday;
+  extra_buffer[TRS80_MONTH] = timeinfo.tm_mon + 1;
+
+  return DEFAULT_STATUS;
 }
 
 

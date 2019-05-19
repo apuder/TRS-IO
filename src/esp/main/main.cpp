@@ -10,6 +10,7 @@
 #include "retrostore.h"
 #include "backend.h"
 #include "trs-io.h"
+#include "ntp_sync.h"
 
 
 extern "C" {
@@ -30,6 +31,8 @@ void app_main(void)
   
   init_ota();
   init_wifi();
+
+  init_time();
 
   vTaskDelete(NULL);
 }

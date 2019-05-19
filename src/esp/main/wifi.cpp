@@ -4,6 +4,7 @@
 #include "ota.h"
 #include "led.h"
 #include "storage.h"
+#include "ntp_sync.h"
 #include "esp_wifi.h"
 #include "esp_mock.h"
 #include "mdns.h"
@@ -115,6 +116,12 @@ void mongoose_event_handler(struct mg_connection* nc,
           response = status_html;
           response_len = status_html_len;
           reboot = true;
+        }
+
+        char tz[33];
+        int l3 = mg_get_http_var(&message->body, "tz", tz, sizeof(tz));
+        if (l3 > 0) {
+          set_timezone(tz);
         }
       }
       mg_send_head(nc, 200, response_len, "Content-Type: text/html");
