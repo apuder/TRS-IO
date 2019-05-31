@@ -7,5 +7,5 @@
 # please read the ESP-IDF documents if you need to do this.
 #
 
-$(call compile_only_if,$(CONFIG_ENABLE_TRSIO_OTA),ota.o)
-$(call compile_only_if_not,$(CONFIG_ENABLE_TRSIO_OTA),ota-dummy.o)
+$(call compile_only_if,$(CONFIG_TRS_IO_ENABLE_OTA),ota.o)
+$(call compile_only_if_not,$(CONFIG_TRS_IO_ENABLE_OTA),ota-dummy.o)

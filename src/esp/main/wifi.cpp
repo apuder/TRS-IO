@@ -183,9 +183,16 @@ static void wifi_init_sta()
     .sta = {},
   };
 
+  status = RS_STATUS_WIFI_CONNECTING;
+
+#ifdef CONFIG_TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
+  strcpy(ssid, CONFIG_TRS_IO_SSID);
+  strcpy(passwd, CONFIG_TRS_IO_PASSWD);
+#else
   storage_get_str(WIFI_KEY_SSID, ssid, sizeof(ssid));
   storage_get_str(WIFI_KEY_PASSWD, passwd, sizeof(passwd));
-  
+#endif
+
   ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", ssid);
   ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", passwd);
 
@@ -205,8 +212,10 @@ void init_wifi()
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
+#ifdef CONFIG_TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
+  wifi_init_sta();
+#else
   if (storage_has_key(WIFI_KEY_SSID) && storage_has_key(WIFI_KEY_PASSWD)) {
-    status = RS_STATUS_WIFI_CONNECTING;
     wifi_init_sta();
   } else {
     status = RS_STATUS_WIFI_NOT_CONFIGURED;
@@ -214,4 +223,5 @@ void init_wifi()
     wifi_init_ap();
     xTaskCreatePinnedToCore(mg_task, "mg", 3000, NULL, 1, NULL, 0);
   }
+#endif
 }

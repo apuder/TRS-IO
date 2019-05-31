@@ -1,7 +1,35 @@
-config ENABLE_TRSIO_OTA
-    bool "Enable OTA for TrsIO."
-    default "n"
-    help
+menu "TRS-IO"
+
+    config TRS_IO_ENABLE_OTA
+        bool "Enable OTA for TRS-IO"
+        default n
+        help
         Select this if the OTA mechanism should be enabled.
         This might immediately overwrite the flashed firmware.
         Should be disabled during development.
+
+    config TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
+        bool "Use compile-time credentials for WiFi"
+        default n
+        help
+        If enabled, TRS-IO will use hard-coded credentials to
+        connect to the specified WiFi network. If disabled,
+        TRS-IO will create a WiFi Access Point to allow
+        provisioning of WiFi credentials at runtime.
+
+    config TRS_IO_SSID
+        string "WiFi SSID"
+        depends on TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
+        default ""
+        help
+        Sets a compile-time SSID that TRS-IO will connect to.
+
+    config TRS_IO_PASSWD
+        string "WiFi password"
+        depends on TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
+        default ""
+        help
+        Set a compile-time password that TRS-IO will use
+        to connect to a given WiFi.
+
+endmenu
