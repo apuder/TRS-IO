@@ -79,6 +79,7 @@ static inline void frehd_write() {
 
 void io_task(void* p)
 {
+  portDISABLE_INTERRUPTS();
   while(true) {
     // Wait for access to ports 31 or 0xC0-0xCF
     while (GPIO.in & MASK_ESP_SEL_N) ;
@@ -172,6 +173,7 @@ void init_io()
   // Set ESP_WAIT_N to 0
   gpio_set_level((gpio_num_t) WAIT_N, 0);
 
-  xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, tskIDLE_PRIORITY + 2,
+                          NULL, 1);
   xTaskCreatePinnedToCore(action_task, "action", 6000, NULL, 1, NULL, 0);
 }
