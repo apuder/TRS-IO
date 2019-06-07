@@ -3,6 +3,7 @@
 #include "wifi.h"
 #include "ota.h"
 #include "led.h"
+#include "io.h"
 #include "storage.h"
 #include "ntp_sync.h"
 #include "esp_wifi.h"
@@ -65,6 +66,7 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     status = RS_STATUS_WIFI_CONNECTED;
     trigger_ota_check();
     set_led(false, true, false, false, true);
+    io_start();
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
     ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",

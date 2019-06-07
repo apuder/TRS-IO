@@ -26,7 +26,11 @@ void app_main(void)
   init_storage();
 
   if (is_button_pressed()) {
+#ifdef TRS_IO_BUTTON_ONLY_AT_STARTUP
+    storage_erase();
+#else
     switch_to_factory();
+#endif
   }
   
   init_ota();

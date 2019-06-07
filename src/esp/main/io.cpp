@@ -10,7 +10,10 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
+#include "freertos/event_groups.h"
 
+
+static EventGroupHandle_t event_group;
 
 // GPIO pins 12-19
 #define GPIO_DATA_BUS_MASK 0b11111111000000000000
@@ -77,9 +80,22 @@ static inline void frehd_write() {
   REG_WRITE(GPIO_OUT_W1TC_REG, d);
 }
 
+void io_start()
+{
+  xEventGroupSetBits(event_group, 1);
+}
+
 void io_task(void* p)
 {
+  // Wait for WiFi to be connected
+  while(xEventGroupWaitBits(event_group, 1,
+                            pdTRUE, // Clear on exit
+                            pdFALSE, // Wait for all bits
+                            portMAX_DELAY) == 0) ;
+
+  // Turn off interrupts on core 1
   portDISABLE_INTERRUPTS();
+
   while(true) {
     // Wait for access to ports 31 or 0xC0-0xCF
     while (GPIO.in & MASK_ESP_SEL_N) ;
@@ -130,6 +146,9 @@ void action_task(void* p)
 
 void init_io()
 {
+  event_group = xEventGroupCreate();
+  xEventGroupClearBits(event_group, 0xff);
+
   init_frehd();
 
   gpio_config_t gpioConfig;

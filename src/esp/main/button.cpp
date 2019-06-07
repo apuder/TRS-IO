@@ -8,6 +8,7 @@
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
+#ifndef TRS_IO_BUTTON_ONLY_AT_STARTUP
 static void IRAM_ATTR isr_button(void* arg)
 {
   static int64_t then;
@@ -22,6 +23,7 @@ static void IRAM_ATTR isr_button(void* arg)
     }
   }
 }
+#endif
 
 void init_button()
 {
@@ -32,10 +34,16 @@ void init_button()
   gpioConfig.mode = GPIO_MODE_INPUT;
   gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
   gpioConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
+#ifdef TRS_IO_BUTTON_ONLY_AT_STARTUP
+  gpioConfig.intr_type = GPIO_INTR_DISABLE;
+#else
   gpioConfig.intr_type = GPIO_INTR_ANYEDGE;
+#endif
   gpio_config(&gpioConfig);
+#ifndef TRS_IO_BUTTON_ONLY_AT_STARTUP
   gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
   gpio_isr_handler_add(GPIO_BUTTON, isr_button, NULL);
+#endif
 }
 
 bool is_button_pressed()
