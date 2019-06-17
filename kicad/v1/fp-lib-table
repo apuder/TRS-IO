@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name HiLetGoESP32s)(type KiCad)(uri ${KIPRJMOD}/HiLetGoESP32s.pretty)(options "")(descr ""))
+  (lib (name TRSIO)(type KiCad)(uri ${KIPRJMOD}/TRSIO.pretty)(options "")(descr ""))
+)
