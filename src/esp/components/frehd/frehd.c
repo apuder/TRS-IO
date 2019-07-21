@@ -4,10 +4,7 @@
 #include "trs_hard.h"
 #include "trs_extra.h"
 #include "action.h"
-
-#ifdef ESP_PLATFORM
-#include "serial-io.h"
-#endif
+#include "fileio.h"
 
 //#define RUN_FILE_IO_TESTS
 void test_file_io();
@@ -90,9 +87,6 @@ void init_frehd()
 {
   pic_init();
   frehd_init();
-#ifdef ESP_PLATFORM
-  init_serial_io();
-#endif
 
 #ifdef RUN_FILE_IO_TESTS
   test_file_io();

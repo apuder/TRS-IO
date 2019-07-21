@@ -2,6 +2,10 @@
 #ifndef __FILEIO_H__
 #define __FILEIO_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <dirent.h>
 
@@ -58,7 +62,7 @@ typedef char TCHAR;
 typedef uint32_t FSIZE_t;
 
 typedef struct {
-    FILE*   f;          /* Object identifier */
+    uint16_t   f;          /* Object identifier */
 } FIL;
 
 typedef struct {
@@ -70,7 +74,7 @@ typedef struct {
 } FILINFO;
 
 typedef struct {
-    DIR*   dir;        /* Object identifier */
+    uint16_t  dir;        /* Object identifier */
 } DIR_;
 
 void f_log(const char* format, ...);
@@ -130,5 +134,9 @@ FRESULT f_stat (
         const TCHAR* path,  /* [IN] Object name */
         FILINFO* fno        /* [OUT] FILINFO structure */
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
