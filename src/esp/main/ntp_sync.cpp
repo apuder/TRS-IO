@@ -2,8 +2,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include "storage.h"
-#include "esp_sntp.h"
-#include "ntp_sync.h"
+#include "lwip/apps/sntp.h"
 
 #define KEY_TZ "tz"
 

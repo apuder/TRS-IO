@@ -113,8 +113,10 @@ static bool pb_app_title_callback(pb_istream_t* stream, const pb_field_t* field,
 
   app_title_t* app_title = &apps[num_apps];
 
-  snprintf(app_title->title, sizeof(((app_title_t*) 0)->title), "%s (%s)",
-           app.name, app.author);
+  if (snprintf(app_title->title, sizeof(((app_title_t*) 0)->title), "%s (%s)",
+               app.name, app.author) < 0) {
+    app_title->title[0] = '\0';
+  }
   strcpy(app_title->id, app.id);
 
 #if 0
@@ -173,9 +175,11 @@ static bool pb_app_details_callback(pb_istream_t* stream,
     return false;
   }
 
-  snprintf(app_details, sizeof(app_details), "%s\nAuthor: %s\n"
-           "Year: %d\n\n%s", app.name,app.author, app.release_year,
-           app.description);
+  if (snprintf(app_details, sizeof(app_details), "%s\nAuthor: %s\n"
+               "Year: %d\n\n%s", app.name,app.author, app.release_year,
+               app.description) < 0) {
+    app_details[0] = '\0';
+  }
 
   return true;
 }
