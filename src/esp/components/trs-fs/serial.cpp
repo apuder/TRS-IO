@@ -104,7 +104,7 @@ TRS_FS_SERIAL::TRS_FS_SERIAL() {
   init_serial_io();
 }
   
-void TRS_FS_SERIAL::f_log_impl(const char* msg) {
+void TRS_FS_SERIAL::f_log(const char* msg) {
   send_marker();
   write_byte(F_LOG);
   write_string(msg);
@@ -122,7 +122,7 @@ FRESULT TRS_FS_SERIAL::f_open (
   write_string(path);
   FRESULT fr = read_fresult();
   if (fr == FR_OK) {
-    fp->f = read_word();
+    fp->f = (void*) read_word();
   }
   return fr;
 }
@@ -136,7 +136,7 @@ FRESULT TRS_FS_SERIAL::f_opendir (
   write_string(path);
   FRESULT fr = read_fresult();
   if (fr == FR_OK) {
-    dp->dir = read_word();
+    dp->dir = (void*) read_word();
   }
   return fr;
 }
@@ -149,7 +149,7 @@ FRESULT TRS_FS_SERIAL::f_write (
                                 ) {
   send_marker();
   write_byte(F_WRITE);
-  write_word(fp->f);
+  write_word((uint32_t) fp->f);
   write_word(btw);
   write_blob(buff, btw);
 #if 0
@@ -171,7 +171,7 @@ FRESULT TRS_FS_SERIAL::f_read (
                                ) {
   send_marker();
   write_byte(F_READ);
-  write_word(fp->f);
+  write_word((uint32_t) fp->f);
   write_word(btr);
   FRESULT fr = read_fresult();
   *br = read_word();
@@ -191,7 +191,7 @@ FRESULT TRS_FS_SERIAL::f_readdir (
                                   ) {
   send_marker();
   write_byte(F_READDIR);
-  write_word(dp->dir);
+  write_word((uint32_t) dp->dir);
   FRESULT fr = read_fresult();
   if (fr == FR_OK) {
     read_string(fno->fname);
@@ -219,7 +219,7 @@ FRESULT TRS_FS_SERIAL::f_lseek (
                                 ) {
   send_marker();
   write_byte(F_LSEEK);
-  write_word(fp->f);
+  write_word((uint32_t) fp->f);
   write_long(ofs);
   FRESULT fr = read_fresult();
   return fr;
@@ -230,7 +230,7 @@ FRESULT TRS_FS_SERIAL::f_close (
                                 ) {
   send_marker();
   write_byte(F_CLOSE);
-  write_word(fp->f);
+  write_word((uint32_t) fp->f);
   FRESULT fr = read_fresult();
   return fr;
 }

@@ -1,11 +1,11 @@
-#ifndef TRS_FS_SERIAL_H
-#define TRS_FS_SERIAL_H
+#ifndef TRS_FS_SMB_H
+#define TRS_FS_SMB_H
 
 #include "trs-fs.h"
 
-class TRS_FS_SERIAL : virtual public TRS_FS {
+class TRS_FS_SMB : virtual public TRS_FS {
 public:
-  TRS_FS_SERIAL();
+  TRS_FS_SMB();
   void f_log(const char* msg);
   FRESULT f_open (
                   FIL* fp,           /* [OUT] Pointer to the file object structure */

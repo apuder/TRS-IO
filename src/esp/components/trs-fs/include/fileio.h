@@ -62,7 +62,7 @@ typedef char TCHAR;
 typedef uint32_t FSIZE_t;
 
 typedef struct {
-    uint16_t   f;          /* Object identifier */
+    void*   f;          /* Object identifier */
 } FIL;
 
 typedef struct {
@@ -74,7 +74,7 @@ typedef struct {
 } FILINFO;
 
 typedef struct {
-    uint16_t  dir;        /* Object identifier */
+    void*  dir;        /* Object identifier */
 } DIR_;
 
 void f_log(const char* format, ...);

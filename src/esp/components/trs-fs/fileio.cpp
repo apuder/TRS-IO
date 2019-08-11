@@ -3,7 +3,15 @@
 
 
 void f_log(const char* format, ...) {
-  trs_fs->f_log(format);
+#if 0
+  char* msg;
+  va_list args;
+  va_start(args, format);
+  vasprintf(&msg, format, args);
+  va_end(args);
+  trs_fs->f_log(msg);
+  free(msg);
+#endif
 }
 
 FRESULT f_open (
@@ -11,23 +19,32 @@ FRESULT f_open (
                 const TCHAR* path, /* [IN] File name */
                 BYTE mode          /* [IN] Mode flags */
                 ) {
-  return trs_fs->f_open(fp, path, mode);
+  f_log("f_open: %s", path);
+  FRESULT err = trs_fs->f_open(fp, path, mode);
+  f_log("err: %d", err);
+  return err;
 }
 
 FRESULT f_opendir (
                    DIR_* dp,           /* [OUT] Pointer to the directory object structure */
                    const TCHAR* path  /* [IN] Directory name */
                    ) {
-  return trs_fs->f_opendir(dp, path);
+  f_log("f_opendir: %s", path);
+  FRESULT err = trs_fs->f_opendir(dp, path);
+  f_log("err: %d", err);
+  return err;
 }
 
 FRESULT f_write (
                  FIL* fp,          /* [IN] Pointer to the file object structure */
                  const void* buff, /* [IN] Pointer to the data to be written */
                  UINT btw,         /* [IN] Number of bytes to write */
-                 UINT* bw          /* [OUT] Pointer to the variable to return number of bytes written */
+                 UINT* bw          /* [OUT] Pointer to the variable to FRESULT err = number of bytes written */
                  ) {
-  return trs_fs->f_write(fp, buff, btw, bw);
+  f_log("f_write");
+  FRESULT err = trs_fs->f_write(fp, buff, btw, bw);
+  f_log("err: %d", err);
+  return err;
 }
 
 FRESULT f_read (
@@ -36,50 +53,75 @@ FRESULT f_read (
                 UINT btr,    /* [IN] Number of bytes to read */
                 UINT* br     /* [OUT] Number of bytes read */
                 ) {
-  return trs_fs->f_read(fp, buff, btr, br);
+  f_log("f_read");
+  FRESULT err = trs_fs->f_read(fp, buff, btr, br);
+  f_log("err: %d", err);
+  return err;
 }
 
 FRESULT f_readdir (
                    DIR_* dp,      /* [IN] Directory object */
                    FILINFO* fno  /* [OUT] File information structure */
                    ) {
-  return trs_fs->f_readdir(dp, fno);
+  f_log("f_readdir");
+  FRESULT err = trs_fs->f_readdir(dp, fno);
+  f_log("fn : %s", fno->fname);
+  f_log("err: %d", err);
+  return err;
 }
 
 FSIZE_t f_tell (
                 FIL* fp   /* [IN] File object */
                 ) {
-  return trs_fs->f_tell(fp);
+  f_log("f_tell");
+  FSIZE_t size = trs_fs->f_tell(fp);
+  f_log("size: %d", size);
+  return size;
 }
 
 FRESULT f_sync (
                 FIL* fp     /* [IN] File object */
                 ) {
-  return trs_fs->f_sync(fp);
+  f_log("f_sync");
+  FRESULT err = trs_fs->f_sync(fp);
+  f_log("err: %d", err);
+  return err;
 }
 
 FRESULT f_lseek (
                  FIL*    fp,  /* [IN] File object */
                  FSIZE_t ofs  /* [IN] File read/write pointer */
                  ) {
-  return trs_fs->f_lseek(fp, ofs);
+  f_log("f_lseek");
+  FRESULT err = trs_fs->f_lseek(fp, ofs);
+  f_log("err: %d", err);
+  return err;
 }
 
 FRESULT f_close (
                  FIL* fp     /* [IN] Pointer to the file object */
                  ) {
-  return trs_fs->f_close(fp);
+  f_log("f_close");
+  FRESULT err = trs_fs->f_close(fp);
+  f_log("err: %d", err);
+  return err;
 }
 
 FRESULT f_unlink (
                   const TCHAR* path  /* [IN] Object name */
                   ) {
-  return trs_fs->f_unlink(path);
+  f_log("f_unlink: %s", path);
+  FRESULT err = trs_fs->f_unlink(path);
+  f_log("err: %d", err);
+  return err;
 }
 
 FRESULT f_stat (
                 const TCHAR* path,  /* [IN] Object name */
                 FILINFO* fno        /* [OUT] FILINFO structure */
                 ) {
-  return trs_fs->f_stat(path, fno);
+  f_log("f_stat: %s", path);
+  FRESULT err = trs_fs->f_stat(path, fno);
+  f_log("err: %d", err);
+  return err;
 }

@@ -13,8 +13,6 @@
 #include "freertos/event_groups.h"
 
 
-static EventGroupHandle_t event_group;
-
 // GPIO pins 12-19
 #define GPIO_DATA_BUS_MASK 0b11111111000000000000
 
@@ -43,6 +41,20 @@ static EventGroupHandle_t event_group;
 #define GPIO_OUTPUT_ENABLE(mask) GPIO.enable_w1ts = (mask)
 
 static volatile bool trigger_trs_io_action = false;
+
+#define IO_CORE1_ENABLE_INTR BIT0
+#define IO_CORE1_DISABLE_INTR BIT1
+
+static volatile uint8_t intr_event = 0;
+
+void io_core1_enable_intr() {
+  intr_event |= IO_CORE1_ENABLE_INTR;
+  while (intr_event & IO_CORE1_ENABLE_INTR) ;
+}
+
+void io_core1_disable_intr() {
+  intr_event |= IO_CORE1_DISABLE_INTR;
+}
 
 static inline void trs_io_read() {
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
@@ -80,25 +92,22 @@ static inline void frehd_write() {
   REG_WRITE(GPIO_OUT_W1TC_REG, d);
 }
 
-void io_start()
+static void io_task(void* p)
 {
-  xEventGroupSetBits(event_group, 1);
-}
-
-void io_task(void* p)
-{
-  // Wait for WiFi to be connected
-  while(xEventGroupWaitBits(event_group, 1,
-                            pdTRUE, // Clear on exit
-                            pdFALSE, // Wait for all bits
-                            portMAX_DELAY) == 0) ;
-
-  // Turn off interrupts on core 1
-  portDISABLE_INTERRUPTS();
-
   while(true) {
     // Wait for access to ports 31 or 0xC0-0xCF
-    while (GPIO.in & MASK_ESP_SEL_N) ;
+    while ((GPIO.in & MASK_ESP_SEL_N) && (intr_event == 0)) ;
+
+    if (intr_event != 0) {
+      if (intr_event & IO_CORE1_ENABLE_INTR) {
+        portENABLE_INTERRUPTS();
+        intr_event &= ~IO_CORE1_ENABLE_INTR;
+      } else if (intr_event & IO_CORE1_DISABLE_INTR) {
+        portDISABLE_INTERRUPTS();
+        intr_event &= ~IO_CORE1_DISABLE_INTR;
+      }
+      continue;
+    }
 
     if (GPIO.in1.data & MASK_RD_N) {
       // Read data
@@ -129,7 +138,7 @@ void io_task(void* p)
   }
 }
 
-void action_task(void* p)
+static void action_task(void* p)
 {
   while (true) {
     frehd_check_action();
@@ -146,9 +155,6 @@ void action_task(void* p)
 
 void init_io()
 {
-  event_group = xEventGroupCreate();
-  xEventGroupClearBits(event_group, 0xff);
-
   init_frehd();
 
   gpio_config_t gpioConfig;

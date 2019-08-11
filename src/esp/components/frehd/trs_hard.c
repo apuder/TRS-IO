@@ -365,6 +365,7 @@ void frehd_init(void)
  */
 void trs_action(void)
 {
+  f_log("trs_action: %x", action_type);
 	switch (action_type) {
 	case ACTION_HARD_SEEK:
 		if (find_sector() != FR_OK) {

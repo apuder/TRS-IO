@@ -15,7 +15,8 @@ void set_timezone(const char* tz) {
 void init_time() {
   if (storage_has_key(KEY_TZ)) {
     char tz[33];
-    storage_get_str(KEY_TZ, tz, sizeof(tz));
+    size_t len = sizeof(tz);
+    storage_get_str(KEY_TZ, tz, &len);
     setenv("TZ", tz, 1);
     tzset();
   }

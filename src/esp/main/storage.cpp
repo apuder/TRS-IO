@@ -36,9 +36,9 @@ bool storage_has_key(const char* key)
   return true;
 }
 
-void storage_get_str(const char* key, char* out, size_t len)
+void storage_get_str(const char* key, char* out, size_t* len)
 {
-  ESP_ERROR_CHECK(nvs_get_str(storage, key, out, &len));
+  ESP_ERROR_CHECK(nvs_get_str(storage, key, out, len));
 }
 
 void storage_set_str(const char* key, const char* value)

@@ -49,6 +49,7 @@ struct sync_cb_data {
 	void *ptr;
 };
 
+#include <stdio.h>
 static int wait_for_reply(struct smb2_context *smb2,
                           struct sync_cb_data *cb_data)
 {
@@ -62,7 +63,7 @@ static int wait_for_reply(struct smb2_context *smb2,
 			smb2_set_error(smb2, "Poll failed");
 			return -1;
 		}
-                if (pfd.revents == 0) {
+        if (pfd.revents == 0) {
                         continue;
                 }
 		if (smb2_service(smb2, pfd.revents) < 0) {
@@ -139,8 +140,8 @@ static void opendir_cb(struct smb2_context *smb2, int status,
 {
         struct sync_cb_data *cb_data = private_data;
 
-        cb_data->is_finished = 1;
         cb_data->ptr = command_data;
+        cb_data->is_finished = 1;
 }
 
 struct smb2dir *smb2_opendir(struct smb2_context *smb2, const char *path)

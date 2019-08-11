@@ -5,14 +5,17 @@
 #include "led.h"
 #include "io.h"
 #include "storage.h"
+#include "event.h"
 #include "ntp_sync.h"
 #include "esp_wifi.h"
 #include "esp_mock.h"
+#include "version.h"
 #include "mdns.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
 #include "mongoose.h"
 #include <string.h>
+#include "cJSON.h"
 
 #define WIFI_KEY_SSID "ssid"
 #define WIFI_KEY_PASSWD "passwd"
@@ -32,7 +35,6 @@ static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 static char ssid[33];
 static char passwd[33];
 
-static bool reboot;
 
 uint8_t* get_wifi_status()
 {
@@ -42,8 +44,9 @@ uint8_t* get_wifi_status()
 const char* get_wifi_ssid()
 {
   static char ssid[33];
-  
-  storage_get_str(WIFI_KEY_SSID, ssid, sizeof(ssid));
+
+  size_t len = sizeof(ssid);
+  storage_get_str(WIFI_KEY_SSID, ssid, &len);
   return ssid;
 }
 
@@ -53,6 +56,8 @@ const char* get_wifi_ip()
 {
   return ip;
 }
+
+void init_trs_fs();
 
 static esp_err_t event_handler(void* ctx, system_event_t* event)
 {
@@ -65,13 +70,16 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     ESP_LOGI(TAG, "got ip:%s", ip);
     status = RS_STATUS_WIFI_CONNECTED;
     trigger_ota_check();
+    evt_signal_wifi_up();
     set_led(false, true, false, false, true);
-    io_start();
+    init_trs_fs();
+    io_core1_disable_intr();
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
     ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",
              MAC2STR(event->event_info.sta_connected.mac),
              event->event_info.sta_connected.aid);
+    evt_signal_wifi_up();
     break;
   case SYSTEM_EVENT_AP_STADISCONNECTED:
     ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d",
@@ -93,40 +101,92 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
 void set_wifi_credentials(const char* ssid, const char* passwd)
 {
   // Store credentials and reboot
+  io_core1_enable_intr();
   storage_set_str(WIFI_KEY_SSID, ssid);
   storage_set_str(WIFI_KEY_PASSWD, passwd);
   esp_restart();
 }
 
-void mongoose_event_handler(struct mg_connection* nc,
-                            int event,
-                            void* eventData)
+static bool mongoose_handle_config(struct http_message* message,
+                                   char** response,
+                                   unsigned int* response_len,
+                                   const char** content_type)
 {
+  bool reboot = false;
+  
+  int l1 = mg_get_http_var(&message->body, "ssid", ssid, sizeof(ssid));
+  int l2 = mg_get_http_var(&message->body, "passwd", passwd, sizeof(passwd));
+  if ((l1 >= 0) && (l2 >= 0)) {
+    io_core1_enable_intr();
+    storage_set_str(WIFI_KEY_SSID, ssid);
+    storage_set_str(WIFI_KEY_PASSWD, passwd);
+    *response = (char*) status_html;
+    *response_len = status_html_len;
+    reboot = true;
+  }
+  
+  char tz[33];
+  int l3 = mg_get_http_var(&message->body, "tz", tz, sizeof(tz));
+  if (l3 > 0) {
+    set_timezone(tz);
+  }
+
+  return reboot;
+}
+
+static void mongoose_handle_status(struct http_message* message,
+                                   char** response,
+                                   unsigned int* response_len,
+                                   const char** content_type)
+{
+  static char* resp = NULL;
+
+  if (resp != NULL) {
+    free(resp);
+    resp = NULL;
+  }
+  
+  cJSON* s = cJSON_CreateObject();
+  cJSON_AddNumberToObject(s, "hardware_rev", TRS_IO_HARDWARE_REVISION);
+  cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
+  cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
+  cJSON_AddNumberToObject(s, "wifi_status", status);
+  cJSON_AddNumberToObject(s, "smb_status", 0);
+
+  resp = cJSON_PrintUnformatted(s);
+  *response = resp;
+  *response_len = strlen(resp);
+  cJSON_Delete(s);
+
+  *content_type = "Content-Type: application/json";
+}
+
+static void mongoose_event_handler(struct mg_connection* nc,
+                                   int event,
+                                   void* eventData)
+{
+  static bool reboot = false;
+  
   switch (event) {
   case MG_EV_HTTP_REQUEST:
     {
       struct http_message* message = (struct http_message*) eventData;
       const char* uri = message->uri.p;
-      unsigned char* response = index_html;
+      char* response = (char*) index_html;
       unsigned int response_len = index_html_len;
-      if (strncmp(uri, "/config", 7) == 0) {
-        int l1 = mg_get_http_var(&message->body, "ssid", ssid, sizeof(ssid));
-        int l2 = mg_get_http_var(&message->body, "passwd", passwd, sizeof(passwd));
-        if ((l1 >= 0) && (l2 >= 0)) {
-          storage_set_str(WIFI_KEY_SSID, ssid);
-          storage_set_str(WIFI_KEY_PASSWD, passwd);
-          response = status_html;
-          response_len = status_html_len;
-          reboot = true;
-        }
+      const char* content_type = "Content-Type: text/html";
 
-        char tz[33];
-        int l3 = mg_get_http_var(&message->body, "tz", tz, sizeof(tz));
-        if (l3 > 0) {
-          set_timezone(tz);
-        }
+      if (strncmp(uri, "/config", 7) == 0) {
+        reboot = mongoose_handle_config(message, &response,
+                                        &response_len, &content_type);
       }
-      mg_send_head(nc, 200, response_len, "Content-Type: text/html");
+
+      if (strncmp(uri, "/status", 7) == 0) {
+        mongoose_handle_status(message, &response,
+                               &response_len, &content_type);
+      }
+      
+      mg_send_head(nc, 200, response_len, content_type);
       mg_send(nc, response, response_len);
       nc->flags |= MG_F_SEND_AND_CLOSE;
     }
@@ -142,10 +202,12 @@ void mongoose_event_handler(struct mg_connection* nc,
   }
 }
 
-void mg_task(void* p)
+static void mg_task(void* p)
 {
   struct mg_mgr mgr;
-  
+
+  evt_wait_wifi_up();
+
   // Start mDNS service
   ESP_ERROR_CHECK(mdns_init());
   ESP_ERROR_CHECK(mdns_hostname_set(MDNS_NAME));
@@ -153,7 +215,6 @@ void mg_task(void* p)
 
   // Start Mongoose
   mg_mgr_init(&mgr, NULL);
-  reboot = false;
   struct mg_connection *c = mg_bind(&mgr, ":80", mongoose_event_handler);
   mg_set_protocol_http_websocket(c);
 
@@ -191,8 +252,10 @@ static void wifi_init_sta()
   strcpy(ssid, CONFIG_TRS_IO_SSID);
   strcpy(passwd, CONFIG_TRS_IO_PASSWD);
 #else
-  storage_get_str(WIFI_KEY_SSID, ssid, sizeof(ssid));
-  storage_get_str(WIFI_KEY_PASSWD, passwd, sizeof(passwd));
+  size_t len = sizeof(ssid);
+  storage_get_str(WIFI_KEY_SSID, ssid, &len);
+  len = sizeof(passwd);
+  storage_get_str(WIFI_KEY_PASSWD, passwd, &len);
 #endif
 
   ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", ssid);
@@ -223,7 +286,7 @@ void init_wifi()
     status = RS_STATUS_WIFI_NOT_CONFIGURED;
     set_led(false, true, true, true, false);
     wifi_init_ap();
-    xTaskCreatePinnedToCore(mg_task, "mg", 3000, NULL, 1, NULL, 0);
   }
 #endif
+  xTaskCreatePinnedToCore(mg_task, "mg", 3000, NULL, 1, NULL, 0);
 }

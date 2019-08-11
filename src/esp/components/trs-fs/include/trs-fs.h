@@ -20,8 +20,7 @@
 
 class TRS_FS {
 public:
-  void f_log(const char* format, ...);
-  virtual void f_log_impl(const char* msg) = 0;
+  virtual void f_log(const char* msg) = 0;
 
   virtual FRESULT f_open(FIL* fp,           /* [OUT] Pointer to the file object structure */
                          const TCHAR* path, /* [IN] File name */
