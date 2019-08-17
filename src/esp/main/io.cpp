@@ -45,14 +45,21 @@ static volatile bool trigger_trs_io_action = false;
 #define IO_CORE1_ENABLE_INTR BIT0
 #define IO_CORE1_DISABLE_INTR BIT1
 
+static volatile bool io_task_started = false;
 static volatile uint8_t intr_event = 0;
 
 void io_core1_enable_intr() {
+  if (!io_task_started) {
+    return;
+  }
   intr_event |= IO_CORE1_ENABLE_INTR;
   while (intr_event & IO_CORE1_ENABLE_INTR) ;
 }
 
 void io_core1_disable_intr() {
+  if (!io_task_started) {
+    return;
+  }
   intr_event |= IO_CORE1_DISABLE_INTR;
 }
 
@@ -94,6 +101,9 @@ static inline void frehd_write() {
 
 static void io_task(void* p)
 {
+  io_task_started = true;
+  portDISABLE_INTERRUPTS();
+  
   while(true) {
     // Wait for access to ports 31 or 0xC0-0xCF
     while ((GPIO.in & MASK_ESP_SEL_N) && (intr_event == 0)) ;

@@ -73,7 +73,7 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     evt_signal_wifi_up();
     set_led(false, true, false, false, true);
     init_trs_fs();
-    io_core1_disable_intr();
+    init_io();
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
     ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",
@@ -101,7 +101,6 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
 void set_wifi_credentials(const char* ssid, const char* passwd)
 {
   // Store credentials and reboot
-  io_core1_enable_intr();
   storage_set_str(WIFI_KEY_SSID, ssid);
   storage_set_str(WIFI_KEY_PASSWD, passwd);
   esp_restart();
@@ -117,7 +116,6 @@ static bool mongoose_handle_config(struct http_message* message,
   int l1 = mg_get_http_var(&message->body, "ssid", ssid, sizeof(ssid));
   int l2 = mg_get_http_var(&message->body, "passwd", passwd, sizeof(passwd));
   if ((l1 >= 0) && (l2 >= 0)) {
-    io_core1_enable_intr();
     storage_set_str(WIFI_KEY_SSID, ssid);
     storage_set_str(WIFI_KEY_PASSWD, passwd);
     *response = (char*) status_html;

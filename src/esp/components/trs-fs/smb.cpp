@@ -60,8 +60,6 @@ int init_smb()
     return 0;
   }
 
-  io_core1_enable_intr();
-  
   if (!storage_has_key(SMB_URL) || !storage_has_key(SMB_USER) || !storage_has_key(SMB_PASSWD)) {
     return 0;
   }
@@ -79,8 +77,6 @@ int init_smb()
   smb_passwd = (char*) malloc(len);
   storage_get_str(SMB_PASSWD, smb_passwd, &len);
 
-  io_core1_disable_intr();
-  
   url = smb2_parse_url(smb2, smb_url);
   if (url == NULL) {
     fprintf(stderr, "Failed to parse url: %s\n",

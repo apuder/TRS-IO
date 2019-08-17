@@ -30,10 +30,6 @@ void app_main(void)
   init_button();
   init_storage();
 
-  storage_set_str(SMB_URL, "smb://192.168.1.10/TRS-80");
-  storage_set_str(SMB_USER, "TRS-IO");
-  storage_set_str(SMB_PASSWD, "tandyassembly--");
-  
   if (is_button_pressed()) {
 #ifdef TRS_IO_BUTTON_ONLY_AT_STARTUP
     storage_erase();
@@ -42,9 +38,12 @@ void app_main(void)
 #endif
   }
   
+  storage_set_str(SMB_URL, "smb://192.168.1.10/TRS-80");
+  storage_set_str(SMB_USER, "TRS-IO");
+  storage_set_str(SMB_PASSWD, "tandyassembly--");
+  
   init_ota();
   init_wifi();
-  init_io();
 
   init_time();
 
