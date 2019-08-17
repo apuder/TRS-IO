@@ -5,6 +5,18 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 
+#ifdef TRS_IO_USE_RETROSTORE_PCB
+#define LED_SEL_MASK (GPIO_SEL_0 | GPIO_SEL_4 | GPIO_SEL_21)
+#define LED_RED GPIO_NUM_4
+#define LED_GREEN GPIO_NUM_0
+#define LED_BLUE GPIO_NUM_21
+#else
+#define LED_SEL_MASK (GPIO_SEL_4 | GPIO_SEL_5 | GPIO_SEL_21)
+#define LED_RED GPIO_NUM_5
+#define LED_GREEN GPIO_NUM_21
+#define LED_BLUE GPIO_NUM_4
+#endif
+
 #define BIT_R BIT0
 #define BIT_G BIT1
 #define BIT_B BIT2
@@ -49,13 +61,13 @@ static void led_task(void* p)
     }
 
     if (on) {
-      gpio_set_level(GPIO_NUM_4, r);
-      gpio_set_level(GPIO_NUM_0, g);
-      gpio_set_level(GPIO_NUM_21, b);
+      gpio_set_level(LED_RED, r);
+      gpio_set_level(LED_GREEN, g);
+      gpio_set_level(LED_BLUE, b);
     } else {
-      gpio_set_level(GPIO_NUM_4, 0);
-      gpio_set_level(GPIO_NUM_0, 0);
-      gpio_set_level(GPIO_NUM_21, 0);
+      gpio_set_level(LED_RED, 0);
+      gpio_set_level(LED_GREEN, 0);
+      gpio_set_level(LED_BLUE, 0);
       if (auto_off) {
         delay = portMAX_DELAY;
       }
@@ -69,7 +81,7 @@ void init_led()
   gpio_config_t gpioConfig;
 
   // Configure LED
-  gpioConfig.pin_bit_mask = GPIO_SEL_0 | GPIO_SEL_4 | GPIO_SEL_21;
+  gpioConfig.pin_bit_mask = LED_SEL_MASK;
   gpioConfig.mode = GPIO_MODE_OUTPUT;
   gpio_config(&gpioConfig);
     
