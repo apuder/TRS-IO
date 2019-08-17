@@ -1,7 +1,8 @@
 
 MAKE = make
 
-DIRS = trs-io-fs
+#DIRS = trs-io-fs
+DIRS = 
 
 
 all:
