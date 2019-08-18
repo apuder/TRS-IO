@@ -121,18 +121,26 @@ static void io_task(void* p)
 
     if (GPIO.in1.data & MASK_RD_N) {
       // Read data
+#ifdef TRS_IO_USE_RETROSTORE_PCB
+      trs_io_read();
+#else
       if (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) {
         trs_io_read();
       } else {
         frehd_read();
       }
+#endif
     } else {
       // Write data
+#ifdef TRS_IO_USE_RETROSTORE_PCB
+      trs_io_write();
+#else
       if (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) {
         trs_io_write();
       } else {
         frehd_write();
       }
+#endif
     }
     
     // Release WAIT_N

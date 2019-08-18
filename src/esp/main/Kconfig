@@ -4,9 +4,8 @@ menu "TRS-IO"
         bool "Use RetroStoreCard settings"
         default n
         help
-        The GPIO pin assignments for the LED are different for the
-        RetroStoreCard and TRS-IO PCB. By default, the TRS-IO
-        settings will be used.
+        Enable backward compatibility with the original
+        RetroStoreCard. By default, the TRS-IO settings will be used.
 
     config TRS_IO_ENABLE_OTA
         bool "Enable OTA for TRS-IO"
