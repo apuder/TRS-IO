@@ -20,15 +20,11 @@
 #include "smb2/libsmb2.h"
 #include "smb2/libsmb2-raw.h"
 
-#define SMB_URL "smb_url"
-#define SMB_USER "smb_user"
-#define SMB_PASSWD "smb_passwd"
-
 static char* smb_url = NULL;
 
 static struct smb2_context *smb2 = NULL;
 
-int init_smb()
+const char* init_smb()
 {
   static char* smb_user = NULL;
   static char* smb_passwd = NULL;
@@ -56,32 +52,29 @@ int init_smb()
  
   smb2 = smb2_init_context();
   if (smb2 == NULL) {
-    fprintf(stderr, "Failed to init context\n");
-    return 0;
+    return "Failed to initialize SMB";
   }
 
-  if (!storage_has_key(SMB_URL) || !storage_has_key(SMB_USER) || !storage_has_key(SMB_PASSWD)) {
-    return 0;
+  if (!storage_has_key(SMB_KEY_URL) || !storage_has_key(SMB_KEY_USER) || !storage_has_key(SMB_KEY_PASSWD)) {
+    return "Missing SMB share configuration";
   }
   
   size_t len;
-  storage_get_str(SMB_URL, NULL, &len);
+  storage_get_str(SMB_KEY_URL, NULL, &len);
   smb_url = (char*) malloc(len);
-  storage_get_str(SMB_URL, smb_url, &len);
+  storage_get_str(SMB_KEY_URL, smb_url, &len);
 
-  storage_get_str(SMB_USER, NULL, &len);
+  storage_get_str(SMB_KEY_USER, NULL, &len);
   smb_user = (char*) malloc(len);
-  storage_get_str(SMB_USER, smb_user, &len);
+  storage_get_str(SMB_KEY_USER, smb_user, &len);
 
-  storage_get_str(SMB_PASSWD, NULL, &len);
+  storage_get_str(SMB_KEY_PASSWD, NULL, &len);
   smb_passwd = (char*) malloc(len);
-  storage_get_str(SMB_PASSWD, smb_passwd, &len);
+  storage_get_str(SMB_KEY_PASSWD, smb_passwd, &len);
 
   url = smb2_parse_url(smb2, smb_url);
   if (url == NULL) {
-    fprintf(stderr, "Failed to parse url: %s\n",
-            smb2_get_error(smb2));
-    return 0;
+    return smb2_get_error(smb2);
   }
 
   smb2_set_security_mode(smb2, SMB2_NEGOTIATE_SIGNING_ENABLED);
@@ -89,17 +82,15 @@ int init_smb()
   smb2_set_password(smb2, smb_passwd);
 
   if (smb2_connect_share(smb2, url->server, url->share, url->user) != 0) {
-    printf("smb2_connect_share failed. %s\n", smb2_get_error(smb2));
-    return 0;
+    return smb2_get_error(smb2);
   }
 
-  printf("Connected to SMB share\n");
-  return 1;
+  return NULL;
 }
 
 
 TRS_FS_SMB::TRS_FS_SMB() {
-  init_smb();
+  err_msg = init_smb();
 }
   
 void TRS_FS_SMB::f_log(const char* msg) {

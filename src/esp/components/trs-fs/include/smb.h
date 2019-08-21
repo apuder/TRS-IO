@@ -3,6 +3,11 @@
 
 #include "trs-fs.h"
 
+#define SMB_KEY_URL "smb_url"
+#define SMB_KEY_USER "smb_user"
+#define SMB_KEY_PASSWD "smb_passwd"
+
+
 class TRS_FS_SMB : virtual public TRS_FS {
 public:
   TRS_FS_SMB();

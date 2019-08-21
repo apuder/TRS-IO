@@ -7,28 +7,22 @@
 
 #define TRS_FS_MODULE_ID 4
 
-TRS_FS* trs_fs;
+TRS_FS* trs_fs = NULL;
 
-void init_trs_fs() {
-  trs_fs = new TRS_FS_SMB();
-
-#if 0
-  FIL fp;
-  f_open(&fp, "FREHD.ROM", FA_READ);
-  f_close(&fp);
-  
-  DIR_ d;
-  f_opendir(&d, "/");
-  while (1) {
-    FILINFO f;
-    f_readdir(&d, &f);
-    if (f.fname[0] == '\0') {
-      break;
-    }
-    printf("%s\n", f.fname);
+const char* init_trs_fs() {
+  if (trs_fs != NULL) {
+    delete trs_fs;
   }
-#endif
+  trs_fs = new TRS_FS_SMB();
+  return trs_fs->get_err_msg();
   //trs_fs = new TRS_FS_SERIAL();
+}
+
+const char* get_smb_err_msg() {
+  if (trs_fs == NULL) {
+    return "SMB not connected";
+  }
+  return trs_fs->get_err_msg();
 }
 
 class TrsFileSystemModule : public TrsIO {

@@ -19,7 +19,16 @@
 
 
 class TRS_FS {
+protected:
+  const char* err_msg;
+
 public:
+  virtual ~TRS_FS() {}
+  
+  const char* get_err_msg() {
+    return err_msg;
+  }
+
   virtual void f_log(const char* msg) = 0;
 
   virtual FRESULT f_open(FIL* fp,           /* [OUT] Pointer to the file object structure */

@@ -1,6 +1,7 @@
 
 #include "retrostore.h"
 #include "wifi.h"
+#include "smb.h"
 #include "ota.h"
 #include "led.h"
 #include "io.h"
@@ -19,6 +20,7 @@
 
 #define WIFI_KEY_SSID "ssid"
 #define WIFI_KEY_PASSWD "passwd"
+#define WIFI_KEY_TZ "timezone"
 
 #define SSID "TRS-IO"
 #define MDNS_NAME "trs-io"
@@ -50,14 +52,18 @@ const char* get_wifi_ssid()
   return ssid;
 }
 
-static char* ip = "-";
+static char* ip = (char*) "-";
 
 const char* get_wifi_ip()
 {
   return ip;
 }
 
-void init_trs_fs();
+static char buf[64];
+
+const char* init_trs_fs();
+const char* get_smb_err_msg();
+
 
 static esp_err_t event_handler(void* ctx, system_event_t* event)
 {
@@ -112,10 +118,11 @@ static bool mongoose_handle_config(struct http_message* message,
                                    const char** content_type)
 {
   bool reboot = false;
+  bool smb_connect = false;
   
-  int l1 = mg_get_http_var(&message->body, "ssid", ssid, sizeof(ssid));
-  int l2 = mg_get_http_var(&message->body, "passwd", passwd, sizeof(passwd));
-  if ((l1 >= 0) && (l2 >= 0)) {
+  int len = mg_get_http_var(&message->body, "ssid", ssid, sizeof(ssid));
+  mg_get_http_var(&message->body, "passwd", passwd, sizeof(passwd));
+  if (len > 0) {
     storage_set_str(WIFI_KEY_SSID, ssid);
     storage_set_str(WIFI_KEY_PASSWD, passwd);
     *response = (char*) status_html;
@@ -123,12 +130,34 @@ static bool mongoose_handle_config(struct http_message* message,
     reboot = true;
   }
   
-  char tz[33];
-  int l3 = mg_get_http_var(&message->body, "tz", tz, sizeof(tz));
-  if (l3 > 0) {
-    set_timezone(tz);
+  len = mg_get_http_var(&message->body, "tz", buf, sizeof(buf));
+  if (len > 0) {
+    storage_set_str(WIFI_KEY_TZ, buf);
+    set_timezone(buf);
   }
 
+  len = mg_get_http_var(&message->body, "smb_url", buf, sizeof(buf));
+  if (len > 0) {
+    storage_set_str(SMB_KEY_URL, buf);
+    smb_connect = true;
+  }
+
+  len = mg_get_http_var(&message->body, "smb_user", buf, sizeof(buf));
+  if (len > 0) {
+    storage_set_str(SMB_KEY_USER, buf);
+    smb_connect = true;
+  }
+
+  len = mg_get_http_var(&message->body, "smb_passwd", buf, sizeof(buf));
+  if (len > 0) {
+    storage_set_str(SMB_KEY_PASSWD, buf);
+    smb_connect = true;
+  }
+
+  if (smb_connect) {
+    init_trs_fs();
+  }
+  
   return reboot;
 }
 
@@ -149,7 +178,31 @@ static void mongoose_handle_status(struct http_message* message,
   cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
   cJSON_AddNumberToObject(s, "wifi_status", status);
-  cJSON_AddNumberToObject(s, "smb_status", 0);
+  if (storage_has_key(WIFI_KEY_SSID)) {
+    size_t len = sizeof(ssid);
+    storage_get_str(WIFI_KEY_SSID, ssid, &len);
+    cJSON_AddStringToObject(s, "ssid", ssid);
+  }
+  if (storage_has_key(WIFI_KEY_TZ)) {
+    size_t len = sizeof(buf);
+    storage_get_str(WIFI_KEY_TZ, buf, &len);
+    cJSON_AddStringToObject(s, "tz", buf);
+  }
+  if (storage_has_key(SMB_KEY_URL)) {
+    size_t len = sizeof(buf);
+    storage_get_str(SMB_KEY_URL, buf, &len);
+    cJSON_AddStringToObject(s, "smb_url", buf);
+  }
+  if (storage_has_key(SMB_KEY_USER)) {
+    size_t len = sizeof(buf);
+    storage_get_str(SMB_KEY_USER, buf, &len);
+    cJSON_AddStringToObject(s, "smb_user", buf);
+  }
+
+  const char* smb_err = get_smb_err_msg();
+  if (smb_err != NULL) {
+    cJSON_AddStringToObject(s, "smb_err", smb_err);
+  }
 
   resp = cJSON_PrintUnformatted(s);
   *response = resp;

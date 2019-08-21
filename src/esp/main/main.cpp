@@ -18,9 +18,6 @@ extern "C" {
   void app_main(void);
 }
 
-#define SMB_URL "smb_url"
-#define SMB_USER "smb_user"
-#define SMB_PASSWD "smb_passwd"
 
 void app_main(void)
 {
@@ -37,10 +34,6 @@ void app_main(void)
     switch_to_factory();
 #endif
   }
-  
-  storage_set_str(SMB_URL, "smb://192.168.1.10/TRS-80");
-  storage_set_str(SMB_USER, "TRS-IO");
-  storage_set_str(SMB_PASSWD, "tandyassembly--");
   
   init_ota();
   init_wifi();
