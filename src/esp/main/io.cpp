@@ -61,6 +61,7 @@ void io_core1_disable_intr() {
     return;
   }
   intr_event |= IO_CORE1_DISABLE_INTR;
+  while (intr_event & IO_CORE1_DISABLE_INTR) ;
 }
 
 static inline void trs_io_read() {
