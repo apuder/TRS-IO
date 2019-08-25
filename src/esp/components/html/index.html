@@ -1,20 +1,212 @@
 <html>
-  <head>
-    <title>TRS-IO - WiFi Configuration</title>
-  </head>
-  <body>
-    <h1>TRS-IO</h1>
-    <h3>Configuration</h3>
-    Enter the SSID and password of the WiFi network that TRS-IO
-    should connect to.<p>
-    <form action="/config" method="post">
-        SSID: <input type="text" maxlength="32" name="ssid"><p>
-        Password: <input type="password" maxlength="32" name="passwd"><p><p>
-        Timezone: <input type="text" maxlength="32" name="tz"> <small>e.g., GMT+8 or PST8PDT,M3.2.0,M11.1.0</small><p><p>
-        SMB URL: <input type="text" maxlength="100" name="smb_url"><p>
-        SMB User: <input type="text" maxlength="32" name="smb_user"><p>
-        SMB Password: <input type="text" maxlength="32" name="smb_passwd"><p><p>
-      <input type="submit" value="Submit">
-    </form>
-  </body>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRS-IO - WiFi Configuration</title>
+  <style>
+    * {
+      font-family:Helvetica,Arial;
+      color:#733;
+    }
+    body {
+      background:#eee;
+      background: radial-gradient(circle, rgba(151,104,184,1) 0%, rgba(255,143,143,1) 50%, rgba(255,181,78,1) 100%);
+    }
+    body, html {
+      height:100%;
+      display:grid;
+      margin:0;
+    }
+    h1 {
+      margin:0;
+      background:#fff;
+      border-radius:10px 0 10px 0;
+      padding:10px 0;
+      display:inline-block;
+    }
+    h1 * {
+      font-family:Courier;
+      font-size:2em;
+      padding:10px;
+    }
+    h3 {
+      margin: 0 0 4px 0;
+    }
+    input {
+      display:block;
+      background:#fee;
+      border:1px #d0bcbc solid;
+      padding:10px;
+      color:#666;
+      font-family:monospace;
+      font-weight:bold;
+      width:100%;
+    }
+    form > label {
+      margin-top:10px;
+      display:block;
+      color:#a55;
+      text-transform:uppercase;
+      font-size:0.8em;
+    }
+    input[type=submit] {
+      margin-top: 1em;
+      font-size: 1.5em;
+      background-color: #c66;
+      color: #fff;
+    }
+    #main-wrapper {
+      margin:auto;
+      max-width:400px;
+      background-color: rgba(255,255,255,0.7);
+      box-shadow:grey 0 0 20px;
+      border-radius:10px;
+    }
+    #inner-wrapper {
+      padding:1em 2em;      
+    }
+    .h1-trs {
+      background-color:black;
+      color:white;
+      border-radius:10px 0 0 0;
+    }
+    .h1-io {
+      color:red;
+    }
+    #status-box * {
+      font-family:monospace;
+    }
+    #status-box > span {
+      text-align:center;
+    }
+    #status-box {
+      float:right;
+      display:grid;
+      grid-template-columns:auto auto;
+      grid-gap:12px;
+      padding:4px;
+      margin-right:36px;
+      background:white;
+      border-radius:0 0 5px 5px;
+    }
+    #status-hw, #status-sw {
+      font-weight:bold;
+    }
+    .status-icon {
+      width:2em;
+      height:2em;
+      background-repeat:no-repeat;
+      background-size:contain;
+      display:inline-block;
+    }
+    .wifi-no-conn {
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 6.83V20H6.83L20 6.83M22 2L2 22h20V2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+      filter:invert(40%) sepia() saturate(10000%) hue-rotate(33deg);
+    }
+    .wifi-not-conf {
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M21 1l-8.59 8.59L21 18.18V1zM4.77 4.5L3.5 5.77l6.36 6.36L1 21h17.73l2 2L22 21.73 4.77 4.5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+    }
+    .wifi-connecting, .wifi-connected {
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2 22h20V2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+    }
+    .wifi-connecting {
+      filter:invert(90%) sepia() saturate(10000%) hue-rotate(-60deg);
+      animation:pulse 1s infinite;
+    }
+    .wifi-connected {
+      filter:invert(76%) sepia() saturate(10000%) hue-rotate(109deg)
+    }
+    @keyframes pulse {
+      from { transform: scale(1); }
+      33% { transform: scale(1.3); }
+      66% { transform: scale(1); }
+    }
+
+    .smb-not-conf {
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.23 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45C23.16 18.16 24 16.68 24 15c0-2.64-2.05-4.78-4.65-4.96zM3 5.27l2.75 2.74C2.56 8.15 0 10.77 0 14c0 3.31 2.69 6 6 6h11.73l2 2L21 20.73 4.27 4 3 5.27zM7.73 10l8 8H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h1.73z"/></svg>');
+    }
+    .smb-error {
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h.71C7.37 7.69 9.48 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3s-1.34 3-3 3z"/></svg>');
+      filter:invert(40%) sepia() saturate(10000%) hue-rotate(33deg);
+    }
+    .smb-connected {
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM10 17l-3.5-3.5 1.41-1.41L10 14.17 15.18 9l1.41 1.41L10 17z"/></svg>');
+      filter:invert(76%) sepia() saturate(10000%) hue-rotate(109deg)
+    }
+
+  </style>
+</head>
+<body onload="onLoad();">
+  <div id="main-wrapper">
+  <div id="status-box">
+    <span>H/W<br><span id="status-hw">?</span></span>
+    <span>S/W<br><span id="status-sw">?</span></span>
+    <span>Wifi<br><div id="status-wifi" class="status-icon wifi-not-conf"></div></span>
+    <span>SMB<br><label id="status-smb-msg" title=""><div id="status-smb" class="status-icon smb-not-conf"></div></label></span>
+  </div>
+  <h1><span class="h1-trs">TRS</span><span class="h1-io">IO</span></h1>
+  <div id="inner-wrapper">
+  Use the fields below to configure the WiFi network that TRS-IO should connect to, the current timezone, as well as an optional SMB share to connect to.<p>
+  <form action="/config" method="post">
+      <label>WIFI SSID</label><input id="form-ssid" type="text" maxlength="32" name="ssid">
+      <label>WIFI Password</label><input id="form-wifi-passwd" type="password" maxlength="32" name="passwd">
+      <label>Timezone</label><input id="form-timezone" type="text" maxlength="32" name="tz">
+      <small>e.g., GMT+8 or PST8PDT,M3.2.0,M11.1.0</small>
+      <label>SMB URL</label><input id="form-smb-url" type="text" maxlength="100" name="smb_url">
+      <label>SMB User</label><input id="form-smb-user" type="text" maxlength="32" name="smb_user">
+      <label>SMB Password</label><input id="form-smb-passwd" type="password" maxlength="32" name="smb_passwd">
+    <input type="submit" value="Submit">
+  </form>
+  </div>
+</div>
+</body>
+<script>
+el = function(id) {
+  return  document.getElementById(id);
+};
+onLoad = function() {
+  console.log('Loaded');
+  update(true);
+  setInterval(function(){update(false);}, 1000);
+}
+update = function(first) {
+  fetch('/status')
+    .then(response => {
+      return response.json();
+  })
+  .then(updateStatus);
+};
+updateStatus = function(status, first) {
+    el('status-hw').textContent = status.hardware_rev;
+    el('status-sw').textContent = `${status.vers_major}.${status.vers_minor}`;
+    if (!!status.smb_err) {
+      el('status-smb-msg').setAttribute('title', status.smb_err);
+      el('status-smb').className = 'status-icon smb-error';
+    } else if (!!status.smb_url && !!status.smb_user) {
+      el('status-smb-msg').setAttribute('title', '');
+      el('status-smb').className = 'status-icon smb-connected';
+    } else {
+      el('status-smb-msg').setAttribute('title', '');
+      el('status-smb').className = 'status-icon smb-not-conf';
+    }
+    if (status.wifi_status == 1) {
+      el('status-wifi').className = 'status-icon wifi-connecting';
+    } else if (status.wifi_status == 2) {
+      el('status-wifi').className = 'status-icon wifi-connected';
+    } else if (status.wifi_status == 3) {
+      el('status-wifi').className = 'status-icon wifi-no-conn';
+    } else if (status.wifi_status == 4) {
+      el('status-wifi').className = 'status-icon wifi-not-conf';
+    }
+
+    // Don't update form fields after first update.
+    if (first) {
+      el('form-ssid').value = !!status.ssid ? status.ssid : ''; 
+      el('form-timezone').value = !!status.tz ? status.tz : ''; 
+      el('form-smb-url').value = !!status.smb_url ? status.smb_url : ''; 
+      el('form-smb-user').value = !!status.smb_user ? status.smb_user : ''; 
+    }
+};
+
+</script>
 </html>
