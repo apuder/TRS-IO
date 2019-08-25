@@ -167,7 +167,7 @@ el = function(id) {
 onLoad = function() {
   console.log('Loaded');
   update(true);
-  setInterval(function(){update(false);}, 1000);
+  setInterval(function(){update(false);}, 5000);
 }
 update = function(first) {
   fetch('/status')
