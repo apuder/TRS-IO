@@ -37,6 +37,7 @@ void app_main(void)
   
   init_ota();
   init_wifi();
+  init_io();
 
   init_time();
 

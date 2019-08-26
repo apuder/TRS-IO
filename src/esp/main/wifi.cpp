@@ -29,8 +29,6 @@ static const char* TAG = "TRS-IO";
 
 extern unsigned char index_html[];
 extern unsigned int index_html_len;
-extern unsigned char status_html[];
-extern unsigned int status_html_len;
 
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
@@ -79,7 +77,6 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     evt_signal_wifi_up();
     set_led(false, true, false, false, true);
     init_trs_fs();
-    init_io();
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
     ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",
@@ -119,14 +116,16 @@ static bool mongoose_handle_config(struct http_message* message,
 {
   bool reboot = false;
   bool smb_connect = false;
+
+  *response = "";
+  *response_len = 0;
+  *content_type = "Content-Type: text/plain";
   
   int len = mg_get_http_var(&message->body, "ssid", ssid, sizeof(ssid));
   mg_get_http_var(&message->body, "passwd", passwd, sizeof(passwd));
   if (len > 0) {
     storage_set_str(WIFI_KEY_SSID, ssid);
     storage_set_str(WIFI_KEY_PASSWD, passwd);
-    *response = (char*) status_html;
-    *response_len = status_html_len;
     reboot = true;
   }
   
@@ -183,11 +182,26 @@ static void mongoose_handle_status(struct http_message* message,
     storage_get_str(WIFI_KEY_SSID, ssid, &len);
     cJSON_AddStringToObject(s, "ssid", ssid);
   }
+  if (storage_has_key(WIFI_KEY_PASSWD)) {
+    size_t len = sizeof(passwd);
+    storage_get_str(WIFI_KEY_PASSWD, passwd, &len);
+    cJSON_AddStringToObject(s, "passwd", passwd);
+  }
   if (storage_has_key(WIFI_KEY_TZ)) {
     size_t len = sizeof(buf);
     storage_get_str(WIFI_KEY_TZ, buf, &len);
     cJSON_AddStringToObject(s, "tz", buf);
   }
+
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+  localtime_r(&now, &timeinfo);
+  char* time;
+  asprintf(&time, "%d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+  cJSON_AddStringToObject(s, "time", time);
+  free(time);
+
   if (storage_has_key(SMB_KEY_URL)) {
     size_t len = sizeof(buf);
     storage_get_str(SMB_KEY_URL, buf, &len);
@@ -197,6 +211,11 @@ static void mongoose_handle_status(struct http_message* message,
     size_t len = sizeof(buf);
     storage_get_str(SMB_KEY_USER, buf, &len);
     cJSON_AddStringToObject(s, "smb_user", buf);
+  }
+  if (storage_has_key(SMB_KEY_PASSWD)) {
+    size_t len = sizeof(buf);
+    storage_get_str(SMB_KEY_PASSWD, buf, &len);
+    cJSON_AddStringToObject(s, "smb_passwd", buf);
   }
 
   const char* smb_err = get_smb_err_msg();
@@ -339,5 +358,5 @@ void init_wifi()
     wifi_init_ap();
   }
 #endif
-  xTaskCreatePinnedToCore(mg_task, "mg", 4000, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(mg_task, "mg", 5000, NULL, 1, NULL, 0);
 }
