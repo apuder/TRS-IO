@@ -83,10 +83,10 @@
     #status-box {
       float:right;
       display:grid;
-      grid-template-columns:auto auto;
+      grid-template-columns:auto auto auto;
       grid-gap:12px;
       padding:4px;
-      margin-right:36px;
+      margin-right:24px;
       background:white;
       border-radius:0 0 5px 5px;
     }
@@ -142,6 +142,7 @@
   <div id="status-box">
     <span>H/W<br><span id="status-hw">?</span></span>
     <span>S/W<br><span id="status-sw">?</span></span>
+    <span>Time<br><span id="status-time">?</span></span>
     <span>Wifi<br><div id="status-wifi" class="status-icon wifi-not-conf"></div></span>
     <span>SMB<br><label id="status-smb-msg" title=""><div id="status-smb" class="status-icon smb-not-conf"></div></label></span>
   </div>
@@ -168,7 +169,7 @@ el = function(id) {
 onLoad = function() {
   console.log('Loaded');
   update(true);
-  setInterval(function(){update(false);}, 5000);
+  setInterval(function(){update(false);}, 2000);
 }
 update = function(first) {
   fetch('/status')
@@ -180,6 +181,8 @@ update = function(first) {
 updateStatus = function(status, first) {
     el('status-hw').textContent = status.hardware_rev;
     el('status-sw').textContent = `${status.vers_major}.${status.vers_minor}`;
+    el('status-time').textContent = status.time;
+
     if (!!status.smb_err) {
       el('status-smb-msg').setAttribute('title', status.smb_err);
       el('status-smb').className = 'status-icon smb-error';
@@ -203,9 +206,11 @@ updateStatus = function(status, first) {
     // Don't update form fields after first update.
     if (first) {
       el('form-ssid').value = !!status.ssid ? status.ssid : ''; 
+      el('form-wifi-passwd').value = !!status.passwd ? status.passwd : ''; 
       el('form-timezone').value = !!status.tz ? status.tz : ''; 
       el('form-smb-url').value = !!status.smb_url ? status.smb_url : ''; 
       el('form-smb-user').value = !!status.smb_user ? status.smb_user : ''; 
+      el('form-smb-passwd').value = !!status.smb_passwd ? status.smb_passwd : ''; 
     }
 };
 
