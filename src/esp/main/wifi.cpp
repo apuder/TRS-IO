@@ -339,5 +339,5 @@ void init_wifi()
     wifi_init_ap();
   }
 #endif
-  xTaskCreatePinnedToCore(mg_task, "mg", 3000, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(mg_task, "mg", 4000, NULL, 1, NULL, 0);
 }
