@@ -99,6 +99,7 @@ void init_led()
   // Configure LED
   gpioConfig.pin_bit_mask = LED_SEL_MASK;
   gpioConfig.mode = GPIO_MODE_OUTPUT;
+  gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
     
   event_group = xEventGroupCreate();
