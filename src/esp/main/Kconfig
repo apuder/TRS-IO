@@ -39,4 +39,11 @@ menu "TRS-IO"
         Set a compile-time password that TRS-IO will use
         to connect to a given WiFi.
 
+    config TRS_IO_TEST_LED
+        bool "Test LED"
+        default n
+        help
+        If enabled, run LED test (cycle through RGB colors). In that
+        mode, TRS-IO will not do anything else besides the test.
+
 endmenu

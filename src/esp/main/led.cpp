@@ -30,6 +30,22 @@ static TaskHandle_t task_handle;
 static EventGroupHandle_t event_group;
 
 
+#ifdef CONFIG_TRS_IO_TEST_LED
+static void test_led()
+{
+  while(1) {
+    set_led(false, false, false, false, false);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    set_led(true, false, false, false, false);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    set_led(false, true, false, false, false);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    set_led(false, false, true, false, false);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+  }
+}
+#endif
+    
 
 static void led_task(void* p)
 {
@@ -91,6 +107,9 @@ void init_led()
   
   // Turn LED off
   set_led(false, false, false, false, false);
+#ifdef CONFIG_TRS_IO_TEST_LED
+  test_led();
+#endif
 }
     
 
