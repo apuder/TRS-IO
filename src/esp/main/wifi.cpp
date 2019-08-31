@@ -1,6 +1,7 @@
 
 #include "retrostore.h"
 #include "wifi.h"
+#include "trs-fs.h"
 #include "smb.h"
 #include "ota.h"
 #include "led.h"
@@ -58,9 +59,6 @@ const char* get_wifi_ip()
 }
 
 static char buf[64];
-
-const char* init_trs_fs();
-const char* get_smb_err_msg();
 
 
 static esp_err_t event_handler(void* ctx, system_event_t* event)

@@ -2,6 +2,11 @@
 #include "trs-io.h"
 #include "frehd.h"
 #include "io.h"
+#include "button.h"
+#include "led.h"
+#include "storage.h"
+#include "wifi.h"
+#include "trs-fs.h"
 #include "esp_task.h"
 #include "esp_event_loop.h"
 #include "tcpip.h"
@@ -166,6 +171,32 @@ static void action_task(void* p)
       TrsIO::processInBackground();
       trigger_trs_io_action = false;
       REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
+    }
+
+    if (is_button_long_press()) {
+      storage_erase();
+      esp_restart();
+    }
+
+    if (is_button_short_press()) {
+      // Check Wifi status
+      if (*get_wifi_status() == RS_STATUS_WIFI_CONNECTED) {
+        set_led(false, true, false, false, false);
+      } else {
+        set_led(true, false, false, false, false);
+      }
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+      set_led(false, false, false, false, false);
+      vTaskDelay(500 / portTICK_PERIOD_MS);
+
+      // Check SMB status
+      if (get_smb_err_msg() == NULL) {
+        set_led(false, true, false, false, false);
+      } else {
+        set_led(true, false, false, false, false);
+      }
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+      set_led(false, false, false, false, false);      
     }
       
     vTaskDelay(1);

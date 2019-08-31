@@ -1,12 +1,30 @@
 
 #include "button.h"
-#include "storage.h"
 #include "driver/gpio.h"
 #include "esp_event.h"
 
 #define GPIO_BUTTON GPIO_NUM_22
 
 #define ESP_INTR_FLAG_DEFAULT 0
+
+#define BUTTON_LONG_PRESS BIT0
+#define BUTTON_SHORT_PRESS BIT1
+
+static volatile uint8_t button_status = 0;
+
+bool is_button_long_press()
+{
+  bool yes = (button_status & BUTTON_LONG_PRESS) != 0;
+  button_status &= ~ BUTTON_LONG_PRESS;
+  return yes;
+}
+
+bool is_button_short_press()
+{
+  bool yes = (button_status & BUTTON_SHORT_PRESS) != 0;
+  button_status &= ~ BUTTON_SHORT_PRESS;
+  return yes;
+}
 
 #ifndef TRS_IO_BUTTON_ONLY_AT_STARTUP
 static void IRAM_ATTR isr_button(void* arg)
@@ -17,9 +35,16 @@ static void IRAM_ATTR isr_button(void* arg)
     then = esp_timer_get_time();
   } else {
     int64_t now = esp_timer_get_time();
-    if ((now - then) / (1000 * 1000) >= 3) {
-      storage_erase();
-      esp_restart();
+    int64_t delta_ms = (now - then) / 1000;
+    if (delta_ms < 50) {
+      // Bounce
+      return;
+    }
+    if (delta_ms < 1000) {
+      button_status |= BUTTON_SHORT_PRESS;
+    }
+    if (delta_ms > 3000) {
+      button_status |= BUTTON_LONG_PRESS;
     }
   }
 }

@@ -18,6 +18,10 @@
 #define F_STAT 8
 
 
+const char* init_trs_fs();
+const char* get_smb_err_msg();
+
+
 class TRS_FS {
 protected:
   const char* err_msg;
