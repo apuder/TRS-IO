@@ -140,9 +140,9 @@
 <body onload="onLoad();">
   <div id="main-wrapper">
   <div id="status-box">
-    <span>H/W<br><span id="status-hw">?</span></span>
-    <span>S/W<br><span id="status-sw">?</span></span>
-    <span>Time<br><span id="status-time">?</span></span>
+    <span>H/W<br><span id="status-hw">-</span></span>
+    <span>S/W<br><span id="status-sw">-</span></span>
+    <span>Time<br><span id="status-time">-</span></span>
     <span>Wifi<br><div id="status-wifi" class="status-icon wifi-not-conf"></div></span>
     <span>SMB<br><label id="status-smb-msg" title=""><div id="status-smb" class="status-icon smb-not-conf"></div></label></span>
   </div>
@@ -181,7 +181,6 @@ update = function(first) {
 updateStatus = function(status, first) {
     el('status-hw').textContent = status.hardware_rev;
     el('status-sw').textContent = `${status.vers_major}.${status.vers_minor}`;
-    el('status-time').textContent = status.time;
 
     if (!!status.smb_err) {
       el('status-smb-msg').setAttribute('title', status.smb_err);
@@ -197,6 +196,9 @@ updateStatus = function(status, first) {
       el('status-wifi').className = 'status-icon wifi-connecting';
     } else if (status.wifi_status == 2) {
       el('status-wifi').className = 'status-icon wifi-connected';
+      // Only display time when WIFI is connected since the time makes
+      // no sense when there is no Internet connection with NTP.
+      el('status-time').textContent = status.time;
     } else if (status.wifi_status == 3) {
       el('status-wifi').className = 'status-icon wifi-no-conn';
     } else if (status.wifi_status == 4) {
