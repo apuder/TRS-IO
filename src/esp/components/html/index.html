@@ -66,6 +66,10 @@
     #inner-wrapper {
       padding:1em 2em;      
     }
+    #request-iframe {
+      position: absolute;
+      top: -1000px;
+    }
     .h1-trs {
       background-color:black;
       color:white;
@@ -149,7 +153,7 @@
   <h1><span class="h1-trs">TRS</span><span class="h1-io">IO</span></h1>
   <div id="inner-wrapper">
   Use the fields below to configure the WiFi network that TRS-IO should connect to, the current timezone, as well as an optional SMB share to connect to.<p>
-  <form action="/config" method="post">
+  <form action="/config" method="post" target="request-iframe">
       <label>WIFI SSID</label><input id="form-ssid" type="text" maxlength="32" name="ssid">
       <label>WIFI Password</label><input id="form-wifi-passwd" type="password" maxlength="32" name="passwd">
       <label>Timezone</label><input id="form-timezone" type="text" maxlength="32" name="tz">
@@ -170,13 +174,16 @@ onLoad = function() {
   console.log('Loaded');
   update(true);
   setInterval(function(){update(false);}, 2000);
-}
+};
 update = function(first) {
   fetch('/status')
     .then(response => {
       return response.json();
   })
-  .then(function(status){updateStatus(status, first)});
+  .then(function(status){updateStatus(status, first)})
+  .catch(function() {
+    console.log('Error fetching status.');
+  });
 };
 updateStatus = function(status, first) {
     el('status-hw').textContent = status.hardware_rev;
@@ -215,6 +222,10 @@ updateStatus = function(status, first) {
       el('form-smb-passwd').value = !!status.smb_passwd ? status.smb_passwd : ''; 
     }
 };
+submitForm = function() {
+  console.log('--> ' + el('request-iframe').contentDocument.readyState);
+};
 
 </script>
+<iframe id="request-iframe" name="request-iframe"></iframe>
 </html>
