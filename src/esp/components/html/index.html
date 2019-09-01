@@ -59,9 +59,12 @@
     #main-wrapper {
       margin:auto;
       max-width:400px;
-      background-color: rgba(255,255,255,0.7);
+      background-color:rgba(255,255,255,0.7);
       box-shadow:grey 0 0 20px;
       border-radius:10px;
+    }
+    body.unavailable #main-wrapper{
+      filter:blur(5px);
     }
     #inner-wrapper {
       padding:1em 2em;      
@@ -96,6 +99,24 @@
     }
     #status-hw, #status-sw, #status-time {
       font-weight:bold;
+    }
+    #please-wait {
+      width:100%;
+      height:100%;
+      position:fixed;
+      display:none;
+    }
+    #please-wait .message {
+      color:black;
+      margin: auto;
+      padding: 3em;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      font-size: 1.4em;
+    }
+    body.unavailable #please-wait {
+      display:grid !important;
     }
     .status-icon {
       width:2em;
@@ -139,6 +160,42 @@
       filter:invert(76%) sepia() saturate(10000%) hue-rotate(109deg)
     }
 
+    #wave {
+      position:relative;
+      text-align:center;
+      margin-top:2em;
+      width:100px;
+      height:20px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #wave .dot {
+      display:inline-block;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      margin-right:3px;
+      background:#303131;
+      animation: wave 1.3s linear infinite;
+    }
+    #wave span:nth-child(2) {
+      animation-delay: -1.1s;
+    }
+
+    #wave span:nth-child(3) {
+      animation-delay: -0.9s;
+    }
+
+    @keyframes wave {
+      0%, 60%, 100% {
+        transform: initial;
+      }
+
+      30% {
+        transform: translateY(-15px);
+      }
+    }
+
   </style>
 </head>
 <body onload="onLoad();">
@@ -165,6 +222,16 @@
   </form>
   </div>
 </div>
+<div id="please-wait">
+  <div class="message">
+    Waiting for TRS-IO
+    <div id="wave">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+  </div>
+</div>
 </body>
 <script>
 el = function(id) {
@@ -173,18 +240,39 @@ el = function(id) {
 onLoad = function() {
   console.log('Loaded');
   update(true);
-  setInterval(function(){update(false);}, 2000);
 };
+let networkTimeout;
 update = function(first) {
+  // If we haven't heard from the server in a while, set UI to 'error'.
+  clearTimeout(networkTimeout);
+  networkTimeout = setTimeout(function() {
+    setServerAvailableUi(false);
+  }, 4000);
+
   fetch('/status')
-    .then(response => {
+      .then(response => {
       return response.json();
   })
-  .then(function(status){updateStatus(status, first)})
+  .then(function(status){
+     updateStatus(status, first);
+     updateServerAvailableStatus(true);
+   })
   .catch(function() {
-    console.log('Error fetching status.');
+    updateServerAvailableStatus(false);
   });
 };
+
+updateServerAvailableStatus = function(available) {
+  setServerAvailableUi(available);
+  setTimeout(function() {
+    update();
+  }, 2000);
+};
+
+setServerAvailableUi = function(available) {
+  document.body.className = available ? "" : "unavailable";
+};
+
 updateStatus = function(status, first) {
     el('status-hw').textContent = status.hardware_rev;
     el('status-sw').textContent = `${status.vers_major}.${status.vers_minor}`;
