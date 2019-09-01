@@ -1,5 +1,5 @@
 
 #pragma once
 
-void set_timezone(const char* tz);
+void set_timezone();
 void init_time();

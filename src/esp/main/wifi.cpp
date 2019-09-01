@@ -33,9 +33,6 @@ extern unsigned int index_html_len;
 
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
-static char ssid[33];
-static char passwd[33];
-
 
 uint8_t* get_wifi_status()
 {
@@ -77,13 +74,13 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     init_trs_fs();
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
-    ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",
+    ESP_LOGI(TAG, "station:" MACSTR " join, AID=%d",
              MAC2STR(event->event_info.sta_connected.mac),
              event->event_info.sta_connected.aid);
     evt_signal_wifi_up();
     break;
   case SYSTEM_EVENT_AP_STADISCONNECTED:
-    ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d",
+    ESP_LOGI(TAG, "station:" MACSTR "leave, AID=%d",
              MAC2STR(event->event_info.sta_disconnected.mac),
              event->event_info.sta_disconnected.aid);
     status = RS_STATUS_WIFI_NOT_CONNECTED;
@@ -107,6 +104,26 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
   esp_restart();
 }
 
+static bool extract_post_param(struct http_message* message,
+                               const char* param,
+                               const char* nvs_key)
+{
+  static char buf2[sizeof(buf)];
+  
+  int len = mg_get_http_var(&message->body, param, buf, sizeof(buf));
+  if (!storage_has_key(nvs_key)) {
+    storage_set_str(nvs_key, buf);
+    return true;
+  }
+  size_t len2;
+  storage_get_str(nvs_key, buf2, &len2);
+  if (strcmp(buf, buf2) == 0) {
+    return false;
+  }
+  storage_set_str(nvs_key, buf);
+  return true;
+}
+
 static bool mongoose_handle_config(struct http_message* message,
                                    char** response,
                                    unsigned int* response_len,
@@ -118,38 +135,15 @@ static bool mongoose_handle_config(struct http_message* message,
   *response = "";
   *response_len = 0;
   *content_type = "Content-Type: text/plain";
-  
-  int len = mg_get_http_var(&message->body, "ssid", ssid, sizeof(ssid));
-  mg_get_http_var(&message->body, "passwd", passwd, sizeof(passwd));
-  if (len > 0) {
-    storage_set_str(WIFI_KEY_SSID, ssid);
-    storage_set_str(WIFI_KEY_PASSWD, passwd);
-    reboot = true;
-  }
-  
-  len = mg_get_http_var(&message->body, "tz", buf, sizeof(buf));
-  if (len > 0) {
-    storage_set_str(WIFI_KEY_TZ, buf);
-    set_timezone(buf);
-  }
 
-  len = mg_get_http_var(&message->body, "smb_url", buf, sizeof(buf));
-  if (len > 0) {
-    storage_set_str(SMB_KEY_URL, buf);
-    smb_connect = true;
-  }
+  reboot |= extract_post_param(message, "ssid", WIFI_KEY_SSID);
+  reboot |= extract_post_param(message, "passwd", WIFI_KEY_PASSWD);
+  extract_post_param(message, "tz", WIFI_KEY_TZ);
+  set_timezone();
 
-  len = mg_get_http_var(&message->body, "smb_user", buf, sizeof(buf));
-  if (len > 0) {
-    storage_set_str(SMB_KEY_USER, buf);
-    smb_connect = true;
-  }
-
-  len = mg_get_http_var(&message->body, "smb_passwd", buf, sizeof(buf));
-  if (len > 0) {
-    storage_set_str(SMB_KEY_PASSWD, buf);
-    smb_connect = true;
-  }
+  smb_connect |= extract_post_param(message, "smb_url", SMB_KEY_URL);
+  smb_connect |= extract_post_param(message, "smb_user", SMB_KEY_USER);
+  smb_connect |= extract_post_param(message, "smb_passwd", SMB_KEY_PASSWD);
 
   if (smb_connect) {
     init_trs_fs();
@@ -176,14 +170,14 @@ static void mongoose_handle_status(struct http_message* message,
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
   cJSON_AddNumberToObject(s, "wifi_status", status);
   if (storage_has_key(WIFI_KEY_SSID)) {
-    size_t len = sizeof(ssid);
-    storage_get_str(WIFI_KEY_SSID, ssid, &len);
-    cJSON_AddStringToObject(s, "ssid", ssid);
+    size_t len = sizeof(buf);
+    storage_get_str(WIFI_KEY_SSID, buf, &len);
+    cJSON_AddStringToObject(s, "ssid", buf);
   }
   if (storage_has_key(WIFI_KEY_PASSWD)) {
-    size_t len = sizeof(passwd);
-    storage_get_str(WIFI_KEY_PASSWD, passwd, &len);
-    cJSON_AddStringToObject(s, "passwd", passwd);
+    size_t len = sizeof(buf);
+    storage_get_str(WIFI_KEY_PASSWD, buf, &len);
+    cJSON_AddStringToObject(s, "passwd", buf);
   }
   if (storage_has_key(WIFI_KEY_TZ)) {
     size_t len = sizeof(buf);
@@ -317,21 +311,18 @@ static void wifi_init_sta()
   status = RS_STATUS_WIFI_CONNECTING;
 
 #ifdef CONFIG_TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
-  strcpy(ssid, CONFIG_TRS_IO_SSID);
-  strcpy(passwd, CONFIG_TRS_IO_PASSWD);
+  strcpy((char*) wifi_config.sta.ssid, CONFIG_TRS_IO_SSID);
+  strcpy((char*) wifi_config.sta.password, CONFIG_TRS_IO_PASSWD);
 #else
-  size_t len = sizeof(ssid);
-  storage_get_str(WIFI_KEY_SSID, ssid, &len);
-  len = sizeof(passwd);
-  storage_get_str(WIFI_KEY_PASSWD, passwd, &len);
+  size_t len = sizeof(wifi_config.sta.ssid);
+  storage_get_str(WIFI_KEY_SSID, (char*) wifi_config.sta.ssid, &len);
+  len = sizeof(wifi_config.sta.password);
+  storage_get_str(WIFI_KEY_PASSWD, (char*) wifi_config.sta.password, &len);
 #endif
 
-  ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", ssid);
-  ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", passwd);
+  ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", (char*) wifi_config.sta.ssid);
+  ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", (char*) wifi_config.sta.password);
 
-  strcpy((char*) wifi_config.sta.ssid, ssid);
-  strcpy((char*) wifi_config.sta.password, passwd);
-  
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
   ESP_ERROR_CHECK(esp_wifi_start());
