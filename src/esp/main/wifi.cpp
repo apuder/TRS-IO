@@ -1,6 +1,7 @@
 
 #include "retrostore.h"
 #include "wifi.h"
+#include "ntp_sync.h"
 #include "trs-fs.h"
 #include "smb.h"
 #include "ota.h"
@@ -21,7 +22,6 @@
 
 #define WIFI_KEY_SSID "ssid"
 #define WIFI_KEY_PASSWD "passwd"
-#define WIFI_KEY_TZ "timezone"
 
 #define SSID "TRS-IO"
 #define MDNS_NAME "trs-io"
@@ -115,7 +115,7 @@ static bool extract_post_param(struct http_message* message,
     storage_set_str(nvs_key, buf);
     return true;
   }
-  size_t len2;
+  size_t len2 = sizeof(buf2);
   storage_get_str(nvs_key, buf2, &len2);
   if (strcmp(buf, buf2) == 0) {
     return false;
@@ -138,7 +138,7 @@ static bool mongoose_handle_config(struct http_message* message,
 
   reboot |= extract_post_param(message, "ssid", WIFI_KEY_SSID);
   reboot |= extract_post_param(message, "passwd", WIFI_KEY_PASSWD);
-  extract_post_param(message, "tz", WIFI_KEY_TZ);
+  extract_post_param(message, "tz", NTP_KEY_TZ);
   set_timezone();
 
   smb_connect |= extract_post_param(message, "smb_url", SMB_KEY_URL);
@@ -179,9 +179,9 @@ static void mongoose_handle_status(struct http_message* message,
     storage_get_str(WIFI_KEY_PASSWD, buf, &len);
     cJSON_AddStringToObject(s, "passwd", buf);
   }
-  if (storage_has_key(WIFI_KEY_TZ)) {
+  if (storage_has_key(NTP_KEY_TZ)) {
     size_t len = sizeof(buf);
-    storage_get_str(WIFI_KEY_TZ, buf, &len);
+    storage_get_str(NTP_KEY_TZ, buf, &len);
     cJSON_AddStringToObject(s, "tz", buf);
   }
 
