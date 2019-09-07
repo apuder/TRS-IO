@@ -127,7 +127,7 @@ static void io_task(void* p)
 
     if (GPIO.in1.data & MASK_RD_N) {
       // Read data
-#ifdef TRS_IO_USE_RETROSTORE_PCB
+#ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
       trs_io_read();
 #else
       if (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) {
@@ -138,7 +138,7 @@ static void io_task(void* p)
 #endif
     } else {
       // Write data
-#ifdef TRS_IO_USE_RETROSTORE_PCB
+#ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
       trs_io_write();
 #else
       if (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) {
