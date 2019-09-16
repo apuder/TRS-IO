@@ -61,7 +61,7 @@ private:
   uint8_t clientVersionMajor;
   uint8_t clientVersionMinor;
   
-  uint8_t nextSocketFd;
+  uint8_t nextSocketFd = 0;
   unordered_map<uint8_t, SocketInfo> socketMap;
   
 public:
