@@ -124,6 +124,12 @@ static bool extract_post_param(struct http_message* message,
   return true;
 }
 
+
+//-----------------------------------------------------------------
+// Web server
+
+static TaskHandle_t mg_task_handle = NULL;
+
 static bool mongoose_handle_config(struct http_message* message,
                                    char** response,
                                    unsigned int* response_len,
@@ -285,6 +291,20 @@ static void mg_task(void* p)
   }
 }
 
+void stop_mg()
+{
+  if (mg_task_handle != NULL) {
+    vTaskDelete(mg_task_handle);
+  }
+}
+
+void start_mg()
+{
+  xTaskCreatePinnedToCore(mg_task, "mg", 5000, NULL, 1, &mg_task_handle, 0);
+}
+
+//--------------------------------------------------------------------------
+
 void wifi_init_ap()
 {
   wifi_config_t wifi_config;
@@ -342,5 +362,5 @@ void init_wifi()
     set_led(false, true, true, true, false);
     wifi_init_ap();
   }
-  xTaskCreatePinnedToCore(mg_task, "mg", 5000, NULL, 1, NULL, 0);
+  start_mg();
 }

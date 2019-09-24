@@ -3,6 +3,8 @@
 #include "storage.h"
 #include "led.h"
 #include "utils.h"
+#include "io.h"
+#include "wifi.h"
 #include "version.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
@@ -11,6 +13,14 @@
 #include "freertos/event_groups.h"
 
 #define BIT_CHECK_OTA BIT0
+
+#ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
+#define FIRMWARE_PCB "card"
+#else
+#define FIRMWARE_PCB "trs-io"
+#endif
+
+#define CHECK_OTA(err) if ((err) != ESP_OK) return;
 
 #define KEY_VERSION "version"
 
@@ -59,7 +69,8 @@ static void perform_ota(int32_t remote_version)
 
   set_led(false, false, true, false, false);
   
-  if (asprintf(&path, "/card/%d/firmware", RS_RETROCARD_REVISION) < 0) {
+  if (asprintf(&path, "/%s/%d/firmware", FIRMWARE_PCB,
+               TRS_IO_HARDWARE_REVISION) < 0) {
     return;
   }
   bool status = server_http(path);
@@ -74,12 +85,14 @@ static void perform_ota(int32_t remote_version)
 
   const esp_partition_t* update_partition =
     esp_ota_get_next_update_partition(NULL);
+  if (update_partition == NULL) {
+    return;
+  }
   ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%x",
            update_partition->subtype, update_partition->address);
-  assert(update_partition != NULL);
 
-  ESP_ERROR_CHECK(esp_ota_begin(update_partition,
-                                OTA_SIZE_UNKNOWN, &update_handle));
+  CHECK_OTA(esp_ota_begin(update_partition,
+                          OTA_SIZE_UNKNOWN, &update_handle));
 
   bool flag = true;
 
@@ -93,17 +106,17 @@ static void perform_ota(int32_t remote_version)
       ESP_LOGI(TAG, "Connection closed, all packets received");
       close(fd);
     } else {
-      ESP_ERROR_CHECK(esp_ota_write(update_handle,
-                                    (const void *)ota_write_data,
-                                    buff_len));
+      CHECK_OTA(esp_ota_write(update_handle,
+                              (const void *)ota_write_data,
+                              buff_len));
       binary_file_length += buff_len;
     }
   }
 
   ESP_LOGI(TAG, "Firmware size: %d", binary_file_length);
 
-  ESP_ERROR_CHECK(esp_ota_end(update_handle));
-  ESP_ERROR_CHECK(esp_ota_set_boot_partition(update_partition));
+  CHECK_OTA(esp_ota_end(update_handle));
+  CHECK_OTA(esp_ota_set_boot_partition(update_partition));
   storage_set_i32(KEY_VERSION, remote_version);
   ESP_LOGI(TAG, "Restart system");
   esp_restart();
@@ -113,7 +126,8 @@ static void check_ota()
 {
   char* path = NULL;
   
-  if (asprintf(&path, "/card/%d/version", RS_RETROCARD_REVISION) < 0) {
+  if (asprintf(&path, "/%s/%d/version", FIRMWARE_PCB,
+               TRS_IO_HARDWARE_REVISION) < 0) {
     return;
   }
 
@@ -150,7 +164,13 @@ static void check_ota()
   }
   
   if (needs_ota) {
+    stop_mg();
+    io_core1_enable_intr();
     perform_ota(version_remote);
+    // If we get here, OTA failed
+    set_led(false, false, false, false, false);
+    start_mg();
+    io_core1_disable_intr();
   }
 }
 
@@ -171,8 +191,9 @@ static void ota_task(void* p)
 
 void trigger_ota_check()
 {
-  if ( event_group != NULL )
+  if (event_group != NULL) {
     xEventGroupSetBits(event_group, BIT_CHECK_OTA);
+  }
 }
 
 void switch_to_factory()
