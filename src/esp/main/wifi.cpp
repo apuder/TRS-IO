@@ -68,7 +68,6 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     ip = ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip);
     ESP_LOGI(TAG, "got ip:%s", ip);
     status = RS_STATUS_WIFI_CONNECTED;
-    trigger_ota_check();
     evt_signal_wifi_up();
     set_led(false, true, false, false, true);
     init_trs_fs();
@@ -274,8 +273,6 @@ static void mg_task(void* p)
 {
   struct mg_mgr mgr;
 
-  evt_wait_wifi_up();
-
   // Start mDNS service
   ESP_ERROR_CHECK(mdns_init());
   ESP_ERROR_CHECK(mdns_hostname_set(MDNS_NAME));
@@ -362,5 +359,4 @@ void init_wifi()
     set_led(false, true, true, true, false);
     wifi_init_ap();
   }
-  start_mg();
 }

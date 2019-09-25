@@ -5,14 +5,12 @@
 #include "utils.h"
 #include "io.h"
 #include "wifi.h"
+#include "event.h"
 #include "version.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
-
-#define BIT_CHECK_OTA BIT0
 
 #ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
 #define FIRMWARE_PCB "card"
@@ -27,7 +25,6 @@
 static const char* TAG = "OTA";
 
 static TaskHandle_t task_handle;
-static EventGroupHandle_t event_group = NULL;
 
 #define BUFFSIZE 1024
 
@@ -164,36 +161,20 @@ static void check_ota()
   }
   
   if (needs_ota) {
-    stop_mg();
     io_core1_enable_intr();
     perform_ota(version_remote);
     // If we get here, OTA failed
     set_led(false, false, false, false, false);
-    start_mg();
     io_core1_disable_intr();
   }
 }
 
 static void ota_task(void* p)
 {
-  TickType_t delay = portMAX_DELAY;
-  
-  EventBits_t bits = xEventGroupWaitBits(event_group,
-                                         BIT_CHECK_OTA,
-                                         pdTRUE,
-                                         pdFALSE,
-                                         delay);
-  if (bits != 0) {
-    check_ota();
-  }
+  evt_wait_wifi_up();
+  check_ota();
+  start_mg();
   vTaskDelete(NULL);
-}
-
-void trigger_ota_check()
-{
-  if (event_group != NULL) {
-    xEventGroupSetBits(event_group, BIT_CHECK_OTA);
-  }
 }
 
 void switch_to_factory()
@@ -215,7 +196,5 @@ void switch_to_factory()
 
 void init_ota()
 {
-  event_group = xEventGroupCreate();
-  xEventGroupClearBits(event_group, 0xff);
   xTaskCreatePinnedToCore(ota_task, "ota", 4096, NULL, 1, &task_handle, 0);
 }
