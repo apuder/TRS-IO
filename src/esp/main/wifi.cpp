@@ -127,7 +127,38 @@ static bool extract_post_param(struct http_message* message,
 //-----------------------------------------------------------------
 // Web server
 
-static TaskHandle_t mg_task_handle = NULL;
+static struct {
+  char* ssid;
+  char* passwd;
+  char* tz;
+  char* smb_url;
+  char* smb_user;
+  char* smb_passwd;
+} config;
+
+static void copy_config_from_nvs(const char* key, char** value)
+{
+  size_t len;
+  
+  if (*value != NULL) {
+    free(*value);
+  }
+  *value = NULL;
+  if (storage_has_key(key, &len)) {
+    *value = (char*) malloc(len);
+    storage_get_str(key, *value, &len);
+  }
+}
+
+static void copy_config_from_nvs()
+{
+  copy_config_from_nvs(WIFI_KEY_SSID, &config.ssid);
+  copy_config_from_nvs(WIFI_KEY_PASSWD, &config.passwd);
+  copy_config_from_nvs(NTP_KEY_TZ, &config.tz);
+  copy_config_from_nvs(SMB_KEY_URL, &config.smb_url);
+  copy_config_from_nvs(SMB_KEY_USER, &config.smb_user);
+  copy_config_from_nvs(SMB_KEY_PASSWD, &config.smb_passwd);
+}
 
 static bool mongoose_handle_config(struct http_message* message,
                                    char** response,
@@ -153,7 +184,9 @@ static bool mongoose_handle_config(struct http_message* message,
   if (smb_connect) {
     init_trs_fs();
   }
-  
+
+  copy_config_from_nvs();
+
   return reboot;
 }
 
@@ -174,20 +207,23 @@ static void mongoose_handle_status(struct http_message* message,
   cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
   cJSON_AddNumberToObject(s, "wifi_status", status);
-  if (storage_has_key(WIFI_KEY_SSID)) {
-    size_t len = sizeof(buf);
-    storage_get_str(WIFI_KEY_SSID, buf, &len);
-    cJSON_AddStringToObject(s, "ssid", buf);
+  if (config.ssid != NULL) {
+    cJSON_AddStringToObject(s, "ssid", config.ssid);
   }
-  if (storage_has_key(WIFI_KEY_PASSWD)) {
-    size_t len = sizeof(buf);
-    storage_get_str(WIFI_KEY_PASSWD, buf, &len);
-    cJSON_AddStringToObject(s, "passwd", buf);
+  if (config.passwd != NULL) {
+    cJSON_AddStringToObject(s, "passwd", config.passwd);
   }
-  if (storage_has_key(NTP_KEY_TZ)) {
-    size_t len = sizeof(buf);
-    storage_get_str(NTP_KEY_TZ, buf, &len);
-    cJSON_AddStringToObject(s, "tz", buf);
+  if (config.tz != NULL) {
+    cJSON_AddStringToObject(s, "tz", config.tz);
+  }
+  if (config.smb_url != NULL) {
+    cJSON_AddStringToObject(s, "smb_url", config.smb_url);
+  }
+  if (config.smb_user != NULL) {
+    cJSON_AddStringToObject(s, "smb_user", config.smb_user);
+  }
+  if (config.smb_passwd != NULL) {
+    cJSON_AddStringToObject(s, "smb_passwd", config.smb_passwd);
   }
 
   time_t now;
@@ -198,22 +234,6 @@ static void mongoose_handle_status(struct http_message* message,
   asprintf(&time, "%d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
   cJSON_AddStringToObject(s, "time", time);
   free(time);
-
-  if (storage_has_key(SMB_KEY_URL)) {
-    size_t len = sizeof(buf);
-    storage_get_str(SMB_KEY_URL, buf, &len);
-    cJSON_AddStringToObject(s, "smb_url", buf);
-  }
-  if (storage_has_key(SMB_KEY_USER)) {
-    size_t len = sizeof(buf);
-    storage_get_str(SMB_KEY_USER, buf, &len);
-    cJSON_AddStringToObject(s, "smb_user", buf);
-  }
-  if (storage_has_key(SMB_KEY_PASSWD)) {
-    size_t len = sizeof(buf);
-    storage_get_str(SMB_KEY_PASSWD, buf, &len);
-    cJSON_AddStringToObject(s, "smb_passwd", buf);
-  }
 
   const char* smb_err = get_smb_err_msg();
   if (smb_err != NULL) {
@@ -273,6 +293,14 @@ static void mg_task(void* p)
 {
   struct mg_mgr mgr;
 
+  config.ssid = NULL;
+  config.passwd = NULL;
+  config.tz = NULL;
+  config.smb_url = NULL;
+  config.smb_user = NULL;
+  config.smb_passwd = NULL;
+  copy_config_from_nvs();
+
   // Start mDNS service
   ESP_ERROR_CHECK(mdns_init());
   ESP_ERROR_CHECK(mdns_hostname_set(MDNS_NAME));
@@ -288,16 +316,9 @@ static void mg_task(void* p)
   }
 }
 
-void stop_mg()
-{
-  if (mg_task_handle != NULL) {
-    vTaskDelete(mg_task_handle);
-  }
-}
-
 void start_mg()
 {
-  xTaskCreatePinnedToCore(mg_task, "mg", 5000, NULL, 1, &mg_task_handle, 0);
+  xTaskCreatePinnedToCore(mg_task, "mg", 5000, NULL, 1, NULL, 0);
 }
 
 //--------------------------------------------------------------------------
