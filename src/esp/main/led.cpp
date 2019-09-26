@@ -5,7 +5,7 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 
-#ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
+#if defined(CONFIG_TRS_IO_USE_RETROSTORE_PCB) || defined(CONFIG_TRS_IO_USE_RETROSTORE_LED_PINS)
 #define LED_SEL_MASK (GPIO_SEL_0 | GPIO_SEL_4 | GPIO_SEL_21)
 #define LED_RED GPIO_NUM_4
 #define LED_GREEN GPIO_NUM_0

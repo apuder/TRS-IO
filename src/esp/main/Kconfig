@@ -7,6 +7,15 @@ menu "TRS-IO"
         Enable backward compatibility with the original
         RetroStoreCard. By default, the TRS-IO settings will be used.
 
+    config TRS_IO_USE_RETROSTORE_LED_PINS
+        bool "Use RetroStoreCard LED pin assignments"
+        default n
+        help
+	Use the GPIO pin assignments for LED as used by the
+	RetroStoreCard. By default, the TRS-IO GPIO assignments
+	will be used. Note that setting this option with not
+	deactivate other TRS-IO functionality such as FreHD.
+
     config TRS_IO_ENABLE_OTA
         bool "Enable OTA for TRS-IO"
         default n
