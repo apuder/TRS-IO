@@ -25,7 +25,7 @@ The TRS-IO board supports two commonly available ESP32 modules.
 
 * 30 Pin Module commonly branded as DEVKITV1
 
-<img src="esp32-38pin.png" />
+<img src="esp32-30pin.png" />
 
 The pinout and spacing of the two modules differs.  Unless you plan to test your board with both modules, install 15 pin SIL sockets in 1st and 3rd positons for the 30 Pin Module or 19 pin SIL sockets in the 2nd and 4th positions for the 38 Pin Module.
 
@@ -37,7 +37,7 @@ Correct orientation of the modules is shown below:
 
 * 30 Pin Module commonly branded as DEVKITV1
 
-<img src="trs-io-card-30-38pin.png" />
+<img src="trs-io-card-v1-30pin.png" />
 
 #### Notes:
 * The switch can be installed in either SW1 or SW2.  SW2 is recommended when assembling the board for installation in a case.
