@@ -2,7 +2,7 @@
 #include "retrostore.h"
 
 #define BOOT_LOADER_ADDR 0x4300
-#include "../loader/cmd/loader_cmd.c"
+#include "../../loader/cmd/loader_cmd.c"
 
 
 static void copy_boot_loader()
@@ -91,6 +91,9 @@ void main() {
   bool show_from_left = false;
   menu_t* the_menu;
   uint8_t status;
+
+  // For M4, turn on MIII memory map. Nop on a MIII
+  out(0x84, 0);
 
   copy_boot_loader();
   
