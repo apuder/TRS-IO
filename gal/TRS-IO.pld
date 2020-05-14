@@ -9,6 +9,7 @@ Location  None;
 Device    g16v8a;
 
 /* Inputs  */
+Pin 1   = FREHD_ENABLED;
 Pin [2..9] = [A7..0];
 Pin 17  =  !RD_N;
 Pin 18  =  !WR_N;
@@ -30,7 +31,7 @@ esp_sel_trs_io = !A7 & !A6 & !A5 & A4 & A3 & A2 & A1 & A0 & io_bus_sel;
 ESP_SEL_TRS_IO = esp_sel_trs_io;
 
 /* ESP is selected at ports 0xC0-0xCF for FreHD */
-esp_sel_frehd = A7 & A6 & !A5 & !A4 & io_bus_sel;
+esp_sel_frehd = FREHD_ENABLED & A7 & A6 & !A5 & !A4 & io_bus_sel;
 
 /* ESP is selected at either TRS-IO or FreHD ports */
 esp_sel = esp_sel_trs_io # esp_sel_frehd;
