@@ -5,17 +5,10 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 
-#if defined(CONFIG_TRS_IO_USE_RETROSTORE_PCB) || defined(CONFIG_TRS_IO_USE_RETROSTORE_LED_PINS)
-#define LED_SEL_MASK (GPIO_SEL_0 | GPIO_SEL_4 | GPIO_SEL_21)
-#define LED_RED GPIO_NUM_4
-#define LED_GREEN GPIO_NUM_0
-#define LED_BLUE GPIO_NUM_21
-#else
-#define LED_SEL_MASK (GPIO_SEL_4 | GPIO_SEL_5 | GPIO_SEL_21)
-#define LED_RED GPIO_NUM_5
-#define LED_GREEN GPIO_NUM_21
-#define LED_BLUE GPIO_NUM_4
-#endif
+#define LED_RED CONFIG_TRS_IO_GPIO_LED_RED
+#define LED_GREEN CONFIG_TRS_IO_GPIO_LED_GREEN
+#define LED_BLUE CONFIG_TRS_IO_GPIO_LED_BLUE
+#define LED_SEL_MASK ((1 << LED_RED) | (1 << LED_GREEN) | (1 << LED_BLUE))
 
 #define BIT_R BIT0
 #define BIT_G BIT1
@@ -34,14 +27,25 @@ static EventGroupHandle_t event_group;
 static void test_led()
 {
   while(1) {
+    // First blink twice in white
+    set_led(true, true, true, false, false);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     set_led(false, false, false, false, false);
     vTaskDelay(500 / portTICK_PERIOD_MS);
+    set_led(true, true, true, false, false);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    set_led(false, false, false, false, false);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    // Red
     set_led(true, false, false, false, false);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    // Green
     set_led(false, true, false, false, false);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    // Blue
     set_led(false, false, true, false, false);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 #endif
@@ -77,13 +81,13 @@ static void led_task(void* p)
     }
 
     if (on) {
-      gpio_set_level(LED_RED, r);
-      gpio_set_level(LED_GREEN, g);
-      gpio_set_level(LED_BLUE, b);
+      gpio_set_level((gpio_num_t) LED_RED, r);
+      gpio_set_level((gpio_num_t) LED_GREEN, g);
+      gpio_set_level((gpio_num_t) LED_BLUE, b);
     } else {
-      gpio_set_level(LED_RED, 0);
-      gpio_set_level(LED_GREEN, 0);
-      gpio_set_level(LED_BLUE, 0);
+      gpio_set_level((gpio_num_t) LED_RED, 0);
+      gpio_set_level((gpio_num_t) LED_GREEN, 0);
+      gpio_set_level((gpio_num_t) LED_BLUE, 0);
       if (auto_off) {
         delay = portMAX_DELAY;
       }
