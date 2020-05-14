@@ -1,6 +1,5 @@
 
 #include "inout.h"
-#include "hardware.h"
 
 void out(uint8_t port, uint8_t val)
 {

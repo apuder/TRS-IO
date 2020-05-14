@@ -1,6 +1,8 @@
 
-#include "retrostore.h"
-
+#include "list.h"
+#include "key.h"
+#include "header.h"
+#include "screen.h"
 
 static window_t wnd_sel;
 static window_t wnd_desc;
@@ -13,15 +15,14 @@ void init_list(list_t* list, const char* title,
   list->start_idx = 0;
 }
 
-uint16_t list(window_t* wnd,
-              list_t* list,
+uint16_t list(list_t* list,
               bool show_from_left,
               bool can_abort)
 {
   const char* name;
   uint16_t i;
-  wnd_switch_to_background(wnd);
-  header(wnd, list->title);
+  set_screen_to_background();
+  header(list->title);
   init_window(&wnd_sel, 0, 3, 2, 0);
   init_window(&wnd_desc, 3, 3, 0, 0);
   wnd_print(&wnd_sel, false, LIST_HIGHLIGHT);
@@ -36,15 +37,13 @@ uint16_t list(window_t* wnd,
     wnd_cr(&wnd_desc);
   }
   if (i == 0) {
-    wnd_popup(wnd, "No items");
+    wnd_popup("No items");
   }
-  wnd_show(wnd, show_from_left);
+  screen_show(show_from_left);
   if (i == 0) {
     get_key();
-    return LIST_EXIT;
+    return LIST_ABORT;
   }
-  wnd_sel.buffer = wnd->buffer;
-  wnd_desc.buffer = wnd->buffer;
 
   while (true) {
     char ch = get_key();
@@ -53,7 +52,7 @@ uint16_t list(window_t* wnd,
     case KEY_LEFT:
     case KEY_CLEAR:
       if (can_abort) {
-        return LIST_EXIT;
+        return LIST_ABORT;
       }
       break;
     case KEY_ENTER:
@@ -92,5 +91,5 @@ uint16_t list(window_t* wnd,
     }
   }
 
-  return LIST_EXIT;
+  return LIST_ABORT;
 }

@@ -1,5 +1,7 @@
+
 #include "retrostore.h"
 #include "version.h"
+#include "trs-lib.h"
 
 static window_t wnd;
 
@@ -28,8 +30,9 @@ void about()
   uint8_t revision;
   uint16_t version;
   
+  set_screen_to_background();
   init_window(&wnd, 0, 3, 0, 0);
-  header(&wnd, "About");
+  header("About");
 
   scan_result = scan();
   get_trs_io_version(&revision, &version);
@@ -98,6 +101,6 @@ void about()
   print_details(&wnd, TRS_IO_SEND_WIFI_SSID, "WiFi SSID: ");
   print_details(&wnd, TRS_IO_SEND_WIFI_IP, "WiFi IP  : ");
   
-  wnd_show(&wnd, false);
+  screen_show(false);
   get_key();
 }

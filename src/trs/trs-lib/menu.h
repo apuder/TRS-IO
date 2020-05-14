@@ -5,7 +5,7 @@
 #include "window.h"
 #include "list.h"
 
-#define MENU_EXIT 0xff
+#define MENU_ABORT 0xff
 
 #define MENU(name, title) \
   static menu_t name = { \
@@ -28,7 +28,7 @@ typedef struct {
   list_t list;
 } menu_t;
 
-uint8_t menu(window_t* wnd, menu_t* menu, bool show_from_left, bool can_abort);
+uint8_t menu(menu_t* menu, bool show_from_left, bool can_abort);
 
 
 #endif

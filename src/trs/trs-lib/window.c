@@ -1,13 +1,12 @@
 
 #include "window.h"
+#include "screen.h"
 #include <string.h>
 
 static const uint8_t scroll_increment = 5;
 
-static uint8_t background_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-
 inline uint8_t* get_screen_pos0(window_t* wnd, uint8_t x, uint8_t y) {
-  return (wnd->buffer + (wnd->y + y) * SCREEN_WIDTH +
+  return (screen.current + (wnd->y + y) * screen.width +
 		     (wnd->x + x));
 }
 
@@ -20,77 +19,10 @@ void init_window(window_t* wnd, uint8_t x, uint8_t y, int8_t w, int8_t h) {
   wnd->cy = 0;
   wnd->x = x;
   wnd->y = y;
-  wnd->w = (w > 0) ? w : SCREEN_WIDTH + w - x;
-  wnd->h = (h > 0) ? h : SCREEN_HEIGHT + h - y;
-  wnd_switch_to_background(wnd);
+  wnd->w = (w > 0) ? w : screen.width + w - x;
+  wnd->h = (h > 0) ? h : screen.height + h - y;
 }
 
-void wnd_switch_to_background(window_t* wnd) {
-  wnd->buffer = (uint16_t) background_buffer;
-}
-
-void wnd_switch_to_foreground(window_t* wnd) {
-  wnd->buffer = SCREEN_BASE;
-}
-
-static void wnd_show_from_right(window_t* wnd) {
-  uint8_t y, cx;
-  int8_t left;
-  uint8_t* from;
-  uint8_t* to;
-
-  cx = 0;
-  left = SCREEN_WIDTH;
-
-  while (left > 0) {
-    uint8_t d = (left >= scroll_increment) ? scroll_increment : left;
-    for (y = 0; y < SCREEN_HEIGHT; y++) {
-      to = (uint8_t*) (SCREEN_BASE + y * SCREEN_WIDTH);
-      from = to + d;
-      memmove(to, from, SCREEN_WIDTH - d);
-
-      to = (uint8_t*) (SCREEN_BASE + (y + 1) * SCREEN_WIDTH - d);
-      from = (uint8_t*) (wnd->buffer + y * SCREEN_WIDTH + cx);
-      memmove(to, from, d);
-    }
-    cx += d;
-    left -= scroll_increment;
-  }
-  wnd->buffer = SCREEN_BASE;
-}
-
-static void wnd_show_from_left(window_t* wnd) {
-  uint8_t y;
-  int8_t left;
-  uint8_t* from;
-  uint8_t* to;
-
-  left = SCREEN_WIDTH;
-
-  while (left > 0) {
-    uint8_t d = (left >= scroll_increment) ? scroll_increment : left;
-    for (y = 0; y < SCREEN_HEIGHT; y++) {
-      from = (uint8_t*) (SCREEN_BASE + y * SCREEN_WIDTH);
-      to = from + d;
-      memmove(to, from, SCREEN_WIDTH - d);
-
-      from = (uint8_t*) (wnd->buffer + y * SCREEN_WIDTH + left - d);
-      to = (uint8_t*) (SCREEN_BASE + y * SCREEN_WIDTH);
-      memmove(to, from, d);
-    }
-    left -= scroll_increment;
-  }
-  wnd->buffer = SCREEN_BASE;
-}
-      
-void wnd_show(window_t* wnd, bool from_left) {
-  if (from_left) {
-    wnd_show_from_left(wnd);
-  } else {
-    wnd_show_from_right(wnd);
-  }
-}
-    
 void wnd_cr(window_t* wnd) {
   wnd->cx = 0;
   wnd->cy++;
@@ -104,10 +36,11 @@ void wnd_goto(window_t* wnd, uint8_t x, uint8_t y) {
 void wnd_print(window_t* wnd, bool single_line, const char* str) {
   const char* start_of_word;
   uint8_t len;
-  uint8_t* p;
+  uint8_t* p, from;
   
   while (*str != '\0') {
     const char* next = str;
+    uint8_t* from = get_screen_pos(wnd);
 
     if (*next == '\n') {
       if (wnd->cy + 1 == wnd->h) {
@@ -142,10 +75,11 @@ void wnd_print(window_t* wnd, bool single_line, const char* str) {
       // No. Do we have another line?
       if (single_line || wnd->cy + 1 == wnd->h) {
 	// No. Stop outputting and print "..."
-	p = get_screen_pos(wnd);
+	from = p = get_screen_pos(wnd);
 	*p++ = '.';
 	*p++ = '.';
-	*p = '.';
+	*p++ = '.';
+	screen_update_range(from, p);
 	return;
       }
       // Yes. Continue on next line
@@ -155,12 +89,13 @@ void wnd_print(window_t* wnd, bool single_line, const char* str) {
       str = start_of_word;
     }
 
-    p = get_screen_pos(wnd);
+    from = p = get_screen_pos(wnd);
   
     while (str != next) {
       *p++ = *str++;
       wnd->cx++;
     }
+    screen_update_range(from, p);
   }
 } 
 
@@ -179,6 +114,13 @@ void wnd_print_int(window_t* wnd, uint16_t v) {
   wnd_print(wnd, false, buf + i);
 }
 
+static void window_screen_update(window_t* wnd)
+{
+  uint8_t* from = get_screen_pos0(wnd, 0, 0);
+  uint8_t* to = get_screen_pos0(wnd, wnd->w - 1, wnd->h - 1) + 1;
+  screen_update_range(from, to);
+}
+
 void wnd_cls(window_t* wnd) {
   uint8_t x, y;
 
@@ -191,15 +133,28 @@ void wnd_cls(window_t* wnd) {
   }
   wnd->cx = 0;
   wnd->cy = 0;
+  window_screen_update(wnd);
 }  
+
+void wnd_clear_eol(window_t* wnd)
+{
+  uint8_t x;
+
+  uint8_t* from = get_screen_pos(wnd);
+  uint8_t* to = from;
+  for (x = wnd->cx; x < wnd->w; x++) {
+    *to++ = 0;
+  }
+  screen_update_range(from, to);  
+}
 
 void wnd_scroll_up(window_t* wnd) {
   int8_t x, y;
-  int8_t* clear;
+  uint8_t* clear = NULL;
 
   for (y = 0; y < wnd->h - 1; y++) {
     uint8_t* to = get_screen_pos0(wnd, 0, y);
-    uint8_t* from = to + SCREEN_WIDTH;
+    uint8_t* from = to + screen.width;
     clear = from;
     
     for (x = 0; x < wnd->w; x++) {
@@ -213,15 +168,16 @@ void wnd_scroll_up(window_t* wnd) {
 
   wnd->cx = 0;
   wnd->cy = wnd->h - 1;
+  window_screen_update(wnd);
 }
 
 void wnd_scroll_down(window_t* wnd) {
   int8_t x, y;
-  uint8_t* clear;
+  uint8_t* clear = NULL;
 
   for (y = wnd->h - 1; y > 0; y--) {
     uint8_t* to = get_screen_pos0(wnd, 0, y);
-    uint8_t* from = to - SCREEN_WIDTH;
+    uint8_t* from = to - screen.width;
     clear = from;
     
     for (x = 0; x < wnd->w; x++) {
@@ -235,15 +191,19 @@ void wnd_scroll_down(window_t* wnd) {
 
   wnd->cx = 0;
   wnd->cy = 0;
+  window_screen_update(wnd);
 }
 
-void wnd_popup(window_t* wnd, const char* msg) {
+void wnd_popup(const char* msg) {
   int len = strlen(msg) + 2;
-  int cx = (wnd->w - len) / 2;
-  int cy = wnd->h / 2 - 1;
-  uint8_t* p0 = get_screen_pos0(wnd, cx, cy);
-  uint8_t* p1 = get_screen_pos0(wnd, cx, cy + 1);
-  uint8_t* p2 = get_screen_pos0(wnd, cx, cy + 2);
+  int cx = (screen.width - len) / 2;
+  int cy = screen.height / 2 - 1;
+  uint8_t* p0 = screen.current + cy * screen.width + cx;
+  uint8_t* p1 = p0 + screen.width;
+  uint8_t* p2 = p1 + screen.width;
+  uint8_t* p0_from = p0;
+  uint8_t* p1_from = p1;
+  uint8_t* p2_from = p2;
   int x, y;
   
   for (x = 0; x < len; x++) {
@@ -256,4 +216,7 @@ void wnd_popup(window_t* wnd, const char* msg) {
     }
     p1++;
   }
+  screen_update_range(p0_from, p0);
+  screen_update_range(p1_from, p2);
+  screen_update_range(p2_from, p2);  
 }

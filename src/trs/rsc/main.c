@@ -1,5 +1,6 @@
 
 #include "retrostore.h"
+#include "trs-lib.h"
 
 #define BOOT_LOADER_ADDR 0x4300
 #include "../../loader/cmd/loader_cmd.c"
@@ -22,31 +23,31 @@ void load_cmd(uint16_t id) {
   __endasm;
 }
 
-static uint8_t check(window_t* wnd) {
+static uint8_t check() {
   static bool first_time = true;
   uint8_t status;
   uint16_t version;
   
-  wnd_switch_to_foreground(wnd);
+  set_screen_to_foreground();
   if (first_time) {
-    wnd_popup(wnd, "Scanning...");
+    wnd_popup("Scanning...");
   }
   first_time = false;
 
   status = scan();
   
   if (status == RS_STATUS_NO_RETROSTORE_CARD) {
-    wnd_popup(wnd, "No RetroStore card found!");
+    wnd_popup("No RetroStore card found!");
     while(1);
   }
 
   get_retrostore_version(&version);
   if ((version >> 8) != RS_CLIENT_VERSION_MAJOR) {
-    wnd_popup(wnd, "Incompatible RetroStore card version!");
+    wnd_popup("Incompatible RetroStore card version!");
     while(1);
   }
   
-  wnd_switch_to_background(wnd);
+  set_screen_to_background();
   return status;
 }
   
@@ -96,11 +97,13 @@ void main() {
   out(0x84, 0);
 
   copy_boot_loader();
+
+  init_hardware();
   
   init_window(&wnd, 0, 0, 0, 0);
 
   while (true) {
-    switch (check(&wnd)) {
+    switch (check()) {
     case RS_STATUS_WIFI_NOT_NEEDED:
       the_menu = &main_menu_wifi_not_needed;
       break;
@@ -112,23 +115,23 @@ void main() {
       break;
     }
   
-    status = menu(&wnd, the_menu, show_from_left, false);
+    status = menu(the_menu, show_from_left, false);
     switch (status) {
     case MENU_BROWSE:
-      wnd_popup(&wnd, "Loading...");
+      wnd_popup("Loading...");
       idx = browse_retrostore(&wnd);
-      if (idx == LIST_EXIT) {
+      if (idx == LIST_ABORT) {
         break;
       }
-      wnd_popup(&wnd, "Downloading...");
+      wnd_popup("Downloading...");
       load_cmd(idx);
       break;
     case MENU_SEARCH:
       idx = search_retrostore(&wnd);
-      if (idx == LIST_EXIT) {
+      if (idx == LIST_ABORT) {
         break;
       }
-      wnd_popup(&wnd, "Downloading...");
+      wnd_popup("Downloading...");
       load_cmd(idx);
       break;
     case MENU_WIFI:

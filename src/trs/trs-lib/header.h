@@ -4,6 +4,6 @@
 
 #include "window.h"
 
-void header(window_t* wnd, const char* banner);
+void header(const char* banner);
 
 #endif

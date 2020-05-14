@@ -8,4 +8,5 @@
 *.asm
 *.sym
 *.cmd
+*.lib
 rsclient.c

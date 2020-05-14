@@ -2,7 +2,7 @@
 /*
  * https://github.com/idispatch/raster-fonts/blob/master/font-5x8.c
  */
-unsigned char console_font_5x8[] = {
+const unsigned char console_font_5x8[] = {
 
     /*
      * code=0, hex=0x00, ascii="^@"

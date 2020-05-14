@@ -4,7 +4,7 @@
 
 #include "window.h"
 
-#define LIST_EXIT ((uint16_t) 0xffff)
+#define LIST_ABORT ((uint16_t) 0xffff)
 
 #define LIST_HIGHLIGHT1 "->"
 #define LIST_HIGHLIGHT2 "\214\235"
@@ -20,6 +20,6 @@ typedef struct {
 } list_t;
 
 void init_list(list_t* menu, const char* title, list_get_item_t get_item);
-uint16_t list(window_t* wnd, list_t* list, bool show_from_left, bool can_abort);
+uint16_t list(list_t* list, bool show_from_left, bool can_abort);
 
 #endif
