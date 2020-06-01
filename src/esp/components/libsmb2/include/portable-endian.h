@@ -20,7 +20,7 @@
 #       define __bswap32     __bswap_32
 #       define __bswap64     __bswap_64
 
-#	include <endian.h>
+#	include "esp/endian.h"
 
 #elif defined(__linux__) || defined(__CYGWIN__)
 

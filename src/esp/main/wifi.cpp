@@ -14,7 +14,7 @@
 #include "esp_mock.h"
 #include "version.h"
 #include "mdns.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 #include "esp_log.h"
 #include "mongoose.h"
 #include <string.h>
@@ -65,8 +65,7 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     esp_wifi_connect();
     break;
   case SYSTEM_EVENT_STA_GOT_IP:
-    ip = ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip);
-    ESP_LOGI(TAG, "got ip:%s", ip);
+    ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
     status = RS_STATUS_WIFI_CONNECTED;
     evt_signal_wifi_up();
     set_led(false, true, false, false, true);

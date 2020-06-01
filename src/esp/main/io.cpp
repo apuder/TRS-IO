@@ -8,7 +8,7 @@
 #include "wifi.h"
 #include "trs-fs.h"
 #include "esp_task.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 #include "tcpip.h"
 #include "retrostore.h"
 #include <string.h>

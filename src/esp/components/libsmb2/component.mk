@@ -1,5 +1,5 @@
-
-COMPONENT_SRCDIRS=lib
-COMPONENT_PRIV_INCLUDEDIRS=lib include/esp
-COMPONENT_ADD_INCLUDEDIRS=include include/smb2
+#
+# "main" pseudo-component makefile.
+#
+# (Uses default behaviour of compiling all source files in directory, adding 'include' to include path.)
 
