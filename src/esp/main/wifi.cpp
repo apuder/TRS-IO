@@ -324,7 +324,7 @@ void start_mg()
 
 void wifi_init_ap()
 {
-  wifi_config_t wifi_config;
+  wifi_config_t wifi_config = {0};
   
   strcpy((char*) wifi_config.ap.ssid, SSID);
   wifi_config.ap.ssid_len = strlen(SSID);
@@ -355,6 +355,7 @@ static void wifi_init_sta()
   ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", (char*) wifi_config.sta.ssid);
   ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", (char*) wifi_config.sta.password);
 
+  esp_netif_create_default_wifi_sta();
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
   ESP_ERROR_CHECK(esp_wifi_start());
@@ -362,8 +363,8 @@ static void wifi_init_sta()
 
 void init_wifi()
 {
-  tcpip_adapter_init();
   ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+  ESP_ERROR_CHECK(esp_netif_init());
 
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
