@@ -26,7 +26,7 @@
 #define SSID "TRS-IO"
 #define MDNS_NAME "trs-io"
 
-static const char* TAG = "TRS-IO";
+static const char* TAG = "TRS-IO wifi";
 
 extern unsigned char index_html[];
 extern unsigned int index_html_len;
@@ -72,13 +72,13 @@ static esp_err_t event_handler(void* ctx, system_event_t* event)
     init_trs_fs();
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
-    ESP_LOGI(TAG, "station:" MACSTR " join, AID=%d",
+    ESP_LOGI(TAG, "AP connected. station:" MACSTR " join, AID=%d",
              MAC2STR(event->event_info.sta_connected.mac),
              event->event_info.sta_connected.aid);
     evt_signal_wifi_up();
     break;
   case SYSTEM_EVENT_AP_STADISCONNECTED:
-    ESP_LOGI(TAG, "station:" MACSTR "leave, AID=%d",
+    ESP_LOGI(TAG, "AP disconnected. station:" MACSTR "leave, AID=%d",
              MAC2STR(event->event_info.sta_disconnected.mac),
              event->event_info.sta_disconnected.aid);
     status = RS_STATUS_WIFI_NOT_CONNECTED;
@@ -324,6 +324,7 @@ void start_mg()
 
 void wifi_init_ap()
 {
+  esp_netif_create_default_wifi_ap();
   wifi_config_t wifi_config = {0};
   
   strcpy((char*) wifi_config.ap.ssid, SSID);
@@ -363,8 +364,8 @@ static void wifi_init_sta()
 
 void init_wifi()
 {
-  ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
   ESP_ERROR_CHECK(esp_netif_init());
+  ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
