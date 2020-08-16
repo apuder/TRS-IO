@@ -5,9 +5,15 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 
+#if 1
+#define LED_RED 0
+#define LED_GREEN 0
+#define LED_BLUE 0
+#else
 #define LED_RED CONFIG_TRS_IO_GPIO_LED_RED
 #define LED_GREEN CONFIG_TRS_IO_GPIO_LED_GREEN
 #define LED_BLUE CONFIG_TRS_IO_GPIO_LED_BLUE
+#endif
 #define LED_SEL_MASK ((1 << LED_RED) | (1 << LED_GREEN) | (1 << LED_BLUE))
 
 #define BIT_R BIT0
@@ -98,6 +104,7 @@ static void led_task(void* p)
 
 void init_led()
 {
+#if 0
   gpio_config_t gpioConfig;
 
   // Configure LED
@@ -105,15 +112,18 @@ void init_led()
   gpioConfig.mode = GPIO_MODE_OUTPUT;
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
-    
+#endif
+
   event_group = xEventGroupCreate();
   xEventGroupClearBits(event_group, 0xff);
+#if 0
   xTaskCreatePinnedToCore(led_task, "led", 2048, NULL, 1, &task_handle, 0);
   
   // Turn LED off
   set_led(false, false, false, false, false);
 #ifdef CONFIG_TRS_IO_TEST_LED
   test_led();
+#endif
 #endif
 }
     

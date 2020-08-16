@@ -28,8 +28,8 @@
 
 static const char* TAG = "TRS-IO wifi";
 
-extern unsigned char index_html[];
-extern unsigned int index_html_len;
+extern const uint8_t index_html_start[] asm("_binary_index_html_start");
+extern const uint8_t index_html_end[] asm("_binary_index_html_end");
 
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
@@ -258,8 +258,8 @@ static void mongoose_event_handler(struct mg_connection* nc,
     {
       struct http_message* message = (struct http_message*) eventData;
       const char* uri = message->uri.p;
-      char* response = (char*) index_html;
-      unsigned int response_len = index_html_len;
+      char* response = (char*) index_html_start;
+      unsigned int response_len = index_html_end - index_html_start;
       const char* content_type = "Content-Type: text/html";
 
       if (strncmp(uri, "/config", 7) == 0) {
@@ -353,6 +353,9 @@ static void wifi_init_sta()
   len = sizeof(wifi_config.sta.password);
   storage_get_str(WIFI_KEY_PASSWD, (char*) wifi_config.sta.password, &len);
 
+  //XXX
+  strcpy((char*) wifi_config.sta.password, "beibeiandjuju");
+  
   ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", (char*) wifi_config.sta.ssid);
   ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", (char*) wifi_config.sta.password);
 
@@ -381,4 +384,5 @@ void init_wifi()
     set_led(false, true, true, true, false);
     wifi_init_ap();
   }
+  start_mg();
 }

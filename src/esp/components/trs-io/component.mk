@@ -9,3 +9,5 @@
 
 COMPONENT_ADD_LDFLAGS=-Wl,--whole-archive build/$(COMPONENT_NAME)/lib$(COMPONENT_NAME).a -Wl,--no-whole-archive
 
+COMPONENT_EMBED_FILES := index.html
+

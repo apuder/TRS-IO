@@ -20,11 +20,8 @@ OBJS = \
 %.cmd: %.ihx
 	$(IHEX2CMD) $< $@
 
-all: loader_basic.c
-
-loader_basic.c: loader_basic.cmd
-	xxd -i loader_basic.cmd loader_basic.c
-	cp loader_basic.c ../../esp/components/retrostore/
+all: loader_basic.cmd
+	cp loader_basic.cmd ../../esp/components/retrostore/
 
 loader_basic.ihx : $(OBJS) Makefile
 	$(LD) $(LDFLAGS) -i loader_basic.ihx $(OBJS)
@@ -41,4 +38,3 @@ clean:
 	rm -f *.asm
 	rm -f *.sym
 	rm -f *.cmd
-	rm -f loader_basic.c

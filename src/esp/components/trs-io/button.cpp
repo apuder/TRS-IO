@@ -52,6 +52,7 @@ static void IRAM_ATTR isr_button(void* arg)
 
 void init_button()
 {
+#if 0
   gpio_config_t gpioConfig;
 
   // Configure push button
@@ -69,9 +70,14 @@ void init_button()
   gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
   gpio_isr_handler_add(GPIO_BUTTON, isr_button, NULL);
 #endif
+#endif
 }
 
 bool is_button_pressed()
 {
+#if 0
   return (GPIO.in & (1 << GPIO_BUTTON)) == 0;
+#else
+  return 0;
+#endif
 }

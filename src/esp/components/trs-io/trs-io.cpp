@@ -1,14 +1,14 @@
 
 #include "trs-io.h"
-
+#include "esp_attr.h"
 
 using namespace std;
 
-uint8_t TrsIO::sendBuffer[TRS_IO_MAX_SEND_BUFFER];
+uint8_t TrsIO::sendBuffer[TRS_IO_MAX_SEND_BUFFER] EXT_RAM_ATTR;
 uint8_t* TrsIO::sendPtr;
 uint8_t* TrsIO::nextByteToSend;
 
-uint8_t TrsIO::receiveBuffer[TRS_IO_MAX_RECEIVE_BUFFER];
+uint8_t TrsIO::receiveBuffer[TRS_IO_MAX_RECEIVE_BUFFER] EXT_RAM_ATTR;
 uint8_t* TrsIO::receivePtr;
 
 TrsIO* TrsIO::modules[TRS_IO_MAX_MODULES];

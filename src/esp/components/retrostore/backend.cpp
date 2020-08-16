@@ -8,6 +8,8 @@
 #include "pb_decode.h"
 #include "cJSON.h"
 
+#include "esp_attr.h"
+
 static int fd;
 
 #define SIZE_APP_PAGE 16
@@ -17,7 +19,7 @@ typedef struct {
   char title[64];
 } app_title_t;
 
-static app_title_t apps[SIZE_APP_PAGE];
+static app_title_t apps[SIZE_APP_PAGE] EXT_RAM_ATTR;
 static int current_page = 0;
 static int num_apps  = 0;
 

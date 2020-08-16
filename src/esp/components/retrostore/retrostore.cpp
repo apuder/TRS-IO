@@ -6,17 +6,17 @@
 #include "esp_mock.h"
 #include <string.h>
 
-// Defined in loader_cmd.c
-extern unsigned char loader_cmd_bin[];
-extern unsigned int loader_cmd_bin_len;
+// loader_cmd.bin
+extern const uint8_t loader_cmd_start[] asm("_binary_loader_cmd_bin_start");
+extern const uint8_t loader_cmd_end[] asm("_binary_loader_cmd_bin_end");
 
-// Defined in loader_basic.c
-extern unsigned char loader_basic_cmd[];
-extern unsigned int loader_basic_cmd_len;
+// loader_basic.cmd
+extern const uint8_t loader_basic_start[] asm("_binary_loader_basic_cmd_start");
+extern const uint8_t loader_basic_end[] asm("_binary_loader_basic_cmd_end");
 
-// Defined in rsclient.c
-extern unsigned char rsclient_cmd[];
-extern unsigned int rsclient_cmd_len;
+// rsclient.cmd
+extern const uint8_t rsclient_start[] asm("_binary_rsclient_cmd_start");
+extern const uint8_t rsclient_end[] asm("_binary_rsclient_cmd_end");
 
 
 class RetroStoreModule : public TrsIO {
@@ -37,7 +37,7 @@ public:
   }
 
   void sendLoaderCMD() {
-    addBlob16(loader_cmd_bin, loader_cmd_bin_len);
+    addBlob16((void*) loader_cmd_start, loader_cmd_end - loader_cmd_start);
   }
 
   void sendBASIC() {
@@ -50,7 +50,7 @@ public:
   void sendCMD() {
     uint16_t idx = I(0);
     if (idx == 0xffff) {
-      addBlob16(rsclient_cmd, rsclient_cmd_len);
+      addBlob16((void*) rsclient_start, rsclient_end - rsclient_start);
     } else {
       int type;
       unsigned char* buf;
@@ -58,13 +58,13 @@ public:
       bool ok = get_app_code(idx, &type, &buf, &size);
       if (!ok) {
         // Error happened. Just send rsclient again so we send something legal
-        addBlob16(rsclient_cmd, rsclient_cmd_len);
+        addBlob16((void*) rsclient_start, rsclient_end - rsclient_start);
       } else {
         if (type == 3 /* CMD */) {
           addBlob16(buf, size);
         } else {
           // BASIC loader
-          addBlob16(loader_basic_cmd, loader_basic_cmd_len);
+          addBlob16((void*) loader_basic_start, loader_basic_end - loader_basic_start);
         }
       }  
     }
