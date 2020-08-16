@@ -3,7 +3,11 @@
 #include "driver/gpio.h"
 #include "esp_event.h"
 
+#ifdef CONFIG_TRS_IO_MODEL_1
+#define GPIO_BUTTON GPIO_NUM_39
+#else
 #define GPIO_BUTTON GPIO_NUM_22
+#endif
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
@@ -52,13 +56,16 @@ static void IRAM_ATTR isr_button(void* arg)
 
 void init_button()
 {
-#if 0
   gpio_config_t gpioConfig;
 
   // Configure push button
   gpioConfig.pin_bit_mask = (1ULL << GPIO_BUTTON);
   gpioConfig.mode = GPIO_MODE_INPUT;
+#ifdef CONFIG_TRS_IO_MODEL_1
+  gpioConfig.pull_up_en = GPIO_PULLUP_DISABLE;
+#else
   gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
+#endif
   gpioConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
 #ifdef TRS_IO_BUTTON_ONLY_AT_STARTUP
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
@@ -70,14 +77,13 @@ void init_button()
   gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
   gpio_isr_handler_add(GPIO_BUTTON, isr_button, NULL);
 #endif
-#endif
 }
 
 bool is_button_pressed()
 {
-#if 0
-  return (GPIO.in & (1 << GPIO_BUTTON)) == 0;
+#ifdef CONFIG_TRS_IO_MODEL_1
+  return (GPIO.in1.data & (1 << (GPIO_BUTTON - 32))) == 0;
 #else
-  return 0;
+  return (GPIO.in & (1 << GPIO_BUTTON)) == 0;
 #endif
 }

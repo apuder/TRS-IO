@@ -143,7 +143,7 @@ void wnd_clear_eol(window_t* wnd)
   uint8_t* from = get_screen_pos(wnd);
   uint8_t* to = from;
   for (x = wnd->cx; x < wnd->w; x++) {
-    *to++ = 0;
+    *to++ = ' ';
   }
   screen_update_range(from, to);  
 }

@@ -1,72 +1,86 @@
 menu "TRS-IO"
 
-    config TRS_IO_USE_RETROSTORE_PCB
-        bool "Use RetroStoreCard settings"
-        default n
-        help
+config TRS_IO_USE_RETROSTORE_PCB
+    bool "Use RetroStoreCard settings"
+    default n
+    help
         Enable backward compatibility with the original
         RetroStoreCard. By default, the TRS-IO settings will be used.
 
-    config TRS_IO_GPIO_LED_RED
-        int "GPIO pin for red"
-	default 5
-	help
-	GPIO pin that is connected to the red pin of the
-	multi-color LED. The default for TRS-IO	is GPIO 5
-	and for the RetroStoreCard GPIO 4.
+choice
+    prompt "TRS-80 Model"
+    default TRS_IO_MODEL_3
+    help
+        TRS-80 model that TRS-IO is targetting...
 
-    config TRS_IO_GPIO_LED_GREEN
-        int "GPIO pin for green"
-	default 4
-	help
-	GPIO pin that is connected to the green pin of the
-	multi-color LED. The default for TRS-IO	is GPIO 4
-	and for the RetroStoreCard GPIO 0.
+config TRS_IO_MODEL_1
+    bool "TRS-80 Model 1"
+config TRS_IO_MODEL_3
+    bool "TRS-80 Model III"
+endchoice
 
-    config TRS_IO_GPIO_LED_BLUE
-        int "GPIO pin for blue"
-	default 21
-	help
-	GPIO pin that is connected to the blue pin of the
-	multi-color LED. The default for both TRS-IO
-	and the RetroStoreCard is GPIO 21.
+config TRS_IO_GPIO_LED_RED
+    int "GPIO pin for red"
+    default 5
+    help
+        GPIO pin that is connected to the red pin of the
+        multi-color LED. The default for TRS-IO	is GPIO 5
+        and for the RetroStoreCard GPIO 4.
 
-    config TRS_IO_ENABLE_OTA
-        bool "Enable OTA for TRS-IO"
-        default n
-        help
+config TRS_IO_GPIO_LED_GREEN
+    int "GPIO pin for green"
+    default 4
+    help
+        GPIO pin that is connected to the green pin of the
+        multi-color LED. The default for TRS-IO	is GPIO 4
+        and for the RetroStoreCard GPIO 0.
+
+config TRS_IO_GPIO_LED_BLUE
+    int "GPIO pin for blue"
+    default 32 if TRS_IO_MODEL_1
+    default 21 if TRS_IO_MODEL_3
+    help
+        GPIO pin that is connected to the blue pin of the
+        multi-color LED. The default for both TRS-IO
+        and the RetroStoreCard is GPIO 21 for the Model III
+	and GPIO 32 for the Model 1.
+
+config TRS_IO_ENABLE_OTA
+    bool "Enable OTA for TRS-IO"
+    default n
+    help
         Select this if the OTA mechanism should be enabled.
         This might immediately overwrite the flashed firmware.
         Should be disabled during development.
 
-    config TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
-        bool "Use compile-time credentials for WiFi"
-        default n
-        help
+config TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
+    bool "Use compile-time credentials for WiFi"
+    default n
+    help
         If enabled, TRS-IO will use hard-coded credentials to
         connect to the specified WiFi network. If disabled,
         TRS-IO will create a WiFi Access Point to allow
         provisioning of WiFi credentials at runtime.
 
-    config TRS_IO_SSID
-        string "WiFi SSID"
-        depends on TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
-        default ""
-        help
+config TRS_IO_SSID
+    string "WiFi SSID"
+    depends on TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
+    default ""
+    help
         Sets a compile-time SSID that TRS-IO will connect to.
 
-    config TRS_IO_PASSWD
-        string "WiFi password"
-        depends on TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
-        default ""
-        help
+config TRS_IO_PASSWD
+    string "WiFi password"
+    depends on TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
+    default ""
+    help
         Set a compile-time password that TRS-IO will use
         to connect to a given WiFi.
 
-    config TRS_IO_TEST_LED
-        bool "Test LED"
-        default n
-        help
+config TRS_IO_TEST_LED
+    bool "Test LED"
+    default n
+    help
         If enabled, run LED test (cycle through RGB colors). In that
         mode, TRS-IO will not do anything else besides the test.
 

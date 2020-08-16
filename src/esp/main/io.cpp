@@ -5,6 +5,7 @@
 #include "button.h"
 #include "led.h"
 #include "storage.h"
+#include "spi.h"
 #include "wifi.h"
 #include "trs-fs.h"
 #include "esp_task.h"
@@ -21,29 +22,47 @@
 // GPIO pins 12-19
 #define GPIO_DATA_BUS_MASK 0b11111111000000000000
 
+#ifdef CONFIG_TRS_IO_MODEL_1
+#define ESP_S0 34
+#define ESP_S1 35
+#define IOBUSINT_N 33
+#else
 // GPIO(23): ESP_SEL_N (TRS-IO or Frehd)
-#define ESP_SEL_N 23
 #define ESP_SEL_TRS_IO 39
-#define WAIT_N 27
 #define IOBUSINT_N 25
-#define RD_N 36
+#endif
+
+#define ESP_SEL_N 23
+#define ESP_READ_N 36
+#define ESP_WAIT_RELEASE_N 27
 
 #define ADJUST(x) ((x) < 32 ? (x) : (x) - 32)
 
 #define MASK_ESP_SEL_N (1 << ADJUST(ESP_SEL_N))
 #define MASK64_ESP_SEL_N (1ULL << ESP_SEL_N)
+#ifdef CONFIG_TRS_IO_MODEL_1
+#define MASK_ESP_S0 (1 << ADJUST(ESP_S0))
+#define MASK64_ESP_S0 (1ULL << ESP_S0)
+#define MASK_ESP_S1 (1 << ADJUST(ESP_S1))
+#define MASK64_ESP_S1 (1ULL << ESP_S1)
+#else
 #define MASK_ESP_SEL_TRS_IO (1 << ADJUST(ESP_SEL_TRS_IO))
 #define MASK64_ESP_SEL_TRS_IO (1ULL << ESP_SEL_TRS_IO)
-#define MASK_WAIT_N (1 << ADJUST(WAIT_N))
-#define MASK64_WAIT_N (1ULL << WAIT_N)
+#endif
+#define MASK_ESP_WAIT_RELEASE_N (1 << ADJUST(ESP_WAIT_RELEASE_N))
+#define MASK64_ESP_WAIT_RELEASE_N (1ULL << ESP_WAIT_RELEASE_N)
 #define MASK_IOBUSINT_N (1 << ADJUST(IOBUSINT_N))
 #define MASK64_IOBUSINT_N (1ULL << IOBUSINT_N)
-#define MASK_RD_N (1 << ADJUST(RD_N))
-#define MASK64_RD_N (1ULL << RD_N)
+#define MASK_ESP_READ_N (1 << ADJUST(ESP_READ_N))
+#define MASK64_ESP_READ_N (1ULL << ESP_READ_N)
 
 #define GPIO_OUTPUT_DISABLE(mask) GPIO.enable_w1tc = (mask)
 
 #define GPIO_OUTPUT_ENABLE(mask) GPIO.enable_w1ts = (mask)
+
+// loader_frehd.bin
+extern const uint8_t loader_frehd_start[] asm("_binary_loader_frehd_bin_start");
+extern const uint8_t loader_frehd_end[] asm("_binary_loader_frehd_bin_end");
 
 static volatile bool trigger_trs_io_action = false;
 
@@ -52,6 +71,10 @@ static volatile bool trigger_trs_io_action = false;
 
 static volatile bool io_task_started = false;
 static volatile uint8_t intr_event = 0;
+static volatile bool intr_enabled = true;
+
+#define TRS_IO_DATA_READY 0x20
+static volatile uint8_t fdc_37e0 = 0xff;
 
 void io_core1_enable_intr() {
   if (!io_task_started) {
@@ -69,8 +92,40 @@ void io_core1_disable_intr() {
   while (intr_event & IO_CORE1_DISABLE_INTR) ;
 }
 
+#ifdef CONFIG_TRS_IO_MODEL_1
+static inline uint8_t read_a0_a7()
+{
+  if (!intr_enabled) {
+    portENABLE_INTERRUPTS();
+  }
+  uint8_t lsb = readPortExpander(MCP23S17, MCP23S17_GPIOA);
+  if (!intr_enabled) {
+    portDISABLE_INTERRUPTS();
+  }
+  return lsb;
+}
+
+static inline uint16_t read_a0_a15()
+{
+  if (!intr_enabled) {
+    portENABLE_INTERRUPTS();
+  }
+  uint8_t lsb = readPortExpander(MCP23S17, MCP23S17_GPIOA);
+  uint8_t msb = readPortExpander(MCP23S17, MCP23S17_GPIOB);
+  if (!intr_enabled) {
+    portDISABLE_INTERRUPTS();
+  }
+  uint16_t addr = lsb | (msb << 8);
+  return addr;
+}
+#endif
+
 static inline void trs_io_read() {
+#ifdef CONFIG_TRS_IO_MODEL_1
+  fdc_37e0 |= TRS_IO_DATA_READY;
+#else
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
+#endif
   if (!trigger_trs_io_action) {
     uint8_t data = GPIO.in >> 12;
     if (!TrsIO::outZ80(data)) {
@@ -80,7 +135,11 @@ static inline void trs_io_read() {
 }
 
 static inline void trs_io_write() {
+#ifdef CONFIG_TRS_IO_MODEL_1
+  fdc_37e0 |= TRS_IO_DATA_READY;
+#else
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
+#endif
   GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
   uint32_t d = trigger_trs_io_action ? 0xff : TrsIO::inZ80();
   d <<= 12;
@@ -90,13 +149,21 @@ static inline void trs_io_write() {
 }
 
 static inline void frehd_read() {
+#ifdef CONFIG_TRS_IO_MODEL_1
+  uint8_t port = read_a0_a7();
+#else
   uint8_t port = GPIO.in1.data & 0x0f;
+#endif
   uint8_t data = GPIO.in >> 12;
   frehd_out(port, data);
 }
 
 static inline void frehd_write() {
+#ifdef CONFIG_TRS_IO_MODEL_1
+  uint8_t port = read_a0_a7();
+#else
   uint8_t port = GPIO.in1.data & 0x0f;
+#endif
   uint32_t d = frehd_in(port) << 12;
 
   GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
@@ -105,35 +172,84 @@ static inline void frehd_write() {
   REG_WRITE(GPIO_OUT_W1TC_REG, d);
 }
 
+#ifdef CONFIG_TRS_IO_MODEL_1
+static inline void floppy_write()
+{
+  static uint8_t i = 0;
+  static const uint8_t len = loader_frehd_end - loader_frehd_start;
+
+  uint32_t d = 0xff;
+  uint16_t addr = read_a0_a15();
+  
+  switch(addr) {
+  case 0x37e0:
+    d = fdc_37e0;
+    fdc_37e0 = 0xff;
+    break;
+  case 0x37ec:
+    d = 2;
+    break;
+  case 0x37ef:
+    if (i < len) {
+      d = loader_frehd_start[i];
+    }
+    i++;
+    break;
+  }
+
+  d = d << 12;
+
+  GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
+  REG_WRITE(GPIO_OUT_W1TS_REG, d);
+  d = d ^ GPIO_DATA_BUS_MASK;
+  REG_WRITE(GPIO_OUT_W1TC_REG, d);
+}
+#endif
+
 static void io_task(void* p)
 {
   io_task_started = true;
   portDISABLE_INTERRUPTS();
+  intr_enabled = false;
   
   while(true) {
-    // Wait for access to ports 31 or 0xC0-0xCF
+    // Wait for access the GAL to trigger this ESP
     while ((GPIO.in & MASK_ESP_SEL_N) && (intr_event == 0)) ;
 
     if (intr_event != 0) {
       if (intr_event & IO_CORE1_ENABLE_INTR) {
         portENABLE_INTERRUPTS();
         intr_event &= ~IO_CORE1_ENABLE_INTR;
+	intr_enabled = true;
       } else if (intr_event & IO_CORE1_DISABLE_INTR) {
         portDISABLE_INTERRUPTS();
         intr_event &= ~IO_CORE1_DISABLE_INTR;
+	intr_enabled = false;
       }
       continue;
     }
 
-    if (GPIO.in1.data & MASK_RD_N) {
+#ifdef CONFIG_TRS_IO_MODEL_1
+    // Read pins S0 and S1
+    const uint8_t s = (GPIO.in1.data >> 2) & 3;
+#else
+    const uint8_t s = (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) ? 2 : 3;
+#endif
+    if (GPIO.in1.data & MASK_ESP_READ_N) {
       // Read data
 #ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
       trs_io_read();
 #else
-      if (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) {
-        trs_io_read();
-      } else {
-        frehd_read();
+      switch (s) {
+      case 1:
+	assert(0); // Shouldn't happen
+	break;
+      case 2:
+	trs_io_read();
+	break;
+      case 3:
+	frehd_read();
+	break;
       }
 #endif
     } else {
@@ -141,22 +257,32 @@ static void io_task(void* p)
 #ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
       trs_io_write();
 #else
-      if (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) {
-        trs_io_write();
-      } else {
-        frehd_write();
+      switch (s) {
+      case 1:
+#ifdef CONFIG_TRS_IO_MODEL_1
+	floppy_write();
+#else
+	assert(0); // Shouldn't happen
+#endif
+	break;
+      case 2:
+	trs_io_write();
+	break;
+      case 3:
+	frehd_write();
+	break;
       }
 #endif
     }
     
-    // Release WAIT_N
-    GPIO.out_w1ts = MASK_WAIT_N;
+    // Release ESP_WAIT_RELEASE_N
+    GPIO.out_w1ts = MASK_ESP_WAIT_RELEASE_N;
 
     // Wait for ESP_SEL_N to be de-asserted
     while (!(GPIO.in & MASK_ESP_SEL_N)) ;
     
-    // Set WAIT_N to 0 for next IO command
-    GPIO.out_w1tc = MASK_WAIT_N;
+    // Set ESP_WAIT_RELEASE_N to 0 for next IO command
+    GPIO.out_w1tc = MASK_ESP_WAIT_RELEASE_N;
 
     GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);
   }
@@ -164,13 +290,20 @@ static void io_task(void* p)
 
 static void action_task(void* p)
 {
+  // Clear any spurious interrupts
+  is_button_short_press();
+
   while (true) {
     frehd_check_action();
 
     if (trigger_trs_io_action) {
       TrsIO::processInBackground();
       trigger_trs_io_action = false;
+#ifdef CONFIG_TRS_IO_MODEL_1
+      fdc_37e0 &= ~TRS_IO_DATA_READY;
+#else
       REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
+#endif
     }
 
     if (is_button_long_press()) {
@@ -219,25 +352,33 @@ void init_io()
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
 
+#ifndef CONFIG_TRS_IO_MODEL_1
   // GPIO pins 32-35 are use for A0-A3
   gpioConfig.pin_bit_mask = GPIO_SEL_32 | GPIO_SEL_33 | GPIO_SEL_34 |
     GPIO_SEL_35;
   gpio_config(&gpioConfig);
+#endif
 
-  // Configure RD_N
-  gpioConfig.pin_bit_mask = MASK64_RD_N;
+  // Configure ESP_READ_N
+  gpioConfig.pin_bit_mask = MASK64_ESP_READ_N;
   gpio_config(&gpioConfig);
   
   // Configure ESP_SEL_N
   gpioConfig.pin_bit_mask = MASK64_ESP_SEL_N;
   gpio_config(&gpioConfig);
 
+#ifdef CONFIG_TRS_IO_MODEL_1
+  // Configure ESP_S0 and ESP_S1
+  gpioConfig.pin_bit_mask = MASK64_ESP_S0 | MASK64_ESP_S1;
+  gpio_config(&gpioConfig);
+#else
   // Configure ESP_SEL_TRS_IO
   gpioConfig.pin_bit_mask = MASK64_ESP_SEL_TRS_IO;
   gpio_config(&gpioConfig);
-  
-  // Configure IOBUSINT_N & WAIT_N
-  gpioConfig.pin_bit_mask = MASK64_IOBUSINT_N | MASK64_WAIT_N;
+#endif
+
+  // Configure IOBUSINT_N & ESP_WAIT_RELEASE_N
+  gpioConfig.pin_bit_mask = MASK64_IOBUSINT_N | MASK64_ESP_WAIT_RELEASE_N;
   gpioConfig.mode = GPIO_MODE_OUTPUT;
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
@@ -245,8 +386,12 @@ void init_io()
   // Set IOBUSINT_N to 0
   gpio_set_level((gpio_num_t) IOBUSINT_N, 0);
   
-  // Set ESP_WAIT_N to 0
-  gpio_set_level((gpio_num_t) WAIT_N, 0);
+  // Set ESP_WAIT_RELEASE_N to 0
+  gpio_set_level((gpio_num_t) ESP_WAIT_RELEASE_N, 0);
+
+#ifdef CONFIG_TRS_IO_MODEL_1
+  init_spi();
+#endif
 
   xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, tskIDLE_PRIORITY + 2,
                           NULL, 1);

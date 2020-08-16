@@ -24,6 +24,12 @@ char get_key()
 char get_key() {
   __asm
     push de
+    ld a,(0x125)
+    sub #'I'
+    jr z,rom_key ; This is a MIII
+    ld a,#201    ; Enable BREAK
+    ld (16396),a
+rom_key:
     call 0x0049
     pop de
     ld l,a

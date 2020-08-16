@@ -145,10 +145,10 @@ client via the following short BASIC program:
  20 OUT31,3
  30 OUT31,1
  40 N=INP(31)+256*INP(31)
- 50 FOR X=1 TO N:POKE17151+X,INP(31):NEXT
+ 50 FOR X=1 TO N:POKE20735+X,INP(31):NEXT
  RUN
  SYSTEM
- *? /17152
+ *? /20736
  ```
  
 The above BASIC program will download the CMD executable from TRS-IO

@@ -9,3 +9,5 @@
 
 $(call compile_only_if,$(CONFIG_TRS_IO_ENABLE_OTA),ota.o)
 $(call compile_only_if_not,$(CONFIG_TRS_IO_ENABLE_OTA),ota-dummy.o)
+
+COMPONENT_EMBED_FILES := loader_frehd.bin

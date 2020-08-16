@@ -353,9 +353,6 @@ static void wifi_init_sta()
   len = sizeof(wifi_config.sta.password);
   storage_get_str(WIFI_KEY_PASSWD, (char*) wifi_config.sta.password, &len);
 
-  //XXX
-  strcpy((char*) wifi_config.sta.password, "beibeiandjuju");
-  
   ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", (char*) wifi_config.sta.ssid);
   ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", (char*) wifi_config.sta.password);
 
@@ -384,5 +381,5 @@ void init_wifi()
     set_led(false, true, true, true, false);
     wifi_init_ap();
   }
-  start_mg();
+  //start_mg();
 }

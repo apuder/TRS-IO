@@ -1,7 +1,7 @@
 
 MAKE = make
 
-DIRS = cmd basic
+DIRS = cmd basic frehd
 
 
 all:

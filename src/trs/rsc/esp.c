@@ -1,9 +1,18 @@
 
 #include "retrostore.h"
 
+static inline bool is_m3()
+{
+  return *((uint8_t*) 0x125) == 'I';
+}
+
 void wait_for_esp()
 {
-  while (in(0xe0) & 8) ;
+  if (is_m3()) {
+    while (in(0xe0) & 8) ;
+  } else {
+    while (*((uint8_t*) 0x37e0) & 0x20) ;
+  }
 }
 
 uint8_t scan()

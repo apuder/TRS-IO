@@ -23,6 +23,13 @@ void load_cmd(uint16_t id) {
   __endasm;
 }
 
+static void download_and_run(int idx)
+{
+  wnd_popup("Downloading...");
+  copy_boot_loader();
+  load_cmd(idx);
+}
+
 static uint8_t check() {
   static bool first_time = true;
   uint8_t status;
@@ -92,11 +99,9 @@ void main() {
   bool show_from_left = false;
   menu_t* the_menu;
   uint8_t status;
-
+  
   // For M4, turn on MIII memory map. Nop on a MIII
   out(0x84, 0);
-
-  copy_boot_loader();
 
   init_hardware();
   
@@ -123,16 +128,14 @@ void main() {
       if (idx == LIST_ABORT) {
         break;
       }
-      wnd_popup("Downloading...");
-      load_cmd(idx);
+      download_and_run(idx);
       break;
     case MENU_SEARCH:
       idx = search_retrostore(&wnd);
       if (idx == LIST_ABORT) {
         break;
       }
-      wnd_popup("Downloading...");
-      load_cmd(idx);
+      download_and_run(idx);
       break;
     case MENU_WIFI:
       configure_wifi();

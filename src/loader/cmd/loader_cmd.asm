@@ -1,10 +1,8 @@
 
-CLS: equ 01c9h
+    org 05100h
+    ld hl,0ffffh		;
 
-    org 4300h
-
-    ld hl,0ffffh
-    ld a,56
+    ld a,16			; Enable I/O bus on MIII
     out (236),a
     ld a,3
     out (31),a
@@ -14,10 +12,23 @@ CLS: equ 01c9h
     ld a,h
     out (31),a
 
-WAIT:
+    ld a,(0125h)		; Are we running on a MIII?
+    sub 'I'
+    jr z,wait_m3
+	
+    ld hl,037e0h
+wait_m1:
+    ld a,(hl)
+    and 020h
+    jr nz,wait_m1
+    jr cont
+
+wait_m3:
     in a,(0e0h)
     and 8
-    jr nz,WAIT
+    jr nz,wait_m3
+
+cont:
     in a,(31)
     in a,(31)
 LOOP:
@@ -78,7 +89,6 @@ skip:
     jr skip
 bad_cmd:
     ld a,'*'
-    call 033Ah
-endless_loop:
-    jr endless_loop
-
+    ld hl,03c00h
+    ld (hl),a
+    jr $

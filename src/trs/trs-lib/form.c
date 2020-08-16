@@ -11,6 +11,33 @@ static uint8_t form_items_col2;
 static uint8_t form_items_col3;
 
 
+#ifdef ESP_PLATFORM
+static inline const char* br_open()
+{
+  return "[";
+}
+
+static inline const char* br_close()
+{
+  return "]";
+}
+#else
+static inline bool is_m3()
+{
+  return *((uint8_t*) 0x125) == 'I';
+}
+
+static inline const char* br_open()
+{
+  return is_m3() ? "[" : "<";
+}
+
+static inline const char* br_close()
+{
+  return is_m3() ? "]" : ">";
+}
+#endif
+
 static void draw_input_field(form_input_t* inp, bool has_focus) {
   int8_t i;
   uint8_t idx;
@@ -39,7 +66,7 @@ static void draw_input_field(form_input_t* inp, bool has_focus) {
     return;
   }
   
-  wnd_print(&wnd_form, false, "[");
+  wnd_print(&wnd_form, false, br_open());
   idx = (len > width) ? len - width : 0;
   wnd_print(&wnd_form, false, inp->buf + idx);
   wnd_print(&wnd_form, false, FORM_CURSOR);
@@ -47,15 +74,16 @@ static void draw_input_field(form_input_t* inp, bool has_focus) {
     wnd_print(&wnd_form, false, ".");
   }
   if (len < width) {
-    wnd_print(&wnd_form, false, "]");
+    wnd_print(&wnd_form, false, br_close());
   }
 }
 
 static void draw_checkbox_field(form_checkbox_t* cb, bool has_focus)
 {
-  wnd_print(&wnd_form, false, has_focus ? "[" : " ");
+  wnd_print(&wnd_form, false, has_focus ? br_open() : " ");
   wnd_print(&wnd_form, false, *cb->checked ? "Yes" : "No");
-  wnd_print(&wnd_form, false, has_focus ? "] " : "  ");
+  wnd_print(&wnd_form, false, has_focus ? br_close() : " ");
+  wnd_print(&wnd_form, false, " ");
 }
 
 static void draw_select_field_items(form_select_t* sel)
@@ -72,9 +100,10 @@ static void draw_select_field_items(form_select_t* sel)
       continue;
     }
     frame = current == *sel->selected;
-    wnd_print(&wnd_form, false, frame ? "[" : " ");
+    wnd_print(&wnd_form, false, frame ? br_open() : " ");
     wnd_print(&wnd_form, false, item);
-    wnd_print(&wnd_form, false, frame ? "] " : "  ");
+    wnd_print(&wnd_form, false, frame ? br_close() : " ");
+    wnd_print(&wnd_form, false, " ");
     current++;
   } while (current != sel->first);
 }

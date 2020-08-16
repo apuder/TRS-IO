@@ -1,12 +1,4 @@
 
-CC = sdcc
-AS = sdasz80
-LD = sdldz80
-IHEX2CMD = ../../ihex2cmd/ihex2cmd
-CFLAGS = -mz80 --std-sdcc99 --opt-code-size -I../trs-lib
-ASFLAGS = -l
-LDFLAGS = -mjwx -b _CODE=0x5200 -l ../trs-lib/trs-lib.lib -l $(SDCC_PATH)/lib/z80/z80.lib
-
 OBJS = \
 	crt0.rel \
 	main.rel \
@@ -16,6 +8,16 @@ OBJS = \
 	esp.rel \
 	help.rel \
 	about.rel
+
+TRS_LIB = ../trs-lib/trs-lib.lib
+
+CC = sdcc
+AS = sdasz80
+LD = sdldz80
+IHEX2CMD = ../../ihex2cmd/ihex2cmd
+CFLAGS = -mz80 --std-sdcc99 --opt-code-size -I../trs-lib
+ASFLAGS = -l
+LDFLAGS = -mjwx -b _CODE=0x5200 -l $(TRS_LIB) -l $(SDCC_PATH)/lib/z80/z80.lib
 
 %.rel: %.c
 	$(CC) $(CFLAGS) -c $< 
@@ -29,7 +31,7 @@ OBJS = \
 all: rsclient.cmd
 	cp rsclient.cmd ../../esp/components/retrostore/
 
-rsclient.ihx : $(OBJS) Makefile
+rsclient.ihx : $(OBJS) $(TRS_LIB) Makefile
 	$(LD) $(LDFLAGS) -i rsclient.ihx $(OBJS)
 
 
