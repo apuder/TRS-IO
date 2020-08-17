@@ -1,0 +1,7 @@
+(sym_lib_table
+  (lib (name ESP-AP)(type Legacy)(uri ${KIPRJMOD}/ESP-AP.lib)(options "")(descr ""))
+  (lib (name ATF20V8-AP)(type Legacy)(uri ${KIPRJMOD}/ATF20V8B-AP.lib)(options "")(descr ""))
+  (lib (name SRAM-PDIP-AP)(type Legacy)(uri ${KIPRJMOD}/SRAM-PDIP-AP.lib)(options "")(descr ""))
+  (lib (name ATF22V10-PDIP-AP)(type Legacy)(uri ${KIPRJMOD}/ATF22V10-PDIP-AP.lib)(options "")(descr ""))
+  (lib (name ATF16V8-PDIP-AP)(type Legacy)(uri ${KIPRJMOD}/ATF16V8-PDIP-AP.lib)(options "")(descr ""))
+)

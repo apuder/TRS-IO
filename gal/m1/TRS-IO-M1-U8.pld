@@ -1,0 +1,38 @@
+Name      TRS-IO-M1-U8;
+Partno    ATF22V10C;
+Date      08/03/2020;
+Rev       01;
+Designer  AP;
+Company   SFSU;
+Assembly  None;
+Location  None;
+Device    g22v10;
+
+/*  For the TL866II+ programmer, choose profile ATF22V10C (UES) */
+
+/* Inputs  */
+Pin [1..11] = [A0..10];
+Pin [13..17] = [A11..15];
+
+/* Outputs */
+Pin 18 = ADDR_TRS_IO;
+Pin 19 = ADDR_FREHD;
+Pin 20 = ADDR_0;
+Pin 21 = ADDR_1;
+Pin 22 = ADDR_2;
+
+/* Equations */
+
+/* SRAM */
+ADDR_0 = A15;
+
+/* Floppy 37E0H, 37ECH, 37EFH */
+fdc_base = !A15 & !A14 & A13 & A12 & !A11 & A10 & A9 & A8 & A7 & A6 & A5 & !A4;
+ADDR_1 = fdc_base & ((A3 & A2 & !A1 & !A0) # (A3 & A2 & A1 & A0) #
+                     (!A3 & !A2 & !A1 & !A0));
+
+/* TRS-IO */
+ADDR_TRS_IO = !A7 & !A6 & !A5 & A4 & A3 & A2 & A1 & A0;
+
+/* FreHD */
+ADDR_FREHD = A7 & A6 & !A5 & !A4;
