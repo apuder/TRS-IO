@@ -173,7 +173,7 @@ static void ota_task(void* p)
 {
   evt_wait_wifi_up();
   check_ota();
-  start_mg();
+  start_mg(false);
   vTaskDelete(NULL);
 }
 

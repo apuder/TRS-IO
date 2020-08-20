@@ -315,9 +315,12 @@ static void mg_task(void* p)
   }
 }
 
-void start_mg()
+void start_mg(bool wait_for_wifi)
 {
-  xTaskCreatePinnedToCore(mg_task, "mg", 5000, NULL, 1, NULL, 0);
+  if (wait_for_wifi) {
+    evt_wait_wifi_up();
+  }
+  xTaskCreatePinnedToCore(mg_task, "mg", 4000, NULL, 1, NULL, 0);
 }
 
 //--------------------------------------------------------------------------
@@ -381,5 +384,4 @@ void init_wifi()
     set_led(false, true, true, true, false);
     wifi_init_ap();
   }
-  //start_mg();
 }
