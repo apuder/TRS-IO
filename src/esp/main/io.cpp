@@ -17,6 +17,7 @@
 #include "esp_log.h"
 #include "driver/gpio.h"
 #include "freertos/event_groups.h"
+#include "freertos/timers.h"
 
 
 // GPIO pins 12-19
@@ -73,8 +74,13 @@ static volatile bool io_task_started = false;
 static volatile uint8_t intr_event = 0;
 static volatile bool intr_enabled = true;
 
-#define TRS_IO_DATA_READY 0x20
-static volatile uint8_t fdc_37e0 = 0xff;
+
+// Active low
+#define TRS_IO_DATA_READY_BIT 0x20
+// Active high
+#define TRS_IO_HEARTBEAT_BIT 0x80
+
+static volatile uint8_t fdc_37e0 = TRS_IO_DATA_READY_BIT;
 
 void io_core1_enable_intr() {
   if (!io_task_started) {
@@ -93,6 +99,12 @@ void io_core1_disable_intr() {
 }
 
 #ifdef CONFIG_TRS_IO_MODEL_1
+static void timer25ms(TimerHandle_t pxTimer)
+{
+  fdc_37e0 |= TRS_IO_HEARTBEAT_BIT;
+  REG_WRITE(GPIO_OUT1_W1TS_REG, MASK_IOBUSINT_N);
+}
+
 static inline uint8_t read_a0_a7()
 {
   if (!intr_enabled) {
@@ -122,7 +134,7 @@ static inline uint16_t read_a0_a15()
 
 static inline void trs_io_read() {
 #ifdef CONFIG_TRS_IO_MODEL_1
-  fdc_37e0 |= TRS_IO_DATA_READY;
+  fdc_37e0 |= TRS_IO_DATA_READY_BIT;
 #else
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
 #endif
@@ -136,7 +148,7 @@ static inline void trs_io_read() {
 
 static inline void trs_io_write() {
 #ifdef CONFIG_TRS_IO_MODEL_1
-  fdc_37e0 |= TRS_IO_DATA_READY;
+  fdc_37e0 |= TRS_IO_DATA_READY_BIT;
 #else
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
 #endif
@@ -184,7 +196,8 @@ static inline void floppy_write()
   switch(addr) {
   case 0x37e0:
     d = fdc_37e0;
-    fdc_37e0 = 0xff;
+    fdc_37e0 = TRS_IO_DATA_READY_BIT;
+    REG_WRITE(GPIO_OUT1_W1TC_REG, MASK_IOBUSINT_N);
     break;
   case 0x37ec:
     d = 2;
@@ -300,7 +313,7 @@ static void action_task(void* p)
       TrsIO::processInBackground();
       trigger_trs_io_action = false;
 #ifdef CONFIG_TRS_IO_MODEL_1
-      fdc_37e0 &= ~TRS_IO_DATA_READY;
+      fdc_37e0 &= ~TRS_IO_DATA_READY_BIT;
 #else
       REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
 #endif
@@ -391,6 +404,8 @@ void init_io()
 
 #ifdef CONFIG_TRS_IO_MODEL_1
   init_spi();
+  TimerHandle_t timer = xTimerCreate("Heartbeat", 25, pdTRUE, NULL, timer25ms);
+  assert(xTimerStart(timer, 0) == pdPASS);
 #endif
 
   xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, tskIDLE_PRIORITY + 2,
