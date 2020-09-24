@@ -81,6 +81,7 @@ static volatile bool intr_enabled = true;
 #define TRS_IO_HEARTBEAT_BIT 0x80
 
 static volatile uint8_t fdc_37e0 = TRS_IO_DATA_READY_BIT;
+static volatile bool heartbeat_triggered = false;
 
 void io_core1_enable_intr() {
   if (!io_task_started) {
@@ -101,7 +102,7 @@ void io_core1_disable_intr() {
 #ifdef CONFIG_TRS_IO_MODEL_1
 static void timer25ms(TimerHandle_t pxTimer)
 {
-  fdc_37e0 |= TRS_IO_HEARTBEAT_BIT;
+  heartbeat_triggered = true;
   REG_WRITE(GPIO_OUT1_W1TS_REG, MASK_IOBUSINT_N);
 }
 
@@ -196,7 +197,10 @@ static inline void floppy_write()
   switch(addr) {
   case 0x37e0:
     d = fdc_37e0;
-    fdc_37e0 = TRS_IO_DATA_READY_BIT;
+    if (heartbeat_triggered) {
+      d |= TRS_IO_HEARTBEAT_BIT;
+      heartbeat_triggered = false;
+    }
     REG_WRITE(GPIO_OUT1_W1TC_REG, MASK_IOBUSINT_N);
     break;
   case 0x37ec:
