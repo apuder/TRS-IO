@@ -1,0 +1,3 @@
+[submodule "src/esp/components/libsmb2"]
+	path = src/esp/components/libsmb2
+	url = https://github.com/sahlberg/libsmb2.git
