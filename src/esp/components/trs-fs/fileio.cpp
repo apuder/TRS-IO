@@ -1,7 +1,7 @@
 
 #include "trs-fs.h"
 
-#define CHECK() if(trs_fs == NULL) return FR_NOT_READY;
+#define CHECK() if(trs_fs == NULL || trs_fs->get_err_msg() != NULL) return FR_NOT_READY;
 
 void f_log(const char* format, ...) {
 #if 0

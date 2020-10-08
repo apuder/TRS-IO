@@ -21,6 +21,17 @@ typedef uint16_t USHORT;
 typedef uint32_t DWORD;
 typedef int16_t WORD;
 
+#define f_open _f_open
+#define f_opendir _f_opendir
+#define f_write _f_write
+#define f_read _f_read
+#define f_readdir _f_readdir
+#define f_tell _f_tell
+#define f_sync _f_sync
+#define f_lseek _f_lseek
+#define f_close _f_close
+#define f_unlink _f_unlink
+#define f_stat _f_stat
 
 
 typedef enum {

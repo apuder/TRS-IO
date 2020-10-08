@@ -126,7 +126,9 @@ set_disk_emutype(UCHAR unit)
 static void
 open_dsk_image(UCHAR unit, const char *filename)
 {
-	UCHAR ntrack, sside, sdensity;
+	UCHAR ntrack = 0;
+	UCHAR sside = 0;
+	UCHAR sdensity = 0;
 	FRESULT res;
 
 	// assume ok

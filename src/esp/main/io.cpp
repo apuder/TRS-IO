@@ -309,6 +309,7 @@ static void action_task(void* p)
 {
   // Clear any spurious interrupts
   is_button_short_press();
+  is_button_long_press();
 
   while (true) {
     frehd_check_action();
