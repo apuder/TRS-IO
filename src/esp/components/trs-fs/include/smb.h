@@ -1,6 +1,8 @@
 #ifndef TRS_FS_SMB_H
 #define TRS_FS_SMB_H
 
+#include "smb2.h"
+
 #include "trs-fs.h"
 
 #define SMB_KEY_URL "smb_url"
@@ -9,8 +11,14 @@
 
 
 class TRS_FS_SMB : virtual public TRS_FS {
+private:
+  char* smb_url = NULL;
+  struct smb2_context *smb2 = NULL;
+
+  const char* init();
 public:
   TRS_FS_SMB();
+  virtual ~TRS_FS_SMB();
   void f_log(const char* msg);
   FRESULT f_open (
                   FIL* fp,           /* [OUT] Pointer to the file object structure */
