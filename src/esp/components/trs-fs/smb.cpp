@@ -25,6 +25,14 @@ TRS_FS_SMB::TRS_FS_SMB() {
   err_msg = init();
 }
 
+TRS_FS_SMB::TRS_FS_SMB(const char* url, const char* user, const char* passwd)
+{
+  storage_set_str(SMB_KEY_URL, url);
+  storage_set_str(SMB_KEY_USER, user);
+  storage_set_str(SMB_KEY_PASSWD, passwd);
+  err_msg = init();
+}
+
 TRS_FS_SMB::~TRS_FS_SMB()
 {
   if (smb2 != NULL) {

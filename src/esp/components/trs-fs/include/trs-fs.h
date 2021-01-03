@@ -19,6 +19,7 @@
 
 
 const char* init_trs_fs();
+const char* init_trs_fs(const char* url, const char* user, const char* passwd);
 const char* get_smb_err_msg();
 
 

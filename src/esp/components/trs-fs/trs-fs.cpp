@@ -22,6 +22,15 @@ const char* init_trs_fs() {
   //trs_fs = new TRS_FS_SERIAL();
 }
 
+const char* init_trs_fs(const char* url, const char* user, const char* passwd) {
+  if (trs_fs != NULL) {
+    delete trs_fs;
+  }
+  trs_fs = new TRS_FS_SMB(url, user, passwd);
+  return trs_fs->get_err_msg();
+  //trs_fs = new TRS_FS_SERIAL();
+}
+
 const char* get_smb_err_msg() {
   if (trs_fs == NULL) {
     return "SMB not connected";
