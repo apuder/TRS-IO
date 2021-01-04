@@ -43,8 +43,13 @@ const char* get_wifi_ssid()
 {
   static char ssid[33];
 
-  size_t len = sizeof(ssid);
-  storage_get_str(WIFI_KEY_SSID, ssid, &len);
+  if (!storage_has_key(WIFI_KEY_SSID)) {
+    ssid[0] = '-';
+    ssid[1] = '\0';
+  } else {
+    size_t len = sizeof(ssid);
+    storage_get_str(WIFI_KEY_SSID, ssid, &len);
+  }
   return ssid;
 }
 
