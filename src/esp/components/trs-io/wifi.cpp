@@ -53,47 +53,42 @@ const char* get_wifi_ssid()
   return ssid;
 }
 
-static char* ip = (char*) "-";
+static char ip[16] = {'-', '\0'};
 
 const char* get_wifi_ip()
 {
   return ip;
 }
 
-static esp_err_t event_handler(void* ctx, system_event_t* event)
+static void event_handler(void* arg, esp_event_base_t event_base,
+                          int32_t event_id, void* event_data)
 {
-  switch(event->event_id) {
-  case SYSTEM_EVENT_STA_START:
+  if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
     esp_wifi_connect();
-    break;
-  case SYSTEM_EVENT_STA_GOT_IP:
-    ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
+  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+    ESP_LOGI(TAG,"connect to the AP fail");
+    status = RS_STATUS_WIFI_NOT_CONNECTED;
+    esp_wifi_connect();
+    set_led(true, false, false, false, false);
+  } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+    ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+    snprintf(ip, sizeof(ip), IPSTR, IP2STR(&event->ip_info.ip));
+    ESP_LOGI(TAG, "Got IP: %s", ip);
     status = RS_STATUS_WIFI_CONNECTED;
     evt_signal_wifi_up();
     set_led(false, true, false, false, true);
     init_trs_fs();
-    break;
-  case SYSTEM_EVENT_AP_STACONNECTED:
-    ESP_LOGI(TAG, "AP connected. station:" MACSTR " join, AID=%d",
-             MAC2STR(event->event_info.sta_connected.mac),
-             event->event_info.sta_connected.aid);
+  } else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+    wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
+    ESP_LOGI(TAG, "Station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
     evt_signal_wifi_up();
-    break;
-  case SYSTEM_EVENT_AP_STADISCONNECTED:
-    ESP_LOGI(TAG, "AP disconnected. station:" MACSTR "leave, AID=%d",
-             MAC2STR(event->event_info.sta_disconnected.mac),
-             event->event_info.sta_disconnected.aid);
+  } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+    wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
+    ESP_LOGI(TAG, "Station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
     status = RS_STATUS_WIFI_NOT_CONNECTED;
-    break;
-  case SYSTEM_EVENT_STA_DISCONNECTED:
-    status = RS_STATUS_WIFI_NOT_CONNECTED;
-    esp_wifi_connect();
     set_led(true, false, false, false, false);
-    break;
-  default:
-    break;
+    esp_wifi_connect();
   }
-  return ESP_OK;
 }
 
 void set_wifi_credentials(const char* ssid, const char* passwd)
@@ -154,7 +149,7 @@ static bool extract_post_param(struct http_message* message,
     storage_set_str(nvs_key, buf);
     return true;
   }
-  size_t len2;
+  size_t len2 = max_len;
   storage_get_str(nvs_key, buf2, &len2);
   if (strcmp(buf, buf2) == 0) {
     // Param hasn't changed
@@ -328,9 +323,14 @@ static void mg_task(void* p)
 
 void wifi_init_ap()
 {
-  esp_netif_create_default_wifi_ap();
-  wifi_config_t wifi_config = {0};
+  wifi_config_t wifi_config = {
+    .ap = {0}
+  };
   
+  esp_netif_create_default_wifi_ap();
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
   strcpy((char*) wifi_config.ap.ssid, SSID);
   wifi_config.ap.ssid_len = strlen(SSID);
   strcpy((char*) wifi_config.ap.password, "");
@@ -338,16 +338,13 @@ void wifi_init_ap()
   wifi_config.ap.authmode = WIFI_AUTH_OPEN;
   
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
-  ESP_ERROR_CHECK(esp_wifi_start());
-  
-  ESP_LOGI(TAG, "wifi_init_ap finished.SSID:%s", SSID);
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
 }
 
 static void wifi_init_sta()
 {
   wifi_config_t wifi_config = {
-    .sta = {},
+    .sta = {0},
   };
 
   status = RS_STATUS_WIFI_CONNECTING;
@@ -361,18 +358,26 @@ static void wifi_init_sta()
   ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", (char*) wifi_config.sta.password);
 
   esp_netif_create_default_wifi_sta();
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-  ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
 }
 
 void init_wifi()
 {
   ESP_ERROR_CHECK(esp_netif_init());
-  ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
-
-  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
+  ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                ESP_EVENT_ANY_ID,
+                                                event_handler,
+                                                NULL,
+                                                NULL));
+  ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
+                                                IP_EVENT_STA_GOT_IP,
+                                                event_handler,
+                                                NULL,
+                                                NULL));
 
 #ifdef CONFIG_TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
   storage_set_str(WIFI_KEY_SSID, CONFIG_TRS_IO_SSID);
@@ -385,5 +390,9 @@ void init_wifi()
     set_led(false, true, true, true, false);
     wifi_init_ap();
   }
+  ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(8));
+  ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+
   xTaskCreatePinnedToCore(mg_task, "mg", 6000, NULL, 1, NULL, 0);
 }

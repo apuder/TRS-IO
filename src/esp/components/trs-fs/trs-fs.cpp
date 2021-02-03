@@ -119,4 +119,4 @@ public:
   }
 };
 
-static TrsFileSystemModule theTrsFileSystemModule(TRS_FS_MODULE_ID);
+TrsFileSystemModule theTrsFileSystemModule(TRS_FS_MODULE_ID);

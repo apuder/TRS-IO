@@ -251,4 +251,4 @@ public:
   }
 };
 
-static TCPIPModule theTCPIPModule(TCPIP_MODULE_ID);
+TCPIPModule theTCPIPModule(TCPIP_MODULE_ID);

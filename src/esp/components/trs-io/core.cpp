@@ -41,4 +41,4 @@ public:
   }
 };
 
-static TrsIOCoreModule theTrsIOCoreModule(TRS_IO_CORE_MODULE_ID);
+TrsIOCoreModule theTrsIOCoreModule(TRS_IO_CORE_MODULE_ID);

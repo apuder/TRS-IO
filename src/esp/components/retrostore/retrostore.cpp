@@ -6,6 +6,7 @@
 #include "esp_mock.h"
 #include <string.h>
 
+
 // loader_cmd.bin
 extern const uint8_t loader_cmd_start[] asm("_binary_loader_cmd_bin_start");
 extern const uint8_t loader_cmd_end[] asm("_binary_loader_cmd_bin_end");
@@ -87,4 +88,4 @@ public:
   }  
 };
 
-static RetroStoreModule theRetroStoreModule(RETROSTORE_MODULE_ID);
+RetroStoreModule theRetroStoreModule(RETROSTORE_MODULE_ID);
