@@ -1,4 +1,7 @@
-add_compile_definitions(MG_ENABLE_HTTP_WEBSOCKET=1)
+
+if(NOT CMAKE_BUILD_EARLY_EXPANSION)
+    add_definitions(-DHAVE_CONFIG_H)
+endif()
 
 idf_component_register(SRC_DIRS "."
                        INCLUDE_DIRS "include"
