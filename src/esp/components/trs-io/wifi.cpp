@@ -29,10 +29,8 @@
 static const char* TAG = "TRS-IO wifi";
 
 extern const uint8_t index_html_start[] asm("_binary_index_html_start");
-extern const uint8_t index_html_end[] asm("_binary_index_html_end");
 
 extern const uint8_t printer_html_start[] asm("_binary_printer_html_start");
-extern const uint8_t printer_html_end[] asm("_binary_printer_html_end");
 
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
