@@ -31,6 +31,9 @@ static const char* TAG = "TRS-IO wifi";
 extern const uint8_t index_html_start[] asm("_binary_index_html_start");
 extern const uint8_t index_html_end[] asm("_binary_index_html_end");
 
+extern const uint8_t printer_html_start[] asm("_binary_printer_html_start");
+extern const uint8_t printer_html_end[] asm("_binary_printer_html_end");
+
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
 
@@ -104,6 +107,8 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
 // Web server
 
 static trs_io_wifi_config_t config EXT_RAM_ATTR = {};
+static struct mg_connection *ws_conn = NULL;
+
 
 static void copy_config_from_nvs(const char* key, char* value, size_t max_len)
 {
@@ -132,7 +137,7 @@ trs_io_wifi_config_t* get_wifi_config()
   return &config;
 }
 
-static bool extract_post_param(struct http_message* message,
+static bool extract_post_param(struct mg_http_message* message,
                                const char* param,
                                const char* nvs_key,
                                size_t max_len)
@@ -141,7 +146,7 @@ static bool extract_post_param(struct http_message* message,
   static char buf[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
   static char buf2[sizeof(buf)] EXT_RAM_ATTR;
   
-  mg_get_http_var(&message->body, param, buf, sizeof(buf));
+  mg_http_get_var(&message->body, param, buf, sizeof(buf));
   // In case someone tries to force a buffer overflow
   buf[max_len + 1] = '\0';
   if (!storage_has_key(nvs_key)) {
@@ -159,17 +164,15 @@ static bool extract_post_param(struct http_message* message,
   return true;
 }
 
-static bool mongoose_handle_config(struct http_message* message,
+static bool mongoose_handle_config(struct mg_http_message* message,
                                    char** response,
-                                   unsigned int* response_len,
                                    const char** content_type)
 {
   bool reboot = false;
   bool smb_connect = false;
 
   *response = "";
-  *response_len = 0;
-  *content_type = "Content-Type: text/plain";
+  *content_type = "text/plain";
 
   reboot |= extract_post_param(message, "ssid", WIFI_KEY_SSID, MAX_LEN_SSID);
   reboot |= extract_post_param(message, "passwd", WIFI_KEY_PASSWD, MAX_LEN_PASSWD);
@@ -189,9 +192,8 @@ static bool mongoose_handle_config(struct http_message* message,
   return reboot;
 }
 
-static void mongoose_handle_status(struct http_message* message,
+static void mongoose_handle_status(struct mg_http_message* message,
                                    char** response,
-                                   unsigned int* response_len,
                                    const char** content_type)
 {
   static char* resp = NULL;
@@ -241,44 +243,50 @@ static void mongoose_handle_status(struct http_message* message,
 
   resp = cJSON_PrintUnformatted(s);
   *response = resp;
-  *response_len = strlen(resp);
   cJSON_Delete(s);
 
-  *content_type = "Content-Type: application/json";
+  *content_type = "application/json";
 }
 
-static void mongoose_event_handler(struct mg_connection* nc,
-                                   int event,
-                                   void* eventData)
+static void mongoose_event_handler(struct mg_connection *c,
+                                   int event, void *eventData, void *fn_data)
 {
   static bool reboot = false;
   
   switch (event) {
-  case MG_EV_HTTP_REQUEST:
+  case MG_EV_HTTP_MSG:
     {
-      struct http_message* message = (struct http_message*) eventData;
-      const char* uri = message->uri.p;
+      struct mg_http_message* message = (struct mg_http_message*) eventData;
       char* response = (char*) index_html_start;
-      unsigned int response_len = index_html_end - index_html_start;
-      const char* content_type = "Content-Type: text/html";
+      const char* content_type = "text/html";
 
-      if (strncmp(uri, "/config", 7) == 0) {
-        reboot = mongoose_handle_config(message, &response,
-                                        &response_len, &content_type);
+      if (mg_http_match_uri(message, "/config")) {
+        reboot = mongoose_handle_config(message, &response, &content_type);
       }
 
-      if (strncmp(uri, "/status", 7) == 0) {
-        mongoose_handle_status(message, &response,
-                               &response_len, &content_type);
+      if (mg_http_match_uri(message, "/status")) {
+        mongoose_handle_status(message, &response, &content_type);
+      }
+
+      if (mg_http_match_uri(message, "/printer")) {
+        response = (char*) printer_html_start;
       }
       
-      mg_send_head(nc, 200, response_len, content_type);
-      mg_send(nc, response, response_len);
-      nc->flags |= MG_F_SEND_AND_CLOSE;
+      if (mg_http_match_uri(message, "/log")) {
+        mg_ws_upgrade(c, message, NULL);
+        ws_conn = c;
+      } else {
+        int len = strlen(response);
+        mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n", content_type, len);
+        mg_send(c, response, len);
+      }
     }
     break;
   case MG_EV_CLOSE:
     {
+      if (c == ws_conn) {
+        ws_conn = NULL;
+      }
       if (reboot) {
         vTaskDelay(2000 / portTICK_PERIOD_MS);
         esp_restart();
@@ -286,6 +294,19 @@ static void mongoose_event_handler(struct mg_connection* nc,
     }
     break;
   }
+}
+
+void trs_printer_write(uint8_t ch)
+{
+  if (ws_conn != NULL) {
+    char buf[2] = {ch, '\0'};
+    mg_ws_send(ws_conn, buf, 1, WEBSOCKET_OP_TEXT);
+  }
+}
+
+uint8_t trs_printer_read()
+{
+  return (ws_conn == NULL) ? 0xff : 0x30;
 }
 
 static void init_mdns()
@@ -309,9 +330,8 @@ static void mg_task(void* p)
   copy_config_from_nvs();
 
   // Start Mongoose
-  mg_mgr_init(&mgr, NULL);
-  struct mg_connection *c = mg_bind(&mgr, ":80", mongoose_event_handler);
-  mg_set_protocol_http_websocket(c);
+  mg_mgr_init(&mgr);
+  mg_http_listen(&mgr, "http://0.0.0.0:80", mongoose_event_handler, &mgr); 
 
   while(true) {
     vTaskDelay(1);

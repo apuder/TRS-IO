@@ -1,0 +1,39 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+  <title>TRS-IO Printer</title>
+  <style>
+          .log {
+                  margin: 3em;
+                  border-width: medium;
+                  border: solid;
+                  font-family: 'Courier New', Courier, monospace;
+                  background-color: white;
+                  padding: 0.5em;
+                  white-space: pre;
+          }
+          .background {
+                  background-color: gray;
+          }
+  </style>
+  <script>
+        init = function() {
+                var ws = new WebSocket("ws://trs-io.local/log");
+                ws.onmessage = function (event) {
+                        console.log(event.data);
+                        log(event.data);
+                };
+          };
+
+        log = function(txt) {
+                var div = document.getElementById('log');
+                div.innerText += txt;
+        };
+  </script>
+  </head>
+<body onload="init();" class="background">
+        <div id="log" class="log"></div>
+</body>
+</html> 
