@@ -1,7 +1,8 @@
 
 CC = sdcc
 AS = sdasz80
-LIB = sdcclib
+LIB = sdar
+LIBFLAGS = -rc
 CFLAGS = -mz80 --std-sdcc99 --opt-code-size
 ASFLAGS = -l
 
@@ -25,7 +26,7 @@ OBJS = \
 all: trs-lib.lib
 
 trs-lib.lib : $(OBJS) Makefile
-	$(LIB) trs-lib.lib $(OBJS)
+	$(LIB) $(LIBFLAGS) trs-lib.lib $(OBJS)
 
 
 clean:
