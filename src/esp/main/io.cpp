@@ -83,6 +83,8 @@ static volatile bool intr_enabled = true;
 static volatile uint8_t fdc_37e0 = TRS_IO_DATA_READY_BIT;
 static volatile bool heartbeat_triggered = false;
 
+static volatile int16_t printer_data = -1;
+
 void io_core1_enable_intr() {
   if (!io_task_started) {
     return;
@@ -136,12 +138,18 @@ static inline uint16_t read_a0_a15()
 static inline void trs_io_read() {
 #ifdef CONFIG_TRS_IO_MODEL_1
   fdc_37e0 |= TRS_IO_DATA_READY_BIT;
+  uint8_t port = read_a0_a7() & 0x0f;
 #else
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
+  uint8_t port = GPIO.in1.data & 0x0f;
 #endif
   if (!trigger_trs_io_action) {
     uint8_t data = GPIO.in >> 12;
-    if (!TrsIO::outZ80(data)) {
+    if (port != 0x0f) {
+      // This data was written to the printer port
+      printer_data = data;
+      trigger_trs_io_action = true;
+    } else if (!TrsIO::outZ80(data)) {
       trigger_trs_io_action = true;
     }
   }
@@ -150,11 +158,18 @@ static inline void trs_io_read() {
 static inline void trs_io_write() {
 #ifdef CONFIG_TRS_IO_MODEL_1
   fdc_37e0 |= TRS_IO_DATA_READY_BIT;
+  uint8_t port = read_a0_a7() & 0x0f;
 #else
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
+  uint8_t port = GPIO.in1.data & 0x0f;
 #endif
   GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
-  uint32_t d = trigger_trs_io_action ? 0xff : TrsIO::inZ80();
+  uint32_t d;
+  if (port == 0x0f) {
+    d = trigger_trs_io_action ? 0xff : TrsIO::inZ80();
+  } else {
+    d = trigger_trs_io_action ? 0xff : trs_printer_read();
+  }
   d <<= 12;
   REG_WRITE(GPIO_OUT_W1TS_REG, d);
   d = d ^ GPIO_DATA_BUS_MASK;
@@ -315,13 +330,19 @@ static void action_task(void* p)
     frehd_check_action();
 
     if (trigger_trs_io_action) {
-      TrsIO::processInBackground();
-      trigger_trs_io_action = false;
+      if (printer_data == -1) {
+        TrsIO::processInBackground();
+        trigger_trs_io_action = false;
 #ifdef CONFIG_TRS_IO_MODEL_1
-      fdc_37e0 &= ~TRS_IO_DATA_READY_BIT;
+        fdc_37e0 &= ~TRS_IO_DATA_READY_BIT;
 #else
-      REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
+        REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
 #endif
+      } else {
+        trs_printer_write(printer_data);
+        printer_data = -1;
+        trigger_trs_io_action = false;
+      }
     }
 
     if (is_button_long_press()) {

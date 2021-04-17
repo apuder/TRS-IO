@@ -26,8 +26,10 @@ Pin 16  =  ESP_SEL_TRS_IO;
 /* Equations */
 io_bus_sel = IORQ_N & (RD_N # WR_N);
 
-/* ESP is selected at port 31 for TRS-IO */
-esp_sel_trs_io = !A7 & !A6 & !A5 & A4 & A3 & A2 & A1 & A0 & io_bus_sel;
+/* ESP is selected at port 31 or printer ports 0xF8-0xFB for TRS-IO */
+port_31 = !A7 & !A6 & !A5 & A4 & A3 & A2 & A1 & A0;
+port_printer = A7 & A6 & A5 & A4 & A3 & !A2;
+esp_sel_trs_io = (port_31 # port_printer) & io_bus_sel;
 ESP_SEL_TRS_IO = esp_sel_trs_io;
 
 /* ESP is selected at ports 0xC0-0xCF for FreHD */
