@@ -5,11 +5,15 @@
   <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
   <title>TRS-IO Printer</title>
   <style>
+          @font-face {
+              font-family: 'TreasureMIII64C';
+              src: url('font.ttf');
+          }
           .log {
                   margin: 3em;
                   border-width: medium;
                   border: solid;
-                  font-family: 'Courier New', Courier, monospace;
+                  font-family:'TreasureMIII64C';
                   background-color: white;
                   padding: 0.5em;
                   white-space: pre;
@@ -22,7 +26,6 @@
         init = function() {
                 var ws = new WebSocket("ws://trs-io.local/log");
                 ws.onmessage = function (event) {
-                        console.log(event.data);
                         log(event.data);
                 };
           };

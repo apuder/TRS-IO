@@ -29,8 +29,9 @@
 static const char* TAG = "TRS-IO wifi";
 
 extern const uint8_t index_html_start[] asm("_binary_index_html_start");
-
 extern const uint8_t printer_html_start[] asm("_binary_printer_html_start");
+extern const uint8_t font_ttf_start[] asm("_binary_AnotherMansTreasureMIII64C_ttf_start");
+extern const uint8_t font_ttf_end[] asm("_binary_AnotherMansTreasureMIII64C_ttf_end");
 
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
@@ -256,27 +257,36 @@ static void mongoose_event_handler(struct mg_connection *c,
     {
       struct mg_http_message* message = (struct mg_http_message*) eventData;
       char* response = (char*) index_html_start;
+      int response_len = strlen(response);
       const char* content_type = "text/html";
 
       if (mg_http_match_uri(message, "/config")) {
         reboot = mongoose_handle_config(message, &response, &content_type);
+        response_len = strlen(response);
       }
 
       if (mg_http_match_uri(message, "/status")) {
         mongoose_handle_status(message, &response, &content_type);
+        response_len = strlen(response);
       }
 
       if (mg_http_match_uri(message, "/printer")) {
         response = (char*) printer_html_start;
+        response_len = strlen(response);
       }
       
+      if (mg_http_match_uri(message, "/font.ttf")) {
+        response = (char*) font_ttf_start;
+        response_len = font_ttf_end - font_ttf_start;
+        content_type = "font/ttf";
+      }
+
       if (mg_http_match_uri(message, "/log")) {
         mg_ws_upgrade(c, message, NULL);
         ws_conn = c;
       } else {
-        int len = strlen(response);
-        mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n", content_type, len);
-        mg_send(c, response, len);
+        mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
+        mg_send(c, response, response_len);
       }
     }
     break;
@@ -294,11 +304,10 @@ static void mongoose_event_handler(struct mg_connection *c,
   }
 }
 
-void trs_printer_write(uint8_t ch)
+void trs_printer_write(const char* ch)
 {
   if (ws_conn != NULL) {
-    char buf[2] = {ch, '\0'};
-    mg_ws_send(ws_conn, buf, 1, WEBSOCKET_OP_TEXT);
+    mg_ws_send(ws_conn, ch, strlen(ch), WEBSOCKET_OP_TEXT);
   }
 }
 
