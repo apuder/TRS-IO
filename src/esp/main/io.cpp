@@ -16,8 +16,15 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
+#include "driver/rtc_io.h"
+#include "driver/rtc_cntl.h"
 #include "freertos/event_groups.h"
 #include "freertos/timers.h"
+#include "freertos/semphr.h"
+#include "soc/rtc_cntl_reg.h"
+#include "esp32/ulp.h"
+
+#include "ulp_io.h"
 
 
 // GPIO pins 12-19
@@ -33,9 +40,17 @@
 #define IOBUSINT_N 25
 #endif
 
+#if 0
 #define ESP_SEL_N 23
+#else
+#define ESP_SEL_N GPIO_NUM_2
+#endif
 #define ESP_READ_N 36
+#if 0
 #define ESP_WAIT_RELEASE_N 27
+#else
+#define ESP_WAIT_RELEASE_N GPIO_NUM_27
+#endif
 
 #define ADJUST(x) ((x) < 32 ? (x) : (x) - 32)
 
@@ -50,8 +65,10 @@
 #define MASK_ESP_SEL_TRS_IO (1 << ADJUST(ESP_SEL_TRS_IO))
 #define MASK64_ESP_SEL_TRS_IO (1ULL << ESP_SEL_TRS_IO)
 #endif
+#if 0
 #define MASK_ESP_WAIT_RELEASE_N (1 << ADJUST(ESP_WAIT_RELEASE_N))
 #define MASK64_ESP_WAIT_RELEASE_N (1ULL << ESP_WAIT_RELEASE_N)
+#endif
 #define MASK_IOBUSINT_N (1 << ADJUST(IOBUSINT_N))
 #define MASK64_IOBUSINT_N (1ULL << IOBUSINT_N)
 #define MASK_ESP_READ_N (1 << ADJUST(ESP_READ_N))
@@ -86,19 +103,73 @@ static volatile bool heartbeat_triggered = false;
 static volatile int16_t printer_data = -1;
 
 void io_core1_enable_intr() {
+#if 0
   if (!io_task_started) {
     return;
   }
   intr_event |= IO_CORE1_ENABLE_INTR;
   while (intr_event & IO_CORE1_ENABLE_INTR) ;
+#endif
 }
 
 void io_core1_disable_intr() {
+#if 0
   if (!io_task_started) {
     return;
   }
   intr_event |= IO_CORE1_DISABLE_INTR;
   while (intr_event & IO_CORE1_DISABLE_INTR) ;
+#endif
+}
+
+/******************************************************************
+ * ULP
+ ******************************************************************/
+
+extern const uint8_t _ulp_start[] asm("_binary_ulp_io_bin_start");
+extern const uint8_t _ulp_end[]   asm("_binary_ulp_io_bin_end");
+
+static uint32_t rtc_intr;
+static SemaphoreHandle_t ulp_isr_sem;
+
+static void ulp_isr(void* arg)
+{
+  static BaseType_t xHigherPriorityTaskWoken;
+
+  // Work around issue where ULP interrupt is generated twice
+  // https://esp32.com/viewtopic.php?t=2376
+  rtc_intr = READ_PERI_REG(RTC_CNTL_INT_ST_REG);
+	// disable and clear interrupt
+	CLEAR_PERI_REG_MASK(RTC_CNTL_INT_ENA_REG, RTC_CNTL_ULP_CP_INT_ENA);
+  
+  SemaphoreHandle_t done = (SemaphoreHandle_t) arg;
+  xSemaphoreGiveFromISR(done, &xHigherPriorityTaskWoken);
+}
+
+static void init_ulp()
+{
+  ESP_ERROR_CHECK(ulp_load_binary(0, _ulp_start, (_ulp_end - _ulp_start) / sizeof(uint32_t)));
+  
+  rtc_gpio_init(ESP_SEL_N);
+  rtc_gpio_set_direction(ESP_SEL_N, RTC_GPIO_MODE_INPUT_ONLY);
+  rtc_gpio_pulldown_dis(ESP_SEL_N);
+  rtc_gpio_pullup_dis(ESP_SEL_N);
+
+  rtc_gpio_init(ESP_WAIT_RELEASE_N);
+  rtc_gpio_set_direction(ESP_WAIT_RELEASE_N, RTC_GPIO_MODE_OUTPUT_ONLY);
+  rtc_gpio_pulldown_dis(ESP_WAIT_RELEASE_N);
+  rtc_gpio_pullup_dis(ESP_WAIT_RELEASE_N);
+
+  // Initialize ESP_RELEASE_N to 0
+  RTCIO.out_w1tc.w1tc = (1ULL << rtc_io_number_get(ESP_WAIT_RELEASE_N));
+
+  ulp_isr_sem = xSemaphoreCreateBinary();
+  assert(ulp_isr_sem);
+
+  ESP_ERROR_CHECK(rtc_isr_register(&ulp_isr, (void*) ulp_isr_sem, RTC_CNTL_SAR_INT_ST_M));
+  REG_SET_BIT(RTC_CNTL_INT_ENA_REG, RTC_CNTL_ULP_CP_INT_ENA_M);
+
+  ESP_ERROR_CHECK(ulp_run(&ulp_entry - RTC_SLOW_MEM));
 }
 
 #ifdef CONFIG_TRS_IO_MODEL_1
@@ -163,7 +234,7 @@ static inline void trs_io_write() {
   REG_WRITE(GPIO_OUT_W1TC_REG, MASK_IOBUSINT_N);
   uint8_t port = GPIO.in1.data & 0x0f;
 #endif
-  GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
+  //GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
   uint32_t d;
   if (port == 0x0f) {
     d = trigger_trs_io_action ? 0xff : TrsIO::inZ80();
@@ -194,7 +265,7 @@ static inline void frehd_write() {
 #endif
   uint32_t d = frehd_in(port) << 12;
 
-  GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
+  //GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
   REG_WRITE(GPIO_OUT_W1TS_REG, d);
   d = d ^ GPIO_DATA_BUS_MASK;
   REG_WRITE(GPIO_OUT_W1TC_REG, d);
@@ -231,13 +302,14 @@ static inline void floppy_write()
 
   d = d << 12;
 
-  GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
+  //GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
   REG_WRITE(GPIO_OUT_W1TS_REG, d);
   d = d ^ GPIO_DATA_BUS_MASK;
   REG_WRITE(GPIO_OUT_W1TC_REG, d);
 }
 #endif
 
+#if 0
 static void io_task(void* p)
 {
   io_task_started = true;
@@ -319,6 +391,78 @@ static void io_task(void* p)
     GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);
   }
 }
+#else
+static void io_task(void* p)
+{
+  io_task_started = true;
+  
+  while(true) {
+    // Wait for access the GAL to trigger this ESP
+    int result = xSemaphoreTake(ulp_isr_sem, portMAX_DELAY);
+    if (result != pdPASS) {
+      continue;
+    }
+
+#ifdef CONFIG_TRS_IO_MODEL_1
+    // Read pins S0 and S1
+    const uint8_t s = (GPIO.in1.data >> 2) & 3;
+#else
+    const uint8_t s = (GPIO.in1.data & MASK_ESP_SEL_TRS_IO) ? 2 : 3;
+#endif
+    if (GPIO.in1.data & MASK_ESP_READ_N) {
+      // Read data
+      GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);
+
+#ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
+      trs_io_read();
+#else
+      switch (s) {
+      case 1:
+        assert(0); // Shouldn't happen
+        break;
+      case 2:
+        trs_io_read();
+        break;
+      case 3:
+        frehd_read();
+        break;
+      }
+#endif
+    } else {
+      // Write data
+      GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
+
+#ifdef CONFIG_TRS_IO_USE_RETROSTORE_PCB
+      trs_io_write();
+#else
+      switch (s) {
+      case 1:
+#ifdef CONFIG_TRS_IO_MODEL_1
+        floppy_write();
+#else
+        assert(0); // Shouldn't happen
+#endif
+	break;
+      case 2:
+        trs_io_write();
+        break;
+      case 3:
+        frehd_write();
+        break;
+      }
+#endif
+    }
+
+    // Work around issue where ULP interrupt is generated twice
+    // https://esp32.com/viewtopic.php?t=2376
+    WRITE_PERI_REG(RTC_CNTL_INT_CLR_REG, rtc_intr);
+    REG_SET_BIT(RTC_CNTL_INT_ENA_REG, RTC_CNTL_ULP_CP_INT_ENA_M);
+
+    // Release ESP_WAIT_RELEASE_N
+    RTCIO.out_w1ts.w1ts = (1ULL << rtc_io_number_get(ESP_WAIT_RELEASE_N));
+  }
+}
+#endif
 
 static void action_task(void* p)
 {
@@ -402,10 +546,12 @@ void init_io()
   // Configure ESP_READ_N
   gpioConfig.pin_bit_mask = MASK64_ESP_READ_N;
   gpio_config(&gpioConfig);
-  
+
+#if 0
   // Configure ESP_SEL_N
   gpioConfig.pin_bit_mask = MASK64_ESP_SEL_N;
   gpio_config(&gpioConfig);
+#endif
 
 #ifdef CONFIG_TRS_IO_MODEL_1
   // Configure ESP_S0 and ESP_S1
@@ -417,17 +563,29 @@ void init_io()
   gpio_config(&gpioConfig);
 #endif
 
+#if 0
   // Configure IOBUSINT_N & ESP_WAIT_RELEASE_N
   gpioConfig.pin_bit_mask = MASK64_IOBUSINT_N | MASK64_ESP_WAIT_RELEASE_N;
   gpioConfig.mode = GPIO_MODE_OUTPUT;
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
-  
+#else
+  // Configure IOBUSINT_N
+  gpioConfig.pin_bit_mask = MASK64_IOBUSINT_N;
+  gpioConfig.mode = GPIO_MODE_OUTPUT;
+  gpioConfig.intr_type = GPIO_INTR_DISABLE;
+  gpio_config(&gpioConfig);
+#endif
+
   // Set IOBUSINT_N to 0
   gpio_set_level((gpio_num_t) IOBUSINT_N, 0);
-  
+
+#if 0
   // Set ESP_WAIT_RELEASE_N to 0
   gpio_set_level((gpio_num_t) ESP_WAIT_RELEASE_N, 0);
+#endif
+
+init_ulp();
 
 #ifdef CONFIG_TRS_IO_MODEL_1
   init_spi();

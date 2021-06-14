@@ -11,6 +11,8 @@ idf_component_register(SRCS ${src}
                        REQUIRES app_update
                                 main
                                 nvs_flash
+                                soc
+                                ulp
                                 frehd
                                 libsmb2
                                 mdns
@@ -18,3 +20,8 @@ idf_component_register(SRCS ${src}
                                 tcpip
                                 trs-fs
                                 trs-io)
+
+set(ulp_app_name ulp_io)
+set(ulp_s_sources "ulp/io.S")
+set(ulp_exp_dep_srcs "io.cpp")
+ulp_embed_binary(${ulp_app_name} "${ulp_s_sources}" "${ulp_exp_dep_srcs}")
