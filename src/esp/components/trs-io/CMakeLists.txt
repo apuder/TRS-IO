@@ -5,7 +5,7 @@ endif()
 
 idf_component_register(SRC_DIRS "."
                        INCLUDE_DIRS "include"
-                       EMBED_TXTFILES index.html printer.html
+                       EMBED_TXTFILES index.html printer.html AnotherMansTreasureMIII64C.ttf
                        REQUIRES retrostore trs-fs)
 
 # Force static linking of this component

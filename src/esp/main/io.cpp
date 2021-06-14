@@ -339,7 +339,8 @@ static void action_task(void* p)
         REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
 #endif
       } else {
-        trs_printer_write(printer_data);
+        char buf[2] = {(char) (printer_data & 0xff), 0};
+        trs_printer_write(buf);
         printer_data = -1;
         trigger_trs_io_action = false;
       }
