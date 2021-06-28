@@ -5,8 +5,8 @@ $Descr A3 16535 11693
 encoding utf-8
 Sheet 1 1
 Title "TRS-IO M1"
-Date "2020-07-16"
-Rev "V1"
+Date "2021-06-23"
+Rev "V1.1"
 Comp ""
 Comment1 ""
 Comment2 ""
@@ -24,166 +24,166 @@ F 3 "" H 2250 3050 50  0001 C CNN
 	1    2050 2900
 	1    0    0    -1  
 $EndComp
-Text GLabel 1750 7000 0    50   Input ~ 0
-RAS_N
-Text GLabel 2450 7000 2    50   Input ~ 0
-SYSRES_N
-Text GLabel 1750 6900 0    50   Input ~ 0
-CAS_N
-Text GLabel 2450 6900 2    50   Input ~ 0
-A10
-Text GLabel 1750 6800 0    50   Input ~ 0
-A12
-Text GLabel 2450 6800 2    50   Input ~ 0
-A13
-Text GLabel 1750 6700 0    50   Input ~ 0
-A15
-Text GLabel 2450 6700 2    50   Input ~ 0
-GND
-Text GLabel 1750 6600 0    50   Input ~ 0
-A11
-Text GLabel 2450 6600 2    50   Input ~ 0
-A14
-Text GLabel 1750 6500 0    50   Input ~ 0
-A8
-Text GLabel 2450 6500 2    50   Input ~ 0
-OUT_N
-Text GLabel 1750 6400 0    50   Input ~ 0
-WR_N
-Text GLabel 2450 6400 2    50   Input ~ 0
-INTACK_N
-Text GLabel 1750 6300 0    50   Input ~ 0
-RD_N
-Text GLabel 2450 6300 2    50   Input ~ 0
-MUX
-Text GLabel 1750 6200 0    50   Input ~ 0
-A9
-Text GLabel 2450 6200 2    50   Input ~ 0
-D4
-Text GLabel 1750 6100 0    50   Input ~ 0
-IN_N
-Text GLabel 2450 6100 2    50   Input ~ 0
-D7
-Text GLabel 1750 6000 0    50   Input ~ 0
-INT_N
-Text GLabel 2450 6000 2    50   Input ~ 0
-D1
-Text GLabel 1750 5900 0    50   Input ~ 0
-TEST_N
-Text GLabel 2450 5900 2    50   Input ~ 0
-D6
-Text GLabel 1750 5800 0    50   Input ~ 0
-A0
-Text GLabel 2450 5800 2    50   Input ~ 0
-D3
-Text GLabel 1750 5700 0    50   Input ~ 0
-A1
-Text GLabel 2450 5700 2    50   Input ~ 0
-D5
-Text GLabel 1750 5600 0    50   Input ~ 0
-GND
-Text GLabel 2450 5600 2    50   Input ~ 0
-D0
-Text GLabel 1750 5500 0    50   Input ~ 0
-A4
-Text GLabel 2450 5500 2    50   Input ~ 0
-D2
-Text GLabel 1750 5400 0    50   Input ~ 0
-WAIT_N
-Text GLabel 2450 5400 2    50   Input ~ 0
-A3
-Text GLabel 1750 5300 0    50   Input ~ 0
-A5
-Text GLabel 2450 5300 2    50   Input ~ 0
-A7
-Text GLabel 1750 5200 0    50   Input ~ 0
-GND
-Text GLabel 2450 5200 2    50   Input ~ 0
-A6
-Text GLabel 1750 5100 0    50   Input ~ 0
-5V
 Text GLabel 2450 5100 2    50   Input ~ 0
+RAS_N
+Text GLabel 1750 5100 0    50   Input ~ 0
+SYSRES_N
+Text GLabel 2450 5200 2    50   Input ~ 0
+CAS_N
+Text GLabel 1750 5200 0    50   Input ~ 0
+A10
+Text GLabel 2450 5300 2    50   Input ~ 0
+A12
+Text GLabel 1750 5300 0    50   Input ~ 0
+A13
+Text GLabel 2450 5400 2    50   Input ~ 0
+A15
+Text GLabel 1750 5400 0    50   Input ~ 0
+GND
+Text GLabel 2450 5500 2    50   Input ~ 0
+A11
+Text GLabel 1750 5500 0    50   Input ~ 0
+A14
+Text GLabel 2450 5600 2    50   Input ~ 0
+A8
+Text GLabel 1750 5600 0    50   Input ~ 0
+OUT_N
+Text GLabel 2450 5700 2    50   Input ~ 0
+WR_N
+Text GLabel 1750 5700 0    50   Input ~ 0
+INTACK_N
+Text GLabel 2450 5800 2    50   Input ~ 0
+RD_N
+Text GLabel 1750 5800 0    50   Input ~ 0
+MUX
+Text GLabel 2450 5900 2    50   Input ~ 0
+A9
+Text GLabel 1750 5900 0    50   Input ~ 0
+D4
+Text GLabel 2450 6000 2    50   Input ~ 0
+IN_N
+Text GLabel 1750 6000 0    50   Input ~ 0
+D7
+Text GLabel 2450 6100 2    50   Input ~ 0
+INT_N
+Text GLabel 1750 6100 0    50   Input ~ 0
+D1
+Text GLabel 2450 6200 2    50   Input ~ 0
+TEST_N
+Text GLabel 1750 6200 0    50   Input ~ 0
+D6
+Text GLabel 2450 6300 2    50   Input ~ 0
+A0
+Text GLabel 1750 6300 0    50   Input ~ 0
+D3
+Text GLabel 2450 6400 2    50   Input ~ 0
+A1
+Text GLabel 1750 6400 0    50   Input ~ 0
+D5
+Text GLabel 2450 6500 2    50   Input ~ 0
+GND
+Text GLabel 1750 6500 0    50   Input ~ 0
+D0
+Text GLabel 2450 6600 2    50   Input ~ 0
+A4
+Text GLabel 1750 6600 0    50   Input ~ 0
+D2
+Text GLabel 2450 6700 2    50   Input ~ 0
+WAIT_N
+Text GLabel 1750 6700 0    50   Input ~ 0
+A3
+Text GLabel 2450 6800 2    50   Input ~ 0
+A5
+Text GLabel 1750 6800 0    50   Input ~ 0
+A7
+Text GLabel 2450 6900 2    50   Input ~ 0
+GND
+Text GLabel 1750 6900 0    50   Input ~ 0
+A6
+Text GLabel 2450 7000 2    50   Input ~ 0
+5V
+Text GLabel 1750 7000 0    50   Input ~ 0
 A2
 Wire Wire Line
-	1750 5100 1850 5100
+	2450 7000 2350 7000
 Wire Wire Line
-	1750 5200 1850 5200
+	2450 6900 2350 6900
 Wire Wire Line
-	1750 5300 1850 5300
+	2450 6800 2350 6800
 Wire Wire Line
-	1750 5400 1850 5400
+	2450 6700 2350 6700
 Wire Wire Line
-	1750 5500 1850 5500
+	2450 6600 2350 6600
 Wire Wire Line
-	1750 5600 1850 5600
+	2450 6500 2350 6500
 Wire Wire Line
-	1750 5700 1850 5700
+	2450 6400 2350 6400
 Wire Wire Line
-	1750 5800 1850 5800
+	2450 6300 2350 6300
 Wire Wire Line
-	1750 5900 1850 5900
+	2450 6200 2350 6200
 Wire Wire Line
-	1750 6000 1850 6000
+	2450 6100 2350 6100
 Wire Wire Line
-	1750 6100 1850 6100
+	2450 6000 2350 6000
 Wire Wire Line
-	1750 6200 1850 6200
+	2450 5900 2350 5900
 Wire Wire Line
-	1750 6300 1850 6300
+	2450 5800 2350 5800
 Wire Wire Line
-	1750 6400 1850 6400
+	2450 5700 2350 5700
 Wire Wire Line
-	1750 6500 1850 6500
+	2450 5600 2350 5600
 Wire Wire Line
-	1750 6600 1850 6600
+	2450 5500 2350 5500
 Wire Wire Line
-	1750 6700 1850 6700
+	2450 5400 2350 5400
 Wire Wire Line
-	1750 6800 1850 6800
+	2450 5300 2350 5300
 Wire Wire Line
-	1750 6900 1850 6900
+	2450 5200 2350 5200
 Wire Wire Line
-	1750 7000 1850 7000
+	2450 5100 2350 5100
 Wire Wire Line
-	2350 5100 2450 5100
+	1850 7000 1750 7000
 Wire Wire Line
-	2350 5200 2450 5200
+	1850 6900 1750 6900
 Wire Wire Line
-	2350 5300 2450 5300
+	1850 6800 1750 6800
 Wire Wire Line
-	2350 5400 2450 5400
+	1850 6700 1750 6700
 Wire Wire Line
-	2350 5500 2450 5500
+	1850 6600 1750 6600
 Wire Wire Line
-	2350 5600 2450 5600
+	1850 6500 1750 6500
 Wire Wire Line
-	2350 5700 2450 5700
+	1850 6400 1750 6400
 Wire Wire Line
-	2350 5800 2450 5800
+	1850 6300 1750 6300
 Wire Wire Line
-	2350 5900 2450 5900
+	1850 6200 1750 6200
 Wire Wire Line
-	2350 6000 2450 6000
+	1850 6100 1750 6100
 Wire Wire Line
-	2350 6100 2450 6100
+	1850 6000 1750 6000
 Wire Wire Line
-	2350 6200 2450 6200
+	1850 5900 1750 5900
 Wire Wire Line
-	2350 6300 2450 6300
+	1850 5800 1750 5800
 Wire Wire Line
-	2350 6400 2450 6400
+	1850 5700 1750 5700
 Wire Wire Line
-	2350 6500 2450 6500
+	1850 5600 1750 5600
 Wire Wire Line
-	2350 6600 2450 6600
+	1850 5500 1750 5500
 Wire Wire Line
-	2350 6700 2450 6700
+	1850 5400 1750 5400
 Wire Wire Line
-	2350 6800 2450 6800
+	1850 5300 1750 5300
 Wire Wire Line
-	2350 6900 2450 6900
+	1850 5200 1750 5200
 Wire Wire Line
-	2350 7000 2450 7000
+	1850 5100 1750 5100
 $Comp
 L 74xx:74LS245 U4
 U 1 1 5EFB64D2
@@ -196,37 +196,37 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS245" H 4800 5900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text GLabel 4200 5400 0    50   Input ~ 0
-D0
-Text GLabel 4200 5500 0    50   Input ~ 0
-D1
-Text GLabel 4200 5600 0    50   Input ~ 0
-D2
-Text GLabel 4200 5700 0    50   Input ~ 0
-D3
-Text GLabel 4200 5800 0    50   Input ~ 0
 D4
+Text GLabel 4200 5500 0    50   Input ~ 0
+D7
+Text GLabel 4200 5600 0    50   Input ~ 0
+D1
+Text GLabel 4200 5700 0    50   Input ~ 0
+D6
+Text GLabel 4200 5800 0    50   Input ~ 0
+D3
 Text GLabel 4200 5900 0    50   Input ~ 0
 D5
 Text GLabel 4200 6000 0    50   Input ~ 0
-D6
+D0
 Text GLabel 4200 6100 0    50   Input ~ 0
-D7
+D2
 Text GLabel 5400 5400 2    50   Input ~ 0
-DD0
-Text GLabel 5400 5500 2    50   Input ~ 0
-DD1
-Text GLabel 5400 5600 2    50   Input ~ 0
-DD2
-Text GLabel 5400 5700 2    50   Input ~ 0
-DD3
-Text GLabel 5400 5800 2    50   Input ~ 0
 DD4
+Text GLabel 5400 5500 2    50   Input ~ 0
+DD7
+Text GLabel 5400 5600 2    50   Input ~ 0
+DD1
+Text GLabel 5400 5700 2    50   Input ~ 0
+DD6
+Text GLabel 5400 5800 2    50   Input ~ 0
+DD3
 Text GLabel 5400 5900 2    50   Input ~ 0
 DD5
 Text GLabel 5400 6000 2    50   Input ~ 0
-DD6
+DD0
 Text GLabel 5400 6100 2    50   Input ~ 0
-DD7
+DD2
 Wire Wire Line
 	4200 5400 4300 5400
 Wire Wire Line
@@ -426,10 +426,8 @@ Text GLabel 9300 2300 0    50   Input ~ 0
 ESP_SEL_N
 Text GLabel 10600 2300 2    50   Input ~ 0
 ESP3_SEL_N
-Text GLabel 2700 2050 2    50   Input ~ 0
+Text GLabel 1400 2950 0    50   Input ~ 0
 ESP3_SEL_N
-Wire Wire Line
-	2700 2050 2550 2050
 $Comp
 L power:+5V #PWR0105
 U 1 1 5F09023D
@@ -620,7 +618,7 @@ Wire Wire Line
 	9300 2500 9450 2500
 Wire Wire Line
 	10450 2500 10600 2500
-Text GLabel 1400 2950 0    50   Input ~ 0
+Text GLabel 2700 3350 2    50   Input ~ 0
 ESP_WAIT_RELEASE_N
 Wire Wire Line
 	1550 2950 1400 2950
@@ -655,37 +653,37 @@ F 3 "http://www.ti.com/lit/gpn/sn74HC245" H 7500 5900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text GLabel 6800 5400 0    50   Input ~ 0
-A0
+A10
 Text GLabel 6800 5500 0    50   Input ~ 0
-A1
+A12
 Text GLabel 6800 5600 0    50   Input ~ 0
-A2
+A13
 Text GLabel 6800 5700 0    50   Input ~ 0
-A3
+A15
 Text GLabel 6800 5800 0    50   Input ~ 0
-A4
+A11
 Text GLabel 6800 5900 0    50   Input ~ 0
-A5
+A14
 Text GLabel 6800 6000 0    50   Input ~ 0
-A6
+A8
 Text GLabel 6800 6100 0    50   Input ~ 0
-A7
+A9
 Text GLabel 8200 5400 2    50   Input ~ 0
-AA0
+AA10
 Text GLabel 8200 5500 2    50   Input ~ 0
-AA1
+AA12
 Text GLabel 8200 5700 2    50   Input ~ 0
-AA3
+AA15
 Text GLabel 8200 5800 2    50   Input ~ 0
-AA4
+AA11
 Text GLabel 8200 5900 2    50   Input ~ 0
-AA5
+AA14
 Text GLabel 8200 6000 2    50   Input ~ 0
-AA6
+AA8
 Text GLabel 8200 6100 2    50   Input ~ 0
-AA7
+AA9
 Text GLabel 8200 5600 2    50   Input ~ 0
-AA2
+AA13
 Text GLabel 5700 2000 2    50   Input ~ 0
 AA8
 Text GLabel 9300 2600 0    50   Input ~ 0
@@ -978,20 +976,20 @@ Wire Wire Line
 $Comp
 L power:GND #PWR0119
 U 1 1 5F2A160B
-P 2950 7350
-F 0 "#PWR0119" H 2950 7100 50  0001 C CNN
-F 1 "GND" H 2950 7200 50  0000 C CNN
-F 2 "" H 2950 7350 50  0001 C CNN
-F 3 "" H 2950 7350 50  0001 C CNN
-	1    2950 7350
+P 3350 7600
+F 0 "#PWR0119" H 3350 7350 50  0001 C CNN
+F 1 "GND" H 3350 7450 50  0000 C CNN
+F 2 "" H 3350 7600 50  0001 C CNN
+F 3 "" H 3350 7600 50  0001 C CNN
+	1    3350 7600
 	1    0    0    -1  
 $EndComp
-Text GLabel 3100 7150 2    50   Input ~ 0
+Text GLabel 3500 7400 2    50   Input ~ 0
 GND
 Wire Wire Line
-	2950 7350 2950 7150
+	3350 7600 3350 7400
 Wire Wire Line
-	2950 7150 3100 7150
+	3350 7400 3500 7400
 $Comp
 L power:GND #PWR0120
 U 1 1 5F346195
@@ -1048,37 +1046,37 @@ F 3 "http://www.ti.com/lit/gpn/sn74HC245" H 9900 5900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text GLabel 9200 5400 0    50   Input ~ 0
-A8
+A0
 Text GLabel 9200 5500 0    50   Input ~ 0
-A9
+A1
 Text GLabel 9200 5600 0    50   Input ~ 0
-A10
+A4
 Text GLabel 9200 5700 0    50   Input ~ 0
-A11
+A3
 Text GLabel 9200 5800 0    50   Input ~ 0
-A12
+A5
 Text GLabel 9200 5900 0    50   Input ~ 0
-A13
+A7
 Text GLabel 9200 6000 0    50   Input ~ 0
-A14
+A6
 Text GLabel 9200 6100 0    50   Input ~ 0
-A15
+A2
 Text GLabel 10600 5400 2    50   Input ~ 0
-AA8
+AA0
 Text GLabel 10600 5500 2    50   Input ~ 0
-AA9
+AA1
 Text GLabel 10600 5700 2    50   Input ~ 0
-AA11
+AA3
 Text GLabel 10600 5800 2    50   Input ~ 0
-AA12
+AA5
 Text GLabel 10600 5900 2    50   Input ~ 0
-AA13
+AA7
 Text GLabel 10600 6000 2    50   Input ~ 0
-AA14
+AA6
 Text GLabel 10600 6100 2    50   Input ~ 0
-AA15
+AA2
 Text GLabel 10600 5600 2    50   Input ~ 0
-AA10
+AA4
 $Comp
 L power:+5V #PWR0102
 U 1 1 5F2BCDB3
@@ -1171,42 +1169,42 @@ F 3 "" H 12450 3000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text GLabel 12350 2300 0    50   Input ~ 0
-AA0
-Text GLabel 12350 2400 0    50   Input ~ 0
-AA1
-Text GLabel 12350 2500 0    50   Input ~ 0
-AA2
-Text GLabel 12350 2600 0    50   Input ~ 0
-AA3
-Text GLabel 12350 2700 0    50   Input ~ 0
-AA4
-Text GLabel 12350 2800 0    50   Input ~ 0
-AA5
-Text GLabel 12350 2900 0    50   Input ~ 0
-AA6
-Text GLabel 12350 3000 0    50   Input ~ 0
-AA7
-Text GLabel 12350 3100 0    50   Input ~ 0
-AA8
-Text GLabel 12350 3200 0    50   Input ~ 0
-AA9
-Text GLabel 12350 3300 0    50   Input ~ 0
 AA10
-Text GLabel 13850 3300 2    50   Input ~ 0
-AA11
-Text GLabel 13850 3200 2    50   Input ~ 0
+Text GLabel 12350 2400 0    50   Input ~ 0
 AA12
-Text GLabel 13850 3100 2    50   Input ~ 0
+Text GLabel 12350 2500 0    50   Input ~ 0
 AA13
-Text GLabel 13850 3000 2    50   Input ~ 0
-AA14
-Text GLabel 13850 2900 2    50   Input ~ 0
+Text GLabel 12350 2600 0    50   Input ~ 0
 AA15
-Text GLabel 13850 2800 2    50   Input ~ 0
+Text GLabel 12350 2700 0    50   Input ~ 0
+AA11
+Text GLabel 12350 2800 0    50   Input ~ 0
+AA14
+Text GLabel 12350 2900 0    50   Input ~ 0
+AA8
+Text GLabel 12350 3000 0    50   Input ~ 0
+AA9
+Text GLabel 12350 3100 0    50   Input ~ 0
+AA0
+Text GLabel 12350 3200 0    50   Input ~ 0
+AA1
+Text GLabel 12350 3300 0    50   Input ~ 0
+AA4
+Text GLabel 13850 3300 2    50   Input ~ 0
+AA2
+Text GLabel 13850 3200 2    50   Input ~ 0
+AA6
+Text GLabel 13850 3100 2    50   Input ~ 0
+AA7
+Text GLabel 13850 3000 2    50   Input ~ 0
+AA5
+Text GLabel 13850 2900 2    50   Input ~ 0
+AA3
+Text GLabel 13850 2500 2    50   Input ~ 0
 ADDR_TRS_IO
-Text GLabel 13850 2700 2    50   Input ~ 0
-ADDR_FREHD
 Text GLabel 13850 2600 2    50   Input ~ 0
+ADDR_FREHD
+Text GLabel 13850 2700 2    50   Input ~ 0
 ADDR_0
 $Comp
 L ATF16V8-PDIP-AP:ATF16V8-PDIP U9
@@ -1225,14 +1223,12 @@ Text GLabel 12300 5450 0    50   Input ~ 0
 ADDR_FREHD
 Text GLabel 12300 5550 0    50   Input ~ 0
 ADDR_0
-Text GLabel 13850 2500 2    50   Input ~ 0
+Text GLabel 13850 2800 2    50   Input ~ 0
 ADDR_1
-Text GLabel 13850 2400 2    50   Input ~ 0
-ADDR_2
 Text GLabel 12300 5650 0    50   Input ~ 0
 ADDR_1
 Text GLabel 12300 5750 0    50   Input ~ 0
-ADDR_2
+RAS_N
 Text GLabel 12300 5850 0    50   Input ~ 0
 RD_N
 Text GLabel 12300 6050 0    50   Input ~ 0
@@ -1254,51 +1250,49 @@ S0
 Text GLabel 13800 5550 2    50   Input ~ 0
 S1
 Text GLabel 4150 8400 0    50   Input ~ 0
-AA14
+AA10
 Text GLabel 4150 8500 0    50   Input ~ 0
 AA12
 Text GLabel 4150 8600 0    50   Input ~ 0
-AA7
+AA13
 Text GLabel 4150 8700 0    50   Input ~ 0
-AA6
+AA11
 Text GLabel 4150 8800 0    50   Input ~ 0
-AA5
+AA14
 Text GLabel 4150 8900 0    50   Input ~ 0
-AA4
+AA8
 Text GLabel 4150 9000 0    50   Input ~ 0
-AA3
+AA9
 Text GLabel 4150 9100 0    50   Input ~ 0
-AA2
+AA0
 Text GLabel 4150 9200 0    50   Input ~ 0
 AA1
 Text GLabel 4150 9300 0    50   Input ~ 0
-AA0
+AA4
 Text GLabel 4150 9400 0    50   Input ~ 0
-DD0
+D6
 Text GLabel 4150 9500 0    50   Input ~ 0
-DD1
+D5
 Text GLabel 4150 9600 0    50   Input ~ 0
-DD2
+D2
 Text GLabel 5450 9600 2    50   Input ~ 0
-DD3
+D0
 Text GLabel 5450 9500 2    50   Input ~ 0
-DD4
+D3
 Text GLabel 5450 9400 2    50   Input ~ 0
-DD5
+D1
 Text GLabel 5450 9300 2    50   Input ~ 0
-DD6
+D7
 Text GLabel 5450 9200 2    50   Input ~ 0
-DD7
+D4
 Text GLabel 5450 9000 2    50   Input ~ 0
-AA10
+AA2
 Text GLabel 5450 8800 2    50   Input ~ 0
-AA11
+AA6
 Text GLabel 5450 8700 2    50   Input ~ 0
-AA9
+AA7
 Text GLabel 5450 8600 2    50   Input ~ 0
-AA8
-Text GLabel 5450 8500 2    50   Input ~ 0
-AA13
+AA5
 Text GLabel 12300 5950 0    50   Input ~ 0
 WR_N
 Text GLabel 13800 5450 2    50   Input ~ 0
@@ -1367,8 +1361,6 @@ Wire Wire Line
 	12350 3200 12600 3200
 Wire Wire Line
 	12350 3300 12600 3300
-Wire Wire Line
-	13600 2400 13850 2400
 Wire Wire Line
 	13600 2500 13850 2500
 Wire Wire Line
@@ -1614,13 +1606,13 @@ Wire Wire Line
 $Comp
 L Connector_Generic:Conn_02x20_Odd_Even J1
 U 1 1 5EF83F83
-P 2150 6100
-F 0 "J1" H 2200 7100 50  0000 C CNN
-F 1 "Conn_02x20_Odd_Even" H 2200 5000 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical" H 2150 6100 50  0001 C CNN
-F 3 "~" H 2150 6100 50  0001 C CNN
-	1    2150 6100
-	-1   0    0    1   
+P 2050 6000
+F 0 "J1" H 2100 7000 50  0000 C CNN
+F 1 "Conn_02x20_Odd_Even" H 2100 4900 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical" H 2050 6000 50  0001 C CNN
+F 3 "~" H 2050 6000 50  0001 C CNN
+	1    2050 6000
+	1    0    0    -1  
 $EndComp
 Text Notes 850  4850 0    50   ~ 0
 Note: the pin numbers do NOT correspond with the pinout of the M1 expansion\ninterface because of the non-standard numbering used for the M1.
@@ -1776,4 +1768,179 @@ Wire Wire Line
 	14300 8500 14100 8500
 Wire Wire Line
 	14100 8500 14100 8750
+Text GLabel 2450 7750 2    50   Input ~ 0
+RAS_N
+Text GLabel 1750 7750 0    50   Input ~ 0
+SYSRES_N
+Text GLabel 2450 7850 2    50   Input ~ 0
+CAS_N
+Text GLabel 1750 7850 0    50   Input ~ 0
+A10
+Text GLabel 2450 7950 2    50   Input ~ 0
+A12
+Text GLabel 1750 7950 0    50   Input ~ 0
+A13
+Text GLabel 2450 8050 2    50   Input ~ 0
+A15
+Text GLabel 1750 8050 0    50   Input ~ 0
+GND
+Text GLabel 2450 8150 2    50   Input ~ 0
+A11
+Text GLabel 1750 8150 0    50   Input ~ 0
+A14
+Text GLabel 2450 8250 2    50   Input ~ 0
+A8
+Text GLabel 1750 8250 0    50   Input ~ 0
+OUT_N
+Text GLabel 2450 8350 2    50   Input ~ 0
+WR_N
+Text GLabel 1750 8350 0    50   Input ~ 0
+INTACK_N
+Text GLabel 2450 8450 2    50   Input ~ 0
+RD_N
+Text GLabel 1750 8450 0    50   Input ~ 0
+MUX
+Text GLabel 2450 8550 2    50   Input ~ 0
+A9
+Text GLabel 1750 8550 0    50   Input ~ 0
+D4
+Text GLabel 2450 8650 2    50   Input ~ 0
+IN_N
+Text GLabel 1750 8650 0    50   Input ~ 0
+D7
+Text GLabel 2450 8750 2    50   Input ~ 0
+INT_N
+Text GLabel 1750 8750 0    50   Input ~ 0
+D1
+Text GLabel 2450 8850 2    50   Input ~ 0
+TEST_N
+Text GLabel 1750 8850 0    50   Input ~ 0
+D6
+Text GLabel 2450 8950 2    50   Input ~ 0
+A0
+Text GLabel 1750 8950 0    50   Input ~ 0
+D3
+Text GLabel 2450 9050 2    50   Input ~ 0
+A1
+Text GLabel 1750 9050 0    50   Input ~ 0
+D5
+Text GLabel 2450 9150 2    50   Input ~ 0
+GND
+Text GLabel 1750 9150 0    50   Input ~ 0
+D0
+Text GLabel 2450 9250 2    50   Input ~ 0
+A4
+Text GLabel 1750 9250 0    50   Input ~ 0
+D2
+Text GLabel 2450 9350 2    50   Input ~ 0
+WAIT_N
+Text GLabel 1750 9350 0    50   Input ~ 0
+A3
+Text GLabel 2450 9450 2    50   Input ~ 0
+A5
+Text GLabel 1750 9450 0    50   Input ~ 0
+A7
+Text GLabel 2450 9550 2    50   Input ~ 0
+GND
+Text GLabel 1750 9550 0    50   Input ~ 0
+A6
+Text GLabel 2450 9650 2    50   Input ~ 0
+5V
+Text GLabel 1750 9650 0    50   Input ~ 0
+A2
+Wire Wire Line
+	2450 9650 2350 9650
+Wire Wire Line
+	2450 9550 2350 9550
+Wire Wire Line
+	2450 9450 2350 9450
+Wire Wire Line
+	2450 9350 2350 9350
+Wire Wire Line
+	2450 9250 2350 9250
+Wire Wire Line
+	2450 9150 2350 9150
+Wire Wire Line
+	2450 9050 2350 9050
+Wire Wire Line
+	2450 8950 2350 8950
+Wire Wire Line
+	2450 8850 2350 8850
+Wire Wire Line
+	2450 8750 2350 8750
+Wire Wire Line
+	2450 8650 2350 8650
+Wire Wire Line
+	2450 8550 2350 8550
+Wire Wire Line
+	2450 8450 2350 8450
+Wire Wire Line
+	2450 8350 2350 8350
+Wire Wire Line
+	2450 8250 2350 8250
+Wire Wire Line
+	2450 8150 2350 8150
+Wire Wire Line
+	2450 8050 2350 8050
+Wire Wire Line
+	2450 7950 2350 7950
+Wire Wire Line
+	2450 7850 2350 7850
+Wire Wire Line
+	2450 7750 2350 7750
+Wire Wire Line
+	1850 9650 1750 9650
+Wire Wire Line
+	1850 9550 1750 9550
+Wire Wire Line
+	1850 9450 1750 9450
+Wire Wire Line
+	1850 9350 1750 9350
+Wire Wire Line
+	1850 9250 1750 9250
+Wire Wire Line
+	1850 9150 1750 9150
+Wire Wire Line
+	1850 9050 1750 9050
+Wire Wire Line
+	1850 8950 1750 8950
+Wire Wire Line
+	1850 8850 1750 8850
+Wire Wire Line
+	1850 8750 1750 8750
+Wire Wire Line
+	1850 8650 1750 8650
+Wire Wire Line
+	1850 8550 1750 8550
+Wire Wire Line
+	1850 8450 1750 8450
+Wire Wire Line
+	1850 8350 1750 8350
+Wire Wire Line
+	1850 8250 1750 8250
+Wire Wire Line
+	1850 8150 1750 8150
+Wire Wire Line
+	1850 8050 1750 8050
+Wire Wire Line
+	1850 7950 1750 7950
+Wire Wire Line
+	1850 7850 1750 7850
+Wire Wire Line
+	1850 7750 1750 7750
+$Comp
+L Connector_Generic:Conn_02x20_Odd_Even J2
+U 1 1 60D6F010
+P 2050 8650
+F 0 "J2" H 2100 9650 50  0000 C CNN
+F 1 "Conn_02x20_Odd_Even" H 2100 7550 50  0000 C CNN
+F 2 "TRS-IO-M1:TRSEDGE" H 2050 8650 50  0001 C CNN
+F 3 "~" H 2050 8650 50  0001 C CNN
+	1    2050 8650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2550 3350 2700 3350
+Text GLabel 5450 8500 2    50   Input ~ 0
+AA3
 $EndSCHEMATC
