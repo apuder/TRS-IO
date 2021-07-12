@@ -11,15 +11,28 @@ Device    g22v10;
 /*  For the TL866II+ programmer, choose profile ATF22V10C (UES) */
 
 /* Inputs  */
-Pin [1..11] = [A0..10];
-Pin [13..17] = [A11..15];
+Pin 1 = A10;
+Pin 2 = A12;
+Pin 3 = A13;
+Pin 4 = A15;
+Pin 5 = A11;
+Pin 6 = A14;
+Pin 7 = A8;
+Pin 8 = A9;
+Pin 9 = A0;
+Pin 10 = A1;
+Pin 11 = A4;
+Pin 13 = A2;
+Pin 14 = A6;
+Pin 15 = A7;
+Pin 16 = A5;
+Pin 17 = A3;
 
 /* Outputs */
-Pin 18 = ADDR_TRS_IO;
-Pin 19 = ADDR_FREHD;
-Pin 20 = ADDR_0;
-Pin 21 = ADDR_1;
-Pin 22 = ADDR_2;
+Pin 18 = ADDR_1;
+Pin 19 = ADDR_0;
+Pin 20 = ADDR_FREHD;
+Pin 21 = ADDR_TRS_IO;
 
 /* Equations */
 
