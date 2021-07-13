@@ -43,13 +43,13 @@
 #if 0
 #define ESP_SEL_N 23
 #else
-#define ESP_SEL_N GPIO_NUM_2
+#define ESP_SEL_N GPIO_NUM_27
 #endif
 #define ESP_READ_N 36
 #if 0
 #define ESP_WAIT_RELEASE_N 27
 #else
-#define ESP_WAIT_RELEASE_N GPIO_NUM_27
+#define ESP_WAIT_RELEASE_N GPIO_NUM_2
 #endif
 
 #define ADJUST(x) ((x) < 32 ? (x) : (x) - 32)

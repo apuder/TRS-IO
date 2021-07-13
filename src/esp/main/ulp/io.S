@@ -6,8 +6,8 @@
 
 .global entry
 
-.set esp_sel_n, 12           // GPIO 2 (orig GPIO 23), RTC GPIO 12
-.set esp_wait_release_n, 17  // GPIO 27, RTC GPIO 17
+.set esp_sel_n, 17           // GPIO 27, RTC GPIO 17
+.set esp_wait_release_n, 12  // GPIO 2 (orig GPIO 23), RTC GPIO 12
 
 .text
 
