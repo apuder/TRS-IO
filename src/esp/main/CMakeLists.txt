@@ -1,8 +1,15 @@
-set(src button.cpp led.cpp spi.cpp io.cpp main.cpp storage.cpp)
+set(src button.cpp led.cpp spi.cpp main.cpp storage.cpp)
+
 if (CONFIG_TRS_IO_ENABLE_OTA)
    set(src ${src} ota.cpp)
 else()
    set(src ${src} ota-dummy.cpp)
+endif()
+
+if (CONFIG_TRS_IO_MODEL_1)
+   set(src ${src} io_m1.cpp)
+else()
+   set(src ${src} io_m3.cpp)
 endif()
 
 idf_component_register(SRCS ${src}
@@ -23,5 +30,5 @@ idf_component_register(SRCS ${src}
 
 set(ulp_app_name ulp_io)
 set(ulp_s_sources "ulp/io.S")
-set(ulp_exp_dep_srcs "io.cpp")
+set(ulp_exp_dep_srcs "io_m1.cpp")
 ulp_embed_binary(${ulp_app_name} "${ulp_s_sources}" "${ulp_exp_dep_srcs}")
