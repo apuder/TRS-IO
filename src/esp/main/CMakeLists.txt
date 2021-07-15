@@ -20,6 +20,9 @@ idf_component_register(SRCS ${src}
                                 nvs_flash
                                 soc
                                 ulp
+                                sdmmc
+                                fatfs
+                                vfs
                                 frehd
                                 libsmb2
                                 mdns

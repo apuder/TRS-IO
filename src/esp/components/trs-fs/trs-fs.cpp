@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "serial.h"
 #include "smb.h"
+#include "posix.h"
 
 #include "fileio.h"
 
@@ -14,19 +15,39 @@
 TRS_FS* trs_fs = NULL;
 
 const char* init_trs_fs() {
+  if (trs_fs != NULL && trs_fs->type() == FS_POSIX && trs_fs->get_err_msg() == NULL) {
+    // We have mounted a SD card. This takes higher precedence
+    return trs_fs->get_err_msg();
+  }
+
   if (trs_fs != NULL) {
     delete trs_fs;
   }
-  trs_fs = new TRS_FS_SMB();
+  trs_fs = new TRS_FS_POSIX();
+  if (trs_fs->get_err_msg() != NULL) {
+    // Mounting of SD Card failed. Try to mount via SMB
+    delete trs_fs;
+    trs_fs = new TRS_FS_SMB();
+  }
   return trs_fs->get_err_msg();
   //trs_fs = new TRS_FS_SERIAL();
 }
 
 const char* init_trs_fs(const char* url, const char* user, const char* passwd) {
+  if (trs_fs != NULL && trs_fs->type() == FS_POSIX && trs_fs->get_err_msg() == NULL) {
+    // We have mounted a SD card. This takes higher precedence
+    return trs_fs->get_err_msg();
+  }
+
   if (trs_fs != NULL) {
     delete trs_fs;
   }
-  trs_fs = new TRS_FS_SMB(url, user, passwd);
+  trs_fs = new TRS_FS_POSIX();
+  if (trs_fs->get_err_msg() != NULL) {
+    // Mounting of SD Card failed. Try to mount via SMB
+    delete trs_fs;
+    trs_fs = new TRS_FS_SMB(url, user, passwd);
+  }
   return trs_fs->get_err_msg();
   //trs_fs = new TRS_FS_SERIAL();
 }

@@ -1,25 +1,16 @@
-#ifndef TRS_FS_SMB_H
-#define TRS_FS_SMB_H
+#ifndef TRS_FS_POSIX_H
+#define TRS_FS_POSIX_H
 
-#include "smb2.h"
 
 #include "trs-fs.h"
 
-#define SMB_KEY_URL "smb_url"
-#define SMB_KEY_USER "smb_user"
-#define SMB_KEY_PASSWD "smb_passwd"
 
-
-class TRS_FS_SMB : virtual public TRS_FS {
+class TRS_FS_POSIX : virtual public TRS_FS {
 private:
-  char* smb_url = NULL;
-  struct smb2_context *smb2 = NULL;
+  const char* mount;
 
-  const char* init();
 public:
-  TRS_FS_SMB();
-  TRS_FS_SMB(const char* url, const char* user, const char* passwd);
-  virtual ~TRS_FS_SMB();
+  TRS_FS_POSIX();
   FS_TYPE type();
   void f_log(const char* msg);
   FRESULT f_open (

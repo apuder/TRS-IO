@@ -17,6 +17,10 @@
 #define F_READDIR 7
 #define F_STAT 8
 
+enum FS_TYPE {
+  FS_SMB,
+  FS_POSIX
+};
 
 const char* init_trs_fs();
 const char* init_trs_fs(const char* url, const char* user, const char* passwd);
@@ -30,6 +34,8 @@ protected:
 public:
   virtual ~TRS_FS() {}
   
+  virtual FS_TYPE type() = 0;
+
   const char* get_err_msg() {
     return err_msg;
   }

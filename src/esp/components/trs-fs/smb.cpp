@@ -47,6 +47,11 @@ TRS_FS_SMB::~TRS_FS_SMB()
   }
 }
 
+FS_TYPE TRS_FS_SMB::type()
+{
+  return FS_SMB;
+}
+
 const char* TRS_FS_SMB::init()
 {
   char* smb_user = NULL;
