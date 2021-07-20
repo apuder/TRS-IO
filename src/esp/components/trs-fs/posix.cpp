@@ -25,10 +25,17 @@ namespace VFS {
 #include <sys/types.h>
 #include <unistd.h>
 
+#if defined(CONFIG_POCKET_TRS_TTGO_VGA32_SUPPORT)
+#define SPI_CS GPIO_NUM_13
+#elif defined(CONFIG_TRS_IO_MODEL_1)
+#define SPI_CS GPIO_NUM_23
+#else
+// TRS-IO for Model III does not (yet) support SD card
+#define SPR_CS GPIO_NUM_0
+#endif
 
 
 TRS_FS_POSIX::TRS_FS_POSIX() {
-  mount = "/sdcard";
   err_msg = NULL;
 
   VFS::esp_vfs_fat_sdmmc_mount_config_t mount_config = {
@@ -37,11 +44,9 @@ TRS_FS_POSIX::TRS_FS_POSIX() {
     .allocation_unit_size = 16 * 1024
   };
 
-  sdmmc_card_t *card;
-
   sdmmc_host_t host = SDSPI_HOST_DEFAULT();
   sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-  slot_config.gpio_cs = GPIO_NUM_13;
+  slot_config.gpio_cs = SPI_CS;
   slot_config.host_id = HSPI_HOST;
 
   esp_err_t ret = VFS::esp_vfs_fat_sdspi_mount(mount, &host, &slot_config, &mount_config, &card);
@@ -55,13 +60,22 @@ TRS_FS_POSIX::TRS_FS_POSIX() {
   }
 }
 
+TRS_FS_POSIX::~TRS_FS_POSIX()
+{
+  if (err_msg == NULL) {
+    VFS::esp_vfs_fat_sdcard_unmount(mount, card);
+  }
+}
+
 FS_TYPE TRS_FS_POSIX::type()
 {
   return FS_POSIX;
 }
 
 void TRS_FS_POSIX::f_log(const char* msg) {
+#if 0
   printf("TRS_FS_POSIX: %s\n", msg);
+#endif
 }
   
 FRESULT TRS_FS_POSIX::f_open (

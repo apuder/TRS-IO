@@ -1,16 +1,17 @@
 #ifndef TRS_FS_POSIX_H
 #define TRS_FS_POSIX_H
 
-
+#include "driver/sdmmc_types.h"
 #include "trs-fs.h"
-
 
 class TRS_FS_POSIX : virtual public TRS_FS {
 private:
-  const char* mount;
+  const char* mount = "/sdcard";
+  sdmmc_card_t* card;
 
 public:
   TRS_FS_POSIX();
+  virtual ~TRS_FS_POSIX();
   FS_TYPE type();
   void f_log(const char* msg);
   FRESULT f_open (

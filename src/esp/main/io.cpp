@@ -451,7 +451,6 @@ void init_io()
   gpio_set_level((gpio_num_t) ESP_WAIT_RELEASE_N, 0);
 
 #ifdef CONFIG_TRS_IO_MODEL_1
-  init_spi();
   TimerHandle_t timer = xTimerCreate("Heartbeat", 25, pdTRUE, NULL, timer25ms);
   assert(xTimerStart(timer, 0) == pdPASS);
 #endif
