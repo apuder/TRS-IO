@@ -243,6 +243,9 @@ onLoad = function() {
 };
 let networkTimeout;
 update = function(first) {
+  if (isDebugMode()) {
+    return;
+  }
   // If we haven't heard from the server in a while, set UI to 'error'.
   clearTimeout(networkTimeout);
   networkTimeout = setTimeout(function() {
@@ -312,6 +315,9 @@ updateStatus = function(status, first) {
 };
 submitForm = function() {
   console.log('--> ' + el('request-iframe').contentDocument.readyState);
+};
+isDebugMode = function() {
+  return document.location.href.indexOf("file://") == 0;
 };
 
 </script>
