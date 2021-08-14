@@ -295,7 +295,11 @@ static void io_task(void* p)
 #else
       switch (s) {
       case 1:
+#ifdef CONFIG_TRS_IO_MODEL_1
         floppy_read();
+#else
+        assert(0);
+#endif
         break;
       case 2:
         trs_io_read();
