@@ -31,12 +31,17 @@ namespace VFS {
 #define SPI_CS GPIO_NUM_23
 #else
 // TRS-IO for Model III does not (yet) support SD card
-#define SPR_CS GPIO_NUM_0
+#define SPI_CS GPIO_NUM_0
 #endif
 
 
 TRS_FS_POSIX::TRS_FS_POSIX() {
   err_msg = NULL;
+
+  if (SPI_CS == GPIO_NUM_0) {
+    err_msg = "SD card not supported";
+    return;
+  }
 
   VFS::esp_vfs_fat_sdmmc_mount_config_t mount_config = {
     .format_if_mount_failed = false,
