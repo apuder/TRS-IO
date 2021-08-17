@@ -88,7 +88,9 @@ void init_frehd()
 {
   pic_init();
   frehd_init();
+#ifdef CONFIG_TRS_IO_MODEL_1
   trs_disk_init(1);
+#endif
 
 #ifdef RUN_FILE_IO_TESTS
   test_file_io();

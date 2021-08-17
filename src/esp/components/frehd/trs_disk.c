@@ -1,3 +1,5 @@
+#ifdef CONFIG_TRS_IO_MODEL_1
+
 /*
  * Copyright (c) 1996-2020, Timothy P. Mann
  *
@@ -3947,3 +3949,5 @@ void trs_disk_load(FILE *file)
   }
 }
 #endif
+
+#endif // CONFIG_TRS_IO_MODEL_1

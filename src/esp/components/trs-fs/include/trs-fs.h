@@ -24,6 +24,7 @@ enum FS_TYPE {
 
 const char* init_trs_fs_posix();
 const char* init_trs_fs_smb();
+const char* init_trs_fs_smb(const char* url, const char* user, const char* passwd);
 const char* get_smb_err_msg();
 const char* get_posix_err_msg();
 bool trs_fs_has_sd_card_reader();
