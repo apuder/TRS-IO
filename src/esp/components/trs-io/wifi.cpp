@@ -242,7 +242,7 @@ static void mongoose_handle_status(struct mg_http_message* message,
 
   const char* posix_err = get_posix_err_msg();
   if (posix_err != NULL) {
-    cJSON_AddStringToObject(s, "posix_err", smb_err);
+    cJSON_AddStringToObject(s, "posix_err", posix_err);
   }
 
   cJSON_AddBoolToObject(s, "has_sd_card", trs_fs_has_sd_card_reader());
