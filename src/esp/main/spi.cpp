@@ -8,6 +8,8 @@
 #include "esp_task.h"
 #include "esp_event_loop.h"
 #include "spi.h"
+#include "esp_vfs_fat.h"
+#include "sdmmc_cmd.h"
 
 #define MCP23S_CHIP_ADDRESS 0x40
 #define MCP23S_WRITE 0x00
@@ -94,15 +96,15 @@ void wire_test_port_expander()
 
 void init_spi()
 {
-  // Configure SPI bus
-  spi_bus.flags = SPICOMMON_BUSFLAG_MASTER;
-  spi_bus.sclk_io_num = SPI_PIN_NUM_CLK;
-  spi_bus.mosi_io_num = SPI_PIN_NUM_MOSI;
-  spi_bus.miso_io_num = SPI_PIN_NUM_MISO;
-  spi_bus.quadwp_io_num = -1;
-  spi_bus.quadhd_io_num = -1;
-  spi_bus.max_transfer_sz = 32;
-  esp_err_t ret = spi_bus_initialize(HSPI_HOST, &spi_bus, 0);
+  spi_bus = {
+        .mosi_io_num = SPI_PIN_NUM_MOSI,
+        .miso_io_num = SPI_PIN_NUM_MISO,
+        .sclk_io_num = SPI_PIN_NUM_CLK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 4000,
+  };
+  esp_err_t ret = spi_bus_initialize(HSPI_HOST, &spi_bus, 1);
   ESP_ERROR_CHECK(ret);
 
   // Configure SPI device for MCP23S17

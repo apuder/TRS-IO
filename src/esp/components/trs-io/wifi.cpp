@@ -79,7 +79,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     status = RS_STATUS_WIFI_CONNECTED;
     evt_signal_wifi_up();
     set_led(false, true, false, false, true);
-    init_trs_fs();
+    init_trs_fs_smb();
   } else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
     wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
     ESP_LOGI(TAG, "Station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
@@ -183,7 +183,7 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   smb_connect |= extract_post_param(message, "smb_passwd", SMB_KEY_PASSWD, MAX_LEN_SMB_PASSWD);
 
   if (smb_connect) {
-    init_trs_fs();
+    init_trs_fs_smb();
   }
 
   copy_config_from_nvs();
@@ -239,6 +239,13 @@ static void mongoose_handle_status(struct mg_http_message* message,
   if (smb_err != NULL) {
     cJSON_AddStringToObject(s, "smb_err", smb_err);
   }
+
+  const char* posix_err = get_posix_err_msg();
+  if (posix_err != NULL) {
+    cJSON_AddStringToObject(s, "posix_err", smb_err);
+  }
+
+  cJSON_AddBoolToObject(s, "has_sd_card", trs_fs_has_sd_card_reader());
 
   resp = cJSON_PrintUnformatted(s);
   *response = resp;

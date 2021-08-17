@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "trs_hard.h"
+#include "trs_disk.h"
 #include "trs_extra.h"
 #include "action.h"
 #include "fileio.h"
@@ -87,6 +88,7 @@ void init_frehd()
 {
   pic_init();
   frehd_init();
+  trs_disk_init(1);
 
 #ifdef RUN_FILE_IO_TESTS
   test_file_io();

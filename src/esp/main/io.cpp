@@ -27,15 +27,17 @@
 #define ESP_S0 34
 #define ESP_S1 35
 #define IOBUSINT_N 33
+#define ESP_SEL_N 27
+#define ESP_WAIT_RELEASE_N 2
 #else
 // GPIO(23): ESP_SEL_N (TRS-IO or Frehd)
 #define ESP_SEL_TRS_IO 39
 #define IOBUSINT_N 25
+#define ESP_SEL_N 23
+#define ESP_WAIT_RELEASE_N 27
 #endif
 
-#define ESP_SEL_N 23
 #define ESP_READ_N 36
-#define ESP_WAIT_RELEASE_N 27
 
 #define ADJUST(x) ((x) < 32 ? (x) : (x) - 32)
 
@@ -201,6 +203,25 @@ static inline void frehd_write() {
 }
 
 #ifdef CONFIG_TRS_IO_MODEL_1
+static inline void floppy_read()
+{
+  uint16_t addr = read_a0_a15();
+  uint8_t data = GPIO.in >> 12;
+
+  switch(addr) {
+  case 0x37e0:
+    //printf("%04X = %02X\n", addr, data);
+    break;
+  case 0x37ec:
+    //printf("%04X = %02X\n", addr, data);
+    break;
+  case 0x37ef:
+    //printf("%04X = %02X\n", addr, data);
+    break;
+  }
+}
+
+
 static inline void floppy_write()
 {
   static uint8_t i = 0;
@@ -274,14 +295,18 @@ static void io_task(void* p)
 #else
       switch (s) {
       case 1:
-	assert(0); // Shouldn't happen
-	break;
+#ifdef CONFIG_TRS_IO_MODEL_1
+        floppy_read();
+#else
+        assert(0);
+#endif
+        break;
       case 2:
-	trs_io_read();
-	break;
+        trs_io_read();
+        break;
       case 3:
-	frehd_read();
-	break;
+        frehd_read();
+        break;
       }
 #endif
     } else {
@@ -292,17 +317,17 @@ static void io_task(void* p)
       switch (s) {
       case 1:
 #ifdef CONFIG_TRS_IO_MODEL_1
-	floppy_write();
+        floppy_write();
 #else
-	assert(0); // Shouldn't happen
+        assert(0); // Shouldn't happen
 #endif
-	break;
+        break;
       case 2:
-	trs_io_write();
-	break;
+        trs_io_write();
+        break;
       case 3:
-	frehd_write();
-	break;
+        frehd_write();
+        break;
       }
 #endif
     }
@@ -312,11 +337,11 @@ static void io_task(void* p)
 
     // Wait for ESP_SEL_N to be de-asserted
     while (!(GPIO.in & MASK_ESP_SEL_N)) ;
-    
+
     // Set ESP_WAIT_RELEASE_N to 0 for next IO command
     GPIO.out_w1tc = MASK_ESP_WAIT_RELEASE_N;
 
-    GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);
+    GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);    
   }
 }
 
@@ -339,7 +364,8 @@ static void action_task(void* p)
         REG_WRITE(GPIO_OUT_W1TS_REG, MASK_IOBUSINT_N);
 #endif
       } else {
-        trs_printer_write(printer_data);
+        char buf[2] = {(char) (printer_data & 0xff), 0};
+        trs_printer_write(buf);
         printer_data = -1;
         trigger_trs_io_action = false;
       }
@@ -429,7 +455,6 @@ void init_io()
   gpio_set_level((gpio_num_t) ESP_WAIT_RELEASE_N, 0);
 
 #ifdef CONFIG_TRS_IO_MODEL_1
-  init_spi();
   TimerHandle_t timer = xTimerCreate("Heartbeat", 25, pdTRUE, NULL, timer25ms);
   assert(xTimerStart(timer, 0) == pdPASS);
 #endif

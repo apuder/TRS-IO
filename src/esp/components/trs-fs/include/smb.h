@@ -18,8 +18,8 @@ private:
   const char* init();
 public:
   TRS_FS_SMB();
-  TRS_FS_SMB(const char* url, const char* user, const char* passwd);
   virtual ~TRS_FS_SMB();
+  FS_TYPE type();
   void f_log(const char* msg);
   FRESULT f_open (
                   FIL* fp,           /* [OUT] Pointer to the file object structure */

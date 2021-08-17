@@ -1,4 +1,5 @@
-set(src button.cpp led.cpp spi.cpp io.cpp main.cpp storage.cpp)
+set(src button.cpp led.cpp spi.cpp main.cpp storage.cpp io.cpp)
+
 if (CONFIG_TRS_IO_ENABLE_OTA)
    set(src ${src} ota.cpp)
 else()
@@ -11,6 +12,9 @@ idf_component_register(SRCS ${src}
                        REQUIRES app_update
                                 main
                                 nvs_flash
+                                sdmmc
+                                fatfs
+                                vfs
                                 frehd
                                 libsmb2
                                 mdns
