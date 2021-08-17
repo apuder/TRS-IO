@@ -302,8 +302,11 @@ static void mongoose_event_handler(struct mg_connection *c,
       if (c == ws_conn) {
         ws_conn = NULL;
       }
+    }
+    break;
+  case MG_EV_POLL:
+    {
       if (reboot) {
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
         esp_restart();
       }
     }
