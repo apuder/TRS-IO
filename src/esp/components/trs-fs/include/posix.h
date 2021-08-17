@@ -13,6 +13,7 @@ public:
   TRS_FS_POSIX();
   virtual ~TRS_FS_POSIX();
   FS_TYPE type();
+  bool has_sd_card_reader();
   void f_log(const char* msg);
   FRESULT f_open (
                   FIL* fp,           /* [OUT] Pointer to the file object structure */

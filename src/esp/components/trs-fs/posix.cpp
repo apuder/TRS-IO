@@ -38,7 +38,7 @@ namespace VFS {
 TRS_FS_POSIX::TRS_FS_POSIX() {
   err_msg = NULL;
 
-  if (SPI_CS == GPIO_NUM_0) {
+  if (!has_sd_card_reader()) {
     err_msg = "SD card not supported";
     return;
   }
@@ -75,6 +75,11 @@ TRS_FS_POSIX::~TRS_FS_POSIX()
 FS_TYPE TRS_FS_POSIX::type()
 {
   return FS_POSIX;
+}
+
+bool TRS_FS_POSIX::has_sd_card_reader()
+{
+  return SPI_CS != GPIO_NUM_0;
 }
 
 void TRS_FS_POSIX::f_log(const char* msg) {
@@ -232,7 +237,6 @@ FRESULT TRS_FS_POSIX::f_stat (
   char* abs_path;
   struct stat s;
   asprintf(&abs_path, "%s/%s", mount, path);
-  printf("STAT: %s\n", abs_path);
   int r = stat(abs_path, &s);
   free(abs_path);
   if (r != 0) {
@@ -240,7 +244,6 @@ FRESULT TRS_FS_POSIX::f_stat (
   }
   strcpy(fno->fname, path);
   fno->fsize = s.st_size;
-  printf("SIZE: %d\n", fno->fsize);
   fno->fattrib = 1; //XXX
   return FR_OK;
 }

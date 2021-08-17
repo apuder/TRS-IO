@@ -11,6 +11,7 @@
 #include "retrostore.h"
 #include "backend.h"
 #include "trs-io.h"
+#include "trs-fs.h"
 #include "spi.h"
 
 
@@ -35,6 +36,7 @@ void app_main(void)
   init_ota();
 #ifdef CONFIG_TRS_IO_MODEL_1
   init_spi();
+  init_trs_fs_posix();
 #endif
   init_wifi();
   init_io();

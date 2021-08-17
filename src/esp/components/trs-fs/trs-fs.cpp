@@ -13,50 +13,55 @@
 #define TRS_FS_MODULE_ID 4
 
 TRS_FS* trs_fs = NULL;
+static TRS_FS_POSIX* trs_fs_posix = NULL;
+static TRS_FS_SMB* trs_fs_smb = NULL;
 
-const char* init_trs_fs() {
-  if (trs_fs != NULL && trs_fs->type() == FS_POSIX && trs_fs->get_err_msg() == NULL) {
-    // We have mounted a SD card. This takes higher precedence
-    return trs_fs->get_err_msg();
+static void set_fs() {
+  if (trs_fs_posix != NULL && trs_fs_posix->get_err_msg() == NULL) {
+    // We have a mounted SD card. This has higher precedent
+    trs_fs = trs_fs_posix;
+  } else {
+    trs_fs = trs_fs_smb;
   }
-
-  if (trs_fs != NULL) {
-    delete trs_fs;
-  }
-  trs_fs = new TRS_FS_POSIX();
-  if (trs_fs->get_err_msg() != NULL) {
-    // Mounting of SD Card failed. Try to mount via SMB
-    delete trs_fs;
-    trs_fs = new TRS_FS_SMB();
-  }
-  return trs_fs->get_err_msg();
-  //trs_fs = new TRS_FS_SERIAL();
 }
 
-const char* init_trs_fs(const char* url, const char* user, const char* passwd) {
-  if (trs_fs != NULL && trs_fs->type() == FS_POSIX && trs_fs->get_err_msg() == NULL) {
-    // We have mounted a SD card. This takes higher precedence
-    return trs_fs->get_err_msg();
+const char* init_trs_fs_posix() {
+  if (trs_fs_posix != NULL) {
+    delete trs_fs_posix;
   }
+  trs_fs_posix = new TRS_FS_POSIX();
+  set_fs();
+  return trs_fs_posix->get_err_msg();
+}
 
-  if (trs_fs != NULL) {
-    delete trs_fs;
+const char* init_trs_fs_smb() {
+  if (trs_fs_smb != NULL) {
+    delete trs_fs_smb;
   }
-  trs_fs = new TRS_FS_POSIX();
-  if (trs_fs->get_err_msg() != NULL) {
-    // Mounting of SD Card failed. Try to mount via SMB
-    delete trs_fs;
-    trs_fs = new TRS_FS_SMB(url, user, passwd);
-  }
-  return trs_fs->get_err_msg();
-  //trs_fs = new TRS_FS_SERIAL();
+  trs_fs_smb = new TRS_FS_SMB();
+  set_fs();
+  return trs_fs_smb->get_err_msg();
 }
 
 const char* get_smb_err_msg() {
-  if (trs_fs == NULL) {
+  if (trs_fs_smb == NULL) {
     return "SMB not connected";
   }
-  return trs_fs->get_err_msg();
+  return trs_fs_smb->get_err_msg();
+}
+
+const char* get_posix_err_msg() {
+  if (trs_fs_posix == NULL) {
+    return "No SD card";
+  }
+  return trs_fs_posix->get_err_msg();
+}
+
+bool trs_fs_has_sd_card_reader() {
+  if (trs_fs_posix == NULL) {
+    return false;
+  }
+  return trs_fs_posix->has_sd_card_reader();
 }
 
 using namespace std;
