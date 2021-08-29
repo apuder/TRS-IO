@@ -29,4 +29,5 @@
   (lib (name contrib)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/contrib.lib)(options "")(descr ""))
   (lib (name valves)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/valves.lib)(options "")(descr ""))
   (lib (name HiLetgoESP32s)(type Legacy)(uri ${KIPRJMOD}/HiLetgoESP32s.lib)(options "")(descr ""))
+  (lib (name SDCard)(type Legacy)(uri ${KIPRJMOD}/SDCard.lib)(options "")(descr ""))
 )
