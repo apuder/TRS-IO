@@ -294,21 +294,21 @@ F 3 "" H 9100 2250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text GLabel 8650 6100 2    60   Input ~ 0
-ESP32_D7
+BD7
 Text GLabel 8650 6300 2    60   Input ~ 0
-ESP32_D5
+BD5
 Text GLabel 8650 6500 2    60   Input ~ 0
-ESP32_D3
+BD3
 Text GLabel 8650 6700 2    60   Input ~ 0
-ESP32_D1
+BD1
 Text GLabel 9300 6200 2    60   Input ~ 0
-ESP32_D6
+BD6
 Text GLabel 9300 6400 2    60   Input ~ 0
-ESP32_D4
+BD4
 Text GLabel 9300 6600 2    60   Input ~ 0
-ESP32_D2
+BD2
 Text GLabel 9300 6800 2    60   Input ~ 0
-ESP32_D0
+BD0
 Text GLabel 11750 2450 2    60   Input ~ 0
 /ESP32_SEL
 Text GLabel 9000 2550 0    60   Input ~ 0
@@ -400,8 +400,8 @@ Entry Wire Line
 	6800 4450 6900 4550
 Entry Wire Line
 	6800 4600 6900 4700
-Text Notes 11950 10300 0    60   ~ 0
-Reconfiguration of RetroStoreCard to support TRS-HD Emulation\n\nPrepared by Andrew Quinn
+Text Notes 11900 10150 0    60   ~ 0
+Updated TRS-IO with SD Card Support and Edge Connector
 Text Notes 13100 11050 0    60   ~ 0
 28 August 2021
 Text Notes 5650 9400 0    60   ~ 0
@@ -1793,19 +1793,19 @@ F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/21919e.pdf" H 8150 10700 50
 	-1   0    0    -1  
 $EndComp
 Text GLabel 9200 9800 2    60   Input ~ 0
-ESP32_D0
+BD0
 Text GLabel 8650 9900 2    60   Input ~ 0
-ESP32_D1
+BD1
 Text GLabel 9200 10000 2    60   Input ~ 0
-ESP32_D2
+BD2
 Text GLabel 8650 10100 2    60   Input ~ 0
-ESP32_D3
+BD3
 Text GLabel 9200 10200 2    60   Input ~ 0
-ESP32_D4
+BD4
 Text GLabel 8650 10300 2    60   Input ~ 0
-ESP32_D5
+BD5
 Text GLabel 9200 10400 2    60   Input ~ 0
-ESP32_D6
+BD6
 Wire Wire Line
 	8400 9800 9200 9800
 Wire Wire Line
@@ -1821,7 +1821,7 @@ Wire Wire Line
 Wire Wire Line
 	8400 10400 9200 10400
 Text GLabel 8650 10500 2    60   Input ~ 0
-ESP32_D7
+BD7
 Wire Wire Line
 	8400 10500 8650 10500
 $Comp
@@ -2153,11 +2153,11 @@ Wire Wire Line
 	5000 9900 5000 10000
 Wire Wire Line
 	4800 10000 5000 10000
+Connection ~ 5000 10000
+Wire Wire Line
+	5000 10000 5000 10400
 Wire Bus Line
 	8950 7500 8950 7850
 Wire Bus Line
 	6800 3950 6800 8650
-Connection ~ 5000 10000
-Wire Wire Line
-	5000 10000 5000 10400
 $EndSCHEMATC

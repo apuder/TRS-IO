@@ -294,21 +294,21 @@ F 3 "" H 9100 2250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text GLabel 8650 6100 2    60   Input ~ 0
-ESP32_D7
+BD7
 Text GLabel 8650 6300 2    60   Input ~ 0
-ESP32_D5
+BD5
 Text GLabel 8650 6500 2    60   Input ~ 0
-ESP32_D3
+BD3
 Text GLabel 8650 6700 2    60   Input ~ 0
-ESP32_D1
+BD1
 Text GLabel 9300 6200 2    60   Input ~ 0
-ESP32_D6
+BD6
 Text GLabel 9300 6400 2    60   Input ~ 0
-ESP32_D4
+BD4
 Text GLabel 9300 6600 2    60   Input ~ 0
-ESP32_D2
+BD2
 Text GLabel 9300 6800 2    60   Input ~ 0
-ESP32_D0
+BD0
 Text GLabel 11750 2450 2    60   Input ~ 0
 /ESP32_SEL
 Text GLabel 9000 2550 0    60   Input ~ 0
@@ -1793,19 +1793,19 @@ F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/21919e.pdf" H 8150 10700 50
 	-1   0    0    -1  
 $EndComp
 Text GLabel 9200 9800 2    60   Input ~ 0
-ESP32_D0
+BD0
 Text GLabel 8650 9900 2    60   Input ~ 0
-ESP32_D1
+BD1
 Text GLabel 9200 10000 2    60   Input ~ 0
-ESP32_D2
+BD2
 Text GLabel 8650 10100 2    60   Input ~ 0
-ESP32_D3
+BD3
 Text GLabel 9200 10200 2    60   Input ~ 0
-ESP32_D4
+BD4
 Text GLabel 8650 10300 2    60   Input ~ 0
-ESP32_D5
+BD5
 Text GLabel 9200 10400 2    60   Input ~ 0
-ESP32_D6
+BD6
 Wire Wire Line
 	8400 9800 9200 9800
 Wire Wire Line
@@ -1821,7 +1821,7 @@ Wire Wire Line
 Wire Wire Line
 	8400 10400 9200 10400
 Text GLabel 8650 10500 2    60   Input ~ 0
-ESP32_D7
+BD7
 Wire Wire Line
 	8400 10500 8650 10500
 $Comp
@@ -2123,11 +2123,41 @@ Wire Wire Line
 Connection ~ 2550 9050
 Wire Wire Line
 	2200 9350 2200 9500
+Connection ~ 2200 9500
+Wire Wire Line
+	2200 9500 3000 9500
+$Comp
+L power:GND #PWR?
+U 1 1 614CC471
+P 5000 10400
+F 0 "#PWR?" H 5000 10150 50  0001 C CNN
+F 1 "GND" H 5000 10250 50  0000 C CNN
+F 2 "" H 5000 10400 50  0001 C CNN
+F 3 "" H 5000 10400 50  0001 C CNN
+	1    5000 10400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4800 9600 5000 9600
+Wire Wire Line
+	5000 9600 5000 9700
+Wire Wire Line
+	4800 9700 5000 9700
+Connection ~ 5000 9700
+Wire Wire Line
+	5000 9700 5000 9900
+Wire Wire Line
+	4800 9900 5000 9900
+Connection ~ 5000 9900
+Wire Wire Line
+	5000 9900 5000 10000
+Wire Wire Line
+	4800 10000 5000 10000
+Connection ~ 5000 10000
+Wire Wire Line
+	5000 10000 5000 10400
 Wire Bus Line
 	8950 7500 8950 7850
 Wire Bus Line
 	6800 3950 6800 8650
-Connection ~ 2200 9500
-Wire Wire Line
-	2200 9500 3000 9500
 $EndSCHEMATC
