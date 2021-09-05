@@ -8,12 +8,17 @@
 
 #include "fileio.h"
 
+extern "C" {
+#include "trs_hard.h"
+}
+
 #define TRS_FS_VERSION_MAJOR 1
 #define TRS_FS_VERSION_MINOR 0
 
 #define TRS_FS_MODULE_ID 4
 
 TRS_FS* trs_fs = NULL;
+static TRS_FS* current_trs_fs = NULL;
 static TRS_FS_POSIX* trs_fs_posix = NULL;
 static TRS_FS_SMB* trs_fs_smb = NULL;
 
@@ -24,6 +29,10 @@ static void set_fs() {
   } else {
     trs_fs = trs_fs_smb;
   }
+  if (trs_fs != current_trs_fs && trs_fs->get_err_msg() == NULL) {
+    open_drives();
+  }
+  current_trs_fs = trs_fs;
 }
 
 const char* init_trs_fs_posix() {
