@@ -87,6 +87,10 @@ static volatile bool heartbeat_triggered = false;
 
 static volatile int16_t printer_data = -1;
 
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+static uint8_t vram[32 * 1024];
+#endif
+
 void io_core1_enable_intr() {
   if (!io_task_started) {
     return;
@@ -203,10 +207,17 @@ static inline void frehd_write() {
 }
 
 #ifdef CONFIG_TRS_IO_MODEL_1
-static inline void floppy_read()
+static inline void ram_read()
 {
   uint16_t addr = read_a0_a15();
   uint8_t data = GPIO.in >> 12;
+
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+  if (addr & 0x8000) {
+    vram[addr & 0x7fff] = data;
+    return;
+  }
+#endif
 
   switch(addr) {
   case 0x37e0:
@@ -222,7 +233,7 @@ static inline void floppy_read()
 }
 
 
-static inline void floppy_write()
+static inline void ram_write()
 {
   static uint8_t i = 0;
   static const uint8_t len = loader_frehd_end - loader_frehd_start;
@@ -230,6 +241,12 @@ static inline void floppy_write()
   uint32_t d = 0xff;
   uint16_t addr = read_a0_a15();
   
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+  if (addr & 0x8000) {
+    d = vram[addr & 0x7fff];
+  }
+#endif
+
   switch(addr) {
   case 0x37e0:
     d = fdc_37e0;
@@ -261,6 +278,10 @@ static inline void floppy_write()
 
 static void io_task(void* p)
 {
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+  memset(vram, 0, sizeof(vram));
+#endif
+
   io_task_started = true;
   portDISABLE_INTERRUPTS();
   intr_enabled = false;
@@ -273,11 +294,11 @@ static void io_task(void* p)
       if (intr_event & IO_CORE1_ENABLE_INTR) {
         portENABLE_INTERRUPTS();
         intr_event &= ~IO_CORE1_ENABLE_INTR;
-	intr_enabled = true;
+        intr_enabled = true;
       } else if (intr_event & IO_CORE1_DISABLE_INTR) {
         portDISABLE_INTERRUPTS();
         intr_event &= ~IO_CORE1_DISABLE_INTR;
-	intr_enabled = false;
+        intr_enabled = false;
       }
       continue;
     }
@@ -296,7 +317,7 @@ static void io_task(void* p)
       switch (s) {
       case 1:
 #ifdef CONFIG_TRS_IO_MODEL_1
-        floppy_read();
+        ram_read();
 #else
         assert(0);
 #endif
@@ -317,7 +338,7 @@ static void io_task(void* p)
       switch (s) {
       case 1:
 #ifdef CONFIG_TRS_IO_MODEL_1
-        floppy_write();
+        ram_write();
 #else
         assert(0); // Shouldn't happen
 #endif
