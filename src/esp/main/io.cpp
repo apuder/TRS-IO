@@ -68,10 +68,6 @@
 extern const uint8_t loader_frehd_start[] asm("_binary_loader_frehd_bin_start");
 extern const uint8_t loader_frehd_end[] asm("_binary_loader_frehd_bin_end");
 
-extern const uint8_t trs_xray_html_start[] asm("_binary_trs_xray_html_start");
-extern const uint8_t trs_xray_css_start[] asm("_binary_trs_xray_css_start");
-extern const uint8_t trs_xray_js_start[] asm("_binary_trs_xray_js_start");
-
 static volatile bool trigger_trs_io_action = false;
 
 #define IO_CORE1_ENABLE_INTR BIT0
@@ -264,23 +260,7 @@ static uint16_t xray_breakpoint_pc;
 static uint8_t xray_breakpoint_idx;
 
 static char* on_trx_get_resource(TRX_RESOURCE_TYPE type) {
-	switch(type) {
-		case TRX_RES_MAIN_HTML:
-		  return (char*)trs_xray_html_start;
-		case TRX_RES_MAIN_JS:
-		  return (char*)trs_xray_js_start;
-		case TRX_RES_MAIN_CSS:
-		  return (char*)trs_xray_css_start;
-		case TRX_RES_TRS_FONT:
-		  // FIXME
-		  return (char*)trs_xray_html_start;
-		case TRX_RES_JQUERY:
-		  // FIXME
-		  return (char*)trs_xray_html_start;
-		default:
-		  printf("ERROR: Unknown resource type.");
-		  return (char*)trs_xray_html_start;
-	}
+  return NULL;
 }
 
 void on_trx_control_callback(TRX_CONTROL_TYPE type) {
@@ -315,6 +295,7 @@ void trx_write_memory(uint16_t addr, uint8_t value) {
 
 static void init_xray()
 {
+  puts("init_xray() ===========================================");
   TRX_Context* ctx = get_default_trx_context();
   ctx->system_name = "";
   ctx->model = UNDEFINED;
@@ -469,7 +450,9 @@ static inline void ram_write()
 
 static void io_task(void* p)
 {
+  puts("io_task() ===========================================");
 #ifdef CONFIG_TRS_IO_ENABLE_XRAY
+  puts("io_task() --> init_xray===========================================");
   init_xray();
 #endif
 
