@@ -34,10 +34,6 @@ extern const uint8_t printer_html_start[] asm("_binary_printer_html_start");
 extern const uint8_t font_ttf_start[] asm("_binary_AnotherMansTreasureMIII64C_ttf_start");
 extern const uint8_t font_ttf_end[] asm("_binary_AnotherMansTreasureMIII64C_ttf_end");
 
-extern const uint8_t trs_xray_html_start[] asm("_binary_trs_xray_html_start");
-extern const uint8_t trs_xray_css_start[] asm("_binary_trs_xray_css_start");
-extern const uint8_t trs_xray_js_start[] asm("_binary_trs_xray_js_start");
-
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
 uint8_t* get_wifi_status()
@@ -65,30 +61,6 @@ const char* get_wifi_ip()
 {
   return ip;
 }
-
-//---------------------TRS xray---------------------------------------------
-
-static char* on_trx_get_resource(TRX_RESOURCE_TYPE type) {
-	switch(type) {
-		case TRX_RES_MAIN_HTML:
-		  return (char*)trs_xray_html_start;
-		case TRX_RES_MAIN_JS:
-		  return (char*)trs_xray_js_start;
-		case TRX_RES_MAIN_CSS:
-		  return (char*)trs_xray_css_start;
-		case TRX_RES_TRS_FONT:
-		  // FIXME
-		  return (char*)trs_xray_html_start;
-		case TRX_RES_JQUERY:
-		  // FIXME
-		  return (char*)trs_xray_html_start;
-		default:
-		  printf("ERROR: Unknown resource type.");
-		  return (char*)trs_xray_html_start;
-	}
-}
-
-//-------------------------------------------------------------------------
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                           int32_t event_id, void* event_data)
@@ -432,13 +404,6 @@ static void wifi_init_sta()
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-}
-
-// Caller gives up ownership of ctx.
-void init_debugger(TRX_Context* ctx) {
-  ctx->get_resource = &on_trx_get_resource;
-  init_trs_xray(ctx);
-  ESP_LOGI(TAG, "TRX initialized.");
 }
 
 void init_wifi()

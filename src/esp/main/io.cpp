@@ -68,6 +68,10 @@
 extern const uint8_t loader_frehd_start[] asm("_binary_loader_frehd_bin_start");
 extern const uint8_t loader_frehd_end[] asm("_binary_loader_frehd_bin_end");
 
+extern const uint8_t trs_xray_html_start[] asm("_binary_trs_xray_html_start");
+extern const uint8_t trs_xray_css_start[] asm("_binary_trs_xray_css_start");
+extern const uint8_t trs_xray_js_start[] asm("_binary_trs_xray_js_start");
+
 static volatile bool trigger_trs_io_action = false;
 
 #define IO_CORE1_ENABLE_INTR BIT0
@@ -259,6 +263,55 @@ static uint8_t xray_active_breakpoints[XRAY_MAX_BREAKPOINTS];
 static uint16_t xray_breakpoint_pc;
 static uint8_t xray_breakpoint_idx;
 
+static char* on_trx_get_resource(TRX_RESOURCE_TYPE type) {
+	switch(type) {
+		case TRX_RES_MAIN_HTML:
+		  return (char*)trs_xray_html_start;
+		case TRX_RES_MAIN_JS:
+		  return (char*)trs_xray_js_start;
+		case TRX_RES_MAIN_CSS:
+		  return (char*)trs_xray_css_start;
+		case TRX_RES_TRS_FONT:
+		  // FIXME
+		  return (char*)trs_xray_html_start;
+		case TRX_RES_JQUERY:
+		  // FIXME
+		  return (char*)trs_xray_html_start;
+		default:
+		  printf("ERROR: Unknown resource type.");
+		  return (char*)trs_xray_html_start;
+	}
+}
+
+void on_trx_control_callback(TRX_CONTROL_TYPE type) {
+}
+
+void on_trx_get_state_update(TRX_SystemState* state) {
+  state->registers.pc = xray_breakpoint_pc;
+  state->registers.sp = xray_vram_alt.xray_z80_regs.sp;
+  state->registers.af = xray_vram_alt.xray_z80_regs.af;
+  state->registers.bc = xray_vram_alt.xray_z80_regs.bc;
+  state->registers.de = xray_vram_alt.xray_z80_regs.de;
+  state->registers.hl = xray_vram_alt.xray_z80_regs.hl;
+}
+
+void on_trx_add_breakpoint(int bp_id, uint16_t addr, TRX_BREAK_TYPE type) {
+  // int flag = BREAKPOINT_FLAG;  // TRX_BREAK_PC
+  // if (type == TRX_BREAK_MEMORY) flag = WATCHPOINT_FLAG;
+  // set_trap(addr, flag);
+}
+
+void on_trx_remove_breakpoint(int bp_id) {
+  // clear_trap(bp_id);
+}
+
+uint8_t trx_read_memory(uint16_t addr) {
+  return vram[addr];
+}
+
+void trx_write_memory(uint16_t addr, uint8_t value) {
+  vram[addr] = value;
+}
 
 static void init_xray()
 {
@@ -271,13 +324,13 @@ static void init_xray()
   ctx->capabilities.alt_single_step_mode = true;
 
   // TODO the rest....
-  ctx->control_callback = NULL;
-  ctx->read_memory = NULL;
-  ctx->write_memory = NULL;
-  ctx->breakpoint_callback = NULL;
-  ctx->remove_breakpoint_callback = NULL;
-  ctx->get_resource = NULL;
-  ctx->get_state_update = NULL;
+  ctx->control_callback = &on_trx_control_callback;
+  ctx->read_memory = &trx_read_memory;
+  ctx->write_memory = &trx_write_memory;
+  ctx->breakpoint_callback = &on_trx_add_breakpoint;
+  ctx->remove_breakpoint_callback = &on_trx_remove_breakpoint;
+  ctx->get_resource = &on_trx_get_resource;
+  ctx->get_state_update = &on_trx_get_state_update;
 
   init_trs_xray(ctx);
   memset(xray_active_breakpoints, 0, sizeof(xray_active_breakpoints));
