@@ -92,6 +92,10 @@ static volatile int16_t printer_data = -1;
 static uint8_t vram[32 * 1024];
 #endif
 
+static void xray_continue();
+static void xray_set_breakpoint(uint8_t idx, uint16_t addr);
+static void xray_clean_breakpoint(uint8_t idx);
+
 void io_core1_enable_intr() {
   if (!io_task_started) {
     return;
@@ -264,25 +268,40 @@ static char* on_trx_get_resource(TRX_RESOURCE_TYPE type) {
 }
 
 void on_trx_control_callback(TRX_CONTROL_TYPE type) {
+  if (type == TRX_CONTROL_TYPE_STEP ||
+      type == TRX_CONTROL_TYPE_CONTINUE) {
+    xray_continue();
+  }
 }
 
 void on_trx_get_state_update(TRX_SystemState* state) {
+  state->paused = xray_status != XRAY_STATUS_RUN;
   state->registers.pc = xray_breakpoint_pc;
   state->registers.sp = xray_vram_alt.xray_z80_regs.sp;
   state->registers.af = xray_vram_alt.xray_z80_regs.af;
   state->registers.bc = xray_vram_alt.xray_z80_regs.bc;
   state->registers.de = xray_vram_alt.xray_z80_regs.de;
   state->registers.hl = xray_vram_alt.xray_z80_regs.hl;
+
+  // Not supported.
+  state->registers.af_prime = 0;
+  state->registers.bc_prime = 0;
+  state->registers.de_prime = 0;
+  state->registers.hl_prime = 0;
+  state->registers.ix = 0;
+  state->registers.iy = 0;
+  state->registers.i = 0;
+  state->registers.iff1 = 0;
+  state->registers.iff2 = 0;
 }
 
 void on_trx_add_breakpoint(int bp_id, uint16_t addr, TRX_BREAK_TYPE type) {
-  // int flag = BREAKPOINT_FLAG;  // TRX_BREAK_PC
-  // if (type == TRX_BREAK_MEMORY) flag = WATCHPOINT_FLAG;
-  // set_trap(addr, flag);
+  if (type != TRX_BREAK_PC) return;
+  xray_set_breakpoint(bp_id, addr);
 }
 
 void on_trx_remove_breakpoint(int bp_id) {
-  // clear_trap(bp_id);
+  xray_clean_breakpoint(bp_id);
 }
 
 uint8_t trx_read_memory(uint16_t addr) {
@@ -297,10 +316,10 @@ static void init_xray()
 {
   puts("init_xray() ===========================================");
   TRX_Context* ctx = get_default_trx_context();
-  ctx->system_name = "";
-  ctx->model = UNDEFINED;
+  ctx->system_name = "Real Model";
+  ctx->model = MODEL_I;
   ctx->capabilities.memory_range.start = 0x8000;
-  ctx->capabilities.memory_range.length = 0xFFFF;
+  ctx->capabilities.memory_range.length = 0x7FFF;
   ctx->capabilities.max_breakpoints = XRAY_MAX_BREAKPOINTS;
   ctx->capabilities.alt_single_step_mode = true;
 
@@ -321,12 +340,14 @@ static void init_xray()
 
 static void xray_set_breakpoint(uint8_t idx, uint16_t addr)
 {
+  printf("xray_set_breakpoint %d, %d\n", idx, addr);
   xray_breakpoints[idx] = addr;
   xray_active_breakpoints[idx] = 1;
 }
 
 static void xray_clean_breakpoint(uint8_t idx)
 {
+  printf("xray_clean_breakpoint %d\n", idx);
   xray_active_breakpoints[idx] = 0;
 }
 

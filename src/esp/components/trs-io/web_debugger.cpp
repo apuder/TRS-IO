@@ -185,8 +185,8 @@ static void send_memory_segment(const char* params) {
   if (status_conn == NULL) return;
   // printf("TRX: MemorySegment request: '%s'.", params);
 
-  int param_start = 0;
-  int param_length = 0xFFFF;
+  int param_start = ctx->capabilities.memory_range.start;
+  int param_length = ctx->capabilities.memory_range.length;
 
   bool force_update = true; //strcmp("force_update", params) == 0;
 
