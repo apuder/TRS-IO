@@ -17,6 +17,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "mongoose.h"
+#include "web_debugger.h"
 #include <string.h>
 #include "cJSON.h"
 
@@ -112,7 +113,7 @@ static struct mg_connection *ws_conn = NULL;
 static void copy_config_from_nvs(const char* key, char* value, size_t max_len)
 {
   size_t len;
-  
+
   *value = '\0';
   if (storage_has_key(key, &len)) {
     assert (len <= max_len + 1);
@@ -144,7 +145,7 @@ static bool extract_post_param(struct mg_http_message* message,
   // SMB URL is the longest parameter
   static char buf[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
   static char buf2[sizeof(buf)] EXT_RAM_ATTR;
-  
+
   mg_http_get_var(&message->body, param, buf, sizeof(buf));
   // In case someone tries to force a buffer overflow
   buf[max_len + 1] = '\0';
@@ -201,7 +202,7 @@ static void mongoose_handle_status(struct mg_http_message* message,
     free(resp);
     resp = NULL;
   }
-  
+
   cJSON* s = cJSON_CreateObject();
   cJSON_AddNumberToObject(s, "hardware_rev", TRS_IO_HARDWARE_REVISION);
   cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
@@ -258,7 +259,7 @@ static void mongoose_event_handler(struct mg_connection *c,
                                    int event, void *eventData, void *fn_data)
 {
   static bool reboot = false;
-  
+
   switch (event) {
   case MG_EV_HTTP_MSG:
     {
@@ -281,7 +282,7 @@ static void mongoose_event_handler(struct mg_connection *c,
         response = (char*) printer_html_start;
         response_len = strlen(response);
       }
-      
+
       if (mg_http_match_uri(message, "/font.ttf")) {
         response = (char*) font_ttf_start;
         response_len = font_ttf_end - font_ttf_start;
@@ -348,7 +349,7 @@ static void mg_task(void* p)
 
   // Start Mongoose
   mg_mgr_init(&mgr);
-  mg_http_listen(&mgr, "http://0.0.0.0:80", mongoose_event_handler, &mgr); 
+  mg_http_listen(&mgr, "http://0.0.0.0:80", mongoose_event_handler, &mgr);
 
   while(true) {
     vTaskDelay(1);
@@ -363,7 +364,7 @@ void wifi_init_ap()
   wifi_config_t wifi_config = {
     .ap = {0}
   };
-  
+
   esp_netif_create_default_wifi_ap();
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -373,7 +374,7 @@ void wifi_init_ap()
   strcpy((char*) wifi_config.ap.password, "");
   wifi_config.ap.max_connection = 1;
   wifi_config.ap.authmode = WIFI_AUTH_OPEN;
-  
+
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
 }
