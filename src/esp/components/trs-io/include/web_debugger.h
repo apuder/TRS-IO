@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include "mongoose.h"
 
 typedef struct {
   uint16_t af;
@@ -152,6 +153,9 @@ TRX_Context* get_default_trx_context();
 
 // Initialize the web debugger.
 bool init_trs_xray(TRX_Context* ctx);
+
+bool trx_handle_http_request(struct mg_connection *c,
+                             int event, void *eventData, void *fn_data);
 
 // Initialize the web debugger.
 void trx_waitForExit();

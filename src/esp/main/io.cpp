@@ -18,6 +18,7 @@
 #include "driver/gpio.h"
 #include "freertos/event_groups.h"
 #include "freertos/timers.h"
+#include "web_debugger.h"
 
 
 // GPIO pins 12-19
@@ -261,6 +262,24 @@ static uint8_t xray_breakpoint_idx;
 
 static void init_xray()
 {
+  TRX_Context* ctx = get_default_trx_context();
+  ctx->system_name = "";
+  ctx->model = UNDEFINED;
+  ctx->capabilities.memory_range.start = 0x8000;
+  ctx->capabilities.memory_range.length = 0xFFFF;
+  ctx->capabilities.max_breakpoints = XRAY_MAX_BREAKPOINTS;
+  ctx->capabilities.alt_single_step_mode = true;
+
+  // TODO the rest....
+  ctx->control_callback = NULL;
+  ctx->read_memory = NULL;
+  ctx->write_memory = NULL;
+  ctx->breakpoint_callback = NULL;
+  ctx->remove_breakpoint_callback = NULL;
+  ctx->get_resource = NULL;
+  ctx->get_state_update = NULL;
+
+  init_trs_xray(ctx);
   memset(xray_active_breakpoints, 0, sizeof(xray_active_breakpoints));
   memset(vram, 0, sizeof(vram));
   memcpy(vram, fill_bin, sizeof(fill_bin));
@@ -317,7 +336,7 @@ static inline void ram_write()
 
   uint32_t d = 0xff;
   uint16_t addr = read_a0_a15();
-  
+
 #ifdef CONFIG_TRS_IO_ENABLE_XRAY
   if (addr & 0x8000) {
     static bool second_time = false;
@@ -404,7 +423,7 @@ static void io_task(void* p)
   io_task_started = true;
   portDISABLE_INTERRUPTS();
   intr_enabled = false;
-  
+
   while(true) {
     // Wait for access the GAL to trigger this ESP
     while ((GPIO.in & MASK_ESP_SEL_N) && (intr_event == 0)) ;
@@ -471,7 +490,7 @@ static void io_task(void* p)
       }
 #endif
     }
-    
+
     // Release ESP_WAIT_RELEASE_N
     GPIO.out_w1ts = MASK_ESP_WAIT_RELEASE_N;
 
@@ -481,7 +500,7 @@ static void io_task(void* p)
     // Set ESP_WAIT_RELEASE_N to 0 for next IO command
     GPIO.out_w1tc = MASK_ESP_WAIT_RELEASE_N;
 
-    GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);    
+    GPIO_OUTPUT_DISABLE(GPIO_DATA_BUS_MASK);
   }
 }
 
@@ -538,9 +557,9 @@ static void action_task(void* p)
         set_led(true, false, false, false, false);
       }
       vTaskDelay(1000 / portTICK_PERIOD_MS);
-      set_led(false, false, false, false, false);      
+      set_led(false, false, false, false, false);
     }
-      
+
     vTaskDelay(1);
   }
 }
@@ -571,7 +590,7 @@ void init_io()
   // Configure ESP_READ_N
   gpioConfig.pin_bit_mask = MASK64_ESP_READ_N;
   gpio_config(&gpioConfig);
-  
+
   // Configure ESP_SEL_N
   gpioConfig.pin_bit_mask = MASK64_ESP_SEL_N;
   gpio_config(&gpioConfig);
@@ -591,10 +610,10 @@ void init_io()
   gpioConfig.mode = GPIO_MODE_OUTPUT;
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
-  
+
   // Set IOBUSINT_N to 0
   gpio_set_level((gpio_num_t) IOBUSINT_N, 0);
-  
+
   // Set ESP_WAIT_RELEASE_N to 0
   gpio_set_level((gpio_num_t) ESP_WAIT_RELEASE_N, 0);
 

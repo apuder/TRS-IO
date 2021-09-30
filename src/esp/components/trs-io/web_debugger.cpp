@@ -14,6 +14,8 @@ static TRX_MemorySegment memory_query_cache;
 
 // static bool init_webserver(void);
 static char* get_registers_json(const TRX_StatusRegistersAndFlags* registers);
+static bool www_handler(struct mg_connection *conn,
+                        int ev, void *ev_data, void *fn_data);
 
 static void handleDynamicUpdate();
 static int emu_run_looper(void *ptr);
@@ -87,6 +89,12 @@ bool init_trs_xray(TRX_Context* ctx_param) {
 }
 
 // public
+bool trx_handle_http_request(struct mg_connection *c,
+                             int event, void *eventData, void *fn_data) {
+  return www_handler(c, event, eventData, fn_data);
+}
+
+// public
 void trx_waitForExit() {
   // int threadReturnValue;
   // SDL_WaitThread(thread, &threadReturnValue);
@@ -125,7 +133,7 @@ void get_memory_segment(int start, int length,
                         TRX_MemorySegment* segment,
                         bool force_full_update) {
   // Only send a range of data that changed (within the given params).
-  static uint8_t previous_memory_[0xFFFF] = {0};
+  static uint8_t previous_memory_[1] = {0};
   int start_actual = start;
   if (!force_full_update) {
     for (int i = start; i < start + length; ++i) {
@@ -280,7 +288,7 @@ static void key_event(const char* params) {
 
 static bool handle_http_request(struct mg_connection *conn,
                                 struct mg_http_message* message) {
-  if (mg_http_match_uri(message, "/") || mg_http_match_uri(message, "/index.html")) {
+  if (mg_http_match_uri(message, "/debugger")) {
     mg_http_reply(conn, 200, "Content-Type: text/html\r\nConnection: close\r\n",
                   ctx->get_resource(TRX_RES_MAIN_HTML));
   } else if (mg_http_match_uri(message, "/trs_xray.js")) {
@@ -294,7 +302,7 @@ static bool handle_http_request(struct mg_connection *conn,
 		status_conn = conn;
   } else {
     // Resource not found.
-    mg_http_reply(conn, 404, "Content-Type: text/html\r\nConnection: close\r\n", "");
+    // mg_http_reply(conn, 404, "Content-Type: text/html\r\nConnection: close\r\n", "");
     return false;
   }
   return true;
@@ -403,28 +411,34 @@ static void on_frontend_message(const char* msg) {
   }
 }
 
-static void www_handler(struct mg_connection *conn,
+static bool www_handler(struct mg_connection *conn,
                         int ev, void *ev_data, void *fn_data) {
-  switch(ev) {
-	case MG_EV_HTTP_MSG: {
-	  handle_http_request(conn, (struct mg_http_message*) ev_data);
-		break;
-	}
-  case MG_EV_WS_MSG: {
-    static char message[50];
-    struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
-    strncpy(message, wm->data.ptr, wm->data.len);
-    message[wm->data.len] = '\0';
-    on_frontend_message(message);
-    break;
+  if (!trx_running) {
+    return false;
   }
-	case MG_EV_CLOSE: {
-		if (conn == status_conn) {
-			status_conn = NULL;
-		}
-		break;
+  switch(ev) {
+    case MG_EV_HTTP_MSG: {
+      return handle_http_request(conn, (struct mg_http_message*) ev_data);
+    }
+    case MG_EV_WS_MSG: {
+      static char message[50];
+      struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
+      strncpy(message, wm->data.ptr, wm->data.len);
+      message[wm->data.len] = '\0';
+      on_frontend_message(message);
+      break;
+    }
+    case MG_EV_CLOSE: {
+      if (conn == status_conn) {
+        status_conn = NULL;
+      }
+      break;
+    }
+    default: {
+      return false;
+    }
 	}
-	}
+  return true;
 }
 
 // FIXME
