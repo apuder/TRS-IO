@@ -266,6 +266,17 @@ static void init_xray()
   memcpy(vram, fill_bin, sizeof(fill_bin));
 }
 
+static void xray_set_breakpoint(uint8_t idx, uint16_t addr)
+{
+  xray_breakpoints[idx] = addr;
+  xray_active_breakpoints[idx] = 1;
+}
+
+static void xray_clean_breakpoint(uint8_t idx)
+{
+  xray_active_breakpoints[idx] = 0;
+}
+
 static void xray_continue()
 {
   trigger_xray_action = false;
