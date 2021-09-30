@@ -206,6 +206,67 @@ static inline void frehd_write() {
   REG_WRITE(GPIO_OUT_W1TC_REG, d);
 }
 
+/***********************************************************************************
+ * XRay
+ ***********************************************************************************/
+
+static const unsigned char fill_bin[] = {
+  0x21, 0x00, 0x3c, 0x01, 0x00, 0x04, 0x36, 0xbf, 0x23, 0x0b, 0x78, 0xb1,
+  0x20, 0xf8, 0xc9
+};
+
+static const unsigned char xray_stub_bin[] = {
+  0xed, 0x73, 0xd0, 0x42, 0xe5, 0x6c, 0x26, 0xff, 0x6e, 0xe1, 0xe5, 0x26,
+  0xff, 0x6e, 0x6a, 0x6e, 0x6b, 0x6e, 0x68, 0x6e, 0x69, 0x6e, 0xc5, 0xed,
+  0x4b, 0xd0, 0x42, 0x68, 0x6e, 0x69, 0x6e, 0xf5, 0xc1, 0x68, 0x6e, 0x69,
+  0x6e, 0xc1, 0xe1, 0x18, 0xd7
+};
+
+typedef struct {
+  #if 0
+  uint16_t af_p;
+  uint16_t bc_p;
+  uint16_t de_p;
+  uint16_t hl_p;
+  uint16_t ix;
+  uint16_t iy;
+  #endif
+  uint16_t af;
+  uint16_t sp;
+  uint16_t bc;
+  uint16_t de;
+  uint16_t hl;
+} XRAY_Z80_REGS;
+
+static union {
+  XRAY_Z80_REGS xray_z80_regs;
+  uint8_t vram[sizeof(XRAY_Z80_REGS)];
+} xray_vram_alt;
+
+
+#define XRAY_STATUS_RUN 0
+#define XRAY_STATUS_CONTINUE 1
+#define XRAY_STATUS_BREAKPOINT 2
+
+static volatile uint8_t xray_status = XRAY_STATUS_RUN;
+static volatile bool trigger_xray_action = false;
+
+#define XRAY_MAX_BREAKPOINTS 5
+
+static uint16_t xray_breakpoints[XRAY_MAX_BREAKPOINTS];
+static uint8_t xray_active_breakpoints[XRAY_MAX_BREAKPOINTS];
+static uint16_t xray_breakpoint_pc;
+
+
+static void init_xray()
+{
+  memset(xray_active_breakpoints, 0, sizeof(xray_active_breakpoints));
+  xray_breakpoints[0] = 0x800c;
+//  xray_active_breakpoints[0] = 1;
+  memset(vram, 0, sizeof(vram));
+  memcpy(vram, fill_bin, sizeof(fill_bin));
+}
+
 #ifdef CONFIG_TRS_IO_MODEL_1
 static inline void ram_read()
 {
@@ -242,9 +303,55 @@ static inline void ram_write()
   uint16_t addr = read_a0_a15();
   
 #ifdef CONFIG_TRS_IO_ENABLE_XRAY
-  if (addr & 0x8000) {
-    d = vram[addr & 0x7fff];
+
+static uint16_t count = 0;
+
+if (addr == 0x800c) {
+  if (count++ > 1) {
+      xray_active_breakpoints[0] = 1;
   }
+}
+
+  if (addr & 0x8000) {
+    static bool second_time = false;
+    static uint8_t* sp;
+
+    if (xray_status == XRAY_STATUS_RUN) {
+      for (int i = 0; i < XRAY_MAX_BREAKPOINTS; i++) {
+        if (xray_active_breakpoints[i] && xray_breakpoints[i] == addr) {
+          xray_status = XRAY_STATUS_BREAKPOINT;
+          xray_breakpoint_pc = addr;
+          break;
+        }
+      }
+      d = vram[addr & 0x7fff];
+    }
+
+    if (xray_status == XRAY_STATUS_BREAKPOINT || xray_status == XRAY_STATUS_CONTINUE) {
+      uint16_t stub_idx = addr - xray_breakpoint_pc;
+      if (stub_idx == 0) {
+        sp = &xray_vram_alt.vram[sizeof(XRAY_Z80_REGS) - 1];
+        if (second_time) {
+          trigger_xray_action = true;
+        }
+        second_time = true;
+      }
+      if (stub_idx == 0 && xray_status == XRAY_STATUS_CONTINUE) {
+        d = vram[addr & 0x7fff];
+        xray_status = XRAY_STATUS_RUN;
+        second_time = false;
+      } else {
+        if(stub_idx < sizeof(xray_stub_bin)) {
+          d = xray_stub_bin[stub_idx];
+        } else {
+          // Access must be loading pf SP at the end of the debug stub
+          assert((addr & 0xff00) == 0xff00);
+          *sp-- = addr & 0xff;
+          d = 0;
+        }
+      }
+    }
+  } else {
 #endif
 
   switch(addr) {
@@ -267,6 +374,10 @@ static inline void ram_write()
     break;
   }
 
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+  }
+#endif
+
   d = d << 12;
 
   GPIO_OUTPUT_ENABLE(GPIO_DATA_BUS_MASK);
@@ -279,7 +390,7 @@ static inline void ram_write()
 static void io_task(void* p)
 {
 #ifdef CONFIG_TRS_IO_ENABLE_XRAY
-  memset(vram, 0, sizeof(vram));
+  init_xray();
 #endif
 
   io_task_started = true;
@@ -374,6 +485,33 @@ static void action_task(void* p)
 
   while (true) {
     frehd_check_action();
+
+    if (trigger_xray_action) {
+      static int count = 0;
+      if ((count++ % 1000) == 0) {
+        ESP_LOGI("XRAY", "SP: 0x%04X", xray_vram_alt.xray_z80_regs.sp);
+        ESP_LOGI("XRAY", "HL: 0x%04X", xray_vram_alt.xray_z80_regs.hl);
+        ESP_LOGI("XRAY", "BC: 0x%04X", xray_vram_alt.xray_z80_regs.bc);
+        ESP_LOGI("XRAY", "DE: 0x%04X", xray_vram_alt.xray_z80_regs.de);
+        ESP_LOGI("XRAY", "AF: 0x%04X", xray_vram_alt.xray_z80_regs.af);
+        #if 0
+        ESP_LOGI("XRAY", "HL': 0x%04X", xray_vram_alt.xray_z80_regs.hl_p);
+        ESP_LOGI("XRAY", "BC': 0x%04X", xray_vram_alt.xray_z80_regs.bc_p);
+        ESP_LOGI("XRAY", "DE': 0x%04X", xray_vram_alt.xray_z80_regs.de_p);
+        ESP_LOGI("XRAY", "AF': 0x%04X", xray_vram_alt.xray_z80_regs.af_p);
+        ESP_LOGI("XRAY", "IX: 0x%04X", xray_vram_alt.xray_z80_regs.ix);
+        ESP_LOGI("XRAY", "IY: 0x%04X", xray_vram_alt.xray_z80_regs.iy);
+        #endif
+        ESP_LOGI("XRAY", "");
+      }
+      #if 1
+      if ((count % 3000) == 0) {
+        ESP_LOGI("XRAY", "Continue");
+        trigger_xray_action = false;
+        xray_status = XRAY_STATUS_CONTINUE;
+      }
+      #endif
+    }
 
     if (trigger_trs_io_action) {
       if (printer_data == -1) {
