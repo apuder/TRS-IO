@@ -305,11 +305,11 @@ void on_trx_remove_breakpoint(int bp_id) {
 }
 
 uint8_t trx_read_memory(uint16_t addr) {
-  return vram[addr];
+  return vram[addr - 0x8000];
 }
 
 void trx_write_memory(uint16_t addr, uint8_t value) {
-  vram[addr] = value;
+  vram[addr - 0x8000] = value;
 }
 
 static void init_xray()
@@ -319,7 +319,7 @@ static void init_xray()
   ctx->system_name = "Real Model";
   ctx->model = MODEL_I;
   ctx->capabilities.memory_range.start = 0x8000;
-  ctx->capabilities.memory_range.length = 0x7FFF;
+  ctx->capabilities.memory_range.length = 20;  // For demo only. fill program covered.
   ctx->capabilities.max_breakpoints = XRAY_MAX_BREAKPOINTS;
   ctx->capabilities.alt_single_step_mode = true;
 

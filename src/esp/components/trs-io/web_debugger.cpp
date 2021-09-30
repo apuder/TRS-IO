@@ -81,7 +81,7 @@ bool init_trs_xray(TRX_Context* ctx_param) {
   }
 
   // Pre-allocate for performance to max required size.
-  // memory_query_cache.data = (uint8_t*) malloc(sizeof(uint8_t) * 0xFFFF);
+  memory_query_cache.data = (uint8_t*) malloc(sizeof(uint8_t) * ctx->capabilities.memory_range.length);
 
   // emu_run_thread =
   //     SDL_CreateThread(emu_run_looper, "TRX Emu Run Thread", (void *)NULL);
@@ -133,12 +133,13 @@ void get_memory_segment(int start, int length,
                         TRX_MemorySegment* segment,
                         bool force_full_update) {
   // Only send a range of data that changed (within the given params).
-  static uint8_t previous_memory_[1] = {0};
+  static uint8_t* previous_memory_ =
+      (uint8_t*) malloc(sizeof(uint8_t) * ctx->capabilities.memory_range.length);
   int start_actual = start;
   if (!force_full_update) {
     for (int i = start; i < start + length; ++i) {
       int data = ctx->read_memory(i);
-      if (previous_memory_[i] != data) {
+      if (previous_memory_[i - start] != data) {
         start_actual = i;
         break;
       }
@@ -149,7 +150,7 @@ void get_memory_segment(int start, int length,
   if (!force_full_update) {
     for (int i = start + length - 1; i >= start; --i) {
       int data = ctx->read_memory(i);
-      if (previous_memory_[i] != data) {
+      if (previous_memory_[i - start] != data) {
         length_actual = (i - start_actual) + 1;
         break;
       }
@@ -160,7 +161,7 @@ void get_memory_segment(int start, int length,
   for (int i = start_actual; i < start_actual + length_actual; ++i) {
     int data = ctx->read_memory(i);
     segment->data[i - start_actual] = data;
-    previous_memory_[i] = data;
+    previous_memory_[i - start] = data;
   }
 }
 
