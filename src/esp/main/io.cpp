@@ -256,15 +256,20 @@ static volatile bool trigger_xray_action = false;
 static uint16_t xray_breakpoints[XRAY_MAX_BREAKPOINTS];
 static uint8_t xray_active_breakpoints[XRAY_MAX_BREAKPOINTS];
 static uint16_t xray_breakpoint_pc;
+static uint8_t xray_breakpoint_idx;
 
 
 static void init_xray()
 {
   memset(xray_active_breakpoints, 0, sizeof(xray_active_breakpoints));
-  xray_breakpoints[0] = 0x800c;
-//  xray_active_breakpoints[0] = 1;
   memset(vram, 0, sizeof(vram));
   memcpy(vram, fill_bin, sizeof(fill_bin));
+}
+
+static void xray_continue()
+{
+  trigger_xray_action = false;
+  xray_status = XRAY_STATUS_CONTINUE;
 }
 
 #ifdef CONFIG_TRS_IO_MODEL_1
@@ -303,15 +308,6 @@ static inline void ram_write()
   uint16_t addr = read_a0_a15();
   
 #ifdef CONFIG_TRS_IO_ENABLE_XRAY
-
-static uint16_t count = 0;
-
-if (addr == 0x800c) {
-  if (count++ > 1) {
-      xray_active_breakpoints[0] = 1;
-  }
-}
-
   if (addr & 0x8000) {
     static bool second_time = false;
     static uint8_t* sp;
@@ -321,6 +317,7 @@ if (addr == 0x800c) {
         if (xray_active_breakpoints[i] && xray_breakpoints[i] == addr) {
           xray_status = XRAY_STATUS_BREAKPOINT;
           xray_breakpoint_pc = addr;
+          xray_breakpoint_idx = i;
           break;
         }
       }
@@ -487,30 +484,7 @@ static void action_task(void* p)
     frehd_check_action();
 
     if (trigger_xray_action) {
-      static int count = 0;
-      if ((count++ % 1000) == 0) {
-        ESP_LOGI("XRAY", "SP: 0x%04X", xray_vram_alt.xray_z80_regs.sp);
-        ESP_LOGI("XRAY", "HL: 0x%04X", xray_vram_alt.xray_z80_regs.hl);
-        ESP_LOGI("XRAY", "BC: 0x%04X", xray_vram_alt.xray_z80_regs.bc);
-        ESP_LOGI("XRAY", "DE: 0x%04X", xray_vram_alt.xray_z80_regs.de);
-        ESP_LOGI("XRAY", "AF: 0x%04X", xray_vram_alt.xray_z80_regs.af);
-        #if 0
-        ESP_LOGI("XRAY", "HL': 0x%04X", xray_vram_alt.xray_z80_regs.hl_p);
-        ESP_LOGI("XRAY", "BC': 0x%04X", xray_vram_alt.xray_z80_regs.bc_p);
-        ESP_LOGI("XRAY", "DE': 0x%04X", xray_vram_alt.xray_z80_regs.de_p);
-        ESP_LOGI("XRAY", "AF': 0x%04X", xray_vram_alt.xray_z80_regs.af_p);
-        ESP_LOGI("XRAY", "IX: 0x%04X", xray_vram_alt.xray_z80_regs.ix);
-        ESP_LOGI("XRAY", "IY: 0x%04X", xray_vram_alt.xray_z80_regs.iy);
-        #endif
-        ESP_LOGI("XRAY", "");
-      }
-      #if 1
-      if ((count % 3000) == 0) {
-        ESP_LOGI("XRAY", "Continue");
-        trigger_xray_action = false;
-        xray_status = XRAY_STATUS_CONTINUE;
-      }
-      #endif
+      // Breakpoint triggered
     }
 
     if (trigger_trs_io_action) {
