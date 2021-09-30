@@ -296,10 +296,10 @@ static void mongoose_event_handler(struct mg_connection *c,
       if (mg_http_match_uri(message, "/log")) {
         mg_ws_upgrade(c, message, NULL);
         ws_conn = c;
-      } else {
-        mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
-        mg_send(c, response, response_len);
       }
+
+      mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
+      mg_send(c, response, response_len);
     }
     break;
   case MG_EV_CLOSE:

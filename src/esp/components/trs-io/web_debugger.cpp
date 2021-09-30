@@ -81,7 +81,7 @@ bool init_trs_xray(TRX_Context* ctx_param) {
   }
 
   // Pre-allocate for performance to max required size.
-  memory_query_cache.data = (uint8_t*) malloc(sizeof(uint8_t) * 0xFFFF);
+  // memory_query_cache.data = (uint8_t*) malloc(sizeof(uint8_t) * 0xFFFF);
 
   // emu_run_thread =
   //     SDL_CreateThread(emu_run_looper, "TRX Emu Run Thread", (void *)NULL);
@@ -288,16 +288,9 @@ static void key_event(const char* params) {
 
 static bool handle_http_request(struct mg_connection *conn,
                                 struct mg_http_message* message) {
-  if (mg_http_match_uri(message, "/debugger")) {
-    mg_http_reply(conn, 200, "Content-Type: text/html\r\nConnection: close\r\n",
-                  ctx->get_resource(TRX_RES_MAIN_HTML));
-  } else if (mg_http_match_uri(message, "/trs_xray.js")) {
-    mg_http_reply(conn, 200, "Content-Type: application/javascript\r\nConnection: close\r\n",
-                  ctx->get_resource(TRX_RES_MAIN_JS));
-  } else if (mg_http_match_uri(message, "/trs_xray.css")) {
-    mg_http_reply(conn, 200, "Content-Type: text/css\r\nConnection: close\r\n",
-                  ctx->get_resource(TRX_RES_MAIN_CSS));
-  } else if (mg_http_match_uri(message, "/channel")) {
+  // Note: We don't host the html/js/css files here as they are took big
+  //       for the embedded RAM.
+  if (mg_http_match_uri(message, "/channel")) {
 		mg_ws_upgrade(conn, message, NULL);
 		status_conn = conn;
   } else {
