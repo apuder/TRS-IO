@@ -133,8 +133,11 @@ void get_memory_segment(int start, int length,
                         TRX_MemorySegment* segment,
                         bool force_full_update) {
   // Only send a range of data that changed (within the given params).
-  static uint8_t* previous_memory_ =
-      (uint8_t*) malloc(sizeof(uint8_t) * ctx->capabilities.memory_range.length);
+  static uint8_t* previous_memory_ = NULL;
+  if (previous_memory_ == NULL) {
+      previous_memory_ = (uint8_t*) malloc(sizeof(uint8_t) * ctx->capabilities.memory_range.length);
+  }
+
   int start_actual = start;
   if (!force_full_update) {
     for (int i = start; i < start + length; ++i) {
@@ -186,8 +189,8 @@ static void send_memory_segment(const char* params) {
   if (status_conn == NULL) return;
   // printf("TRX: MemorySegment request: '%s'.", params);
 
-  int param_start = ctx->capabilities.memory_range.start;
-  int param_length = ctx->capabilities.memory_range.length;
+  int param_start = 0;
+  int param_length = 0xFFFF;
 
   bool force_update = true; //strcmp("force_update", params) == 0;
 
@@ -205,6 +208,15 @@ static void send_memory_segment(const char* params) {
     param_length_str[substr_length - 1] = '\0';
     param_length = atoi(param_length_str);
     // printf("Parameters: start(%d) length(%d)\n", param_start, param_length);
+  }
+
+  // Limit to range supported by SUT.
+  if (param_start < ctx->capabilities.memory_range.start) {
+    param_start = ctx->capabilities.memory_range.start;
+  }
+
+  if (param_length > ctx->capabilities.memory_range.length) {
+    param_length = ctx->capabilities.memory_range.length;
   }
 
   get_memory_segment(param_start, param_length, &memory_query_cache,
