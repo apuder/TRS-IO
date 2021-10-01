@@ -18,7 +18,6 @@ static bool www_handler(struct mg_connection *conn,
                         int ev, void *ev_data, void *fn_data);
 
 static void handleDynamicUpdate();
-static int emu_run_looper(void *ptr);
 static bool emulation_running = false;
 static int emulation_is_halting = false;
 static uint32_t last_update_sent = 0;
@@ -82,9 +81,6 @@ bool init_trs_xray(TRX_Context* ctx_param) {
 
   // Pre-allocate for performance to max required size.
   memory_query_cache.data = (uint8_t*) malloc(sizeof(uint8_t) * ctx->capabilities.memory_range.length);
-
-  // emu_run_thread =
-  //     SDL_CreateThread(emu_run_looper, "TRX Emu Run Thread", (void *)NULL);
   return true;
 }
 
@@ -366,21 +362,6 @@ static char* get_registers_json(const TRX_StatusRegistersAndFlags* regs) {
     return str;
 }
 
-// Waits until it gets the signal to initiate continuous running.
-static int emu_run_looper(void *ptr) {
-  while(trx_running) {
-    // SDL_Delay(50);  FIXME
-    if (next_async_action != TRX_CONTROL_TYPE_NOOP) {
-      emulation_running = true;
-      ctx->control_callback(next_async_action);
-      emulation_running = false;
-      emulation_is_halting = true;
-      next_async_action = TRX_CONTROL_TYPE_NOOP;
-    }
-  }
-  return 0;
-}
-
 static void on_frontend_message(const char* msg) {
   if (strcmp("action/refresh", msg) == 0) {
     send_update_to_web_debugger();
@@ -388,8 +369,10 @@ static void on_frontend_message(const char* msg) {
     ctx->control_callback(TRX_CONTROL_TYPE_STEP);
     send_update_to_web_debugger();
   } else if (strcmp("action/continue", msg) == 0) {
-    // Running is done asynchronously to not block the main TRX thread.
-    next_async_action = TRX_CONTROL_TYPE_CONTINUE;
+    // // Running is done asynchronously to not block the main TRX thread.
+    // next_async_action = TRX_CONTROL_TYPE_CONTINUE;
+    // For TRS_IO we call continue directly.
+    ctx->control_callback(TRX_CONTROL_TYPE_CONTINUE);
   } else if (strcmp("action/stop", msg) == 0) {
     ctx->control_callback(TRX_CONTROL_TYPE_HALT);
   } else if (strcmp("action/soft_reset", msg) == 0) {
