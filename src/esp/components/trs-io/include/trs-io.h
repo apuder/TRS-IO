@@ -20,8 +20,8 @@
 
 #define TRS_IO_MAX_MODULES 5
 #define TRS_IO_MAX_COMMANDS 15
-#define TRS_IO_MAX_RECEIVE_BUFFER (48 * 1024)
-#define TRS_IO_MAX_SEND_BUFFER (48 * 1024)
+#define TRS_IO_MAX_RECEIVE_BUFFER (1 * 1024)
+#define TRS_IO_MAX_SEND_BUFFER (1 * 1024)
 #define TRS_IO_MAX_PARAMETERS_PER_TYPE 5
 
 extern "C" void init_trs_io();

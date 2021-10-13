@@ -436,5 +436,5 @@ void init_wifi()
   ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(8));
   ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
 
-  xTaskCreatePinnedToCore(mg_task, "mg", 6000, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(mg_task, "mg", 9000, NULL, 1, NULL, 0);
 }

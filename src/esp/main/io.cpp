@@ -353,6 +353,7 @@ static void xray_clean_breakpoint(uint8_t idx)
 
 static void xray_continue()
 {
+  printf("XRAY continue\n");
   trigger_xray_action = false;
   xray_status = XRAY_STATUS_CONTINUE;
 }
@@ -471,12 +472,6 @@ static inline void ram_write()
 
 static void io_task(void* p)
 {
-  puts("io_task() ===========================================");
-#ifdef CONFIG_TRS_IO_ENABLE_XRAY
-  puts("io_task() --> init_xray===========================================");
-  init_xray();
-#endif
-
   io_task_started = true;
   portDISABLE_INTERRUPTS();
   intr_enabled = false;
@@ -571,6 +566,13 @@ static void action_task(void* p)
     frehd_check_action();
 
     if (trigger_xray_action) {
+#if 0
+      static bool first_time = true;
+      if (first_time) {
+        printf("XRAY hit breakpopint\n");
+        first_time = false;
+      }
+#endif
       // Breakpoint triggered
     }
 
@@ -679,7 +681,11 @@ void init_io()
   assert(xTimerStart(timer, 0) == pdPASS);
 #endif
 
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+  init_xray();
+#endif
+
   xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, tskIDLE_PRIORITY + 2,
                           NULL, 1);
-  xTaskCreatePinnedToCore(action_task, "action", 6000, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(action_task, "action", 9000, NULL, 1, NULL, 0);
 }
