@@ -5,6 +5,36 @@
 #include <driver/spi_master.h>
 #include <stdint.h>
 
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+
+//-----XRAY configuration--------------------------------------------
+
+// SPI
+#define SPI_SPEED_MHZ 5
+
+#define SPI_PIN_NUM_MISO GPIO_NUM_22
+#define SPI_PIN_NUM_MOSI GPIO_NUM_21
+#define SPI_PIN_NUM_CLK GPIO_NUM_25
+#define SPI_PIN_NUM_CS_CMOD GPIO_NUM_26
+
+#define FPGA_CMD_SET_LED 0
+#define FPGA_CMD_BRAM_POKE 1
+#define FPGA_CMD_BRAM_PEEK 2
+#define FPGA_CMD_DBUS_READ 3
+#define FPGA_CMD_DBUS_WRITE 4
+#define FPGA_CMD_TRS_IO_DONE 5
+
+void set_led(uint8_t on);
+void bram_poke(uint16_t addr, uint8_t data);
+uint8_t bram_peek(uint16_t addr);
+uint8_t spi_dbus_read();
+void spi_dbus_write(uint8_t d);
+void spi_trs_io_done();
+
+#else
+
+//-----M1 & MIII configuration--------------------------------------
+
 // SPI
 #define SPI_SPEED_MHZ 10
 
@@ -81,6 +111,8 @@ uint8_t readPortExpander(spi_device_handle_t dev, uint8_t reg);
 #else
 void writePortExpander(uint8_t cmd, uint8_t data);
 uint8_t readPortExpander(uint8_t reg);
+#endif
+
 #endif
 
 void init_spi();

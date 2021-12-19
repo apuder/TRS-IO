@@ -25,7 +25,7 @@ config TRS_IO_ENABLE_XRAY
     default n
     help
         Enable support for the XRAY debugger. Note that this option
-        also requires the v1.2-xray GAL equations for U9.
+        requires the FPGA version of TRS-IO.
 
 config TRS_IO_GPIO_LED_RED
     int "GPIO pin for red"

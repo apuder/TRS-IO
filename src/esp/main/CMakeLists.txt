@@ -1,6 +1,8 @@
 set(src button.cpp led.cpp main.cpp storage.cpp)
 
-if (CONFIG_TRS_IO_MODEL_3)
+if (CONFIG_TRS_IO_ENABLE_XRAY)
+   set(src ${src} spi-xray.cpp io-xray.cpp)
+elseif (CONFIG_TRS_IO_MODEL_3)
    set(src ${src} spi-m3.cpp io-m3.cpp)
 else()
    set(src ${src} spi-m1.cpp io-m1.cpp)

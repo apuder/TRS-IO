@@ -52,6 +52,7 @@ TRS_FS_POSIX::TRS_FS_POSIX() {
   };
 
   sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+  host.max_freq_khz = SDMMC_FREQ_PROBING;
   sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
   slot_config.gpio_cs = SPI_CS;
   slot_config.host_id = HSPI_HOST;
@@ -81,7 +82,9 @@ FS_TYPE TRS_FS_POSIX::type()
 
 bool TRS_FS_POSIX::has_sd_card_reader()
 {
-  return SPI_CS != GPIO_NUM_0;
+  //XXX SD card does not work for TRS-IO-XRAY
+  return false;
+  //return SPI_CS != GPIO_NUM_0;
 }
 
 void TRS_FS_POSIX::f_log(const char* msg) {
