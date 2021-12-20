@@ -123,8 +123,8 @@ FRESULT open_drive(UCHAR drive_num, UCHAR options)
 	if (filename[0] == '\0') {
 		// use default name
 		strcpy(filename, (const char*) "hard4-");
-		filename[7] = '0' + drive_num;
-		filename[8] = 0;
+		filename[6] = '0' + drive_num;
+		filename[7] = 0;
 	}
 	
 	/* try to open the file */
