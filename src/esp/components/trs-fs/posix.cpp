@@ -30,8 +30,7 @@ namespace VFS {
 #elif defined(CONFIG_TRS_IO_MODEL_1)
 #define SPI_CS GPIO_NUM_23
 #elif defined(CONFIG_TRS_IO_MODEL_3)
-// TRS-IO for Model III does not (yet) support SD card
-#define SPI_CS GPIO_NUM_0
+#define SPI_CS GPIO_NUM_16
 #else
 // PocketTRS
 #define SPI_CS GPIO_NUM_15
