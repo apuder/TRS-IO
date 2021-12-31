@@ -1,5 +1,7 @@
-#ifdef CONFIG_TRS_IO_MODEL_1
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TRS_IO_MODEL_1
 /*
  * Copyright (c) 1996-2020, Timothy P. Mann
  *

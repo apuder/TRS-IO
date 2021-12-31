@@ -82,9 +82,7 @@ FS_TYPE TRS_FS_POSIX::type()
 
 bool TRS_FS_POSIX::has_sd_card_reader()
 {
-  //XXX SD card does not work for TRS-IO-XRAY
-  return false;
-  //return SPI_CS != GPIO_NUM_0;
+  return SPI_CS != GPIO_NUM_0;
 }
 
 void TRS_FS_POSIX::f_log(const char* msg) {
