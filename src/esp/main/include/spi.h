@@ -11,11 +11,13 @@
 
 // SPI
 #define SPI_SPEED_MHZ 5
+#define SPI_DIGI_POT_SPEED_MHZ 1
 
 #define SPI_PIN_NUM_MISO GPIO_NUM_22
 #define SPI_PIN_NUM_MOSI GPIO_NUM_21
 #define SPI_PIN_NUM_CLK GPIO_NUM_25
 #define SPI_PIN_NUM_CS_CMOD GPIO_NUM_26
+#define SPI_PIN_NUM_CS_MCP4351 GPIO_NUM_19
 
 #define FPGA_CMD_SET_LED 0
 #define FPGA_CMD_BRAM_POKE 1
@@ -30,6 +32,7 @@ uint8_t bram_peek(uint16_t addr);
 uint8_t spi_dbus_read();
 void spi_dbus_write(uint8_t d);
 void spi_trs_io_done();
+void spi_set_screen_color(uint8_t color);
 
 #else
 

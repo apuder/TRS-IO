@@ -2,6 +2,9 @@
 #include <trs-io.h>
 #include "esp_mock.h"
 #include "version.h"
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+#include "spi.h"
+#endif
 
 
 class TrsIOCoreModule : public TrsIO {
@@ -12,6 +15,7 @@ public:
     addCommand(static_cast<cmd_t>(&TrsIOCoreModule::configureWifi), "SS");
     addCommand(static_cast<cmd_t>(&TrsIOCoreModule::sendWifiSSID), "");
     addCommand(static_cast<cmd_t>(&TrsIOCoreModule::sendWifiIP), "");
+    addCommand(static_cast<cmd_t>(&TrsIOCoreModule::setScreenColor), "B");
   }
 
   void sendVersion() {
@@ -38,6 +42,13 @@ public:
   void sendWifiIP() {
     const char* ip = get_wifi_ip();
     addStr(ip);
+  }
+
+  void setScreenColor() {
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+    const uint8_t color = B(0);
+    spi_set_screen_color(color);
+#endif
   }
 };
 

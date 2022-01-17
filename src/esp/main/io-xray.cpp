@@ -130,9 +130,9 @@ static void IRAM_ATTR io_task(void* p)
       continue;
     }
     esp_req_triggered = false;
-    // Read pins [S3..S0,A3..A0]
+    // Read pins [S2..S0,A3..A0]
     const uint8_t s = GPIO.in >> 12;
-    switch(s & 0xf0) {
+    switch(s & 0x70) {
     case 0x00:
       trs_io_write();
       break;
@@ -178,8 +178,6 @@ static void action_task(void* p)
       }
     }
 
-#if 0
-//XXX
     if (is_button_long_press()) {
       storage_erase();
       esp_restart();
@@ -205,7 +203,6 @@ static void action_task(void* p)
       vTaskDelay(1000 / portTICK_PERIOD_MS);
       set_led(false, false, false, false, false);      
     }
-#endif
 
     vTaskDelay(1);
   }
@@ -217,10 +214,10 @@ void init_io()
 
   gpio_config_t gpioConfig;
 
-  // GPIO pins 12-19 (8 pins) are used for S0-S3 and A0-A4
+  // GPIO pins 12-18 (7 pins) are used for S0-S2 and A0-A4
   gpioConfig.pin_bit_mask = GPIO_SEL_12 | GPIO_SEL_13 | GPIO_SEL_14 |
     GPIO_SEL_15 | GPIO_SEL_16 |
-    GPIO_SEL_17 | GPIO_SEL_18 | GPIO_SEL_19;
+    GPIO_SEL_17 | GPIO_SEL_18;
   gpioConfig.mode = GPIO_MODE_INPUT;
   gpioConfig.pull_up_en = GPIO_PULLUP_DISABLE;
   gpioConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
