@@ -17,21 +17,26 @@ module main(
   input TRS_OUT,
   output reg TRS_INT,
   output reg ESP_REQ,
-  output [3:0] ESP_S,
+  output [2:0] ESP_S,
   output reg WAIT,
   input ESP_DONE,
-  output LED
+  output VGA_RGB,
+  output VGA_HSYNC,
+  output VGA_VSYNC
 );
 
 wire clk;
+wire vga_clk;
 
 /*
  * Clocking Wizard
  * Clock primary: 12 MHz
  * clk_out1 frequency: 100 MHz
+ * clk_out2: 12.175 MHz
  */
 clk_wiz_0 clk_wiz_0(
    .clk_out1(clk),
+   .clk_out2(vga_clk),
    .reset(1'b0),
    .locked(),
    .clk_in1(clk_in)
@@ -99,6 +104,9 @@ wire frehd_sel_in = (TRS_A[7:4] == 4'hc) && !TRS_IN;
 wire frehd_sel_out = (TRS_A[7:4] == 4'hc) && !TRS_OUT;
 wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
+wire z80_dsp_sel_wr = (TRS_A[15:10] == 6'b001111) && !TRS_WR;
+wire z80_dsp_sel = z80_dsp_sel_wr;
+
 wire esp_sel = trs_io_sel || frehd_sel;
 
 wire esp_sel_fallingedge;
@@ -143,11 +151,11 @@ localparam [3:0]
   esp_fdc_rd = 4'b0100;
 
 
-assign ESP_S = (esp_trs_io_in & {4{trs_io_sel_in}}) |
-               (esp_trs_io_out & {4{trs_io_sel_out}}) |
-               (esp_frehd_in & {4{frehd_sel_in}}) |
-               (esp_frehd_out & {4{frehd_sel_out}}) |
-               (esp_fdc_rd & {4{fdc_sel_rd}});
+assign ESP_S = (esp_trs_io_in & {3{trs_io_sel_in}}) |
+               (esp_trs_io_out & {3{trs_io_sel_out}}) |
+               (esp_frehd_in & {3{frehd_sel_in}}) |
+               (esp_frehd_out & {3{frehd_sel_out}}) |
+               (esp_fdc_rd & {3{fdc_sel_rd}});
 
 
 
@@ -216,12 +224,15 @@ localparam [2:0]
   ignore     = 3'b011;
 
 localparam [7:0]
-  set_led    = 8'b0, // Deprecated
-  bram_poke  = 8'd1,
-  bram_peek  = 8'd2,
-  dbus_read  = 8'd3,
-  dbus_write = 8'd4,
-  data_ready = 8'd5;
+  set_led          = 8'b0, // Deprecated
+  bram_poke        = 8'd1,
+  bram_peek        = 8'd2,
+  dbus_read        = 8'd3,
+  dbus_write       = 8'd4,
+  data_ready       = 8'd5,
+  set_breakpoint   = 8'd6,
+  clear_breakpoint = 8'd7;
+  
 
 reg [7:0] params[0:4];
 reg [2:0] bytes_to_read;
@@ -282,6 +293,20 @@ always @(posedge clk) begin
             cmd <= dbus_write;
             state <= read_bytes;
             bytes_to_read <= 3'b001;
+            bytes_to_ignore <= 0;
+            idx <= 3'b000;
+          end
+          set_breakpoint: begin
+            cmd <= set_breakpoint;
+            state <= read_bytes;
+            bytes_to_read <= 3;
+            bytes_to_ignore <= 0;
+            idx <= 3'b000;
+          end
+          clear_breakpoint: begin
+            cmd <= clear_breakpoint;
+            state <= read_bytes;
+            bytes_to_read <= 1;
             bytes_to_ignore <= 0;
             idx <= 3'b000;
           end
@@ -371,7 +396,7 @@ blk_mem_gen_0 bram(
 assign addra = TRS_A;
 assign dina = !TRS_WR ? TRS_D : 8'bz;
 
-assign TRS_OE = !((TRS_A[15] && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel);
+assign TRS_OE = !((TRS_A[15] && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel || z80_dsp_sel);
 assign TRS_DIR = TRS_RD && TRS_IN;
 
 
@@ -491,5 +516,88 @@ always @(posedge clk) begin
   end
 end
 
+
+//---XRAY-------------------------------------------------------------------------
+
+wire xena;
+wire xregcea;
+wire [0:0] xwea;
+wire [8:0] xaddra;
+wire [7:0] xdina;
+wire [7:0] xdouta;
+wire xclkb;
+wire xenb;
+wire xregceb;
+wire [0:0] xweb;
+wire [8:0] xaddrb;
+wire [7:0] xdinb;
+wire [7:0] xdoutb;
+
+
+/*
+ * BRAM configuration
+ * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
+ * Port A: Write/Read width: 8, Write depth: 512, Operating mode: Write First, Core Output Register, REGCEA pin
+ * Port B: Write/Read width: 8, Write depth: 512, Operating mode: Read First, Core Output Register, REGCEB pin
+ */
+blk_mem_gen_1 xram(
+  .clka(clk),
+  .ena(xena),
+  .regcea(xregcea),
+  .wea(xwea),
+  .addra(xaddra),
+  .dina(xdina),
+  .douta(xdouta),
+  .clkb(clk),
+  .enb(xenb),
+  .regceb(xregceb),
+  .web(xweb),
+  .addrb(xaddrb), 
+  .dinb(xdinb),
+  .doutb(xdoutb)
+);
+
+
+//---Breakpoint Management-----------------------------------------------------------------
+
+reg [7:0] breakpoints[0:15];
+reg breakpoint_active[0:15];
+
+reg [7:0] breakpoint_idx;
+
+integer i;
+
+always @(posedge clk) begin
+  if ((cmd == set_breakpoint) && trigger_action)
+    begin
+      breakpoint_active[params[0]] <= 1;
+      breakpoints[params[0]] <= {params[1], params[2]};
+    end
+  else if (cmd == clear_breakpoint && trigger_action)
+    breakpoint_active[params[0]] <= 0;
+end
+
+
+always @(trs_a) begin
+  breakpoint_idx <= 255;
+  for(i = 0; i < 15; i = i + 1) begin
+    if (breakpoint_active[i] && breakpoints[i] == trs_a)
+      breakpoint_idx <= i;
+  end
+end
+
+
+//-----VGA-------------------------------------------------------------------------------
+
+vga vga(
+  .clk(clk),     // 100 MHz
+  .vga_clk(vga_clk), // 12 MHz
+  .trs_a(trs_a),
+  .TRS_D(TRS_D),
+  .WR_falling_edge(WR_falling_edge),
+  .z80_dsp_sel(z80_dsp_sel),
+  .VGA_RGB(VGA_RGB),
+  .VGA_HSYNC(VGA_HSYNC),
+  .VGA_VSYNC(VGA_VSYNC));
 
 endmodule
