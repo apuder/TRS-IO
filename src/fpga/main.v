@@ -224,14 +224,19 @@ localparam [2:0]
   ignore     = 3'b011;
 
 localparam [7:0]
-  set_led          = 8'b0, // Deprecated
-  bram_poke        = 8'd1,
-  bram_peek        = 8'd2,
-  dbus_read        = 8'd3,
-  dbus_write       = 8'd4,
-  data_ready       = 8'd5,
-  set_breakpoint   = 8'd6,
-  clear_breakpoint = 8'd7;
+  set_led             = 8'b0, // Deprecated
+  bram_poke           = 8'd1,
+  bram_peek           = 8'd2,
+  dbus_read           = 8'd3,
+  dbus_write          = 8'd4,
+  data_ready          = 8'd5,
+  set_breakpoint      = 8'd6,
+  clear_breakpoint    = 8'd7,
+  xray_code_poke      = 8'd8,
+  xray_data_poke      = 8'd9,
+  xray_data_peek      = 8'd10,
+  enable_breakpoints  = 8'd11,
+  disable_breakpoints = 8'd12;
   
 
 reg [7:0] params[0:4];
@@ -261,54 +266,44 @@ always @(posedge clk) begin
     idle:
       begin
         trigger_action <= 1'b0;
+        cmd <= byte_in;
+        state <= read_bytes;
+        idx <= 3'b000;
+        bytes_to_ignore <= 0;
         case (byte_in)
           set_led: begin
-            cmd <= set_led;
-            state <= read_bytes;
             bytes_to_read <= 3'b001;
-            idx <= 3'b000;
-            bytes_to_ignore <= 0;
           end
           bram_poke: begin
-            cmd <= bram_poke;
-            state <= read_bytes;
             bytes_to_read <= 3'b011;
-            idx <= 3'b000;
-            bytes_to_ignore <= 0;
           end
           bram_peek: begin
-            cmd <= bram_peek;
-            state <= read_bytes;
             bytes_to_read <= 3'b010;
-            idx <= 3'b000;
             bytes_to_ignore <= 1;
           end
           dbus_read: begin
-            cmd <= dbus_read;
             trigger_action <= 1'b1;
             bytes_to_ignore <= 1;
             state <= ignore;
           end
           dbus_write: begin
-            cmd <= dbus_write;
-            state <= read_bytes;
             bytes_to_read <= 3'b001;
-            bytes_to_ignore <= 0;
-            idx <= 3'b000;
           end
           set_breakpoint: begin
-            cmd <= set_breakpoint;
-            state <= read_bytes;
             bytes_to_read <= 3;
-            bytes_to_ignore <= 0;
-            idx <= 3'b000;
           end
           clear_breakpoint: begin
-            cmd <= clear_breakpoint;
-            state <= read_bytes;
             bytes_to_read <= 1;
-            bytes_to_ignore <= 0;
-            idx <= 3'b000;
+          end
+          xray_code_poke: begin
+            bytes_to_read <= 2;
+          end
+          xray_data_poke: begin
+            bytes_to_read <= 2;
+          end
+          xray_data_peek: begin
+            bytes_to_read <= 1;
+            bytes_to_ignore <= 1;
           end
           data_ready: begin
             trs_io_data_ready <= 1'b1;
@@ -488,21 +483,35 @@ assign addrb = {params[1], params[0]};
 assign dinb = params[2];
 
 
-reg[2:0] bramb_rd; always @(posedge clk) bramb_rd <= {bramb_rd[1:0], trigger_action && (cmd == bram_peek)};
 
-wire bramb_wr = trigger_action && (cmd == bram_poke);
+wire xram_peek_done;
+wire [7:0] xdoutb;
 
-wire bramb_sel = (bramb_rd != 0) || (bramb_wr != 0);
+wire enb_peek, enb_poke;
+assign enb = enb_peek || enb_poke;
+assign web = (cmd == bram_poke);
+wire bram_peek_done;
 
-assign enb = bramb_sel;
-assign web = bramb_wr;
-assign regceb = bramb_rd[1];
+trigger bram_poke_trigger(
+  .clk(clk),
+  .trigger_action(trigger_action),
+  .cmd(cmd == bram_poke),
+  .one(enb_poke),
+  .two(),
+  .three());
+
+trigger bram_peek_trigger(
+  .clk(clk),
+  .trigger_action(trigger_action),
+  .cmd(cmd == bram_peek),
+  .one(enb_peek),
+  .two(regceb),
+  .three(bram_peek_done));
 
 always @(posedge clk) begin
-  if (bramb_rd[2] == 1)
-    byte_out <= doutb;
-  else if ((cmd == dbus_read) && trigger_action)
-    byte_out <= TRS_D;
+  if (bram_peek_done) byte_out <= doutb;
+  else if (xram_peek_done) byte_out <= xdoutb;
+  else if ((cmd == dbus_read) && trigger_action) byte_out <= TRS_D;
 end
 
 always @(posedge clk) begin
@@ -531,7 +540,6 @@ wire xregceb;
 wire [0:0] xweb;
 wire [8:0] xaddrb;
 wire [7:0] xdinb;
-wire [7:0] xdoutb;
 
 
 /*
@@ -557,24 +565,56 @@ blk_mem_gen_1 xram(
   .doutb(xdoutb)
 );
 
+wire xenb_peek, xenb_poke;
+assign xenb = xenb_peek || xenb_poke;
+assign xaddrb = {(cmd != xray_code_poke), params[0]};
+assign xdinb = params[1];
+assign xweb = (cmd == xray_code_poke) || (cmd == xray_data_poke);
+
+trigger xram_poke(
+  .clk(clk),
+  .trigger_action(trigger_action),
+  .cmd((cmd == xray_code_poke) || (cmd == xray_data_poke)),
+  .one(xenb_poke),
+  .two(),
+  .three());
+
+trigger xram_peek(
+  .clk(clk),
+  .trigger_action(trigger_action),
+  .cmd(cmd == xray_data_peek),
+  .one(xenb_peek),
+  .two(xregceb),
+  .three(xram_peek_done));
 
 //---Breakpoint Management-----------------------------------------------------------------
 
 reg [7:0] breakpoints[0:15];
 reg breakpoint_active[0:15];
+reg breakpoints_enabled;
 
 reg [7:0] breakpoint_idx;
 
 integer i;
 
 always @(posedge clk) begin
-  if ((cmd == set_breakpoint) && trigger_action)
-    begin
-      breakpoint_active[params[0]] <= 1;
-      breakpoints[params[0]] <= {params[1], params[2]};
-    end
-  else if (cmd == clear_breakpoint && trigger_action)
-    breakpoint_active[params[0]] <= 0;
+  if (trigger_action) begin
+    case(cmd)
+      set_breakpoint: begin
+        breakpoint_active[params[0]] <= 1;
+        breakpoints[params[0]] <= {params[1], params[2]};
+      end
+      clear_breakpoint: begin
+        breakpoint_active[params[0]] <= 0;
+      end
+      enable_breakpoints: begin
+        breakpoints_enabled <= 1;
+      end
+      disable_breakpoints: begin
+        breakpoints_enabled <= 0;
+      end
+    endcase
+  end
 end
 
 
