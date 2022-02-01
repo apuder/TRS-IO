@@ -19,18 +19,35 @@
 #define SPI_PIN_NUM_CS_CMOD GPIO_NUM_26
 #define SPI_PIN_NUM_CS_MCP4351 GPIO_NUM_19
 
-#define FPGA_CMD_SET_LED 0
+#define FPGA_COOKIE 0xaf
+
+#define FPGA_CMD_GET_COOKIE 0
 #define FPGA_CMD_BRAM_POKE 1
 #define FPGA_CMD_BRAM_PEEK 2
 #define FPGA_CMD_DBUS_READ 3
 #define FPGA_CMD_DBUS_WRITE 4
 #define FPGA_CMD_TRS_IO_DONE 5
+#define FPGA_CMD_SET_BREAKPOINT 6
+#define FPGA_CMD_CLEAR_BREAKPOINT 7
+#define FPGA_CMD_XRAM_POKE_CODE 8
+#define FPGA_CMD_XRAM_POKE_DATA 9
+#define FPGA_CMD_XRAM_PEEK_DATA 10
+#define FPGA_ENABLE_BREAKPOINTS 11
+#define FPGA_DISABLE_BREAKPOINTS 12
+#define FPGA_CMD_XRAY_RESUME 13
 
-void set_led(uint8_t on);
-void bram_poke(uint16_t addr, uint8_t data);
-uint8_t bram_peek(uint16_t addr);
+
+uint8_t spi_get_cookie();
+void spi_bram_poke(uint16_t addr, uint8_t data);
+uint8_t spi_bram_peek(uint16_t addr);
+void spi_xram_poke_code(uint8_t addr, uint8_t data);
+void spi_xram_poke_data(uint8_t addr, uint8_t data);
+uint8_t spi_xram_peek_data(uint8_t addr);
 uint8_t spi_dbus_read();
 void spi_dbus_write(uint8_t d);
+void spi_set_breakpoint(uint8_t n, uint16_t addr);
+void spi_clear_breakpoint(uint8_t n);
+void spi_xray_resume();
 void spi_trs_io_done();
 void spi_set_screen_color(uint8_t color);
 

@@ -21,55 +21,114 @@ static spi_device_interface_config_t spi_mcp4351;
 spi_device_handle_t spi_mcp4351_h;
 
 
-void set_led(uint8_t on)
+uint8_t spi_get_cookie()
 {
-  spi_transaction_t trans;
+  spi_transaction_ext_t trans;
 
-  memset(&trans, 0, sizeof(spi_transaction_t));
-  trans.flags = SPI_TRANS_USE_TXDATA;
-  trans.length = 2 * 8;
-  trans.rxlength = 0;
-  trans.tx_data[0] = FPGA_CMD_SET_LED;
-  trans.tx_data[1] = on;
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_USE_RXDATA;
+  trans.base.cmd = FPGA_CMD_GET_COOKIE;
+  trans.address_bits = 0 * 8;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 1 * 8;
 
-  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  ESP_ERROR_CHECK(ret);
+
+  return trans.base.rx_data[0];
+}
+
+void spi_bram_poke(uint16_t addr, uint8_t data)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_BRAM_POKE;
+  trans.address_bits = 3 * 8;
+  const uint32_t b0 = addr & 0xff;
+  const uint32_t b1 = addr >> 8;
+  const uint32_t b2 = data;
+  trans.base.addr = b2 | (b1 << 8) | (b0 << 16);
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
   ESP_ERROR_CHECK(ret);
 }
 
-void bram_poke(uint16_t addr, uint8_t data)
+uint8_t spi_bram_peek(uint16_t addr)
 {
-  spi_transaction_t trans;
+  spi_transaction_ext_t trans;
 
-  memset(&trans, 0, sizeof(spi_transaction_t));
-  trans.flags = SPI_TRANS_USE_TXDATA;
-  trans.length = 4 * 8;
-  trans.rxlength = 0;
-  trans.tx_data[0] = FPGA_CMD_BRAM_POKE;
-  trans.tx_data[1] = addr & 0xff;
-  trans.tx_data[2] = addr >> 8;
-  trans.tx_data[3] = data;
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR | SPI_TRANS_USE_RXDATA;
+  trans.base.cmd = FPGA_CMD_BRAM_PEEK;
+  trans.address_bits = 2 * 8;
+  const uint32_t b0 = addr & 0xff;
+  const uint32_t b1 = addr >> 8;
+  trans.base.addr = b1 | (b0 << 8);
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 1 * 8;
 
-  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  ESP_ERROR_CHECK(ret);
+
+  return trans.base.rx_data[0];
+}
+
+void spi_xram_poke_code(uint8_t addr, uint8_t data)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_XRAM_POKE_CODE;
+  trans.address_bits = 2 * 8;
+  const uint32_t b0 = addr;
+  const uint32_t b1 = data;
+  trans.base.addr = b1 | (b0 << 8);
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
   ESP_ERROR_CHECK(ret);
 }
 
-uint8_t bram_peek(uint16_t addr)
+void spi_xram_poke_data(uint8_t addr, uint8_t data)
 {
-  spi_transaction_t trans;
+  spi_transaction_ext_t trans;
 
-  memset(&trans, 0, sizeof(spi_transaction_t));
-  trans.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
-  trans.length = 3 * 8;
-  trans.rxlength = 1 * 8;
-  trans.tx_data[0] = FPGA_CMD_BRAM_PEEK;
-  trans.tx_data[1] = addr & 0xff;
-  trans.tx_data[2] = addr >> 8;
-  trans.tx_data[3] = 0;
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_XRAM_POKE_DATA;
+  trans.address_bits = 2 * 8;
+  const uint32_t b0 = addr;
+  const uint32_t b1 = data;
+  trans.base.addr = b1 | (b0 << 8);
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
 
-  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  ESP_ERROR_CHECK(ret);
+}
+
+uint8_t spi_xram_peek_data(uint8_t addr)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR | SPI_TRANS_USE_RXDATA;
+  trans.base.cmd = FPGA_CMD_XRAM_PEEK_DATA;
+  trans.address_bits = 1 * 8;
+  trans.base.addr = addr;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 1 * 8;
+
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
   ESP_ERROR_CHECK(ret);
 
-  return trans.rx_data[0];
+  return trans.base.rx_data[0];
 }
 
 uint8_t spi_dbus_read()
@@ -83,9 +142,7 @@ uint8_t spi_dbus_read()
   trans.base.length = 0 * 8;
   trans.base.rxlength = 1 * 8;
 
-  //spi_device_acquire_bus(spi_cmod_h, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
-  //spi_device_release_bus(spi_cmod_h);
   ESP_ERROR_CHECK(ret);
 
   return trans.base.rx_data[0];
@@ -103,9 +160,7 @@ void spi_dbus_write(uint8_t d)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 0 * 8;
 
-  //spi_device_acquire_bus(spi_cmod_h, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
-  //spi_device_release_bus(spi_cmod_h);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -117,11 +172,56 @@ void spi_trs_io_done()
   trans.base.cmd = FPGA_CMD_TRS_IO_DONE;
   trans.base.length = 0 * 8;
 
-  //spi_device_acquire_bus(spi_cmod_h, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
-  //spi_device_release_bus(spi_cmod_h);
   ESP_ERROR_CHECK(ret);
 }
+
+void spi_set_breakpoint(uint8_t n, uint16_t addr)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_SET_BREAKPOINT;
+  trans.address_bits = 3 * 8;
+  const uint32_t b0 = n;
+  const uint32_t b1 = addr & 0xff;
+  const uint32_t b2 = addr >> 8;
+  trans.base.addr = b2 | (b1 << 8) | (b0 << 16);
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  ESP_ERROR_CHECK(ret);
+}
+
+void spi_clear_breakpoint(uint8_t n)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_CLEAR_BREAKPOINT;
+  trans.address_bits = 1 * 8;
+  trans.base.addr = n;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  ESP_ERROR_CHECK(ret);
+}
+
+void spi_xray_resume()
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.cmd = FPGA_CMD_XRAY_RESUME;
+
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  ESP_ERROR_CHECK(ret);
+}
+
 
 static void writeDigiPot(uint8_t pot, uint8_t step)
 {

@@ -19,6 +19,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/timers.h"
 
+#include "spi.h"
 
 #define ESP_REQ GPIO_NUM_34
 #define ESP_DONE GPIO_NUM_27
@@ -167,9 +168,7 @@ static void action_task(void* p)
       if (printer_data == -1) {
         TrsIO::processInBackground();
         trigger_trs_io_action = false;
-        //spi_trs_io_done();
         trigger_trs_io_done = true;
-//        intr_event |= TRS_IO_DONE;
       } else {
         char buf[2] = {(char) (printer_data & 0xff), 0};
         trs_printer_write(buf);
@@ -184,6 +183,34 @@ static void action_task(void* p)
     }
 
     if (is_button_short_press()) {
+#if 0
+      static uint8_t count = 0;
+      static const uint8_t code1[] = {0xf3, 0x21, 0x00, 0x3c, 0x77, 0x3c, 0x18, 0xfc };
+      static const uint8_t code2[] = {0xd9 , 0x21 , 0x01 , 0x3c , 0x7e , 0x3c , 0x77 , 0xd9  , 0x18 , 0xf6};
+
+      if (count == 0) {
+        for (int i = 0; i < sizeof(code1); i++)
+          spi_bram_poke(0x8000 + i, code1[i]);
+        for (int i = 0; i < sizeof(code2); i++)
+          spi_xram_poke_code(i, code2[i]);
+        printf("Poke code\n");
+      }
+      if (count == 1) {
+        spi_set_breakpoint(1, 0x8006);
+        printf("set breakpoint\n");
+      }
+      if (count == 2) {
+      printf("clear breakpoint\n");
+        spi_clear_breakpoint(1);
+      }
+      if (count == 3) {
+        spi_xray_resume();
+        printf("resume\n");
+      }
+      count++;
+      if (count == 4) count = 1;
+#endif
+
       // Check Wifi status
       if (*get_wifi_status() == RS_STATUS_WIFI_CONNECTED) {
         set_led(false, true, false, false, false);
