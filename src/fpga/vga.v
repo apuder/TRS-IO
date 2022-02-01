@@ -5,7 +5,7 @@
 module vga(
   input clk,     // 100 MHz
   input vga_clk, // 12 MHz
-  input [15:0] trs_a,
+  input [15:0] TRS_A,
   input [7:0] TRS_D,
   input WR_falling_edge,
   input z80_dsp_sel,
@@ -61,7 +61,7 @@ wire col_act = (mod_modsel ? ~dsp_XXXXXXX[0] : 1'b1);
 blk_mem_gen_2 z80_dsp (
    .clka(clk), // input
    .ena(WR_falling_edge && z80_dsp_sel), // input
-   .addra(trs_a[9:0]), // input [9:0]
+   .addra(TRS_A[9:0]), // input [9:0]
    .wea(1'b1), // input
    .dina(TRS_D), // input [7:0]
    .douta(), // output [7:0]

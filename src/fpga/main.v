@@ -12,7 +12,6 @@ module main(
   output TRS_DIR,
   input TRS_RD,
   input TRS_WR,
-  input TRS_RAS,
   input TRS_IN,
   input TRS_OUT,
   output reg TRS_INT,
@@ -22,8 +21,11 @@ module main(
   input ESP_DONE,
   output VGA_RGB,
   output VGA_HSYNC,
-  output VGA_VSYNC
+  output VGA_VSYNC,
+  output [1:0] led
 );
+
+localparam [7:0] COOKIE = 8'haf;
 
 wire clk;
 wire vga_clk;
@@ -44,7 +46,7 @@ clk_wiz_0 clk_wiz_0(
 
 
 reg[7:0] byte_in, byte_out;
-reg byte_received;
+reg byte_received = 1'b0;
 
 //----TRS-IO---------------------------------------------------------------------
 
@@ -73,18 +75,6 @@ filter RD_filter(
   .falling_edge(RD_falling_edge)
 );
 
-
-reg [1:0] TRS_A15; always @(posedge clk) TRS_A15 <= {TRS_A15[0], TRS_A[15]};
-wire trs_a15 = TRS_A15[1];
-
-
-reg [15:0] TRS_A_r1, TRS_A_r2;
-always @(posedge clk) begin
-  TRS_A_r2 <= TRS_A_r1;
-  TRS_A_r1 <= TRS_A;
-end
-
-wire [15:0] trs_a = TRS_A_r2;
 
 wire trs_bram_sel_rd = TRS_A[15] && !TRS_RD;
 wire trs_bram_sel_wr = TRS_A[15] && !TRS_WR;
@@ -177,7 +167,7 @@ reg [1:0] MOSIr;  always @(posedge clk) MOSIr <= {MOSIr[0], MOSI};
 wire MOSI_data = MOSIr[1];
 
 
-reg [2:0] bitcnt;
+reg [2:0] bitcnt = 3'b000;
 
 always @(posedge clk)
 begin
@@ -215,16 +205,16 @@ assign MISO = CS_active ? byte_data_sent[7] : 8'bz;
 //---main-------------------------------------------------------------------------
 
 
-reg [2:0] state;
-
 localparam [2:0]
   idle       = 3'b000,
   read_bytes = 3'b001,
   execute    = 3'b010,
   ignore     = 3'b011;
 
+reg [2:0] state = idle;
+
 localparam [7:0]
-  set_led             = 8'b0, // Deprecated
+  get_cookie          = 8'b0,
   bram_poke           = 8'd1,
   bram_peek           = 8'd2,
   dbus_read           = 8'd3,
@@ -236,7 +226,8 @@ localparam [7:0]
   xray_data_poke      = 8'd9,
   xray_data_peek      = 8'd10,
   enable_breakpoints  = 8'd11,
-  disable_breakpoints = 8'd12;
+  disable_breakpoints = 8'd12,
+  xray_resume         = 8'd13;
   
 
 reg [7:0] params[0:4];
@@ -247,17 +238,14 @@ reg [7:0] cmd;
 reg trs_io_data_ready = 1'b0;
 
 
-initial begin
-  state = idle;
-end
-
+reg xxx = 1'b0;
 
 reg trigger_action = 1'b0;
 
 always @(posedge clk) begin
   trigger_action <= 1'b0;
 
-  if (esp_sel_risingedge && (trs_a[7:0] == 31)) trs_io_data_ready <= 1'b0;
+  if (esp_sel_risingedge && (TRS_A[7:0] == 31)) trs_io_data_ready <= 1'b0;
 
   if (start_msg)
     state <= idle;
@@ -271,8 +259,10 @@ always @(posedge clk) begin
         idx <= 3'b000;
         bytes_to_ignore <= 0;
         case (byte_in)
-          set_led: begin
-            bytes_to_read <= 3'b001;
+          get_cookie: begin
+            trigger_action <= 1'b1;
+            bytes_to_ignore <= 1;
+            state <= ignore;
           end
           bram_poke: begin
             bytes_to_read <= 3'b011;
@@ -288,6 +278,10 @@ always @(posedge clk) begin
           end
           dbus_write: begin
             bytes_to_read <= 3'b001;
+          end
+          data_ready: begin
+            trs_io_data_ready <= 1'b1;
+            state <= idle;
           end
           set_breakpoint: begin
             bytes_to_read <= 3;
@@ -305,8 +299,8 @@ always @(posedge clk) begin
             bytes_to_read <= 1;
             bytes_to_ignore <= 1;
           end
-          data_ready: begin
-            trs_io_data_ready <= 1'b1;
+          xray_resume: begin
+            trigger_action <= 1'b1;
             state <= idle;
           end
           default:
@@ -343,6 +337,98 @@ always @(posedge clk) begin
       endcase
   end
 end
+
+
+
+//---Breakpoint Management-----------------------------------------------------------------
+
+reg [15:0] breakpoints[0:7];
+reg breakpoint_active[0:7];
+reg breakpoints_enabled;
+wire [7:0] breakpoint_idx;
+reg [7:0] current_breakpoint_idx;
+
+
+always @(posedge clk) begin
+  if (trigger_action) begin
+    case(cmd)
+      set_breakpoint: begin
+        breakpoints[params[0]] <= {params[2], params[1]};
+        breakpoint_active[params[0]] <= 1;
+      end
+      clear_breakpoint: begin
+        breakpoint_active[params[0]] <= 0;
+      end
+      enable_breakpoints: begin
+        breakpoints_enabled <= 1;
+      end
+      disable_breakpoints: begin
+        breakpoints_enabled <= 0;
+      end
+      default: ;
+    endcase
+  end
+end
+
+wire ram_read_access = RD_falling_edge && TRS_A[15];
+wire ram_write_access = WR_falling_edge && TRS_A[15];
+
+wire pre_ram_access_check;
+wire do_ram_access;
+
+trigger pre_ram_access_check_trigger(
+  .clk(clk),
+  .cond(ram_read_access || ram_write_access),
+  .one(pre_ram_access_check),
+  .two(do_ram_access),
+  .three()
+);
+
+assign breakpoint_idx = ({8{(breakpoint_active[0] && (breakpoints[0] == TRS_A))}} & 8'd1) |
+                        ({8{(breakpoint_active[1] && (breakpoints[1] == TRS_A))}} & 8'd2) |
+                        ({8{(breakpoint_active[2] && (breakpoints[2] == TRS_A))}} & 8'd3) |
+                        ({8{(breakpoint_active[3] && (breakpoints[3] == TRS_A))}} & 8'd4) |
+                        ({8{(breakpoint_active[4] && (breakpoints[4] == TRS_A))}} & 8'd5) |
+                        ({8{(breakpoint_active[5] && (breakpoints[5] == TRS_A))}} & 8'd6) |
+                        ({8{(breakpoint_active[6] && (breakpoints[6] == TRS_A))}} & 8'd7) |
+                        ({8{(breakpoint_active[7] && (breakpoints[7] == TRS_A))}} & 8'd8);
+
+
+reg [15:0] xray_base_addr;
+
+wire [15:0] diff = TRS_A - xray_base_addr;
+wire himem = ((TRS_A & 16'hff00) == 16'hff00);
+
+wire [8:0] xaddra = {9{~himem}} & {1'b0, diff[7:0]} |
+                    {9{himem}} & {1'b1, TRS_A[7:0]};
+
+
+localparam [1:0]
+  state_xray_run = 2'b00,
+  state_xray_stop = 2'b01,
+  state_xray_resume = 2'b11;
+
+reg [1:0] state_xray = state_xray_run;
+
+
+always @(posedge clk) begin
+  if (trigger_action && (cmd == xray_resume) && (state_xray == state_xray_stop)) begin
+    state_xray <= state_xray_resume;
+  end
+  if (pre_ram_access_check && (state_xray == state_xray_run) && (breakpoint_idx != 0)) begin
+    state_xray <= state_xray_stop;
+    xray_base_addr <= TRS_A;
+    current_breakpoint_idx <= breakpoint_idx - 1;
+  end
+  if (pre_ram_access_check && (state_xray == state_xray_resume) && (xray_base_addr == TRS_A)) begin
+    state_xray <= state_xray_run;
+  end
+end
+
+wire xray_run_stub = (state_xray != state_xray_run);
+
+assign led[0] = xray_run_stub;
+assign led[1] = 1'b0;
 
 
 //--------BRAM-------------------------------------------------------------------------
@@ -394,16 +480,29 @@ assign dina = !TRS_WR ? TRS_D : 8'bz;
 assign TRS_OE = !((TRS_A[15] && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel || z80_dsp_sel);
 assign TRS_DIR = TRS_RD && TRS_IN;
 
+wire ena_read;
+wire ena_write;
+assign ena = ena_read || ena_write;
 
-reg[2:0] brama_rd; always @(posedge clk) brama_rd <= {brama_rd[1:0], RD_falling_edge && trs_a15};
+wire brama_data_ready;
 
-wire brama_wr = WR_falling_edge && trs_a15;
+trigger brama_read_trigger(
+  .clk(clk),
+  .cond(do_ram_access && !trs_rd && !xray_run_stub),
+  .one(ena_read),
+  .two(regcea),
+  .three(brama_data_ready)
+);
 
-wire brama_sel = (brama_rd[0] != 0) || (brama_wr != 0);
+trigger brama_write_trigger(
+  .clk(clk),
+  .cond(do_ram_access && !trs_wr && !xray_run_stub),
+  .one(ena_write),
+  .two(),
+  .three()
+);
 
-assign ena = brama_sel;
-assign wea = brama_wr;
-assign regcea = brama_rd[1];
+assign wea = !trs_wr;
 
 reg[7:0] trs_data;
 assign TRS_D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
@@ -428,8 +527,11 @@ localparam [0:(24 * 8) - 1] frehd_loader = {
   8'h3e, 8'h01, 8'hd3, 8'hc5, 8'hdb, 8'hc4, 8'hbf, 8'hc2, 8'h75, 8'h00, 8'h06,
   8'h00, 8'h21, 8'h00, 8'h50, 8'hdb, 8'hc4, 8'h77, 8'h23, 8'h10, 8'hfa, 8'hc3, 8'h00, 8'h50};
 
-reg [7:0] fdc_sector_idx;
+reg [7:0] fdc_sector_idx = 8'd0;
 reg [23:0] counter_25ms;
+
+wire [7:0] xdouta;
+wire xrama_data_ready;
 
 always @(posedge clk) begin
   if (counter_25ms == 2500000)
@@ -442,8 +544,10 @@ always @(posedge clk) begin
       counter_25ms <= counter_25ms + 1;
     end
 
-  if (brama_rd[2] == 1)
+  if (brama_data_ready == 1)
     trs_data <= douta;
+  else if (xrama_data_ready == 1)
+    trs_data <= xdouta;
   else if (trigger_action && cmd == dbus_write)
     trs_data <= params[0];
   else if (RD_falling_edge && fdc_37ec_sel_rd)
@@ -494,16 +598,14 @@ wire bram_peek_done;
 
 trigger bram_poke_trigger(
   .clk(clk),
-  .trigger_action(trigger_action),
-  .cmd(cmd == bram_poke),
+  .cond(trigger_action && (cmd == bram_poke)),
   .one(enb_poke),
   .two(),
   .three());
 
 trigger bram_peek_trigger(
   .clk(clk),
-  .trigger_action(trigger_action),
-  .cmd(cmd == bram_peek),
+  .cond(trigger_action && (cmd == bram_peek)),
   .one(enb_peek),
   .two(regceb),
   .three(bram_peek_done));
@@ -511,19 +613,10 @@ trigger bram_peek_trigger(
 always @(posedge clk) begin
   if (bram_peek_done) byte_out <= doutb;
   else if (xram_peek_done) byte_out <= xdoutb;
-  else if ((cmd == dbus_read) && trigger_action) byte_out <= TRS_D;
+  else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
+  else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
 end
 
-always @(posedge clk) begin
-  if (trigger_action) begin
-    case (cmd)
-      set_led: begin
-        //XXX LED <= params[0][0];
-      end
-      default: ;
-    endcase
-  end
-end
 
 
 //---XRAY-------------------------------------------------------------------------
@@ -531,9 +624,7 @@ end
 wire xena;
 wire xregcea;
 wire [0:0] xwea;
-wire [8:0] xaddra;
 wire [7:0] xdina;
-wire [7:0] xdouta;
 wire xclkb;
 wire xenb;
 wire xregceb;
@@ -565,74 +656,59 @@ blk_mem_gen_1 xram(
   .doutb(xdoutb)
 );
 
+// Port A
+assign xdina = !TRS_WR ? TRS_D : 8'bz;
+
+assign xwea = !trs_wr;
+
+wire xena_read;
+wire xena_write;
+assign xena = xena_read || xena_write;
+
+trigger xrama_read_trigger(
+  .clk(clk),
+  .cond(do_ram_access && !trs_rd && xray_run_stub),
+  .one(xena_read),
+  .two(xregcea),
+  .three(xrama_data_ready)
+);
+
+trigger xrama_write_trigger(
+  .clk(clk),
+  .cond(do_ram_access && !trs_wr && xray_run_stub),
+  .one(xena_write),
+  .two(),
+  .three()
+);
+
+
+// Port B
 wire xenb_peek, xenb_poke;
 assign xenb = xenb_peek || xenb_poke;
 assign xaddrb = {(cmd != xray_code_poke), params[0]};
 assign xdinb = params[1];
 assign xweb = (cmd == xray_code_poke) || (cmd == xray_data_poke);
 
-trigger xram_poke(
+trigger xram_poke_trigger(
   .clk(clk),
-  .trigger_action(trigger_action),
-  .cmd((cmd == xray_code_poke) || (cmd == xray_data_poke)),
+  .cond(trigger_action && ((cmd == xray_code_poke) || (cmd == xray_data_poke))),
   .one(xenb_poke),
   .two(),
   .three());
 
-trigger xram_peek(
+trigger xram_peek_trigger(
   .clk(clk),
-  .trigger_action(trigger_action),
-  .cmd(cmd == xray_data_peek),
+  .cond(trigger_action && (cmd == xray_data_peek)),
   .one(xenb_peek),
   .two(xregceb),
   .three(xram_peek_done));
-
-//---Breakpoint Management-----------------------------------------------------------------
-
-reg [7:0] breakpoints[0:15];
-reg breakpoint_active[0:15];
-reg breakpoints_enabled;
-
-reg [7:0] breakpoint_idx;
-
-integer i;
-
-always @(posedge clk) begin
-  if (trigger_action) begin
-    case(cmd)
-      set_breakpoint: begin
-        breakpoint_active[params[0]] <= 1;
-        breakpoints[params[0]] <= {params[1], params[2]};
-      end
-      clear_breakpoint: begin
-        breakpoint_active[params[0]] <= 0;
-      end
-      enable_breakpoints: begin
-        breakpoints_enabled <= 1;
-      end
-      disable_breakpoints: begin
-        breakpoints_enabled <= 0;
-      end
-    endcase
-  end
-end
-
-
-always @(trs_a) begin
-  breakpoint_idx <= 255;
-  for(i = 0; i < 15; i = i + 1) begin
-    if (breakpoint_active[i] && breakpoints[i] == trs_a)
-      breakpoint_idx <= i;
-  end
-end
-
 
 //-----VGA-------------------------------------------------------------------------------
 
 vga vga(
   .clk(clk),     // 100 MHz
   .vga_clk(vga_clk), // 12 MHz
-  .trs_a(trs_a),
+  .TRS_A(TRS_A),
   .TRS_D(TRS_D),
   .WR_falling_edge(WR_falling_edge),
   .z80_dsp_sel(z80_dsp_sel),

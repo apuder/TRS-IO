@@ -2,13 +2,12 @@
 
 module trigger(
   input clk,
-  input trigger_action,
-  input cmd,
+  input cond,
   output one,
   output reg two,
   output reg three);
 
-assign one = trigger_action && cmd;
+assign one = cond;
 
 always @(posedge clk) begin
   two <= one;
