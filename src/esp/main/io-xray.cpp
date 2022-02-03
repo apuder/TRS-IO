@@ -114,7 +114,6 @@ static inline void frehd_write(uint8_t port) {
 }
 
 static volatile bool DRAM_ATTR esp_req_triggered = false;
-static volatile bool DRAM_ATTR trigger_trs_io_done = false;
 
 static void IRAM_ATTR esp_req_isr_handler(void* arg)
 {
@@ -124,12 +123,7 @@ static void IRAM_ATTR esp_req_isr_handler(void* arg)
 static void IRAM_ATTR io_task(void* p)
 {
   while(true) {
-    while (!esp_req_triggered && !trigger_trs_io_done) ;
-    if (trigger_trs_io_done) {
-      trigger_trs_io_done = false;
-      spi_trs_io_done();
-      continue;
-    }
+    while (!esp_req_triggered) ;
     esp_req_triggered = false;
     // Read pins [S2..S0,A3..A0]
     const uint8_t s = GPIO.in >> 12;
@@ -168,7 +162,7 @@ static void action_task(void* p)
       if (printer_data == -1) {
         TrsIO::processInBackground();
         trigger_trs_io_action = false;
-        trigger_trs_io_done = true;
+        spi_trs_io_done();
       } else {
         char buf[2] = {(char) (printer_data & 0xff), 0};
         trs_printer_write(buf);

@@ -20,6 +20,7 @@ spi_device_handle_t spi_cmod_h;
 static spi_device_interface_config_t spi_mcp4351;
 spi_device_handle_t spi_mcp4351_h;
 
+static SemaphoreHandle_t mutex = NULL;
 
 uint8_t spi_get_cookie()
 {
@@ -32,7 +33,9 @@ uint8_t spi_get_cookie()
   trans.base.length = 0 * 8;
   trans.base.rxlength = 1 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 
   return trans.base.rx_data[0];
@@ -53,7 +56,9 @@ void spi_bram_poke(uint16_t addr, uint8_t data)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 0 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -71,7 +76,9 @@ uint8_t spi_bram_peek(uint16_t addr)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 1 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 
   return trans.base.rx_data[0];
@@ -91,7 +98,9 @@ void spi_xram_poke_code(uint8_t addr, uint8_t data)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 0 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -109,7 +118,9 @@ void spi_xram_poke_data(uint8_t addr, uint8_t data)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 0 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -125,7 +136,9 @@ uint8_t spi_xram_peek_data(uint8_t addr)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 1 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 
   return trans.base.rx_data[0];
@@ -142,7 +155,9 @@ uint8_t spi_dbus_read()
   trans.base.length = 0 * 8;
   trans.base.rxlength = 1 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 
   return trans.base.rx_data[0];
@@ -160,7 +175,9 @@ void spi_dbus_write(uint8_t d)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 0 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -172,7 +189,9 @@ void spi_trs_io_done()
   trans.base.cmd = FPGA_CMD_TRS_IO_DONE;
   trans.base.length = 0 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -191,7 +210,9 @@ void spi_set_breakpoint(uint8_t n, uint16_t addr)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 0 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -207,7 +228,9 @@ void spi_clear_breakpoint(uint8_t n)
   trans.base.length = 0 * 8;
   trans.base.rxlength = 0 * 8;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -218,7 +241,9 @@ void spi_xray_resume()
   memset(&trans, 0, sizeof(spi_transaction_ext_t));
   trans.base.cmd = FPGA_CMD_XRAY_RESUME;
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
   ESP_ERROR_CHECK(ret);
 }
 
@@ -329,6 +354,8 @@ static void test_digital_pot()
 
 void init_spi()
 {
+  mutex = xSemaphoreCreateMutex();
+
   spi_bus = {
         .mosi_io_num = SPI_PIN_NUM_MOSI,
         .miso_io_num = SPI_PIN_NUM_MISO,
