@@ -18,7 +18,7 @@
 #include "driver/gpio.h"
 #include "freertos/event_groups.h"
 #include "freertos/timers.h"
-
+#include "web_debugger.h"
 #include "spi.h"
 
 #define ESP_REQ GPIO_NUM_34
@@ -45,6 +45,130 @@ static volatile uint8_t DRAM_ATTR intr_event = 0;
 static volatile bool DRAM_ATTR intr_enabled = true;
 
 static volatile int16_t DRAM_ATTR printer_data = -1;
+
+/***********************************************************************************
+ * XRay
+ ***********************************************************************************/
+
+extern const uint8_t xray_stub_start[] asm("_binary_xray_stub_bin_start");
+extern const uint8_t xray_stub_end[] asm("_binary_xray_stub_bin_end");
+static const uint8_t xray_stub_len = xray_stub_end - xray_stub_start;
+
+typedef struct {
+  uint16_t af;
+  uint16_t bc;
+  uint16_t de;
+  uint16_t hl;
+  uint16_t af_p;
+  uint16_t bc_p;
+  uint16_t de_p;
+  uint16_t hl_p;
+  uint16_t ix;
+  uint16_t iy;
+  uint16_t pc;
+  uint16_t sp;
+} XRAY_Z80_REGS;
+
+static union {
+  XRAY_Z80_REGS xray_z80_regs;
+  uint8_t vram[sizeof(XRAY_Z80_REGS)];
+} xray_vram_alt;
+
+
+#define XRAY_STATUS_RUN 0
+#define XRAY_STATUS_CONTINUE 1
+#define XRAY_STATUS_BREAKPOINT 2
+
+static volatile uint8_t xray_status = XRAY_STATUS_RUN;
+static volatile bool trigger_xray_action = false;
+
+#define XRAY_MAX_BREAKPOINTS 5
+
+static char* on_trx_get_resource(TRX_RESOURCE_TYPE type) {
+  return NULL;
+}
+
+void on_trx_control_callback(TRX_CONTROL_TYPE type) {
+  if (type == TRX_CONTROL_TYPE_STEP ||
+      type == TRX_CONTROL_TYPE_CONTINUE) {
+    spi_xray_resume();
+    xray_status = XRAY_STATUS_RUN;
+  }
+}
+
+void on_trx_get_state_update(TRX_SystemState* state) {
+  state->paused = xray_status != XRAY_STATUS_RUN;
+  if (state->paused) {
+    printf("Hit breakpoint\n");
+  }
+    for (int i = 0; i < sizeof(XRAY_Z80_REGS); i++) {
+      xray_vram_alt.vram[sizeof(XRAY_Z80_REGS) - 1 - i] = spi_xram_peek_data(255 - i);
+    }
+
+    state->registers.pc = xray_vram_alt.xray_z80_regs.pc;
+    state->registers.sp = xray_vram_alt.xray_z80_regs.sp;
+    state->registers.af = xray_vram_alt.xray_z80_regs.af;
+    state->registers.bc = xray_vram_alt.xray_z80_regs.bc;
+    state->registers.de = xray_vram_alt.xray_z80_regs.de;
+    state->registers.hl = xray_vram_alt.xray_z80_regs.hl;
+
+    state->registers.af_prime = xray_vram_alt.xray_z80_regs.af_p;
+    state->registers.bc_prime = xray_vram_alt.xray_z80_regs.bc_p;
+    state->registers.de_prime = xray_vram_alt.xray_z80_regs.de_p;
+    state->registers.hl_prime = xray_vram_alt.xray_z80_regs.hl_p;
+    state->registers.ix = xray_vram_alt.xray_z80_regs.ix;
+    state->registers.iy = xray_vram_alt.xray_z80_regs.iy;
+
+    // Not supported.
+    state->registers.i = 0;
+    state->registers.iff1 = 0;
+    state->registers.iff2 = 0;
+  //}
+}
+
+void on_trx_add_breakpoint(int bp_id, uint16_t addr, TRX_BREAK_TYPE type) {
+  if (type != TRX_BREAK_PC) return;
+  spi_set_breakpoint(bp_id, addr);
+}
+
+void on_trx_remove_breakpoint(int bp_id) {
+  spi_clear_breakpoint(bp_id);
+}
+
+uint8_t trx_read_memory(uint16_t addr) {
+//  return spi_bram_peek(addr);
+  uint8_t d = spi_bram_peek(addr);
+  printf("peek(%04x): %02x\n", addr, d);
+  return d;
+}
+
+void trx_write_memory(uint16_t addr, uint8_t value) {
+  spi_bram_poke(addr, value);
+}
+
+static void init_xray()
+{
+  TRX_Context* ctx = get_default_trx_context();
+  ctx->system_name = "Model 1";
+  ctx->model = MODEL_I;
+  ctx->capabilities.memory_range.start = 0x8000;
+  ctx->capabilities.memory_range.length = 20;  // For demo only. fill program covered.
+  ctx->capabilities.max_breakpoints = XRAY_MAX_BREAKPOINTS;
+  ctx->capabilities.alt_single_step_mode = true;
+
+  // TODO the rest....
+  ctx->control_callback = &on_trx_control_callback;
+  ctx->read_memory = &trx_read_memory;
+  ctx->write_memory = &trx_write_memory;
+  ctx->breakpoint_callback = &on_trx_add_breakpoint;
+  ctx->remove_breakpoint_callback = &on_trx_remove_breakpoint;
+  ctx->get_resource = &on_trx_get_resource;
+  ctx->get_state_update = &on_trx_get_state_update;
+
+  init_trs_xray(ctx);
+}
+
+//-----------------------------------------------------------------
 
 void io_core1_enable_intr() {
 #if 0
@@ -122,6 +246,8 @@ static void IRAM_ATTR esp_req_isr_handler(void* arg)
 
 static void IRAM_ATTR io_task(void* p)
 {
+  init_xray();
+
   while(true) {
     while (!esp_req_triggered) ;
     esp_req_triggered = false;
@@ -139,6 +265,9 @@ static void IRAM_ATTR io_task(void* p)
       break;
     case 0x30:
       frehd_read(s);
+      break;
+    case 0x50:
+      xray_status = XRAY_STATUS_BREAKPOINT;
       break;
     }
     
@@ -177,18 +306,18 @@ static void action_task(void* p)
     }
 
     if (is_button_short_press()) {
-#if 0
       static uint8_t count = 0;
-      static const uint8_t code1[] = {0xf3, 0x21, 0x00, 0x3c, 0x77, 0x3c, 0x18, 0xfc };
-      static const uint8_t code2[] = {0xd9 , 0x21 , 0x01 , 0x3c , 0x7e , 0x3c , 0x77 , 0xd9  , 0x18 , 0xf6};
+      static const uint8_t code1[] = {0xf3, 0x21, 0x00, 0x3c, 0x11, 0x34, 0x12, 0x01, 0x78, 0x56, 0x7e, 0x3c, 0x77, 0x18, 0xfb };
 
       if (count == 0) {
         for (int i = 0; i < sizeof(code1); i++)
           spi_bram_poke(0x8000 + i, code1[i]);
-        for (int i = 0; i < sizeof(code2); i++)
-          spi_xram_poke_code(i, code2[i]);
+        for (int i = 0; i < xray_stub_len; i++)
+          spi_xram_poke_code(i, xray_stub_start[i]);
+        spi_xram_poke_data(0, 0xc9);
         printf("Poke code\n");
       }
+#if 0
       if (count == 1) {
         spi_set_breakpoint(1, 0x8006);
         printf("set breakpoint\n");
