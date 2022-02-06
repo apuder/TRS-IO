@@ -50,6 +50,8 @@ static volatile int16_t DRAM_ATTR printer_data = -1;
  * XRay
  ***********************************************************************************/
 
+#define XRAY_PC_OFFSET 11
+
 extern const uint8_t xray_stub_start[] asm("_binary_xray_stub_bin_start");
 extern const uint8_t xray_stub_end[] asm("_binary_xray_stub_bin_end");
 static const uint8_t xray_stub_len = xray_stub_end - xray_stub_start;
@@ -97,6 +99,7 @@ void on_trx_control_callback(TRX_CONTROL_TYPE type) {
 }
 
 void on_trx_get_state_update(TRX_SystemState* state) {
+  printf("on_trx_get_state_update\n");
   state->paused = xray_status != XRAY_STATUS_RUN;
   if (state->paused) {
     printf("Hit breakpoint\n");
@@ -105,7 +108,7 @@ void on_trx_get_state_update(TRX_SystemState* state) {
       xray_vram_alt.vram[sizeof(XRAY_Z80_REGS) - 1 - i] = spi_xram_peek_data(255 - i);
     }
 
-    state->registers.pc = xray_vram_alt.xray_z80_regs.pc;
+    state->registers.pc = xray_vram_alt.xray_z80_regs.pc - XRAY_PC_OFFSET;
     state->registers.sp = xray_vram_alt.xray_z80_regs.sp;
     state->registers.af = xray_vram_alt.xray_z80_regs.af;
     state->registers.bc = xray_vram_alt.xray_z80_regs.bc;
@@ -129,10 +132,12 @@ void on_trx_get_state_update(TRX_SystemState* state) {
 void on_trx_add_breakpoint(int bp_id, uint16_t addr, TRX_BREAK_TYPE type) {
   if (type != TRX_BREAK_PC) return;
   spi_set_breakpoint(bp_id, addr);
+  printf("set breakpoint(%d): 0x%04x\n", bp_id, addr);
 }
 
 void on_trx_remove_breakpoint(int bp_id) {
   spi_clear_breakpoint(bp_id);
+  printf("clear breakpoint(%d)\n", bp_id);
 }
 
 uint8_t trx_read_memory(uint16_t addr) {

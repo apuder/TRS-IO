@@ -14,19 +14,6 @@ ret_label:
 diff: equ ret_label-breakpoint
     dec sp         ; Restore RET address that is still in memory
     dec sp
-    ex (sp),hl
-    dec hl         ; Sub 11 (== diff) from HL
-    dec hl
-    dec hl
-    dec hl
-    dec hl
-    dec hl
-    dec hl
-    dec hl
-    dec hl
-    dec hl
-    dec hl
-    ex (sp),hl
 
     push iy
     push ix
