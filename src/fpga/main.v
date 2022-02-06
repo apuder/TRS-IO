@@ -97,7 +97,9 @@ wire frehd_sel = frehd_sel_in || frehd_sel_out;
 wire z80_dsp_sel_wr = (TRS_A[15:10] == 6'b001111) && !TRS_WR;
 wire z80_dsp_sel = z80_dsp_sel_wr;
 
-wire esp_sel = trs_io_sel || frehd_sel;
+wire xray_sel;
+
+wire esp_sel = trs_io_sel || frehd_sel || xray_sel;
 
 wire esp_sel_fallingedge;
 wire esp_sel_risingedge;
@@ -133,19 +135,21 @@ always @(posedge clk) begin
 end
 
       
-localparam [3:0]
-  esp_trs_io_in = 4'b0000,
-  esp_trs_io_out = 4'b0001,
-  esp_frehd_in = 4'b0010,
-  esp_frehd_out = 4'b0011,
-  esp_fdc_rd = 4'b0100;
+localparam [2:0]
+  esp_trs_io_in = 3'd0,
+  esp_trs_io_out = 3'd1,
+  esp_frehd_in = 3'd2,
+  esp_frehd_out = 3'd3,
+  esp_fdc_rd = 3'd4,
+  esp_xray = 3'd5;
 
 
 assign ESP_S = (esp_trs_io_in & {3{trs_io_sel_in}}) |
                (esp_trs_io_out & {3{trs_io_sel_out}}) |
                (esp_frehd_in & {3{frehd_sel_in}}) |
                (esp_frehd_out & {3{frehd_sel_out}}) |
-               (esp_fdc_rd & {3{fdc_sel_rd}});
+               (esp_fdc_rd & {3{fdc_sel_rd}}) |
+               (esp_xray & {3{xray_sel}});
 
 
 
@@ -408,24 +412,34 @@ localparam [1:0]
   state_xray_stop = 2'b01,
   state_xray_resume = 2'b11;
 
+reg stub_ran_once = 1'b0;
+
 reg [1:0] state_xray = state_xray_run;
 
 
 always @(posedge clk) begin
   if (trigger_action && (cmd == xray_resume) && (state_xray == state_xray_stop)) begin
     state_xray <= state_xray_resume;
+    stub_ran_once <= 1'b0;
   end
   if (pre_ram_access_check && (state_xray == state_xray_run) && (breakpoint_idx != 0)) begin
     state_xray <= state_xray_stop;
     xray_base_addr <= TRS_A;
     current_breakpoint_idx <= breakpoint_idx - 1;
+    stub_ran_once <= 1'b0;
   end
   if (pre_ram_access_check && (state_xray == state_xray_resume) && (xray_base_addr == TRS_A)) begin
     state_xray <= state_xray_run;
+    stub_ran_once <= 1'b0;
+  end
+  if (pre_ram_access_check && (state_xray == state_xray_stop) && (xray_base_addr == TRS_A)) begin
+    stub_ran_once <= 1'b1;
   end
 end
 
 wire xray_run_stub = (state_xray != state_xray_run);
+
+assign xray_sel = xray_run_stub && stub_ran_once;
 
 assign led[0] = xray_run_stub;
 assign led[1] = 1'b0;
@@ -450,6 +464,10 @@ wire [7:0]doutb;
 
 /*
  * BRAM configuration
+ * ------------------
+ * BRAM is 64K in size and coveres the complete 16-bit address range of the Z80. Right
+ * not, only the upper 32K are used (A15 == 1)
+ *
  * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
  * Port A: Write/Read width: 8, Write depth: 65536, Operating mode: Write First, Core Output Register, REGCEA pin
  * Port B: Write/Read width: 8, Write depth: 65536, Operating mode: Read First, Core Output Register, REGCEB pin
@@ -508,6 +526,8 @@ reg[7:0] trs_data;
 assign TRS_D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
 
 /*
+  ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
+  ; boot sector from the FDC.
     org 4200h
     ld a,1
     out (197),a
@@ -634,7 +654,12 @@ wire [7:0] xdinb;
 
 
 /*
- * BRAM configuration
+ * XRAM configuration
+ * ------------------
+ * XRAM is 512 bytes in size. The first 256 bytes hold the debug stub (xray-stub.asm)
+ * that gets injected when execution hits a breapoint. The upper 256 bytes are always
+ * mapped to $FF00. This is where the debug stub stores the context (i.e., Z80 registers)
+ *
  * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
  * Port A: Write/Read width: 8, Write depth: 512, Operating mode: Write First, Core Output Register, REGCEA pin
  * Port B: Write/Read width: 8, Write depth: 512, Operating mode: Read First, Core Output Register, REGCEB pin
