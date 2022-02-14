@@ -153,69 +153,17 @@ assign ESP_S = (esp_trs_io_in & {3{trs_io_sel_in}}) |
 
 
 
-//---SPI---------------------------------------------------------
-
-reg [2:0] SCKr;  always @(posedge clk) SCKr <= {SCKr[1:0], SCK};
-wire SCK_rising_edge = (SCKr[2:1] == 2'b01);
-wire SCK_falling_edge = (SCKr[2:1] == 2'b10);
-
-reg [2:0] CSr;  always @(posedge clk) CSr <= {CSr[1:0], CS};
-wire CS_active = ~CSr[1];
-wire CS_startmessage = (CSr[2:1]==2'b10);
-wire CS_endmessage = (CSr[2:1]==2'b01);
-
-wire start_msg = CS_startmessage;
-wire end_msg = CS_endmessage;
-
-reg [1:0] MOSIr;  always @(posedge clk) MOSIr <= {MOSIr[0], MOSI};
-wire MOSI_data = MOSIr[1];
-
-
-reg [2:0] bitcnt = 3'b000;
-
-always @(posedge clk)
-begin
-  if(~CS_active)
-    begin
-      bitcnt <= 3'b000;
-    end
-  else
-  if(SCK_rising_edge)
-  begin
-    bitcnt <= bitcnt + 3'b001;
-    byte_in <= {byte_in[6:0], MOSI_data};
-  end
-end
-
-always @(posedge clk) byte_received <= CS_active && SCK_rising_edge && (bitcnt == 3'b111);
-
-reg [7:0] byte_data_sent;
-
-always @(posedge clk)
-if(CS_active)
-begin
-  if(SCK_falling_edge)
-  begin
-    if(bitcnt == 3'b000)
-      byte_data_sent <= byte_out;
-    else
-      byte_data_sent <= {byte_data_sent[6:0], 1'b0};
-  end
-end
-
-assign MISO = CS_active ? byte_data_sent[7] : 8'bz;
-
-
 //---main-------------------------------------------------------------------------
 
 
 localparam [2:0]
   idle       = 3'b000,
   read_bytes = 3'b001,
-  execute    = 3'b010,
-  ignore     = 3'b011;
+  execute    = 3'b010;
 
 reg [2:0] state = idle;
+
+wire start_msg;
 
 localparam [7:0]
   get_cookie          = 8'b0,
@@ -236,7 +184,7 @@ localparam [7:0]
 
 reg [7:0] params[0:4];
 reg [2:0] bytes_to_read;
-reg [2:0] bytes_to_ignore;
+reg [7:0] bits_to_send;
 reg [2:0] idx;
 reg [7:0] cmd;
 reg trs_io_data_ready = 1'b0;
@@ -248,6 +196,7 @@ reg trigger_action = 1'b0;
 
 always @(posedge clk) begin
   trigger_action <= 1'b0;
+  bits_to_send <= 0;
 
   if (esp_sel_risingedge && (TRS_A[7:0] == 31)) trs_io_data_ready <= 1'b0;
 
@@ -261,24 +210,23 @@ always @(posedge clk) begin
         cmd <= byte_in;
         state <= read_bytes;
         idx <= 3'b000;
-        bytes_to_ignore <= 0;
         case (byte_in)
           get_cookie: begin
             trigger_action <= 1'b1;
-            bytes_to_ignore <= 1;
-            state <= ignore;
+            bits_to_send <= 9;
+            state <= idle;
           end
           bram_poke: begin
             bytes_to_read <= 3'b011;
           end
           bram_peek: begin
             bytes_to_read <= 3'b010;
-            bytes_to_ignore <= 1;
+            bits_to_send <= 9;
           end
           dbus_read: begin
             trigger_action <= 1'b1;
-            bytes_to_ignore <= 1;
-            state <= ignore;
+            bits_to_send <= 9;
+            state <= idle;
           end
           dbus_write: begin
             bytes_to_read <= 3'b001;
@@ -301,7 +249,7 @@ always @(posedge clk) begin
           end
           xray_data_peek: begin
             bytes_to_read <= 1;
-            bytes_to_ignore <= 1;
+            bits_to_send <= 9;
           end
           xray_resume: begin
             trigger_action <= 1'b1;
@@ -321,27 +269,71 @@ always @(posedge clk) begin
         if (bytes_to_read == 3'b001)
           begin
             trigger_action <= 1'b1;
-            if (bytes_to_ignore == 3'b000)
-              state <= idle;
-            else
-              state <= ignore;
+            state <= idle;
           end
         else
           bytes_to_read <= bytes_to_read - 3'b001;
     end
-    ignore:
-      begin
-        if (bytes_to_ignore == 3'b001)
-          state <= idle;
-        else
-          bytes_to_ignore <= bytes_to_ignore - 3'b001;
-      end
     default:
       state <= idle;
       endcase
   end
 end
 
+
+//---SPI---------------------------------------------------------
+
+reg [2:0] SCKr;  always @(posedge clk) SCKr <= {SCKr[1:0], SCK};
+wire SCK_rising_edge = (SCKr[2:1] == 2'b01);
+wire SCK_falling_edge = (SCKr[2:1] == 2'b10);
+
+reg [2:0] CSr;  always @(posedge clk) CSr <= {CSr[1:0], CS};
+wire CS_active = ~CSr[1];
+wire CS_startmessage = (CSr[2:1]==2'b10);
+wire CS_endmessage = (CSr[2:1]==2'b01);
+
+assign start_msg = CS_startmessage;
+wire end_msg = CS_endmessage;
+
+reg [1:0] MOSIr;  always @(posedge clk) MOSIr <= {MOSIr[0], MOSI};
+wire MOSI_data = MOSIr[1];
+
+reg [7:0] remaining_bits_to_send;
+
+
+reg [2:0] bitcnt = 3'b000;
+
+
+always @(posedge clk) begin
+  if(~CS_active)
+    bitcnt <= 3'b000;
+  else
+    if(SCK_rising_edge) begin
+      bitcnt <= bitcnt + 3'b001;
+      byte_in <= {byte_in[6:0], MOSI_data};
+    end
+end
+
+wire need_to_read_data = ((state == idle) && (remaining_bits_to_send == 0)) || (state == read_bytes);
+
+always @(posedge clk) byte_received <= CS_active && SCK_rising_edge && need_to_read_data && (bitcnt == 3'b111);
+
+reg [7:0] byte_data_sent;
+
+always @(posedge clk) begin
+  if (bits_to_send != 0) remaining_bits_to_send = bits_to_send;
+  if(CS_active) begin
+    if(SCK_falling_edge && state == idle) begin
+      if(remaining_bits_to_send == 8)
+        byte_data_sent <= byte_out;
+      else
+        byte_data_sent <= {byte_data_sent[6:0], 1'b0};
+      if (remaining_bits_to_send != 0) remaining_bits_to_send <= remaining_bits_to_send - 1;
+    end
+  end
+end
+
+assign MISO = CS_active ? byte_data_sent[7] : 8'bz;
 
 
 //---Breakpoint Management-----------------------------------------------------------------
@@ -388,14 +380,15 @@ trigger pre_ram_access_check_trigger(
   .three()
 );
 
-assign breakpoint_idx = ({8{(breakpoint_active[0] && (breakpoints[0] == TRS_A))}} & 8'd1) |
+assign breakpoint_idx = (({8{(breakpoint_active[0] && (breakpoints[0] == TRS_A))}} & 8'd1) |
                         ({8{(breakpoint_active[1] && (breakpoints[1] == TRS_A))}} & 8'd2) |
                         ({8{(breakpoint_active[2] && (breakpoints[2] == TRS_A))}} & 8'd3) |
                         ({8{(breakpoint_active[3] && (breakpoints[3] == TRS_A))}} & 8'd4) |
                         ({8{(breakpoint_active[4] && (breakpoints[4] == TRS_A))}} & 8'd5) |
                         ({8{(breakpoint_active[5] && (breakpoints[5] == TRS_A))}} & 8'd6) |
                         ({8{(breakpoint_active[6] && (breakpoints[6] == TRS_A))}} & 8'd7) |
-                        ({8{(breakpoint_active[7] && (breakpoints[7] == TRS_A))}} & 8'd8);
+                        ({8{(breakpoint_active[7] && (breakpoints[7] == TRS_A))}} & 8'd8)) &
+                        {8{~TRS_RD}};
 
 
 reg [15:0] xray_base_addr;
