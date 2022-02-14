@@ -86,6 +86,16 @@ static volatile bool trigger_xray_action = false;
 
 #define XRAY_MAX_BREAKPOINTS 5
 
+static void setup_xram() {
+  while(spi_get_cookie() != FPGA_COOKIE) {
+    vTaskDelay(10);
+  }
+  for (int i = 0; i < xray_stub_len; i++) {
+    spi_xram_poke_code(i, xray_stub_start[i]);
+  }
+  spi_xram_poke_data(0, 0xc9); // 0xc9 == Z80 RET
+}
+
 static char* on_trx_get_resource(TRX_RESOURCE_TYPE type) {
   return NULL;
 }
@@ -171,6 +181,7 @@ static void init_xray()
   ctx->get_state_update = &on_trx_get_state_update;
 
   init_trs_xray(ctx);
+  setup_xram();
 }
 
 //-----------------------------------------------------------------
@@ -317,27 +328,8 @@ static void action_task(void* p)
       if (count == 0) {
         for (int i = 0; i < sizeof(code1); i++)
           spi_bram_poke(0x8000 + i, code1[i]);
-        for (int i = 0; i < xray_stub_len; i++)
-          spi_xram_poke_code(i, xray_stub_start[i]);
-        spi_xram_poke_data(0, 0xc9);
         printf("Poke code\n");
       }
-#if 0
-      if (count == 1) {
-        spi_set_breakpoint(1, 0x8006);
-        printf("set breakpoint\n");
-      }
-      if (count == 2) {
-      printf("clear breakpoint\n");
-        spi_clear_breakpoint(1);
-      }
-      if (count == 3) {
-        spi_xray_resume();
-        printf("resume\n");
-      }
-      count++;
-      if (count == 4) count = 1;
-#endif
 
       // Check Wifi status
       if (*get_wifi_status() == RS_STATUS_WIFI_CONNECTED) {

@@ -27,9 +27,10 @@ uint8_t spi_get_cookie()
   spi_transaction_ext_t trans;
 
   memset(&trans, 0, sizeof(spi_transaction_ext_t));
-  trans.base.flags = SPI_TRANS_USE_RXDATA;
+  trans.base.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_VARIABLE_DUMMY;
   trans.base.cmd = FPGA_CMD_GET_COOKIE;
   trans.address_bits = 0 * 8;
+  trans.dummy_bits = 2;
   trans.base.length = 0 * 8;
   trans.base.rxlength = 1 * 8;
 
@@ -67,9 +68,10 @@ uint8_t spi_bram_peek(uint16_t addr)
   spi_transaction_ext_t trans;
 
   memset(&trans, 0, sizeof(spi_transaction_ext_t));
-  trans.base.flags = SPI_TRANS_VARIABLE_ADDR | SPI_TRANS_USE_RXDATA;
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR | SPI_TRANS_USE_RXDATA | SPI_TRANS_VARIABLE_DUMMY;
   trans.base.cmd = FPGA_CMD_BRAM_PEEK;
   trans.address_bits = 2 * 8;
+  trans.dummy_bits = 2;
   const uint32_t b0 = addr & 0xff;
   const uint32_t b1 = addr >> 8;
   trans.base.addr = b1 | (b0 << 8);
@@ -129,9 +131,10 @@ uint8_t spi_xram_peek_data(uint8_t addr)
   spi_transaction_ext_t trans;
 
   memset(&trans, 0, sizeof(spi_transaction_ext_t));
-  trans.base.flags = SPI_TRANS_VARIABLE_ADDR | SPI_TRANS_USE_RXDATA;
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR | SPI_TRANS_USE_RXDATA | SPI_TRANS_VARIABLE_DUMMY;
   trans.base.cmd = FPGA_CMD_XRAM_PEEK_DATA;
   trans.address_bits = 1 * 8;
+  trans.dummy_bits = 2;
   trans.base.addr = addr;
   trans.base.length = 0 * 8;
   trans.base.rxlength = 1 * 8;
@@ -149,9 +152,10 @@ uint8_t spi_dbus_read()
   spi_transaction_ext_t trans;
 
   memset(&trans, 0, sizeof(spi_transaction_ext_t));
-  trans.base.flags = SPI_TRANS_USE_RXDATA;
+  trans.base.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_VARIABLE_DUMMY;
   trans.base.cmd = FPGA_CMD_DBUS_READ;
   trans.address_bits = 0 * 8;
+  trans.dummy_bits = 2;
   trans.base.length = 0 * 8;
   trans.base.rxlength = 1 * 8;
 

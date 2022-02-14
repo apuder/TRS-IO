@@ -4,13 +4,14 @@
 
 #include <driver/spi_master.h>
 #include <stdint.h>
+#include "sdkconfig.h"
 
 #ifdef CONFIG_TRS_IO_ENABLE_XRAY
 
 //-----XRAY configuration--------------------------------------------
 
 // SPI
-#define SPI_SPEED_MHZ 5
+#define SPI_SPEED_MHZ 20
 #define SPI_DIGI_POT_SPEED_MHZ 1
 
 #define SPI_PIN_NUM_MISO GPIO_NUM_22
