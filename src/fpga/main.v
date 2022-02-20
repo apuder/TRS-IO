@@ -179,7 +179,8 @@ localparam [7:0]
   xray_data_peek      = 8'd10,
   enable_breakpoints  = 8'd11,
   disable_breakpoints = 8'd12,
-  xray_resume         = 8'd13;
+  xray_resume         = 8'd13,
+  set_full_addr       = 8'd14;
   
 
 reg [7:0] params[0:4];
@@ -254,6 +255,9 @@ always @(posedge clk) begin
           xray_resume: begin
             trigger_action <= 1'b1;
             state <= idle;
+          end
+          set_full_addr: begin
+            bytes_to_read <= 1;
           end
           default:
             begin
@@ -334,6 +338,17 @@ always @(posedge clk) begin
 end
 
 assign MISO = CS_active ? byte_data_sent[7] : 8'bz;
+
+
+//---Full Address--------------------------------------------------------------------------
+
+reg full_addr = 1'b0;
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_full_addr) begin
+    full_addr <= params[0];
+  end
+end
 
 
 //---Breakpoint Management-----------------------------------------------------------------

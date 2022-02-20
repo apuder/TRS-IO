@@ -23,6 +23,7 @@
 
 #define ESP_REQ GPIO_NUM_34
 #define ESP_DONE GPIO_NUM_27
+#define ESP_FULL_ADDR GPIO_NUM_33
 
 
 #define ADJUST(x) ((x) < 32 ? (x) : (x) - 32)
@@ -31,6 +32,8 @@
 #define MASK64_ESP_REQ (1ULL << ESP_REQ)
 #define MASK_ESP_DONE (1 << ADJUST(ESP_DONE))
 #define MASK64_ESP_DONE (1ULL << ESP_DONE)
+#define MASK_ESP_FULL_ADDR (1 << ADJUST(ESP_FULL_ADDR))
+#define MASK64_ESP_FULL_ADDR (1ULL << ESP_FULL_ADDR)
 
 
 static volatile bool DRAM_ATTR trigger_trs_io_action = false;
@@ -163,10 +166,12 @@ void trx_write_memory(uint16_t addr, uint8_t value) {
 
 static void init_xray()
 {
+  bool full_addr = !gpio_get_level(ESP_FULL_ADDR);
+
   TRX_Context* ctx = get_default_trx_context();
   ctx->system_name = "Model 1";
   ctx->model = MODEL_I;
-  ctx->capabilities.memory_range.start = 0x8000;
+  ctx->capabilities.memory_range.start = full_addr ? 0 : 0x8000;
   ctx->capabilities.memory_range.length = 20;  // For demo only. fill program covered.
   ctx->capabilities.max_breakpoints = XRAY_MAX_BREAKPOINTS;
   ctx->capabilities.alt_single_step_mode = true;
@@ -180,6 +185,8 @@ static void init_xray()
   ctx->get_resource = &on_trx_get_resource;
   ctx->get_state_update = &on_trx_get_state_update;
 
+
+  spi_set_full_addr(full_addr);
   init_trs_xray(ctx);
   setup_xram();
 }
@@ -386,6 +393,13 @@ void init_io()
   
   // Set ESP_DONE to 0
   gpio_set_level((gpio_num_t) ESP_DONE, 0);
+
+  // Configure ESP_FULL_ADDR
+  gpioConfig.pin_bit_mask = MASK64_ESP_FULL_ADDR;
+  gpioConfig.mode = GPIO_MODE_INPUT;
+  gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
+  gpioConfig.intr_type = GPIO_INTR_DISABLE;
+  gpio_config(&gpioConfig);
 
   xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, tskIDLE_PRIORITY + 2,
                           NULL, 1);
