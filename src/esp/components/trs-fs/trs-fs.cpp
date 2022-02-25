@@ -1,16 +1,18 @@
 
 #include <trs-io.h>
+#include <trs-fs.h>
 #include <unordered_map>
-#include "serial.h"
-#include "smb.h"
-#include "posix.h"
-#include "storage.h"
 
-#include "fileio.h"
+#ifdef ESP_PLATFORM
+#include "serial.h"
+#include "posix.h"
+#include "smb.h"
+#include "storage.h"
 
 extern "C" {
 #include "trs_hard.h"
 }
+#endif
 
 #define TRS_FS_VERSION_MAJOR 1
 #define TRS_FS_VERSION_MINOR 0
@@ -18,6 +20,8 @@ extern "C" {
 #define TRS_FS_MODULE_ID 4
 
 TRS_FS* trs_fs = NULL;
+
+#ifdef ESP_PLATFORM
 static TRS_FS* current_trs_fs = NULL;
 static TRS_FS_POSIX* trs_fs_posix = NULL;
 static TRS_FS_SMB* trs_fs_smb = NULL;
@@ -80,6 +84,7 @@ bool trs_fs_has_sd_card_reader() {
   }
   return trs_fs_posix->has_sd_card_reader();
 }
+#endif
 
 using namespace std;
 
