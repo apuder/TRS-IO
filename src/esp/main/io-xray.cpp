@@ -53,26 +53,14 @@ static volatile int16_t DRAM_ATTR printer_data = -1;
  * XRay
  ***********************************************************************************/
 
+uint8_t* xray_upper_ram;
+
 #define XRAY_PC_OFFSET 11
 
 extern const uint8_t xray_stub_start[] asm("_binary_xray_stub_bin_start");
 extern const uint8_t xray_stub_end[] asm("_binary_xray_stub_bin_end");
 static const uint8_t xray_stub_len = xray_stub_end - xray_stub_start;
 
-typedef struct {
-  uint16_t af;
-  uint16_t bc;
-  uint16_t de;
-  uint16_t hl;
-  uint16_t af_p;
-  uint16_t bc_p;
-  uint16_t de_p;
-  uint16_t hl_p;
-  uint16_t ix;
-  uint16_t iy;
-  uint16_t pc;
-  uint16_t sp;
-} XRAY_Z80_REGS;
 
 static union {
   XRAY_Z80_REGS xray_z80_regs;
@@ -89,7 +77,7 @@ static volatile bool trigger_xray_action = false;
 
 #define XRAY_MAX_BREAKPOINTS 5
 
-static void setup_xram() {
+static void setup_xram_stub() {
   while(spi_get_cookie() != FPGA_COOKIE) {
     vTaskDelay(10);
   }
@@ -188,7 +176,7 @@ static void init_xray()
 
   spi_set_full_addr(full_addr);
   init_trs_xray(ctx);
-  setup_xram();
+  setup_xram_stub();
 }
 
 //-----------------------------------------------------------------
@@ -321,6 +309,18 @@ static void action_task(void* p)
         printer_data = -1;
         trigger_trs_io_action = false;
       }
+    }
+
+    if ((xray_upper_ram != NULL) && (xray_status != XRAY_STATUS_RUN)) {
+      // Load upper 32K
+      for(int i = 0; i < 32 * 1024; i++) {
+        spi_bram_poke(0x8000 + i, xray_upper_ram[i]);
+      }
+      free(xray_upper_ram);
+      xray_upper_ram = NULL;
+      spi_clear_breakpoint(0);
+      spi_xray_resume();
+      xray_status = XRAY_STATUS_RUN;
     }
 
     if (is_button_long_press()) {
