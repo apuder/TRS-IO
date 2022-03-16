@@ -70,13 +70,25 @@ static uint8_t check() {
 static menu_item_t main_menu_items[] = {
   {MENU_BROWSE, "Browse RetroStore"},
   {MENU_SEARCH, "Search RetroStore"},
-  {MENU_LOAD, "Load XRAY state"},
   {MENU_WIFI, "Configure WiFi"},
   {MENU_HELP, "Help"},
   {MENU_ABOUT, "About"}
 };
 
 MENU(main_menu, "RetroStore");
+
+
+static menu_item_t main_menu_with_xray_items[] = {
+  {MENU_BROWSE, "Browse RetroStore"},
+  {MENU_SEARCH, "Search RetroStore"},
+  {MENU_LOAD, "Load XRAY state"},
+  {MENU_WIFI, "Configure WiFi"},
+  {MENU_HELP, "Help"},
+  {MENU_ABOUT, "About"}
+};
+
+MENU(main_menu_with_xray, "RetroStore");
+
 
 static menu_item_t main_menu_wifi_not_needed_items[] = {
   {MENU_BROWSE, "Browse RetroStore"},
@@ -87,6 +99,7 @@ static menu_item_t main_menu_wifi_not_needed_items[] = {
 
 MENU(main_menu_wifi_not_needed, "RetroStore");
 
+
 static menu_item_t main_menu_not_connected_items[] = {
   {MENU_WIFI, "Configure WiFi"},
   {MENU_HELP, "Help"},
@@ -94,6 +107,7 @@ static menu_item_t main_menu_not_connected_items[] = {
 };
 
 MENU(main_menu_not_connected, "Offline");
+
 
 static window_t wnd;
 
@@ -116,7 +130,11 @@ void main() {
       the_menu = &main_menu_wifi_not_needed;
       break;
     case RS_STATUS_WIFI_CONNECTED:
-      the_menu = &main_menu;
+      if (has_xray_support()) {
+        the_menu = &main_menu_with_xray;
+      } else {
+        the_menu = &main_menu;
+      }
       break;
     default:
       the_menu = &main_menu_not_connected;

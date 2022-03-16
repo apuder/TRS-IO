@@ -62,6 +62,7 @@ public:
   }
 
   void loadXRAYState() {
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
     FIL f;
     UINT br, btr;
     XRAY_Z80_REGS regs;
@@ -130,6 +131,9 @@ public:
   err:
     rewind();
     addByte(0xff);
+#else
+   addByte(0xfe); // Not CRAY edition
+#endif
   }
 };
 
