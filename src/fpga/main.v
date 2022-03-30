@@ -22,8 +22,23 @@ module main(
   output VGA_RGB,
   output VGA_HSYNC,
   output VGA_VSYNC,
-  output [1:0] led
+  output VGA_R,
+  output VGA_G,
+  output VGA_B,
+  output VGA_H,
+  output VGA_V,
+  output [1:0] led,
+  
+  output SPI_CS_N,
+  output SPI_SCK,
+  output SPI_SDO,
+  input SPI_SDI,
+  output SPI_WP_N,
+  output SPI_HLD_N
 );
+
+localparam [2:0] VERSION_MAJOR = 0;
+localparam [4:0] VERSION_MINOR = 1;
 
 localparam [7:0] COOKIE = 8'haf;
 
@@ -34,7 +49,7 @@ wire vga_clk;
  * Clocking Wizard
  * Clock primary: 12 MHz
  * clk_out1 frequency: 100 MHz
- * clk_out2: 12.175 MHz
+ * clk_out2: 20 MHz
  */
 clk_wiz_0 clk_wiz_0(
    .clk_out1(clk),
@@ -76,8 +91,48 @@ filter RD_filter(
 );
 
 
-wire trs_bram_sel_rd = TRS_A[15] && !TRS_RD;
-wire trs_bram_sel_wr = TRS_A[15] && !TRS_WR;
+wire trs_out;
+wire OUT_falling_edge;
+wire OUT_rising_edge;
+
+filter OUT_filter(
+  .clk(clk),
+  .in(TRS_OUT),
+  .out(trs_out),
+  .rising_edge(OUT_rising_edge),
+  .falling_edge(OUT_falling_edge)
+);
+
+wire trs_in;
+wire IN_falling_edge;
+wire IN_rising_edge;
+
+filter IN_filter(
+  .clk(clk),
+  .in(TRS_IN),
+  .out(trs_in),
+  .rising_edge(IN_rising_edge),
+  .falling_edge(IN_falling_edge)
+);
+
+
+reg full_addr = 1'b0;
+
+// rom
+wire trs_rom_sel = full_addr
+                 ? (~TRS_A[15] & ~TRS_A[14] & (~TRS_A[13] | ~TRS_A[12])) // 12k
+                 : 1'b0;                                                 // none (original design)
+
+// ram
+wire trs_ram_sel = full_addr
+                 ? (TRS_A[15] | TRS_A[14]) // full 48k
+                 : TRS_A[15];              // upper 32k (original design)
+
+// map rom and ram
+wire trs_mem_sel = trs_rom_sel | trs_ram_sel;
+
+wire trs_bram_sel_rd = trs_mem_sel && !TRS_RD;
+wire trs_bram_sel_wr = trs_ram_sel && !TRS_WR;
 wire trs_bram_sel = trs_bram_sel_rd || trs_bram_sel_wr;
 
 wire fdc_37e0_sel_rd = (TRS_A == 16'h37e0) && !TRS_RD;
@@ -95,7 +150,12 @@ wire frehd_sel_out = (TRS_A[7:4] == 4'hc) && !TRS_OUT;
 wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
 wire z80_dsp_sel_wr = (TRS_A[15:10] == 6'b001111) && !TRS_WR;
-wire z80_dsp_sel = z80_dsp_sel_wr;
+
+wire z80_le18_data_sel_in  = (TRS_A[7:0] == 8'hec) & ~TRS_IN;
+
+wire z80_spi_ctrl_sel_out = (TRS_A[7:0] == 8'hfc) & OUT_falling_edge;
+wire z80_spi_data_sel_in  = (TRS_A[7:0] == 8'hfd) & ~TRS_IN;
+wire z80_spi_data_sel_out = (TRS_A[7:0] == 8'hfd) & OUT_falling_edge;
 
 wire xray_sel;
 
@@ -180,7 +240,8 @@ localparam [7:0]
   enable_breakpoints  = 8'd11,
   disable_breakpoints = 8'd12,
   xray_resume         = 8'd13,
-  set_full_addr       = 8'd14;
+  set_full_addr       = 8'd14,
+  get_version         = 8'd15;
   
 
 reg [7:0] params[0:4];
@@ -190,8 +251,6 @@ reg [2:0] idx;
 reg [7:0] cmd;
 reg trs_io_data_ready = 1'b0;
 
-
-reg xxx = 1'b0;
 
 reg trigger_action = 1'b0;
 
@@ -213,6 +272,11 @@ always @(posedge clk) begin
         idx <= 3'b000;
         case (byte_in)
           get_cookie: begin
+            trigger_action <= 1'b1;
+            bits_to_send <= 9;
+            state <= idle;
+          end
+          get_version: begin
             trigger_action <= 1'b1;
             bits_to_send <= 9;
             state <= idle;
@@ -342,7 +406,6 @@ assign MISO = CS_active ? byte_data_sent[7] : 8'bz;
 
 //---Full Address--------------------------------------------------------------------------
 
-reg full_addr = 1'b0;
 
 always @(posedge clk) begin
   if (trigger_action && cmd == set_full_addr) begin
@@ -381,8 +444,8 @@ always @(posedge clk) begin
   end
 end
 
-wire ram_read_access = RD_falling_edge && TRS_A[15];
-wire ram_write_access = WR_falling_edge && TRS_A[15];
+wire ram_read_access = RD_falling_edge && trs_mem_sel;
+wire ram_write_access = WR_falling_edge && trs_ram_sel;
 
 wire pre_ram_access_check;
 wire do_ram_access;
@@ -449,9 +512,6 @@ wire xray_run_stub = (state_xray != state_xray_run);
 
 assign xray_sel = xray_run_stub && stub_ran_once;
 
-assign led[0] = xray_run_stub;
-assign led[1] = 1'b0;
-
 
 //--------BRAM-------------------------------------------------------------------------
 
@@ -473,8 +533,7 @@ wire [7:0]doutb;
 /*
  * BRAM configuration
  * ------------------
- * BRAM is 64K in size and coveres the complete 16-bit address range of the Z80. Right
- * not, only the upper 32K are used (A15 == 1)
+ * BRAM is 64K in size and coveres the complete 16-bit address range of the Z80.
  *
  * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
  * Port A: Write/Read width: 8, Write depth: 65536, Operating mode: Write First, Core Output Register, REGCEA pin
@@ -503,7 +562,7 @@ blk_mem_gen_0 bram(
 assign addra = TRS_A;
 assign dina = !TRS_WR ? TRS_D : 8'bz;
 
-assign TRS_OE = !((TRS_A[15] && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel || z80_dsp_sel);
+assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel || z80_dsp_sel_wr || z80_le18_data_sel_in || z80_spi_data_sel_in || !TRS_OUT);
 assign TRS_DIR = TRS_RD && TRS_IN;
 
 wire ena_read;
@@ -561,6 +620,11 @@ reg [23:0] counter_25ms;
 wire [7:0] xdouta;
 wire xrama_data_ready;
 
+wire [7:0] le18_dout;
+wire le18_dout_rdy;
+
+wire [7:0] spi_data_in;
+
 always @(posedge clk) begin
   if (counter_25ms == 2500000)
     begin
@@ -590,6 +654,10 @@ always @(posedge clk) begin
       trs_data <= (fdc_sector_idx < 25) ? frehd_loader[fdc_sector_idx * 8+:8] : 0;
       fdc_sector_idx = fdc_sector_idx + 1;
     end
+  else if (le18_dout_rdy)
+    trs_data <= le18_dout;
+  else if (IN_falling_edge && z80_spi_data_sel_in)
+    trs_data <= spi_data_in;
 end
 
 
@@ -643,6 +711,7 @@ always @(posedge clk) begin
   else if (xram_peek_done) byte_out <= xdoutb;
   else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
+  else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
 end
 
 
@@ -738,15 +807,84 @@ trigger xram_peek_trigger(
 
 //-----VGA-------------------------------------------------------------------------------
 
+wire VGA_RGBx, VGA_HSYNCx, VGA_VSYNCx;
+
 vga vga(
   .clk(clk),     // 100 MHz
-  .vga_clk(vga_clk), // 12 MHz
+  .vga_clk(vga_clk), // 20 MHz
   .TRS_A(TRS_A),
   .TRS_D(TRS_D),
   .WR_falling_edge(WR_falling_edge),
-  .z80_dsp_sel(z80_dsp_sel),
-  .VGA_RGB(VGA_RGB),
-  .VGA_HSYNC(VGA_HSYNC),
-  .VGA_VSYNC(VGA_VSYNC));
+  .OUT_falling_edge(OUT_falling_edge),
+  .IN_falling_edge(IN_falling_edge),
+  .le18_dout(le18_dout),
+  .le18_dout_rdy(le18_dout_rdy),
+  .VGA_RGB(VGA_RGBx),
+  .VGA_HSYNC(VGA_HSYNCx),
+  .VGA_VSYNC(VGA_VSYNCx));
+
+assign VGA_RGB   = VGA_RGBx;
+assign VGA_HSYNC = VGA_HSYNCx;
+assign VGA_VSYNC = VGA_VSYNCx;
+
+assign VGA_R = VGA_RGBx;
+assign VGA_G = VGA_RGBx;
+assign VGA_B = VGA_RGBx;
+assign VGA_H = VGA_HSYNCx;
+assign VGA_V = VGA_VSYNCx;
+
+
+assign led[0] = xray_run_stub;
+assign led[1] = full_addr;
+
+
+//----XFLASH---------------------------------------------------------------------
+
+// SPI Flash control register
+// bit7 is CS  (active high)
+// bit6 is WPN (active low)
+reg [7:0] z80_spi_ctrl_reg = 8'h00;
+
+always @(posedge clk)
+begin
+   if(z80_spi_ctrl_sel_out)
+      z80_spi_ctrl_reg <= TRS_D;
+end
+
+// The SPI shift register is by design faster than the z80 can read and write.
+// Therefore a status bit isn't necessary.  The z80 can read or write and then
+// immediately read or write again on the next instruction.
+reg [7:0] spi_shift_reg;
+reg spi_sdo;
+reg [7:0] spi_counter = 8'b0;
+
+always @(posedge clk)
+begin
+   if(spi_counter[7])
+   begin
+      spi_counter <= spi_counter + 8'b1;
+      if(spi_counter[2:0] == 3'b000)
+      begin
+         if(spi_counter[3] == 1'b0)
+            spi_sdo <= spi_shift_reg[7];
+         else
+            spi_shift_reg <= {spi_shift_reg[6:0], SPI_SDI};
+      end
+   end
+   else if(z80_spi_data_sel_out)
+   begin
+      spi_shift_reg <= TRS_D;
+      spi_counter <= 8'b10000000;
+   end
+end
+
+assign spi_data_in = spi_shift_reg;
+
+
+assign SPI_CS_N  = ~z80_spi_ctrl_reg[7];
+assign SPI_SCK   = spi_counter[3];
+assign SPI_SDO   =  spi_sdo;
+assign SPI_WP_N  =  z80_spi_ctrl_reg[6];
+assign SPI_HLD_N =  1'bz;
 
 endmodule
