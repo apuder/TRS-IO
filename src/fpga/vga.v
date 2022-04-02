@@ -196,7 +196,6 @@ wire [4:0] char_rom_data;
  * Single Port ROM
  * Port A: Width: 5, Depth: 1024, Primitives Output Register, REGCEA Pin
  *         Load Init File: trs80m1_chr.coe
- * Coe file: trs80m1_chr.coe
  */
 blk_mem_gen_3 char_rom (
    .clka(vga_clk), // input
