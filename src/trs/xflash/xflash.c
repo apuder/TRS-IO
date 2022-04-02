@@ -63,7 +63,7 @@ static void help()
   wnd_print(&wnd, "XFLASH flashes the firmware of the Cmod-A7 FPGA module on the TRS-IO board. ");
   wnd_print(&wnd, "The binary of the firmware needs to copied to the SMB share or SD card. ");
   wnd_print(&wnd, "Make sure to use the correct firmware version depending on the Cmod-A7 (15-T or 35-T). ");
-  wnd_print(&wnd, "This utility allows you to flash and verify to the firmware to the FPGA's SPI flash storage.\n\n");
+  wnd_print(&wnd, "This utility allows you to flash and verify the firmware to the FPGA's SPI flash storage.\n\n");
   wnd_print(&wnd, "Details at: https://github.com/apuder/TRS-IO");
   screen_show(false);
   get_key();
