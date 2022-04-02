@@ -1,3 +1,6 @@
 [submodule "src/esp/components/libsmb2"]
 	path = src/esp/components/libsmb2
 	url = https://github.com/sahlberg/libsmb2.git
+[submodule "src/trs/TRS-LIB"]
+	path = src/trs/TRS-LIB
+	url = https://github.com/apuder/TRS-LIB.git

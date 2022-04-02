@@ -2,6 +2,7 @@
 #include <trs-io.h>
 #include "esp_mock.h"
 #include "version.h"
+#include "led.h"
 #ifdef CONFIG_TRS_IO_ENABLE_XRAY
 #include "io.h"
 #include "spi.h"
@@ -26,6 +27,8 @@ public:
     addCommand(static_cast<cmd_t>(&TrsIOCoreModule::sendWifiIP), "");
     addCommand(static_cast<cmd_t>(&TrsIOCoreModule::setScreenColor), "B");
     addCommand(static_cast<cmd_t>(&TrsIOCoreModule::loadXRAYState), "S");
+    addCommand(static_cast<cmd_t>(&TrsIOCoreModule::setLED), "B");
+    addCommand(static_cast<cmd_t>(&TrsIOCoreModule::sendFPGAVersion), "");
   }
 
   void sendVersion() {
@@ -134,6 +137,28 @@ public:
 #else
    addByte(0xfe); // Not CRAY edition
 #endif
+  }
+
+  void setLED() {
+    uint8_t p = B(0);
+    bool r = p & (1 << 0);
+    bool g = p & (1 << 1);
+    bool b = p & (1 << 2);
+    bool blink = p & (1 << 3);
+    bool auto_off = p & (1 << 4);
+    set_led(r, g, b, blink, auto_off);
+  }
+
+  void sendFPGAVersion() {
+    uint8_t version_major = 0xff;
+    uint8_t version_minor = 0xff;
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+    uint8_t v = spi_get_fpga_version();
+    version_major = (v >> 5) & 7;
+    version_minor = v & 0x1f;
+#endif
+    addByte(version_major);
+    addByte(version_minor);
   }
 };
 
