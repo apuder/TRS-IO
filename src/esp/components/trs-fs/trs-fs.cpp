@@ -156,8 +156,8 @@ public:
   
   void doClose() {
     FIL* fp = &fileMap[B(0)];
-    fileMap.erase(B(0));
     FRESULT result = f_close(fp);
+    fileMap.erase(B(0));
     addByte(result);
   }
 };

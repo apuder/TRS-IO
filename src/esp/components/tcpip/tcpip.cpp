@@ -240,8 +240,8 @@ public:
   
   void doClose() {
     int socketFd = socketMap[B(0)].fd;
-    socketMap.erase(B(0));
     int c = close(socketFd);
+    socketMap.erase(B(0));
     if (c == -1) {
       addByte(IP_COMMAND_ERROR);
       addByte(errno);
