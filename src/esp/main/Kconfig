@@ -19,6 +19,21 @@ config TRS_IO_MODEL_3
     bool "TRS-80 Model III"
 endchoice
 
+config TRS_IO_ENABLE_XRAY
+    bool "Enable support for XRAY debugger"
+    depends on TRS_IO_MODEL_1
+    default n
+    help
+        Enable support for the XRAY debugger. Note that this option
+        requires the FPGA version of TRS-IO.
+
+config TRS_IO_RUN_PCB_TESTS
+    bool "Run PCB tests"
+    depends on TRS_IO_ENABLE_XRAY
+    default n
+    help
+        Enable compile-time tests for the PCB.
+
 config TRS_IO_GPIO_LED_RED
     int "GPIO pin for red"
     default 5

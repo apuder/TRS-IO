@@ -55,3 +55,14 @@ void get_retrostore_version(uint16_t* version)
   version_minor = in(TRS_IO_PORT);
   *version = (version_major << 8) | version_minor;
 }
+
+bool has_xray_support()
+{
+  out(TRS_IO_PORT, TRS_IO_CORE_MODULE_ID);
+  out(TRS_IO_PORT, TRS_IO_LOAD_XRAY_STATE);
+  // Send empty string as file name
+  out(TRS_IO_PORT, 0);
+  wait_for_esp();
+  return in(TRS_IO_PORT) != 0xfe;
+}
+

@@ -29,9 +29,11 @@ namespace VFS {
 #define SPI_CS GPIO_NUM_13
 #elif defined(CONFIG_TRS_IO_MODEL_1)
 #define SPI_CS GPIO_NUM_23
+#elif defined(CONFIG_TRS_IO_MODEL_3)
+#define SPI_CS GPIO_NUM_16
 #else
-// TRS-IO for Model III does not (yet) support SD card
-#define SPI_CS GPIO_NUM_0
+// PocketTRS
+#define SPI_CS GPIO_NUM_15
 #endif
 
 
@@ -50,6 +52,7 @@ TRS_FS_POSIX::TRS_FS_POSIX() {
   };
 
   sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+  host.max_freq_khz = SDMMC_FREQ_PROBING;
   sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
   slot_config.gpio_cs = SPI_CS;
   slot_config.host_id = HSPI_HOST;

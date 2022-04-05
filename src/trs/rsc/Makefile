@@ -4,6 +4,7 @@ OBJS = \
 	main.rel \
 	inout.rel \
 	browse.rel \
+	load.rel \
 	wifi.rel \
 	esp.rel \
 	help.rel \

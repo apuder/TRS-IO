@@ -6,6 +6,7 @@ endif()
 idf_component_register(SRC_DIRS "."
                        INCLUDE_DIRS "include"
                        EMBED_TXTFILES index.html printer.html AnotherMansTreasureMIII64C.ttf
+                       EMBED_FILES xray-load.bin
                        REQUIRES retrostore trs-fs)
 
 # Force static linking of this component
