@@ -1,15 +1,17 @@
 # TRS-IO
 
-TRS-IO gives a TRS-80 Model III online capabilities and provides
+TRS-IO gives a TRS-80 Model 1/III online capabilities and provides
 access to a variety of services. TRS-IO currently features the
 following capabilities:
 
 1. Access to the <a href="https://retrostore.org">RetroStore</a>
 2. <a href="http://frehd.com">FreHD</a> emulation
-3. Access to files mounted on a SMB share
+3. Access to files mounted on a SMB share or located on a micro-SD card
 4. Access to remote servers via TCP
+5. Virtual printer support
 
-The following sections give an overview of TRS-IO as well as setup
+The TRS-IO versions for the Model 1 have some additional features that
+are explained below. The following sections give an overview of TRS-IO as well as setup
 instructions. This Github repository contains the complete source code
 as well as the KiCad schematics for the PCB (Printed Circuit Board).
 For the following descriptions it is assumed that an assembled TRS-IO
@@ -27,46 +29,104 @@ the Internet and access various services.
 
 ### Prerequisites
 
-TRS-IO requires a TRS-80 Model III with 48 kB of RAM. Floppy disk
-drives or a cassette tape are not required.  Note that the current
-version of TRS-IO does not work with the TRS-80 Model I.
+TRS-IO requires a TRS-80 Model III with 48kB of RAM or a Model 1 with 16kB of RAM.
+Floppy disk drives or a cassette tape are not required.
 
 
-### Setting up TRS-IO
+### Feature list
 
-The following figure shows the top view of the TRS-IO card:
+TRS-IO support
+TRS-IO comes in three different versions:
 
-<img src="doc/trs-io-card-v1-labels.png" width="60%" />
+* TRS-IO for the Model III
+* TRS-IO for the Model I using a builtin 32kB SRAM
+* TRS-IO for the Model I using an FPGA
 
-1. Push button
-2. Red LED power indicator
-3. Micro-USB connector
-4. Multi-color status LED
-5. TRS-80 I/O Bus connector
+In the following, each of the versions is explained in detail.
+
+### TRS-IO for the Model III
+
+The following figure shows the top view of the TRS-IO card for the Model III:
+
+<img src="doc/TRS-IO-MIII-labels.png" width="60%" />
+
+1. Power supply via a micro-USB connector
+2. Multi-color status LED
+3. Status button
+4. TRS-80 I/O bus connector
+5. Micro-SD card reader
+6. Disable FreHD jumper
 
 The TRS-IO card needs to be connected to the TRS-80 Model III's I/O
-Bus via a 50-pin ribbon cable (5). Furthermore, the TRS-IO card needs
+Bus via a 50-pin ribbon cable (4). Furthermore, the TRS-IO card needs
 a separate power supply via a standard 5V USB charger. The micro-USB
-connector (3) plugs into the side of the TRS-IO card. A small red LED
-will indicate when a power supply is connected (2). The push button
-(1) and the multi-color status LED (4) will be explained in the next
-section.
+connector (1) plugs into the side of the TRS-IO card. The push button
+(3) and the multi-color status LED (2) will be explained in the
+configuration section.
 
-Note: although it is possible to connect multiple cards to the
-TRS-80's I/O Bus, not all cards are compatible.  In particular, the
-popular <a href="http://frehd.com">FreHD</a> hard disk emulator is not
-a good citizen on the I/O Bus as it takes over complete control. It is
-therefore not possible to connect both <a
-href="http://frehd.com">FreHD</a> and TRS-IO at the same time to I/O
-Bus.
+
+### TRS-IO for the Model 1 (SRAM edition)
+
+The following figure shows the top view of the TRS-IO card for the Model 1:
+
+<img src="doc/TRS-IO-M1-labels.png" width="60%" />
+
+1. Power supply via a micro-USB connector
+2. Multi-color status LED
+3. Status button
+4. TRS-80 I/O bus connector
+5. Micro-SD card reader
+
+The TRS-IO version for the Model 1 is almost identical to the Model III.
+One difference is the I/O bus connector (4) is compatible with the 40-pin
+expansion interface of the Model 1. There are several additional features
+for the Model 1 version that are not relevant to the Model III version:
+
+* A 32kB SRAM chip for a total of 48kB of total RAM.
+* 25ms heartbeat timer to trigger the realtime clock.
+* Auto-boot functionality via the FDC.
+
+
+### TRS-IO for the Model 1 (FPGA edition)
+
+The TRS-IO project features a second version for the Model 1 that makes use
+of an FGPA (Field Programmable Gate Array). Using an FPGA allows for some
+advanced features not possible with the SRAM edition of TRS-IO. The following
+figure shows the top view of the FPGA version for the Model 1:
+
+<img src="doc/TRS-IO-M1-XRAY-labels.png" width="60%" />
+
+1. Power supply via a micro-USB connector
+2. Multi-color status LED
+3. Status button
+4. TRS-80 I/O bus connector
+5. Micro-SD card reader
+6. N/A
+7. VGA connector
+8. A15/VU configuration jumpers
+
+This version of TRS-IO offers all the features of the SRAM edition of TRS-IO
+as outlined in the previous section. Additionally, the FPGA edition also
+offers a VGA connector (7) that can be used instead of a CRT monitor. This version
+of TRS-IO also emlates the LE18 graphics cards.
+
+There are two configuation jumpers (8):
+With the VU jumper, the ESP also powers the FPGA. When using this jumper, the FPGA
+SHOULD NOT be powered via its own micro-USB connector; power should only be supplied
+to the ESP's micro-USB connector (1). The A15 jumper regulates
+the address range the FPGA responds to. Without the A15 jumper, the FPGA only
+responds to memory read/write requests for the upper 32 kB (essentially mimicking the
+upper RAM of the SRAM edition). With the A15 jumper, the FPGA will respond to the
+complete 64kB address space of the Z80. This requires a modified Model 1 as the FPGA also
+responds to ROM read requests.
 
 
 ### Configuring TRS-IO
 
 The core of the TRS-IO card is an ESP32 microcontroller that features
 a WiFi module that is used to connect to a WiFi router. After
-physically connecting the TRS-IO card to a TRS-80 Model III as
-explained in the previous section, the WiFi module on the ESP32
+physically connecting the TRS-IO card to a TRS-80 Model 1/III as
+explained in the previous sections, the WiFi module on the ESP32
 microcontroller first needs to be be configured with the credentials
 of the local WiFi network.
 
@@ -101,13 +161,13 @@ handle mDNS that is used to resolve <a
 href="http://trs-io.local">trs-io.local</a>. In that case the IP
 address that was assigned to TRS-IO can be used instead.
 
-Pushing the button will make the LED flash twice. The first time for
+Pushing the status button will make the LED flash twice. The first time for
 the WiFi status (green: WiFi connected; red: WiFi not connected) and a
 second time for the SMB status (green: connected to SMB share; red:
 not connected to SMB share). With proper configuration parameters, the
 LED should flash green twice. Holding down the push button for more
 than three seconds will erase all configuration parameters and place
-TRS-IO back into configuration mode (status LED flashing white). This
+TRS-IO back into setup mode (status LED flashing white). This
 might be necessary if TRS-IO is moved to a different WiFi network.
 
 The status LED indicates the state of TRS-IO:
@@ -124,6 +184,20 @@ The status LED indicates the state of TRS-IO:
 * Off: the status LED will be off during regular operations when TRS-IO is connected to the specified
   WiFi network and ready to accept commands from the TRS-80 Model III.
  
+### FreHD
+
+TRS-IO is compatible with the popular <a
+href="http://frehd.com">FreHD</a> hard disk emulator. The FreHD disk
+images can either be stored on a SMB share or on a micro-SD card.
+If a micro-SD card is inserted, it will take precedence over
+a mounted SMB share. Once TRS-IO is configured to access a SMB share,
+simply copy the required files such as <a
+href="http://members.iinet.net.au/~ianmav/trs80/downloads.htm">FREHD.ROM</a>
+to the SMB share. Alternatively, the disk images can be transferred
+to the micro-SD card. The IMPORT/EXPORT utilities will access files on the
+SMB share or micro-SD card respectively.
+
+
  ### Launching the native RetroStore Client
 
 The <a href="https://retrostore.org">RetroStore</a> hosts applications
@@ -175,14 +249,3 @@ Keyboard controls:
  * ENTER: select current menu selection
  * BREAK/CLEAR: exit to previous screen
 
-### FreHD
-
-TRS-IO is compatible with the popular <a
-href="http://frehd.com">FreHD</a> hard disk emulator. While <a
-href="http://frehd.com">FreHD</a> uses a SD card to store disk images,
-TRS-IO accesses disk images that have to reside on a SMB share. Once
-TRS-IO is configured to access a SMB share, simply copy the required
-files such as <a
-href="http://members.iinet.net.au/~ianmav/trs80/downloads.htm">FREHD.ROM</a>
-to the SMB share. The IMPORT/EXPORT commands will access files on the
-SMB share.
