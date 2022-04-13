@@ -22,7 +22,8 @@ card is available.
 The figure below depicts the overall architecture. The TRS-80 machine
 is connected to TRS-IO via the I/O Bus.  TRS-IO has a WiFi module that
 connects to the local WiFi router. This allows TRS-IO to connect to
-the Internet and access various services.
+the Internet and access various services. Note that TRS-IO can only
+connect to a 2.4 GHz WiFi network.
 
 <img src="doc/trs-io-architecture.png" />
 
@@ -84,7 +85,7 @@ for the Model 1 version that are not relevant to the Model III version:
 
 * A 32kB SRAM chip for a total of 48kB of total RAM.
 * 25ms heartbeat timer to trigger the realtime clock.
-* Auto-boot functionality via the FDC.
+* FreHD auto-boot for an unmodified M1.
 
 
 ### TRS-IO for the Model 1 (FPGA edition)
@@ -108,7 +109,10 @@ figure shows the top view of the FPGA version for the Model 1:
 This version of TRS-IO offers all the features of the SRAM edition of TRS-IO
 as outlined in the previous section. Additionally, the FPGA edition also
 offers a VGA connector (7) that can be used instead of a CRT monitor. This version
-of TRS-IO also emlates the LE18 graphics cards.
+of TRS-IO also emlates the LE18 graphics cards. The color of the VGA signal can
+be set to white (X=0), green (X=1), and amber (X=2) via the following OUT statements:
+
+```OUT 31,0:OUT 31,5:OUT 31,X```
 
 There are two configuation jumpers (8):
 With the VU jumper, the ESP also powers the FPGA. When using this jumper, the FPGA
@@ -152,6 +156,7 @@ parameters. TRS-IO will automatically reboot and try to connect to the
 specified WiFi network. If successful, the LED will turn green for a
 few seconds. If the credentials are wrong or if the specified WiFi
 network is not accessible, the LED light will turn permanently red.
+
 Note that TRS-IO will store all parameters in its local flash memory,
 so the setup only needs to be performed once. Once TRS-IO is connected
 to a WiFi router, it should still be possible to access URL <a
@@ -160,6 +165,13 @@ WiFi network. Note, however, that some WiFi routers do not correctly
 handle mDNS that is used to resolve <a
 href="http://trs-io.local">trs-io.local</a>. In that case the IP
 address that was assigned to TRS-IO can be used instead.
+
+The web interface will also display two icons to indicate the status
+of the SMB share and the micro-SD card (see screenshot above). Green
+icons indicate that TRS-IO has access. Red icons indicate an error.
+In that case, hovering the mouse over the red icon will display the
+error message. It should be noted that TRS-IO needs to be rebooted
+whenever a micro-SD card is inserted or ejected.
 
 Pushing the status button will make the LED flash twice. The first time for
 the WiFi status (green: WiFi connected; red: WiFi not connected) and a
@@ -196,6 +208,14 @@ href="http://members.iinet.net.au/~ianmav/trs80/downloads.htm">FREHD.ROM</a>
 to the SMB share. Alternatively, the disk images can be transferred
 to the micro-SD card. The IMPORT/EXPORT utilities will access files on the
 SMB share or micro-SD card respectively.
+
+
+### Virtual Printer Interface
+
+TRS-IO support a virtual printer interface. Visiting <a
+href="http://trs-io.local/printer">trs-io.local/printer</a> from a browser
+will open the printer interface. Any printer output from the M1/MIII will
+be displayed in the printer interface.
 
 
  ### Launching the native RetroStore Client
