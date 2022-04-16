@@ -47,7 +47,6 @@ static volatile bool io_task_started = false;
 static volatile uint8_t DRAM_ATTR intr_event = 0;
 static volatile bool DRAM_ATTR intr_enabled = true;
 
-static volatile int16_t DRAM_ATTR printer_data = -1;
 
 /***********************************************************************************
  * XRay
@@ -244,8 +243,14 @@ static inline void frehd_read(uint8_t port) {
 }
 
 static inline void frehd_write(uint8_t port) {
-  uint32_t d = frehd_in(port);
+  uint8_t d = frehd_in(port);
   dbus_write(d);
+}
+
+static inline void printer_write() {
+  uint8_t data = spi_get_printer_byte();
+  char buf[2] = {(char) data, 0};
+  trs_printer_write(buf);
 }
 
 static volatile bool DRAM_ATTR esp_req_triggered = false;
@@ -277,6 +282,9 @@ static void IRAM_ATTR io_task(void* p)
     case 0x30:
       frehd_read(s);
       break;
+    case 0x40:
+      printer_write();
+      break;
     case 0x50:
       xray_status = XRAY_STATUS_BREAKPOINT;
       break;
@@ -299,16 +307,9 @@ static void action_task(void* p)
     frehd_check_action();
 
     if (trigger_trs_io_action) {
-      if (printer_data == -1) {
-        TrsIO::processInBackground();
-        trigger_trs_io_action = false;
-        spi_trs_io_done();
-      } else {
-        char buf[2] = {(char) (printer_data & 0xff), 0};
-        trs_printer_write(buf);
-        printer_data = -1;
-        trigger_trs_io_action = false;
-      }
+      TrsIO::processInBackground();
+      trigger_trs_io_action = false;
+      spi_trs_io_done();
     }
 
     if ((xray_upper_ram != NULL) && (xray_status != XRAY_STATUS_RUN)) {
@@ -329,15 +330,6 @@ static void action_task(void* p)
     }
 
     if (is_button_short_press()) {
-      static uint8_t count = 0;
-      static const uint8_t code1[] = {0xf3, 0x21, 0x00, 0x3c, 0x11, 0x34, 0x12, 0x01, 0x78, 0x56, 0x7e, 0x3c, 0x77, 0x18, 0xfb };
-
-      if (count == 0) {
-        for (int i = 0; i < sizeof(code1); i++)
-          spi_bram_poke(0x8000 + i, code1[i]);
-        printf("Poke code\n");
-      }
-
       // Check Wifi status
       if (*get_wifi_status() == RS_STATUS_WIFI_CONNECTED) {
         set_led(false, true, false, false, false);

@@ -38,7 +38,7 @@ module main(
 );
 
 localparam [2:0] VERSION_MAJOR = 0;
-localparam [4:0] VERSION_MINOR = 1;
+localparam [4:0] VERSION_MINOR = 2;
 
 localparam [7:0] COOKIE = 8'haf;
 
@@ -64,6 +64,16 @@ reg[7:0] byte_in, byte_out;
 reg byte_received = 1'b0;
 
 //----TRS-IO---------------------------------------------------------------------
+
+localparam[7:0]
+  PRINTER_STATUS_READY = 8'h30,
+  PRINTER_STATUS_BUSY = 8'hf0;
+
+reg[7:0] printer_status = PRINTER_STATUS_READY;
+
+// One byte buffer for printer output
+reg[7:0] printer_byte;
+
 
 wire trs_wr;
 wire WR_falling_edge;
@@ -141,6 +151,11 @@ wire fdc_37ef_sel_rd = (TRS_A == 16'h37ef) && !TRS_RD;
 wire fdc_sel_rd = fdc_37e0_sel_rd || fdc_37ec_sel_rd || fdc_37ef_sel_rd;
 wire fdc_sel = fdc_sel_rd;
 
+wire printer_sel_rd = (TRS_A == 16'h37e8) && !TRS_RD;
+wire printer_sel_wr = (TRS_A == 16'h37e8) && !TRS_WR;
+wire printer_sel = printer_sel_wr;
+reg printer_sel_reg = 0;
+
 wire trs_io_sel_in = (TRS_A[7:0] == 31) && !TRS_IN;
 wire trs_io_sel_out = (TRS_A[7:0] == 31) && !TRS_OUT;
 wire trs_io_sel = trs_io_sel_in || trs_io_sel_out;
@@ -159,7 +174,7 @@ wire z80_spi_data_sel_out = (TRS_A[7:0] == 8'hfd) & OUT_falling_edge;
 
 wire xray_sel;
 
-wire esp_sel = trs_io_sel || frehd_sel || xray_sel;
+wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel;
 
 wire esp_sel_fallingedge;
 wire esp_sel_risingedge;
@@ -178,17 +193,27 @@ wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
 reg [5:0] count;
 
 always @(posedge clk) begin
-  if (esp_sel_risingedge)
-    begin
-      // When the ESP needs to do some work, assert WAIT and trigger a pulse on ESP_REQ
-      ESP_REQ <= 1;
-      WAIT <= 1;
-      count <= 50;
+  if (esp_sel_risingedge) begin
+    // ESP needs to do something
+    ESP_REQ <= 1;
+    count <= 50;
+    if (printer_sel) begin
+      // The next byte for the printer is ready
+      printer_sel_reg <= 1;
+      printer_byte <= TRS_D;
+      printer_status <= PRINTER_STATUS_BUSY;
     end
+    else begin
+      // This is not a write to 0x37e8 (the printer). Need to assert WAIT
+      WAIT <= 1;
+    end
+  end
   else if (esp_done_risingedge)
     begin
       // When ESP is done, de-assert WAIT
       WAIT <= 0;
+      printer_sel_reg <= 0;
+      printer_status <= PRINTER_STATUS_READY;
     end
   if (count == 1) ESP_REQ <= 0;
   if (count != 0) count <= count - 1;
@@ -200,7 +225,7 @@ localparam [2:0]
   esp_trs_io_out = 3'd1,
   esp_frehd_in = 3'd2,
   esp_frehd_out = 3'd3,
-  esp_fdc_rd = 3'd4,
+  esp_printer_wr = 3'd4,
   esp_xray = 3'd5;
 
 
@@ -208,7 +233,7 @@ assign ESP_S = (esp_trs_io_in & {3{trs_io_sel_in}}) |
                (esp_trs_io_out & {3{trs_io_sel_out}}) |
                (esp_frehd_in & {3{frehd_sel_in}}) |
                (esp_frehd_out & {3{frehd_sel_out}}) |
-               (esp_fdc_rd & {3{fdc_sel_rd}}) |
+               (esp_printer_wr & {3{printer_sel_reg}}) |
                (esp_xray & {3{xray_sel}});
 
 
@@ -241,8 +266,11 @@ localparam [7:0]
   disable_breakpoints = 8'd12,
   xray_resume         = 8'd13,
   set_full_addr       = 8'd14,
-  get_version         = 8'd15;
+  get_version         = 8'd15,
+  get_printer_byte    = 8'd16;
   
+
+
 
 reg [7:0] params[0:4];
 reg [2:0] bytes_to_read;
@@ -322,6 +350,11 @@ always @(posedge clk) begin
           end
           set_full_addr: begin
             bytes_to_read <= 1;
+          end
+          get_printer_byte: begin
+            trigger_action <= 1'b1;
+            bits_to_send <= 9;
+            state <= idle;
           end
           default:
             begin
@@ -562,7 +595,8 @@ blk_mem_gen_0 bram(
 assign addra = TRS_A;
 assign dina = !TRS_WR ? TRS_D : 8'bz;
 
-assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel || z80_dsp_sel_wr || z80_le18_data_sel_in || z80_spi_data_sel_in || !TRS_OUT);
+assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel || z80_dsp_sel_wr ||
+                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || z80_spi_data_sel_in || !TRS_OUT);
 assign TRS_DIR = TRS_RD && TRS_IN;
 
 wire ena_read;
@@ -654,6 +688,8 @@ always @(posedge clk) begin
       trs_data <= (fdc_sector_idx < 25) ? frehd_loader[fdc_sector_idx * 8+:8] : 0;
       fdc_sector_idx = fdc_sector_idx + 1;
     end
+  else if (RD_falling_edge && printer_sel_rd)
+    trs_data <= printer_status;
   else if (le18_dout_rdy)
     trs_data <= le18_dout;
   else if (IN_falling_edge && z80_spi_data_sel_in)
@@ -712,6 +748,7 @@ always @(posedge clk) begin
   else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
+  else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
 end
 
 
@@ -835,7 +872,6 @@ assign VGA_V = VGA_VSYNCx;
 
 
 assign led[0] = xray_run_stub;
-assign led[1] = full_addr;
 
 
 //----XFLASH---------------------------------------------------------------------

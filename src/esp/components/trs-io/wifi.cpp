@@ -105,8 +105,11 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
 //-----------------------------------------------------------------
 // Web server
 
+#define PRINTER_QUEUE_SIZE 100
+
 static trs_io_wifi_config_t config EXT_RAM_ATTR = {};
-static struct mg_connection *ws_conn = NULL;
+static struct mg_connection* ws_pipe;
+static QueueHandle_t prn_queue;
 
 
 static void copy_config_from_nvs(const char* key, char* value, size_t max_len)
@@ -295,18 +298,12 @@ static void mongoose_event_handler(struct mg_connection *c,
 
       if (mg_http_match_uri(message, "/log")) {
         mg_ws_upgrade(c, message, NULL);
-        ws_conn = c;
+        c->label[0] = 'S';  // Label this connection as a web socket
+        return;
       }
 
       mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
       mg_send(c, response, response_len);
-    }
-    break;
-  case MG_EV_CLOSE:
-    {
-      if (c == ws_conn) {
-        ws_conn = NULL;
-      }
     }
     break;
   case MG_EV_POLL:
@@ -319,16 +316,29 @@ static void mongoose_event_handler(struct mg_connection *c,
   }
 }
 
+// Pipe event handler
+static void pcb(struct mg_connection* c, int ev, void* ev_data, void *fn_data) {
+  if (ev == MG_EV_READ) {
+    struct mg_connection* t;
+    for (t = c->mgr->conns; t != NULL; t = t->next) {
+      if (t->label[0] != 'S') continue;  // Ignore non-websocket connections
+      char ch;
+      while (xQueueReceive(prn_queue, &ch, 0)) {
+        mg_ws_send(t, (const char*) &ch, 1, WEBSOCKET_OP_TEXT);
+      }
+    }
+  }
+}
+
 void trs_printer_write(const char* ch)
 {
-  if (ws_conn != NULL) {
-    mg_ws_send(ws_conn, ch, strlen(ch), WEBSOCKET_OP_TEXT);
-  }
+  xQueueSend(prn_queue, ch, portMAX_DELAY);
+  mg_mgr_wakeup(ws_pipe, NULL, 0);
 }
 
 uint8_t trs_printer_read()
 {
-  return (ws_conn == NULL) ? 0xff : 0x30;
+  return 0x30; /* printer selected, ready, with paper, not busy */;
 }
 
 static void init_mdns()
@@ -351,8 +361,11 @@ static void mg_task(void* p)
   init_mdns();
   copy_config_from_nvs();
 
+  prn_queue = xQueueCreate(PRINTER_QUEUE_SIZE, sizeof(char));
+
   // Start Mongoose
   mg_mgr_init(&mgr);
+  ws_pipe = mg_mkpipe(&mgr, pcb, NULL);
   mg_http_listen(&mgr, "http://0.0.0.0:80", mongoose_event_handler, &mgr);
 
   while(true) {
