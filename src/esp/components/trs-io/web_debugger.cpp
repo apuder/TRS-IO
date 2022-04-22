@@ -363,7 +363,9 @@ static char* get_registers_json(const TRX_StatusRegistersAndFlags* regs) {
 }
 
 static void on_frontend_message(const char* msg) {
-  if (strcmp("action/refresh", msg) == 0) {
+  if (strcmp("ping", msg) == 0) {
+    // Do nothing
+  } else if (strcmp("action/refresh", msg) == 0) {
     send_update_to_web_debugger();
   } else if (strcmp("action/step", msg) == 0) {
     ctx->control_callback(TRX_CONTROL_TYPE_STEP);

@@ -210,6 +210,7 @@ static void mongoose_handle_status(struct mg_http_message* message,
   cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
   cJSON_AddNumberToObject(s, "wifi_status", status);
+  cJSON_AddStringToObject(s, "ip", get_wifi_ip());
   if (config.ssid[0] != '\0') {
     cJSON_AddStringToObject(s, "ssid", config.ssid);
   }

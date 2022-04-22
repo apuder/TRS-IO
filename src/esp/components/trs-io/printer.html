@@ -5,38 +5,122 @@
   <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
   <title>TRS-IO Printer</title>
   <style>
-          @font-face {
-              font-family: 'TreasureMIII64C';
-              src: url('font.ttf');
-          }
-          .log {
-                  margin: 3em;
-                  border-width: medium;
-                  border: solid;
-                  font-family:'TreasureMIII64C';
-                  background-color: white;
-                  padding: 0.5em;
-                  white-space: pre;
-          }
-          .background {
-                  background-color: gray;
-          }
+    @font-face {
+      font-family: 'TreasureMIII64C';
+      src: url('font.ttf');
+    }
+    html, body {
+      background-color: gray;
+      height: calc(100% - 3em);
+      width: 100%;
+      margin: 0;
+    }
+    .status {
+      position: absolute;
+      left: 0em;
+      top: 0em;
+      background: darkgray;
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-top: 3px;
+      padding-bottom: 3px;
+      font-weight: bold;
+      z-index: 2;
+    }
+    .log {
+      margin: 3em;
+      height: 100%;
+      border-width: medium;
+      border: solid;
+      font-family:'TreasureMIII64C';
+      background-color: white;
+      padding: 0.5em;
+      white-space: pre;
+      overflow-y: scroll;
+    }
+
+    /* width */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
   </style>
   <script>
-        init = function() {
-                var ws = new WebSocket("ws://trs-io.local/log");
-                ws.onmessage = function (event) {
-                        log(event.data);
-                };
-          };
+    el = function(id) {
+      return document.getElementById(id);
+    };
 
-        log = function(txt) {
-                var div = document.getElementById('log');
-                div.innerText += txt;
+    var connection_check = null;
+    var ws;
+
+    is_connected = function(f) {
+      el('status').style.visibility = f ? 'hidden' : 'visible';
+      if (connection_check != null) {
+          clearInterval(connection_check);
+      }
+      connection_check = null;
+      if (f) {
+        connection_check = setInterval(function() {
+          ws.send('ping');
+        }, 5000);
+      }
+    };
+
+    init = function() {
+      connect();
+    };
+
+    connection_lost = function() {
+      is_connected(false);
+      setTimeout(function() {
+        connect();
+      }, 2000);
+    };
+
+    connect = function() {
+      fetch('/status')
+      .then(response => {
+        return response.json();
+      })
+      .then(function(status){
+        ws = new WebSocket("ws://" + status.ip + "/log");
+        ws.onopen = function(event) {
+          is_connected(true);
         };
+        ws.onmessage = function (event) {
+          log(event.data);
+        };
+        ws.onclose = connection_lost;
+        ws.onerror = connection_lost;
+      })
+      .catch(function() {
+        connection_lost();
+      });
+    };
+
+    log = function(txt) {
+      var div = el('log');
+      div.innerText += txt;
+      div.scrollTop = div.scrollHeight;
+    };
   </script>
   </head>
-<body onload="init();" class="background">
-        <div id="log" class="log"></div>
+<body onload="init();">
+  <div id="status" class="status">Not connected</div>
+  <div id="log" class="log"></div>
 </body>
 </html> 
