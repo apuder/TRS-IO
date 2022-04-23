@@ -633,7 +633,7 @@ assign TRS_D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
     ld a,1
     out (197),a
     in a,(196)
-    cp a,254
+    cp 254
     jp nz,0075h
     ld b,0
     ld hl,20480
@@ -644,8 +644,8 @@ LOOP:
     djnz LOOP
     jp 20480
 */
-localparam [0:(24 * 8) - 1] frehd_loader = {
-  8'h3e, 8'h01, 8'hd3, 8'hc5, 8'hdb, 8'hc4, 8'hbf, 8'hc2, 8'h75, 8'h00, 8'h06,
+localparam [0:(25 * 8) - 1] frehd_loader = {
+  8'h3e, 8'h01, 8'hd3, 8'hc5, 8'hdb, 8'hc4, 8'hfe, 8'hfe, 8'hc2, 8'h75, 8'h00, 8'h06,
   8'h00, 8'h21, 8'h00, 8'h50, 8'hdb, 8'hc4, 8'h77, 8'h23, 8'h10, 8'hfa, 8'hc3, 8'h00, 8'h50};
 
 reg [7:0] fdc_sector_idx = 8'd0;
@@ -685,7 +685,7 @@ always @(posedge clk) begin
     end
   else if (RD_falling_edge && fdc_37ef_sel_rd)
     begin
-      trs_data <= (fdc_sector_idx < 25) ? frehd_loader[fdc_sector_idx * 8+:8] : 0;
+      trs_data <= (fdc_sector_idx < 26) ? frehd_loader[fdc_sector_idx * 8+:8] : 0;
       fdc_sector_idx = fdc_sector_idx + 1;
     end
   else if (RD_falling_edge && printer_sel_rd)

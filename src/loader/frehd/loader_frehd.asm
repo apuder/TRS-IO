@@ -3,7 +3,7 @@
     ld a,1
     out (197),a
     in a,(196)
-    cp a,254
+    cp 254
     jp nz,0075h
     ld b,0
     ld hl,20480
