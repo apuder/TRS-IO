@@ -15,6 +15,10 @@ void f_log(const char* format, ...) {
 #endif
 }
 
+int trs_fs_mounted() {
+  return trs_fs != NULL;
+}
+
 FRESULT f_open (
                 FIL* fp,           /* [OUT] Pointer to the file object structure */
                 const TCHAR* path, /* [IN] File name */

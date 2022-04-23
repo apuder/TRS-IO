@@ -90,6 +90,8 @@ typedef struct {
 
 void f_log(const char* format, ...);
 
+int trs_fs_mounted();
+
 FRESULT f_open (
         FIL* fp,           /* [OUT] Pointer to the file object structure */
         const TCHAR* path, /* [IN] File name */

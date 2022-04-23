@@ -109,7 +109,7 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
 
 static trs_io_wifi_config_t config EXT_RAM_ATTR = {};
 static struct mg_connection* ws_pipe;
-static QueueHandle_t prn_queue;
+static QueueHandle_t prn_queue = NULL;
 
 
 static void copy_config_from_nvs(const char* key, char* value, size_t max_len)
@@ -333,13 +333,15 @@ static void pcb(struct mg_connection* c, int ev, void* ev_data, void *fn_data) {
 
 void trs_printer_write(const char* ch)
 {
-  xQueueSend(prn_queue, ch, portMAX_DELAY);
-  mg_mgr_wakeup(ws_pipe, NULL, 0);
+  if (prn_queue != NULL) {
+    xQueueSend(prn_queue, ch, portMAX_DELAY);
+    mg_mgr_wakeup(ws_pipe, NULL, 0);
+  }
 }
 
 uint8_t trs_printer_read()
 {
-  return 0x30; /* printer selected, ready, with paper, not busy */;
+  return (prn_queue == NULL) ? 0xff : 0x30; /* printer selected, ready, with paper, not busy */;
 }
 
 static void init_mdns()

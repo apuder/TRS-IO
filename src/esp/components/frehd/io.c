@@ -29,6 +29,9 @@ static uint8_t trs_read_size2() {
 }
 
 static uint8_t trs_read_rom() {
+  if (!trs_fs_mounted()) {
+    return 0xff;
+  }
   uint8_t b = (state_romdone == 2) ? state_rom : loader[state_romdone];
   state_romdone++;
   return b;
