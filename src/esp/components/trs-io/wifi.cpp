@@ -1,6 +1,7 @@
 
 #include "retrostore.h"
 #include "wifi.h"
+#include "printer.h"
 #include "ntp_sync.h"
 #include "trs-fs.h"
 #include "smb.h"
@@ -325,16 +326,17 @@ static void pcb(struct mg_connection* c, int ev, void* ev_data, void *fn_data) {
       if (t->label[0] != 'S') continue;  // Ignore non-websocket connections
       char ch;
       while (xQueueReceive(prn_queue, &ch, 0)) {
-        mg_ws_send(t, (const char*) &ch, 1, WEBSOCKET_OP_TEXT);
+        const char* p = charToUTF8(ch);
+        mg_ws_send(t, p, strlen(p), WEBSOCKET_OP_TEXT);
       }
     }
   }
 }
 
-void trs_printer_write(const char* ch)
+void trs_printer_write(const char ch)
 {
   if (prn_queue != NULL) {
-    xQueueSend(prn_queue, ch, portMAX_DELAY);
+    xQueueSend(prn_queue, &ch, portMAX_DELAY);
     mg_mgr_wakeup(ws_pipe, NULL, 0);
   }
 }

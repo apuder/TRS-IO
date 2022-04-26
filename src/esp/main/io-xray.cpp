@@ -249,8 +249,7 @@ static inline void frehd_write(uint8_t port) {
 
 static inline void printer_write() {
   uint8_t data = spi_get_printer_byte();
-  char buf[2] = {(char) data, 0};
-  trs_printer_write(buf);
+  trs_printer_write(data);
 }
 
 static volatile bool DRAM_ATTR esp_req_triggered = false;

@@ -31,6 +31,6 @@ uint8_t* get_wifi_status();
 const char* get_wifi_ssid();
 const char* get_wifi_ip();
 trs_io_wifi_config_t* get_wifi_config();
-void trs_printer_write(const char* ch);
+void trs_printer_write(const char ch);
 uint8_t trs_printer_read();
 void init_wifi();
