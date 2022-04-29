@@ -111,6 +111,7 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
 static trs_io_wifi_config_t config EXT_RAM_ATTR = {};
 static struct mg_connection* ws_pipe;
 static QueueHandle_t prn_queue = NULL;
+static int num_printer_sockets = 0;
 
 
 static void copy_config_from_nvs(const char* key, char* value, size_t max_len)
@@ -299,6 +300,7 @@ static void mongoose_event_handler(struct mg_connection *c,
       }
 
       if (mg_http_match_uri(message, "/log")) {
+        num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
         c->label[0] = 'S';  // Label this connection as a web socket
         return;
@@ -306,6 +308,13 @@ static void mongoose_event_handler(struct mg_connection *c,
 
       mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
       mg_send(c, response, response_len);
+    }
+    break;
+  case MG_EV_CLOSE:
+    {
+      if (c->label[0] == 'S') {
+        num_printer_sockets--;
+      }
     }
     break;
   case MG_EV_POLL:
@@ -321,12 +330,13 @@ static void mongoose_event_handler(struct mg_connection *c,
 // Pipe event handler
 static void pcb(struct mg_connection* c, int ev, void* ev_data, void *fn_data) {
   if (ev == MG_EV_READ) {
-    struct mg_connection* t;
-    for (t = c->mgr->conns; t != NULL; t = t->next) {
-      if (t->label[0] != 'S') continue;  // Ignore non-websocket connections
-      char ch;
-      while (xQueueReceive(prn_queue, &ch, 0)) {
-        const char* p = charToUTF8(ch);
+    char ch;
+    while (xQueueReceive(prn_queue, &ch, 0)) {
+      const char* p = charToUTF8(ch);
+      struct mg_connection* t;
+
+      for (t = c->mgr->conns; t != NULL; t = t->next) {
+        if (t->label[0] != 'S') continue;  // Ignore non-websocket connections
         mg_ws_send(t, p, strlen(p), WEBSOCKET_OP_TEXT);
       }
     }
@@ -335,7 +345,7 @@ static void pcb(struct mg_connection* c, int ev, void* ev_data, void *fn_data) {
 
 void trs_printer_write(const char ch)
 {
-  if (prn_queue != NULL) {
+  if (num_printer_sockets != 0) {
     xQueueSend(prn_queue, &ch, portMAX_DELAY);
     mg_mgr_wakeup(ws_pipe, NULL, 0);
   }
@@ -343,7 +353,7 @@ void trs_printer_write(const char ch)
 
 uint8_t trs_printer_read()
 {
-  return (prn_queue == NULL) ? 0xff : 0x30; /* printer selected, ready, with paper, not busy */;
+  return (num_printer_sockets == 0) ? 0xff : 0x30; /* printer selected, ready, with paper, not busy */;
 }
 
 static void init_mdns()
