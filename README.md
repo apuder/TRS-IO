@@ -144,7 +144,10 @@ should appear in the browser:
 
 <img src="doc/trs-io-web-ui.png" width="50%" />
 
-That web page can be used to configure SSID and password of the WiFi
+Some hosts do not correctly handle mDNS that is used to resolve <a
+href="http://trs-io.local">trs-io.local</a>. In that case, visit the
+IP address <a href="http://192.168.4.1">192.168.4.1</a> instead.
+The web interface shown above can be used to configure SSID and password of the WiFi
 network that TRS-IO should connect to, the local timezone as well as
 the credentials of a SMB share. For open networks leave the WiFi
 password field empty. Note that TRS-IO cannot connect to WiFi networks
@@ -161,10 +164,17 @@ Note that TRS-IO will store all parameters in its local flash memory,
 so the setup only needs to be performed once. Once TRS-IO is connected
 to a WiFi router, it should still be possible to access URL <a
 href="http://trs-io.local">trs-io.local</a> from a browser on the same
-WiFi network. Note, however, that some WiFi routers do not correctly
-handle mDNS that is used to resolve <a
-href="http://trs-io.local">trs-io.local</a>. In that case the IP
-address that was assigned to TRS-IO can be used instead.
+WiFi network. If mDNS is not supported by the host, the following BASIC
+program can be used to determine TRS-IO's local IP address that was
+assigned by the router:
+
+```
+10 OUT 236,16
+20 OUT31,0:out31,4
+30 C=INP(31):IF C=0 THEN END
+40 PRINT CHR$(C);
+50 GOTO 30
+```
 
 The web interface will also display two icons to indicate the status
 of the SMB share and the micro-SD card (see screenshot above). Green
