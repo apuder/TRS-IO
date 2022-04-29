@@ -170,7 +170,7 @@ assigned by the router:
 
 ```
 10 OUT 236,16
-20 OUT31,0:out31,4
+20 OUT31,0:OUT31,4
 30 C=INP(31):IF C=0 THEN END
 40 PRINT CHR$(C);
 50 GOTO 30
@@ -225,7 +225,9 @@ SMB share or micro-SD card respectively.
 TRS-IO support a virtual printer interface. Visiting <a
 href="http://trs-io.local/printer">trs-io.local/printer</a> from a browser
 will open the printer interface. Any printer output from the M1/MIII will
-be displayed in the printer interface.
+be displayed in the printer interface. If the host cannot resolve the mDNS name
+trs-io.local, the above BASIC program can be used to determine the TRS-80's
+IP address.
 
 
  ### Launching the native RetroStore Client
