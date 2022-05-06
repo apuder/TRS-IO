@@ -10,13 +10,13 @@ OBJS = \
 	help.rel \
 	about.rel
 
-TRS_LIB = ../trs-lib/trs-lib.lib
+TRS_LIB = ../trs-libx/trs-lib.lib
 
 CC = sdcc
 AS = sdasz80
 LD = sdldz80
 IHEX2CMD = ../../ihex2cmd/ihex2cmd
-CFLAGS = -mz80 --std-sdcc99 --opt-code-size -I../trs-lib
+CFLAGS = -mz80 --std-sdcc99 --opt-code-size -I../trs-libx
 ASFLAGS = -l
 LDFLAGS = -mjwx -b _CODE=0x5200 -l $(TRS_LIB) -l $(SDCC_PATH)/lib/z80/z80.lib
 
