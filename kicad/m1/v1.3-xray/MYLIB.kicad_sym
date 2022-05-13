@@ -685,7 +685,7 @@
       )
       (pin power_in line (at 10.16 -13.97 180) (length 2.54)
         (name "GND" (effects (font (size 1.27 1.27))))
-        (number "12" (effects (font (size 1.27 1.27))))
+        (number "13" (effects (font (size 1.27 1.27))))
       )
       (pin tri_state line (at 10.16 -11.43 180) (length 2.54)
         (name "B8" (effects (font (size 1.27 1.27))))

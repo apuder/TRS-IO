@@ -1,4 +1,4 @@
-20058399548731394
+20247738656750805
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -1426,21 +1426,21 @@ Surface Mount Tactile Switch for High-Density Mounting, 3.1mm height, https://om
 Tactile Switch
 0
 4
-4
+2
 Button_Switch_SMD
 SW_SPST_Omron_B3FS-101xP
 Surface Mount Tactile Switch for High-Density Mounting, 4.3mm height, https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3fs.pdf
 Tactile Switch
 0
 4
-4
+2
 Button_Switch_SMD
 SW_SPST_Omron_B3FS-105xP
 Surface Mount Tactile Switch for High-Density Mounting, 7.3mm height, https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3fs.pdf
 Tactile Switch
 0
 4
-4
+2
 Button_Switch_SMD
 SW_SPST_PTS645
 C&K Components SPST SMD PTS645 Series 6mm Tact Switch
@@ -2168,7 +2168,7 @@ SW_TH_Tactile_Omron_B3F-10xx_https://www.omron.com/ecb/products/pdf/en-b3f.pdf
 Omron B3F-10xx
 0
 4
-4
+2
 Button_Switch_THT
 SW_Tactile_SKHH_Angled
 tactile switch 6mm ALPS SKHH right angle http://www.alps.com/prod/info/E/HTML/Tact/SnapIn/SKHH/SKHHLUA010.html
@@ -6482,6 +6482,27 @@ Jack_3.5mm_CUI_SJ-3524-SMT_Horizontal
 4
 4
 Connector_Audio
+Jack_3.5mm_CUI_SJ1-3523N_Horizontal
+TRS 3.5mm, horizontal, through-hole, https://www.cuidevices.com/product/resource/pdf/sj1-352xn.pdf
+TRS audio jack stereo horizontal
+0
+3
+3
+Connector_Audio
+Jack_3.5mm_CUI_SJ1-3524N_Horizontal
+TRS 3.5mm, horizontal, through-hole, https://www.cuidevices.com/product/resource/pdf/sj1-352xn.pdf
+TRS audio jack stereo horizontal
+0
+4
+4
+Connector_Audio
+Jack_3.5mm_CUI_SJ1-3525N_Horizontal
+TRS 3.5mm, horizontal, through-hole, https://www.cuidevices.com/product/resource/pdf/sj1-352xn.pdf
+TRS audio jack stereo horizontal
+0
+5
+5
+Connector_Audio
 Jack_3.5mm_CUI_SJ1-3533NG_Horizontal
 TRS 3.5mm, horizontal, through-hole, https://www.cui.com/product/resource/sj1-353xng.pdf
 TRS audio jack stereo horizontal
@@ -7959,13 +7980,6 @@ connector barrel jack
 3
 3
 Connector_Card
-CF-Card_3M_N7E50-7516PK-20-WF
-Compact Flash Card connector (https://multimedia.3m.com/mws/media/22365O/3mtm-cf-card-header-compactflashtm-type-i-sm-ts0662.pdf)
-connector cf
-0
-54
-50
-Connector_Card
 CF-Card_3M_N7E50-A516xx-30
 Compact Flash Card connector, polarization inverse (https://multimedia.3m.com/mws/media/22424O/3mtm-cf-card-header-type-i-low-profile-surface-mount-ts0747.pdf)
 connector cf
@@ -7979,6 +7993,13 @@ connector cf
 0
 54
 50
+Connector_Card
+SD_Hirose_DM1AA_SF_PEJ82
+SD, SMD, top-mount, push-push (https://www.hirose.com/product/document?clcode=CL0609-0004-8-82&productname=DM1AA-SF-PEJ(82)&series=DM1&documenttype=2DDrawing&lang=en&documentid=0000915301)
+SD card connector
+0
+16
+13
 Connector_Card
 SD_Kyocera_145638009211859+
 SD Card Connector, Normal Type, Outer Tail, Without Ejector (https://global.kyocera.com/prdct/electro/product/pdf/5638.pdf)
@@ -10912,6 +10933,237 @@ hdmi micro type d right angle tht smd hybrid
 0
 23
 20
+Connector_Harting
+Harting_har-flexicon_14110213001xxx_1x02-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14110213001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+4
+3
+Connector_Harting
+Harting_har-flexicon_14110213002xxx_1x02-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110213002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+4
+3
+Connector_Harting
+Harting_har-flexicon_14110213010xxx_1x02-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110213010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+4
+3
+Connector_Harting
+Harting_har-flexicon_14110313001xxx_1x03-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14110313001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+5
+4
+Connector_Harting
+Harting_har-flexicon_14110313002xxx_1x03-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110313002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+5
+4
+Connector_Harting
+Harting_har-flexicon_14110313010xxx_1x03-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110313010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+5
+4
+Connector_Harting
+Harting_har-flexicon_14110413001xxx_1x04-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14110413001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+6
+5
+Connector_Harting
+Harting_har-flexicon_14110413002xxx_1x04-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110413002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+6
+5
+Connector_Harting
+Harting_har-flexicon_14110413010xxx_1x04-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110413010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+6
+5
+Connector_Harting
+Harting_har-flexicon_14110513001xxx_1x05-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14110513001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+7
+6
+Connector_Harting
+Harting_har-flexicon_14110513002xxx_1x05-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110513002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+7
+6
+Connector_Harting
+Harting_har-flexicon_14110513010xxx_1x05-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110513010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+7
+6
+Connector_Harting
+Harting_har-flexicon_14110613001xxx_1x06-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14110613001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+8
+7
+Connector_Harting
+Harting_har-flexicon_14110613002xxx_1x06-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110613002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+8
+7
+Connector_Harting
+Harting_har-flexicon_14110613010xxx_1x06-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110613010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+8
+7
+Connector_Harting
+Harting_har-flexicon_14110713001xxx_1x07-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14110713001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+9
+8
+Connector_Harting
+Harting_har-flexicon_14110713002xxx_1x07-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110713002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+9
+8
+Connector_Harting
+Harting_har-flexicon_14110713010xxx_1x07-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110713010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+9
+8
+Connector_Harting
+Harting_har-flexicon_14110813001xxx_1x08-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14110813001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+10
+9
+Connector_Harting
+Harting_har-flexicon_14110813002xxx_1x08-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110813002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+10
+9
+Connector_Harting
+Harting_har-flexicon_14110813010xxx_1x08-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110813010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+10
+9
+Connector_Harting
+Harting_har-flexicon_14110913001xxx_1x09-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14110913001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+11
+10
+Connector_Harting
+Harting_har-flexicon_14110913002xxx_1x09-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110913002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+11
+10
+Connector_Harting
+Harting_har-flexicon_14110913010xxx_1x09-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14110913010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+11
+10
+Connector_Harting
+Harting_har-flexicon_14111013001xxx_1x10-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14111013001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+12
+11
+Connector_Harting
+Harting_har-flexicon_14111013002xxx_1x10-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14111013002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+12
+11
+Connector_Harting
+Harting_har-flexicon_14111013010xxx_1x10-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14111013010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+12
+11
+Connector_Harting
+Harting_har-flexicon_14111113001xxx_1x11-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14111113001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+13
+12
+Connector_Harting
+Harting_har-flexicon_14111113002xxx_1x11-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14111113002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+13
+12
+Connector_Harting
+Harting_har-flexicon_14111113010xxx_1x11-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14111113010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+13
+12
+Connector_Harting
+Harting_har-flexicon_14111213001xxx_1x12-MP_P2.54mm_Vertical
+Harting har-flexicon series connector, 14111213001xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13001XXX_100228421DRW046C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon vertical
+0
+14
+13
+Connector_Harting
+Harting_har-flexicon_14111213002xxx_1x12-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14111213002xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13002XXX_100228421DRW035C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+14
+13
+Connector_Harting
+Harting_har-flexicon_14111213010xxx_1x12-MP_P2.54mm_Horizontal
+Harting har-flexicon series connector, 14111213010xxx (https://b2b.harting.com/files/download/PRD/PDF_TS/1411XX13010XXX_100228421DRW063C.pdf), generated with kicad-footprint-generator
+connector Harting har-flexicon horizontal
+0
+14
+13
 Connector_Harwin
 Harwin_Gecko-G125-FVX0605L0X_2x03_P1.25mm_Vertical
 Harwin Gecko Connector, 6 pins, dual row female, vertical entry, PN:G125-FVX0605L0X
@@ -45493,6 +45745,13 @@ USB_A Female Connector receptacle
 6
 5
 Connector_USB
+USB_A_TE_292303-7_Horizontal
+USB type A, Horizontal, https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=292303&DocType=Customer+Drawing&DocLang=English
+USB_A Female Connector receptacle
+0
+6
+5
+Connector_USB
 USB_A_Wuerth_614004134726_Horizontal
 USB A connector https://www.we-online.com/catalog/datasheet/614004134726.pdf
 USB_A Female Connector receptacle
@@ -45583,6 +45842,13 @@ USB Type-C Receptacle Through-hole Right angle
 0
 20
 17
+Connector_USB
+USB_C_Receptacle_GCT_USB4115-03-C
+USB TYPE C, VERT RCPT PCB, SMT, https://gct.co/files/drawings/usb4115.pdf
+USB C Type-C Receptacle SMD
+0
+28
+25
 Connector_USB
 USB_C_Receptacle_HRO_TYPE-C-31-M-12
 USB Type-C receptacle for USB 2.0 and PD, http://www.krhro.com/uploads/soft/180320/1-1P320120243.pdf
@@ -50358,20 +50624,6 @@ Diode SOD923
 2
 2
 Diode_SMD
-D_SOT-23_ANK
-SOT-23, Single Diode
-SOT-23
-0
-3
-2
-Diode_SMD
-D_SOT-23_NKA
-SOT-23, Single Diode
-SOT-23
-0
-3
-2
-Diode_SMD
 D_TUMD2
 ROHM - TUMD2
 TUMD2
@@ -52759,13 +53011,6 @@ Heatsink TV5G TO-220 Horizontal
 0
 0
 Heatsink
-Heatsink_Aavid-TV5G_TO220_Horizontal
-Heatsink TV5G TO-220 Horizontal, https://www.shopaavid.com/Product/TV-5G
-Heatsink TV5G TO-220 Horizontal 
-0
-0
-0
-Heatsink
 Heatsink_Fischer_FK224xx2201_25x8.3mm
 25x8.3mm Heatsink, 18K/W, TO-220, https://www.fischerelektronik.de/web_fischer/en_GB/$catalogue/fischerData/PR/FK224_220_1_/datasheet.xhtml?branch=heatsinks
 heatsink TO-220
@@ -53189,6 +53434,13 @@ Inductor_SMD
 L_Bourns_SRP7028A_7.3x6.6mm
 Shielded Power Inductors (https://www.bourns.com/docs/product-datasheets/srp7028a.pdf)
 Shielded Inductors Bourns SMD SRP7028A
+0
+2
+2
+Inductor_SMD
+L_Bourns_SRR1208_12.7x12.7mm
+Bourns SRP1208 series SMD inductor https://www.bourns.com/pdfs/SRR1208.pdf
+Bourns SRP1208 SMD inductor
 0
 2
 2
@@ -55131,6 +55383,20 @@ L_CommonMode_Toroid Vertical series Radial pin pitch 17.78*30.48mm^2  length 43.
 0
 4
 4
+Inductor_THT
+L_CommonMode_VAC_T60405-S6123-X140
+3 Phase, CM Choke, https://vacuumschmelze.com/03_Documents/Datasheets%20-%20Drawings/Commom-Mode-Chokes/6123-X140.pdf
+common mode filter
+0
+6
+6
+Inductor_THT
+L_CommonMode_VAC_T60405-S6123-X240
+3 Phase, CM Choke, https://vacuumschmelze.com/03_Documents/Datasheets%20-%20Drawings/Commom-Mode-Chokes/6123-X240.pdf
+common mode filter
+0
+6
+6
 Inductor_THT
 L_CommonMode_Wuerth_WE-CMB-L
 Wuerth, WE-CMB, Bauform L,
@@ -60214,9 +60480,23 @@ Laser Diode TO56
 3
 3
 OptoDevice
+Lightpipe_Dialight_515-1064F
+https://www.dialightsignalsandcomponents.com/515-optopipe-light-pipe-trilevel-2-5mm-rnd-flat-diff-lens-press-fit/#tab-resources
+lightpipe triple tower right angle 3mm
+0
+0
+0
+OptoDevice
 Lightpipe_LPF-C012303S
 https://www.lumex.com/spec/LPF-C012303S.pdf
 lightpipe dual tower right angle 3mm
+0
+0
+0
+OptoDevice
+Lightpipe_LPF-C013301S
+https://www.lumex.com/spec/LPF-C013301S.pdf
+lightpipe triple tower right angle 3mm
 0
 0
 0
@@ -62664,6 +62944,13 @@ DFN NoLead
 9
 7
 Package_DFN_QFN
+DFN-6-1EP_2x1.6mm_P0.5mm_EP1.15x1.3mm
+DFN, 6 Pin (https://www.onsemi.com/pdf/datasheet/ncp349-d.pdf#page=12), generated with kicad-footprint-generator ipc_noLead_generator.py
+DFN NoLead
+0
+9
+7
+Package_DFN_QFN
 DFN-6-1EP_2x1.8mm_P0.5mm_EP1.2x1.6mm
 DFN, 6 Pin (https://www.diodes.com/assets/Package-Files/U-DFN2018-6.pdf), generated with kicad-footprint-generator ipc_noLead_generator.py
 DFN NoLead
@@ -62901,6 +63188,20 @@ DFN 0.5
 0
 8
 8
+Package_DFN_QFN
+DFN-10-1EP_2.6x2.6mm_P0.5mm_EP1.3x2.2mm
+DFN, 10 Pin (https://www.nxp.com/docs/en/data-sheet/PCF85063A.pdf#page=48), generated with kicad-footprint-generator ipc_noLead_generator.py
+DFN NoLead
+0
+15
+11
+Package_DFN_QFN
+DFN-10-1EP_2.6x2.6mm_P0.5mm_EP1.3x2.2mm_ThermalVias
+DFN, 10 Pin (https://www.nxp.com/docs/en/data-sheet/PCF85063A.pdf#page=48), generated with kicad-footprint-generator ipc_noLead_generator.py
+DFN NoLead
+0
+22
+11
 Package_DFN_QFN
 DFN-10-1EP_2x3mm_P0.5mm_EP0.64x2.4mm
 DDB Package; 10-Lead Plastic DFN (3mm x 2mm) (see Linear Technology DFN_10_05-08-1722.pdf)
@@ -71754,7 +72055,7 @@ VSON-8_3.3x3.3mm_P0.65mm_NexFET
 8-Lead Plastic Dual Flat, No Lead Package (MF) - 3.3x3.3x1 mm Body [VSON] http://www.ti.com/lit/ds/symlink/csd87334q3d.pdf
 VSON 0.65
 0
-12
+13
 5
 Package_SON
 VSON-10-1EP_3x3mm_P0.5mm_EP1.2x2mm
@@ -72354,20 +72655,6 @@ SOT-143R Reverse
 Package_TO_SOT_SMD
 SOT-143R_Handsoldering
 SOT-143R, reverse pinning, Handsoldering, https://www.nxp.com/docs/en/package-information/SOT143R.pdf
-SOT-143 Reverse Handsoldering
-0
-4
-4
-Package_TO_SOT_SMD
-SOT-143R_Reverse
-SOT-143R Reverse
-SOT-143R Reverse
-0
-4
-4
-Package_TO_SOT_SMD
-SOT-143R_Reverse_Handsoldering
-SOT-143R Reverse Handsoldering
 SOT-143 Reverse Handsoldering
 0
 4
@@ -74880,56 +75167,56 @@ potentiometer vertical 9mm dual
 6
 Potentiometer_THT
 Potentiometer_Alps_RK09K_Single_Horizontal
-Potentiometer, horizontal, Alps RK09K Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09K/RK09K_list.html
-Potentiometer horizontal Alps RK09K Single
+111009J 1110AK4 11100DN 1110AAR 1110077 1110A0J 110AMJ 1110B26 D1110C1A Potentiometer, horizontal, Alps RK09K Single, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk09k/rk09k.pdf
+Potentiometer horizontal Alps RK09K Single Snapin
 0
 5
-3
+4
 Potentiometer_THT
 Potentiometer_Alps_RK09K_Single_Vertical
-Potentiometer, vertical, Alps RK09K Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09K/RK09K_list.html
-Potentiometer vertical Alps RK09K Single
+113004U 1130A6S 11300DR 1130A8G 1130081 1130A5R 1130AP5 1130AST  D1130C3W D1130C1B D1130C3C D1130C2P Potentiometer, vertical, Alps RK09K Single, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk09k/rk09k.pdf
+Potentiometer vertical Alps RK09K RK09D Single Snapin
 0
-3
-3
+5
+4
 Potentiometer_THT
 Potentiometer_Alps_RK09L_Double_Horizontal
-Potentiometer, horizontal, Alps RK09L Double, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09L/RK09L_list.html
+122002H 122002L 12B0A4S 12B0A1V Potentiometer, horizontal, Alps RK09L Double, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk09l/rk09l.pdf
 Potentiometer horizontal Alps RK09L Double
 0
 8
-6
+7
 Potentiometer_THT
 Potentiometer_Alps_RK09L_Double_Vertical
-Potentiometer, vertical, Alps RK09L Double, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09L/RK09L_list.html
+1240015 1240019 12D0A1W 12D0A1T Potentiometer, vertical, Alps RK09L Double, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk09l/rk09l.pdf
 Potentiometer vertical Alps RK09L Double
 0
-6
-6
+8
+7
 Potentiometer_THT
 Potentiometer_Alps_RK09L_Single_Horizontal
-Potentiometer, horizontal, Alps RK09L Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09L/RK09L_list.html
+1120A5F 1120036 1120A0Z 112003S Potentiometer, horizontal, Alps RK09L Single, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk09l/rk09l.pdf
 Potentiometer horizontal Alps RK09L Single
 0
 5
-3
+4
 Potentiometer_THT
 Potentiometer_Alps_RK09L_Single_Vertical
-Potentiometer, vertical, Alps RK09L Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09L/RK09L_list.html
+ 1140A5L 114001E 1140A2U 114001T Potentiometer, vertical, Alps RK09L Single, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk09l/rk09l.pdf
 Potentiometer vertical Alps RK09L Single
 0
-3
-3
+5
+4
 Potentiometer_THT
 Potentiometer_Alps_RK09Y11_Single_Horizontal
-Potentiometer, horizontal, Alps RK09Y11 Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09Y11/RK09Y11_list.html
+Potentiometer, horizontal, Long Life, Alps RK09Y11 Single, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk09y11/rk09y11.pdf
 Potentiometer horizontal Alps RK09Y11 Single
 0
 3
 3
 Potentiometer_THT
 Potentiometer_Alps_RK097_Dual_Horizontal
-Potentiometer, horizontal, Alps RK097 Dual, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK097/RK097_list.html
+1210, Dual Pot, Horizontal, Alps RK097 Dual,  https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk097/rk097.pdf
 Potentiometer horizontal Alps RK097 Dual
 0
 6
@@ -74937,27 +75224,34 @@ Potentiometer horizontal Alps RK097 Dual
 Potentiometer_THT
 Potentiometer_Alps_RK097_Dual_Horizontal_Switch
 1221-5R1211, Dual Pot, Horizontal, Switch, Alps RK097 Dual, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk097/rk097.pdf
-pot horizontal alps rk097 dual switch
+Potentiometer horizontal Alps RK097 Dual Switch
 0
 8
 8
 Potentiometer_THT
 Potentiometer_Alps_RK097_Single_Horizontal
-Potentiometer, horizontal, Alps RK097 Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK097/RK097_list.html
+1110, Single Pot, Horizontal, Alps RK097 Single,  https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk097/rk097.pdf
 Potentiometer horizontal Alps RK097 Single
 0
 3
 3
 Potentiometer_THT
+Potentiometer_Alps_RK097_Single_Horizontal_Switch
+1111-5R1211, Single Pot, Horizontal, Switch, Alps RK097 Single, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk097/rk097.pdf
+Potentiometer horizontal Alps RK097 Single Switch
+0
+5
+5
+Potentiometer_THT
 Potentiometer_Alps_RK163_Dual_Horizontal
-Potentiometer, horizontal, Alps RK163 Dual, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK16/RK16_list.html
+12101A2 1210AX9 12A0B85 12A0BKR  Potentiometer, horizontal, Alps RK163 Dual, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk16/rk16.pdf
 Potentiometer horizontal Alps RK163 Dual
 0
 6
 6
 Potentiometer_THT
 Potentiometer_Alps_RK163_Single_Horizontal
-Potentiometer, horizontal, Alps RK163 Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK16/RK16_list.html
+1110U1Q 1110TNP 1110U2A 1110U0Q Potentiometer, horizontal, Alps RK163 Single, https://tech.alpsalpine.com/prod/e/pdf/potentiometer/rotarypotentiometers/rk16/rk16.pdf
 Potentiometer horizontal Alps RK163 Single
 0
 3
@@ -75985,7 +76279,7 @@ Bluetooth Module
 30
 30
 RF_Module
-BM78SPPS5XC2
+BM78SPPS5xC2
 Bluetooth Dual-mode module with integral chip antenna (http://ww1.microchip.com/downloads/en/DeviceDoc/60001380C.pdf)
 Bluetooth BR/EDR BLE
 0
@@ -76062,12 +76356,33 @@ ESP WROOM-02 espressif esp8266ex
 19
 19
 RF_Module
+ESP32-S2-MINI-1U
+2.4 GHz Wi-Fi and Bluetooth combo chip, external antenna, https://www.espressif.com/sites/default/files/documentation/esp32-s3-mini-1_mini-1u_datasheet_en.pdf
+2.4 GHz Wi-Fi Bluetooth external antenna espressif  15.4*15.4mm
+0
+73
+65
+RF_Module
 ESP32-S2-WROVER
 ESP32-S2-WROVER(-I) 2.4 GHz Wi-Fi https://www.espressif.com/sites/default/files/documentation/esp32-s2-wroom_esp32-s2-wroom-i_datasheet_en.pdf
 ESP32-S2  ESP32  WIFI
 0
 43
 43
+RF_Module
+ESP32-S3-WROOM-1
+2.4 GHz Wi-Fi and Bluetooth module  https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf
+2.4 GHz Wi-Fi and Bluetooth module
+0
+62
+41
+RF_Module
+ESP32-S3-WROOM-1U
+2.4 GHz Wi-Fi and Bluetooth module  https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf
+2.4 GHz Wi-Fi and Bluetooth module
+0
+62
+41
 RF_Module
 ESP32-WROOM-32
 Single 2.4 GHz Wi-Fi and Bluetooth combo chip https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32_datasheet_en.pdf
@@ -79810,6 +80125,48 @@ Symbol
 Symbol_Highvoltage_Type2_CopperTop_Small
 Symbol, Highvoltage, Type 2, Copper Top, Small,
 Symbol, Highvoltage, Type 2, Copper Top, Small,
+0
+0
+0
+Symbol
+UKCA-Logo_6x6mm_SilkScreen
+UKCA marking
+Logo UKCA marking
+0
+0
+0
+Symbol
+UKCA-Logo_8x8mm_SilkScreen
+UKCA marking
+Logo UKCA marking
+0
+0
+0
+Symbol
+UKCA-Logo_12x12mm_SilkScreen
+UKCA marking
+Logo UKCA marking
+0
+0
+0
+Symbol
+UKCA-Logo_20x20mm_SilkScreen
+UKCA marking
+Logo UKCA marking
+0
+0
+0
+Symbol
+UKCA-Logo_30x30mm_SilkScreen
+UKCA marking
+Logo UKCA marking
+0
+0
+0
+Symbol
+UKCA-Logo_40x40mm_SilkScreen
+UKCA marking
+Logo UKCA marking
 0
 0
 0
@@ -84105,6 +84462,27 @@ Transformer Ethernet SMD
 24
 24
 Transformer_SMD
+Transformer_Ethernet_Halo_N2_SO-16_7.11x12.7mm
+Halo N2 SO, 16 Pin (https://www.haloelectronics.com/pdf/discrete-ultra-100baset.pdf), generated with kicad-footprint-generator ipc_gullwing_generator.py
+Halo SO Transformer_SMD
+0
+16
+16
+Transformer_SMD
+Transformer_Ethernet_Halo_N5_SO-16_7.11x12.7mm
+Halo N5 SO, 16 Pin (https://www.haloelectronics.com/pdf/discrete-ultra-100baset.pdf), generated with kicad-footprint-generator ipc_gullwing_generator.py
+Halo SO Transformer_SMD
+0
+16
+16
+Transformer_SMD
+Transformer_Ethernet_Halo_N6_SO-16_7.11x14.73mm
+Halo N6 SO, 16 Pin (https://www.haloelectronics.com/pdf/discrete-ultra-100baset.pdf), generated with kicad-footprint-generator ipc_gullwing_generator.py
+Halo SO Transformer_SMD
+0
+16
+16
+Transformer_SMD
 Transformer_Ethernet_Wuerth_749013011A
 Ethernet Transformer, Wuerth 749013011A, https://www.we-online.com/katalog/datasheet/749013011A.pdf
 Ethernet Transformer
@@ -84601,6 +84979,76 @@ transformer flyback
 0
 10
 10
+Transistor_Power_Module
+Infineon_AG-ECONO2
+28-lead TH, EconoPACK 2, same as Littelfuse_Package_H_XN2MM, https://www.infineon.com/dgdl/Infineon-FS75R07N2E4-DS-v02_00-en_de.pdf?fileId=db3a30432f5008fe012f52f916333979
+igbt diode module
+0
+28
+28
+Transistor_Power_Module
+Infineon_EasyPIM-1B
+35-lead TH, EasyPIM 1B, https://www.infineon.com/dgdl/Infineon-FP10R06W1E3-DS-v02_01-en_de.pdf?fileId=db3a304412b407950112b43312285a63
+brifge rectifier igbt diode module
+0
+23
+23
+Transistor_Power_Module
+Infineon_EasyPIM-2B
+35-lead TH, EasyPIM 2B, same as ST_ACEPACK-2-CIB, https://www.infineon.com/dgdl/Infineon-FP50R06W2E3-DS-v02_02-EN.pdf?fileId=db3a30431b3e89eb011b455c99987d24
+brifge rectifier igbt diode module
+0
+35
+23
+Transistor_Power_Module
+Littelfuse_Package_H_XBN2MM
+24-lead TH, Package H, https://www.littelfuse.com/~/media/electronics/datasheets/power_semiconductors/littelfuse_power_semiconductor_igbt_module_mg1215h_xbn2mm_datasheet.pdf.pdf
+brifge rectifier igbt diode module
+0
+24
+24
+Transistor_Power_Module
+Littelfuse_Package_H_XN2MM
+28-lead TH, Package H, same as Infineon_AG-ECONO2, https://www.littelfuse.com/~/media/electronics/datasheets/power_semiconductors/littelfuse_power_semiconductor_igbt_module_mg1225h_xn2mm_datasheet.pdf.pdf
+igbt diode module
+0
+28
+28
+Transistor_Power_Module
+Littelfuse_Package_W_XBN2MM
+24-lead TH, Package W, https://www.littelfuse.com/~/media/electronics/datasheets/power_semiconductors/littelfuse_power_semiconductor_igbt_module_mg1250w_xbn2mm_datasheet.pdf.pdf
+brifge rectifier igbt diode module
+0
+35
+24
+Transistor_Power_Module
+Littelfuse_Package_W_XN2MM
+35-lead TH, Package W, https://www.littelfuse.com/~/media/electronics/datasheets/power_semiconductors/littelfuse_power_semiconductor_igbt_module_mg1275w_xn2mm_datasheet.pdf.pdf
+igbt diode module
+0
+35
+35
+Transistor_Power_Module
+ST_ACEPACK-2-CIB
+35-lead TH, ACEPACK 2 CIB, same as Infineon_EasyPIM-2B, https://www.st.com/resource/en/datasheet/a2c25s12m3.pdf
+brifge rectifier igbt diode module
+0
+35
+23
+Transistor_Power_Module
+ST_ACEPACK-2-CIB_PressFIT
+35-lead TH, ACEPACK 2 CIB, PressFIT, https://www.st.com/resource/en/datasheet/a2c50s65m2-f.pdf
+brifge rectifier igbt diode module
+0
+35
+23
+Transistor_Power_Module
+ST_SDIP-25L
+25-lead TH, SDIP-25L, https://www.st.com/resource/en/datasheet/stgips20k60.pdf
+igbt diode module
+0
+25
+25
 Valve
 Valve_ECC-83-1
 Valve ECC-83-1 round pins
