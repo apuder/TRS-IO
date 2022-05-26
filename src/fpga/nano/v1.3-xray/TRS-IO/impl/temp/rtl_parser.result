@@ -1,0 +1,116 @@
+[
+ {
+  "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+  "InstLine" : 3,
+  "InstName" : "main",
+  "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+  "ModuleLine" : 3,
+  "ModuleName" : "main",
+  "SubInsts" : [
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 69,
+    "InstName" : "clk_wiz_0",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/gowin_rpll.v",
+    "ModuleLine" : 9,
+    "ModuleName" : "Gowin_rPLL"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 89,
+    "InstName" : "io",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/filter.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "filter"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 559,
+    "InstName" : "pre_ram_access_check_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 672,
+    "InstName" : "bram",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/gowin_dpb0.v",
+    "ModuleLine" : 9,
+    "ModuleName" : "Gowin_DPB0"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 712,
+    "InstName" : "brama_read_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 720,
+    "InstName" : "brama_write_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 847,
+    "InstName" : "bram_poke_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 854,
+    "InstName" : "bram_peek_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 920,
+    "InstName" : "xram",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/gowin_dpb1.v",
+    "ModuleLine" : 9,
+    "ModuleName" : "Gowin_DPB1"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 949,
+    "InstName" : "xrama_read_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 957,
+    "InstName" : "xrama_write_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 973,
+    "InstName" : "xram_poke_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
+    "InstLine" : 980,
+    "InstName" : "xram_peek_trigger",
+    "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "trigger"
+   }
+  ]
+ }
+]

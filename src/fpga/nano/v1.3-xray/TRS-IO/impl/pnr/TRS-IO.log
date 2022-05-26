@@ -1,0 +1,29 @@
+Reading netlist file: "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg"
+Parsing netlist file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg" completed
+Processing netlist completed
+Reading constraint file: "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\trs-io.cst"
+Physical Constraint parsed completed
+Running placement......
+[10%] Placement Phase 0 completed
+[20%] Placement Phase 1 completed
+[30%] Placement Phase 2 completed
+[50%] Placement Phase 3 completed
+Running routing......
+[60%] Routing Phase 0 completed
+[70%] Routing Phase 1 completed
+[80%] Routing Phase 2 completed
+[90%] Routing Phase 3 completed
+Running timing analysis......
+[95%] Timing analysis completed
+Placement and routing completed
+Bitstream generation in progress......
+Bitstream generation completed
+Running power analysis......
+[100%] Power analysis completed
+Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.power.html" completed
+Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.pin.html" completed
+Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.rpt.html" completed
+Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.rpt.txt" completed
+Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.tr.html" completed
+Mon May 23 22:11:37 2022
+
