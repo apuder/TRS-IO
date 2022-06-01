@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="main" Register="166" Alu="30" Lut="240">
+<Module name="main" Register="211" Alu="69" Lut="250">
     <SubModule name="clk_wiz_0"/>
-    <SubModule name="io" Register="12" Lut="5"/>
+    <SubModule name="io" Register="12" Lut="4"/>
     <SubModule name="pre_ram_access_check_trigger" Register="1"/>
     <SubModule name="bram" Register="2" Lut="18" Bsram="16"/>
     <SubModule name="brama_read_trigger" Register="1"/>
@@ -9,4 +9,16 @@
     <SubModule name="bram_peek_trigger" Register="1" Lut="1"/>
     <SubModule name="xram" Bsram="1"/>
     <SubModule name="xram_peek_trigger" Register="1"/>
+    <SubModule name="pll0"/>
+    <SubModule name="clkdiv0"/>
+    <SubModule name="hdmi" Register="46" Alu="18" Lut="43">
+        <SubModule name="true_hdmi_output.packet_picker" Register="436" Lut="327">
+            <SubModule name="audio_clock_regeneration_packet" Register="40" Alu="19" Lut="8"/>
+        </SubModule>
+        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="381"/>
+        <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="4" Lut="40"/>
+        <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="4" Lut="30"/>
+        <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="4" Lut="30"/>
+        <SubModule name="serializer" Register="41" Lut="29"/>
+    </SubModule>
 </Module>

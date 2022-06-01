@@ -5,11 +5,63 @@
    "Type" : "verilog"
   },
   {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_clkdiv/gowin_clkdiv0.v",
+   "Type" : "verilog"
+  },
+  {
    "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/gowin_dpb0.v",
    "Type" : "verilog"
   },
   {
    "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/gowin_dpb1.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/gowin_rpll.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/gowin_rpll0.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/audio_clock_regeneration_packet.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/audio_info_frame.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/audio_sample_packet.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/auxiliary_video_information_info_frame.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/hdmi.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/packet_assembler.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/packet_picker.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/serializer.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/source_product_description_info_frame.sv",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/tmds_channel.sv",
    "Type" : "verilog"
   },
   {
@@ -19,10 +71,6 @@
   {
    "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
    "Type" : "verilog"
-  },
-  {
-   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/gowin_rpll.v",
-   "Type" : "verilog"
   }
  ],
  "IncludePath" : [
@@ -31,6 +79,6 @@
  "LoopLimit" : 2000,
  "ResultFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/impl/temp/rtl_parser.result",
  "Top" : "",
- "VerilogStd" : "verilog_2001",
+ "VerilogStd" : "sysv",
  "VhdlStd" : "vhdl_93"
 }

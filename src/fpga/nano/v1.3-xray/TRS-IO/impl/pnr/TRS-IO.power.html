@@ -83,7 +83,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Created Time</td>
-<td>Wed Jun 01 10:14:08 2022
+<td>Wed Jun 01 10:57:56 2022
 </td>
 </tr>
 <tr>
@@ -96,15 +96,15 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <table class="summary_table">
 <tr>
 <td class="label">Total Power (mW)</td>
-<td>39.659</td>
+<td>45.052</td>
 </tr>
 <tr>
 <td class="label">Quiescent Power (mW)</td>
-<td>9.414</td>
+<td>9.795</td>
 </tr>
 <tr>
 <td class="label">Dynamic Power (mW)</td>
-<td>30.245</td>
+<td>35.257</td>
 </tr>
 <tr>
 <td class="label">Psram Power (mW)</td>
@@ -115,7 +115,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <table class="summary_table">
 <tr>
 <td class="label">Junction Temperature</td>
-<td>25.851</td>
+<td>25.965</td>
 </tr>
 <tr>
 <td class="label">Theta JA</td>
@@ -123,7 +123,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Max Allowed Ambient Temperature</td>
-<td>84.149</td>
+<td>84.035</td>
 </tr>
 </table>
 <h2><a name="Configure_Info">Configure Information:</a></h2>
@@ -192,16 +192,16 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <tr>
 <td>VCC</td>
 <td>1.200</td>
-<td>23.439</td>
-<td>2.173</td>
-<td>30.734</td>
+<td>26.696</td>
+<td>2.251</td>
+<td>34.736</td>
 </tr>
 <tr>
 <td>VCCX</td>
 <td>2.500</td>
-<td>0.387</td>
+<td>0.577</td>
 <td>2.424</td>
-<td>7.027</td>
+<td>7.503</td>
 </tr>
 <tr>
 <td>VCCO18</td>
@@ -213,9 +213,9 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <tr>
 <td>VCCO33</td>
 <td>3.300</td>
-<td>0.304</td>
-<td>0.164</td>
-<td>1.543</td>
+<td>0.494</td>
+<td>0.251</td>
+<td>2.458</td>
 </tr>
 </table>
 <h1><a name="Detail">Power Details</a></h1>
@@ -229,15 +229,15 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td>Logic</td>
-<td>0.131</td>
+<td>0.289</td>
 <td>NA</td>
-<td>9.936</td>
+<td>5.210</td>
 </tr>
 <tr>
 <td>IO</td>
-<td>4.361
-<td>1.779
-<td>9.045
+<td>6.302
+<td>2.388
+<td>9.535
 </tr>
 <tr>
 <td>BSRAM</td>
@@ -247,7 +247,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td>PLL</td>
-<td>2.259
+<td>5.774
 <td>NA</td>
 <td>NA</td>
 </tr>
@@ -261,8 +261,8 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td>main</td>
-<td>27.656</td>
-<td>27.656(27.540)</td>
+<td>31.330</td>
+<td>31.330(31.174)</td>
 <tr>
 <td>main/bram/</td>
 <td>23.725</td>
@@ -284,9 +284,45 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>2.259</td>
 <td>2.259(0.000)</td>
 <tr>
+<td>main/hdmi/</td>
+<td>0.120</td>
+<td>0.120(0.107)</td>
+<tr>
+<td>main/hdmi/serializer/</td>
+<td>0.010</td>
+<td>0.010(0.000)</td>
+<tr>
+<td>main/hdmi/tmds_gen[0].tmds_channel/</td>
+<td>0.005</td>
+<td>0.005(0.000)</td>
+<tr>
+<td>main/hdmi/tmds_gen[1].tmds_channel/</td>
+<td>0.004</td>
+<td>0.004(0.000)</td>
+<tr>
+<td>main/hdmi/tmds_gen[2].tmds_channel/</td>
+<td>0.004</td>
+<td>0.004(0.000)</td>
+<tr>
+<td>main/hdmi/true_hdmi_output.packet_assembler/</td>
+<td>0.029</td>
+<td>0.029(0.000)</td>
+<tr>
+<td>main/hdmi/true_hdmi_output.packet_picker/</td>
+<td>0.055</td>
+<td>0.055(0.014)</td>
+<tr>
+<td>main/hdmi/true_hdmi_output.packet_picker/audio_clock_regeneration_packet/</td>
+<td>0.014</td>
+<td>0.014(0.000)</td>
+<tr>
 <td>main/io/</td>
 <td>0.002</td>
 <td>0.002(0.000)</td>
+<tr>
+<td>main/pll0/</td>
+<td>3.515</td>
+<td>3.515(0.000)</td>
 <tr>
 <td>main/pre_ram_access_check_trigger/</td>
 <td>0.000</td>
@@ -308,9 +344,24 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <th class="label">Total Dynamic Power(mW)</th>
 </tr>
 <tr>
+<td>clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk</td>
+<td>25.200</td>
+<td>0.102</td>
+</tr>
+<tr>
+<td>clk_audio_4</td>
+<td>50.000</td>
+<td>0.048</td>
+</tr>
+<tr>
 <td>clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk</td>
 <td>81.000</td>
-<td>25.403</td>
+<td>25.400</td>
+</tr>
+<tr>
+<td>clk_in</td>
+<td>27.000</td>
+<td>5.780</td>
 </tr>
 <tr>
 <td>NO CLOCK DOMAIN</td>
@@ -318,9 +369,9 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>0.000</td>
 </tr>
 <tr>
-<td>clk_in</td>
-<td>27.000</td>
-<td>2.259</td>
+<td>pll0/rpll_inst/CLKOUT.default_gen_clk</td>
+<td>126.000</td>
+<td>0.012</td>
 </tr>
 </table>
 </div><!-- content -->
