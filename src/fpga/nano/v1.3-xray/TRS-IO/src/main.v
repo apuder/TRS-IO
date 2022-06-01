@@ -1090,8 +1090,6 @@ always @(posedge clk_in) audio_cnt <= (audio_cnt == 281) ? 0 : audio_cnt + 1;
 always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
 
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
-always @(posedge clk_audio)
-  audio_sample_word <= '{audio_sample_word[1] + 16'd1365, audio_sample_word[0] - 16'd1365};
 
 logic [23:0] rgb = 24'd0;
 logic [9:0] cx, cy, screen_start_x, screen_start_y, frame_width, frame_height, screen_width, screen_height;
@@ -1108,7 +1106,7 @@ hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(59.94), .AUDIO_RATE(48000), .AUDIO
   .rgb(rgb),
   .audio_sample_word(audio_sample_word),
   .tmds(tmds_p),
-  .tmds_clock(),
+  .tmds_clock(tmds_clock_p),
   .cx(cx),
   .cy(cy),
   .frame_width(frame_width),
@@ -1118,8 +1116,7 @@ hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(59.94), .AUDIO_RATE(48000), .AUDIO
 );
 
 assign tmds_n = ~tmds_p;
-assign tmds_clock_p = clk_pixel;
-assign tmds_clock_n = ~clk_pixel;
+assign tmds_clock_n = ~tmds_clock_p;
 
 
 endmodule

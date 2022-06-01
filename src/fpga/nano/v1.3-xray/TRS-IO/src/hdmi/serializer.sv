@@ -8,12 +8,9 @@ module serializer
     input logic clk_pixel_x5,
     input logic reset,
     input logic [9:0] tmds_internal [NUM_CHANNELS-1:0],
-    output logic [2:0] tmdsx,
-    output logic tmds_clockx
+    output logic [2:0] tmds,
+    output logic tmds_clock
 );
-
-logic [NUM_CHANNELS-1:0] tmds;
-logic tmds_clock;
 
 `ifndef VERILATOR
     `ifdef SYNTHESIS
@@ -223,27 +220,31 @@ logic tmds_clock;
                     always_ff @(posedge clk_pixel_x5)
                         tmds_shift_clk_pixel <= load ? 10'b0000011111 : {tmds_shift_clk_pixel[1:0], tmds_shift_clk_pixel[9:2]};
 
+                    logic [NUM_CHANNELS-1:0] tmds_shift_posedge_temp;
                     logic [NUM_CHANNELS-1:0] tmds_shift_negedge_temp;
+                    logic [NUM_CHANNELS-1:0] tmds_shift_negedge_temp1;
                     for (i = 0; i < NUM_CHANNELS; i++)
                     begin: tmds_driving
                         always_ff @(posedge clk_pixel_x5)
                         begin
-                            tmds[i] <= tmds_shift[i][0];
+                            tmds_shift_posedge_temp[i] <= tmds_shift[i][0];
                             tmds_shift_negedge_temp[i] <= tmds_shift[i][1];
                         end
-                        //always_ff @(negedge clk_pixel_x5)
-                        //    tmds[i] <= tmds_shift_negedge_temp[i];
+                        always_ff @(negedge clk_pixel_x5)
+                            tmds_shift_negedge_temp1[i] <= tmds_shift_negedge_temp[i];
                     end
-                    assign tmdsx = (~clk_pixel_x5) ? tmds_shift_negedge_temp : tmds;
+                    assign tmds = clk_pixel_x5 ? tmds_shift_negedge_temp1 : tmds_shift_posedge_temp;
+                    logic tmds_clock_posedge_temp;
                     logic tmds_clock_negedge_temp;
+                    logic tmds_clock_negedge_temp1;
                     always_ff @(posedge clk_pixel_x5)
                     begin
-                        tmds_clock <= tmds_shift_clk_pixel[0];
+                        tmds_clock_posedge_temp <= tmds_shift_clk_pixel[0];
                         tmds_clock_negedge_temp <= tmds_shift_clk_pixel[1];
                     end
-                    //always_ff @(negedge clk_pixel_x5)
-                    //    tmds_clock <= tmds_clock_negedge_temp;
-                    assign tmds_clockx = (~clk_pixel_x5) ? tmds_clock_negedge_temp : tmds_clock;
+                    always_ff @(negedge clk_pixel_x5)
+                        tmds_clock_negedge_temp1 <= tmds_clock_negedge_temp;
+                    assign tmds_clock = clk_pixel_x5 ? tmds_clock_negedge_temp1 : tmds_clock_posedge_temp;
                 `endif
         `endif
     `endif

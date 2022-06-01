@@ -129,7 +129,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 1103,
+    "InstLine" : 1101,
     "InstName" : "hdmi",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/hdmi/hdmi.sv",
     "ModuleLine" : 4,
