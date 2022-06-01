@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="main" Register="154" Alu="30" Lut="223">
+<Module name="main" Register="166" Alu="30" Lut="240">
     <SubModule name="clk_wiz_0"/>
     <SubModule name="io" Register="12" Lut="5"/>
     <SubModule name="pre_ram_access_check_trigger" Register="1"/>
     <SubModule name="bram" Register="2" Lut="18" Bsram="16"/>
-    <SubModule name="brama_read_trigger" Register="2"/>
+    <SubModule name="brama_read_trigger" Register="1"/>
     <SubModule name="brama_write_trigger" Register="1"/>
     <SubModule name="bram_peek_trigger" Register="1" Lut="1"/>
     <SubModule name="xram" Bsram="1"/>

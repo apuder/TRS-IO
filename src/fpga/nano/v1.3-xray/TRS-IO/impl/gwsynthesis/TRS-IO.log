@@ -3,24 +3,24 @@ Running parser ...
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\filter.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb0.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb1.v'
-Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\trigger.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v'
 Compiling module 'main'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":3)
-Extracting RAM for identifier 'breakpoints'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":521)
-Extracting RAM for identifier 'breakpoint_active'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":522)
+Extracting RAM for identifier 'breakpoints'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":522)
+Extracting RAM for identifier 'breakpoint_active'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":523)
 Compiling module 'Gowin_rPLL'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v":9)
 Compiling module 'filter'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\filter.v":3)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 6("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":288)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":501)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 6("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":289)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":502)
 Compiling module 'trigger'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\trigger.v":3)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":605)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":606)
 Compiling module 'Gowin_DPB0'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb0.v":9)
-WARN  (EX3791) : Expression size 25 truncated to fit in target size 24("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":780)
-WARN  (EX3791) : Expression size 9 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":799)
+WARN  (EX3791) : Expression size 25 truncated to fit in target size 24("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":773)
+WARN  (EX3791) : Expression size 9 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":792)
 Compiling module 'Gowin_DPB1'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb1.v":9)
-WARN  (EX1998) : Net 'le18_dout[7]' does not have a driver("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":767)
-WARN  (EX1998) : Net 'le18_dout_rdy' does not have a driver("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":768)
+WARN  (EX1998) : Net 'le18_dout[7]' does not have a driver("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":760)
+WARN  (EX1998) : Net 'le18_dout_rdy' does not have a driver("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":761)
 NOTE  (EX0101) : Current top module is "main"
 WARN  (EX0211) : The output port "led[5]" of module "main" has no driver("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":24)
 WARN  (EX0211) : The output port "led[4]" of module "main" has no driver("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":24)
@@ -49,10 +49,10 @@ Running technical mapping ...
 [75%] Tech-Mapping Phase 2 completed
 [80%] Tech-Mapping Phase 3 completed
 [90%] Tech-Mapping Phase 4 completed
-WARN  (NL0002) : The module "trigger" instantiated to "bram_poke_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":848)
-WARN  (NL0002) : The module "trigger" instantiated to "xram_poke_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":974)
-WARN  (NL0002) : The module "trigger" instantiated to "xrama_read_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":951)
-WARN  (NL0002) : The module "trigger" instantiated to "xrama_write_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":959)
+WARN  (NL0002) : The module "trigger" instantiated to "bram_poke_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":841)
+WARN  (NL0002) : The module "trigger" instantiated to "xram_poke_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":967)
+WARN  (NL0002) : The module "trigger" instantiated to "xrama_read_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":944)
+WARN  (NL0002) : The module "trigger" instantiated to "xrama_write_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":952)
 [95%] Generate netlist file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg" completed
 [100%] Generate report file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO_syn.rpt.html" completed
 GowinSynthesis finish

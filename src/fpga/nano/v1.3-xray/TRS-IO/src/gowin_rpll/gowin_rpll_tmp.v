@@ -1,10 +1,10 @@
 //Copyright (C)2014-2022 Gowin Semiconductor Corporation.
 //All rights reserved.
 //File Title: Template file for instantiation
-//GOWIN Version: V1.9.8.05
+//GOWIN Version: V1.9.8.06
 //Part Number: GW1NR-LV9QN88PC6/I5
 //Device: GW1NR-9C
-//Created Time: Fri May 13 19:53:25 2022
+//Created Time: Wed Jun 01 09:52:42 2022
 
 //Change the instance name and port connections to the signal names
 //--------Copy here to design--------

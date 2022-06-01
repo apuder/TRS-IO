@@ -71,7 +71,6 @@ Gowin_rPLL clk_wiz_0(
    .clkin(clk_in) //input clkin
 );
 
-
 reg[7:0] byte_in, byte_out;
 reg byte_received = 1'b0;
 
@@ -231,12 +230,12 @@ wire printer_sel_wr = 0;//XXX (TRS_A == 17'h37e8) && !TRS_WR;
 wire printer_sel = printer_sel_wr;
 reg printer_sel_reg = 0;
 
-wire trs_io_sel_in = 0;//XXX ~TRS_A[16] && (TRS_A[7:0] == 31) && !TRS_IN;
-wire trs_io_sel_out = 0;//XXX ~TRS_A[16] && (TRS_A[7:0] == 31) && !TRS_OUT;
+wire trs_io_sel_in = ~TRS_A[16] && (TRS_A[7:0] == 31) && !TRS_IN;
+wire trs_io_sel_out = ~TRS_A[16] && (TRS_A[7:0] == 31) && !TRS_OUT;
 wire trs_io_sel = trs_io_sel_in || trs_io_sel_out;
 
-wire frehd_sel_in = 0;//XXX ~TRS_A[16] && (TRS_A[7:4] == 4'hc) && !TRS_IN;
-wire frehd_sel_out = 0;//XXX ~TRS_A[16] && (TRS_A[7:4] == 4'hc) && !TRS_OUT;
+wire frehd_sel_in = ~TRS_A[16] && (TRS_A[7:4] == 4'hc) && !TRS_IN;
+wire frehd_sel_out = ~TRS_A[16] && (TRS_A[7:4] == 4'hc) && !TRS_OUT;
 wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
 wire z80_dsp_sel_wr = 0;//XXX ~TRS_A[16] && (TRS_A[15:10] == 6'b001111) && !TRS_WR;
@@ -264,6 +263,8 @@ reg [5:0] count;
 always @(posedge clk) begin
   if (esp_sel_risingedge) begin
     // ESP needs to do something
+led[0] <= ~led[0];
+
     ESP_REQ <= 1;
     count <= 50;
     if (printer_sel) begin
@@ -709,8 +710,8 @@ trigger brama_read_trigger(
   .clk(clk),
   .cond(do_ram_access && !TRS_RD && !xray_run_stub),
   .one(ena_read),
-  .two(),
-  .three(brama_data_ready)
+  .two(brama_data_ready),
+  .three()
 );
 
 trigger brama_write_trigger(
@@ -721,14 +722,6 @@ trigger brama_write_trigger(
   .three()
 );
 
-//XXX
-always @(posedge clk) begin
-  if (TRS_A == 17'h37ec) led[0] <= 1;
-/*
-  if (do_ram_access) led[0] <= ~led[0];
-  if (brama_data_ready) led[1] <= ~led[1];
-*/
-end
 
 
 assign wea = !TRS_WR;

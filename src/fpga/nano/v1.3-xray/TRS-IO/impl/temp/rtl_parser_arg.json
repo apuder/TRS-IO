@@ -13,15 +13,15 @@
    "Type" : "verilog"
   },
   {
-   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/gowin_rpll.v",
-   "Type" : "verilog"
-  },
-  {
    "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/main.v",
    "Type" : "verilog"
   },
   {
    "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/trigger.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/gowin_rpll.v",
    "Type" : "verilog"
   }
  ],

@@ -7,9 +7,9 @@
         <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\filter.v" type="verilog"/>
         <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb0.v" type="verilog"/>
         <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb1.v" type="verilog"/>
-        <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v" type="verilog"/>
         <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v" type="verilog"/>
         <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\trigger.v" type="verilog"/>
+        <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v" type="verilog"/>
     </FileList>
     <OptionList>
         <Option type="disable_insert_pad" value="0"/>
