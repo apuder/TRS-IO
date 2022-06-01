@@ -1118,5 +1118,24 @@ hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(59.94), .AUDIO_RATE(48000), .AUDIO
 assign tmds_n = ~tmds_p;
 assign tmds_clock_n = ~tmds_clock_p;
 
+//-----Cassette out--------------------------------------------------------------------------
+
+wire cass_sel_out = ~TRS_A[16] && (TRS_A[7:0] == 255) && !TRS_OUT;
+
+reg[1:0] sound_idx = 2;
+
+always @(posedge clk) begin
+  if (io_access && cass_sel_out) sound_idx <= TRS_D & 3;
+end
+
+always @(posedge clk_audio) begin
+  case (sound_idx)
+    0: audio_sample_word <= '{127, -127};
+    1: audio_sample_word <= '{254, -254};
+    2: audio_sample_word <= '{0, 0};
+    3: audio_sample_word <= '{127, -127};
+  endcase
+end
+
 
 endmodule

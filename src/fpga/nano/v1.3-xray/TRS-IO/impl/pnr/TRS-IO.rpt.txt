@@ -11,20 +11,20 @@
   <PnR Version>: V1.9.8.06
   <Part Number>: GW1NR-LV9QN88PC6/I5
   <Device>: GW1NR-9C
-  <Created Time>:Wed Jun 01 14:25:29 2022
+  <Created Time>:Wed Jun 01 14:38:00 2022
 
 
 2. PnR Details
 
   Running placement:
-    Placement Phase 0: CPU time = 0h 0m 0.647s, Elapsed time = 0h 0m 0.647s
-    Placement Phase 1: CPU time = 0h 0m 0.052s, Elapsed time = 0h 0m 0.051s
-    Placement Phase 2: CPU time = 0h 0m 0.44s, Elapsed time = 0h 0m 0.439s
+    Placement Phase 0: CPU time = 0h 0m 0.705s, Elapsed time = 0h 0m 0.705s
+    Placement Phase 1: CPU time = 0h 0m 0.056s, Elapsed time = 0h 0m 0.057s
+    Placement Phase 2: CPU time = 0h 0m 0.353s, Elapsed time = 0h 0m 0.352s
     Placement Phase 3: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
     Total Placement: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
  Running routing:
     Routing Phase 0: CPU time = 0h 0m 0.001s, Elapsed time = 0h 0m 0.001s
-    Routing Phase 1: CPU time = 0h 0m 0.531s, Elapsed time = 0h 0m 0.531s
+    Routing Phase 1: CPU time = 0h 0m 0.558s, Elapsed time = 0h 0m 0.558s
     Routing Phase 2: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
     Total Routing: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
  Generate output files:
@@ -38,15 +38,15 @@
   ----------------------------------------------------------
   Resources                   | Usage
   ----------------------------------------------------------
-  Logic                       | 1278/8640  14%
-    --LUT,ALU,ROM16           | 1278(1175 LUT, 103 ALU, 0 ROM16)
+  Logic                       | 1262/8640  14%
+    --LUT,ALU,ROM16           | 1262(1159 LUT, 103 ALU, 0 ROM16)
     --SSRAM(RAM16)            | 0
   Register                    | 843/6693  12%
     --Logic Register as Latch | 0/6480  0%
     --Logic Register as FF    | 828/6480  12%
     --I/O Register as Latch   | 0/213  0%
     --I/O Register as FF      | 15/213  7%
-  CLS                         | 1005/4320  23%
+  CLS                         | 1015/4320  23%
   I/O Port                    | 51
   I/O Buf                     | 50
     --Input Buf               | 17
@@ -99,8 +99,8 @@
   -------------------------------------------
   Signal         | Global Clock   | Location
   -------------------------------------------
-  clk_in_d       | PRIMARY        |  TR TL BL
-  clk_audio_4    | PRIMARY        |  BL
+  clk_in_d       | PRIMARY        |  TR TL
+  clk_audio_4    | PRIMARY        |  TL BR BL
   clk            | PRIMARY        |  TR TL BR BL
   clk_pixel_x5   | PRIMARY        |  TR BR
   clk_pixel      | PRIMARY        |  TR TL BR BL
