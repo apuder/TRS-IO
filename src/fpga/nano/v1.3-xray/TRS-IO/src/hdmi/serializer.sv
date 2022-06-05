@@ -184,6 +184,44 @@ module serializer
                     ALTLVDS_TX_component.use_no_phase_shift = "ON",
                     ALTLVDS_TX_component.vod_setting = 0,
                     ALTLVDS_TX_component.clk_src_is_pll = "off";
+            `else
+                `ifdef GOWINSEMI
+                    for (i = 0; i < NUM_CHANNELS; i++)
+                    begin: tmds_shifting
+                       OSER10 tmds_ser_i(
+                        .Q(tmds[i]),
+                        .D0(tmds_internal[i][0]),
+                        .D1(tmds_internal[i][1]),
+                        .D2(tmds_internal[i][2]),
+                        .D3(tmds_internal[i][3]),
+                        .D4(tmds_internal[i][4]),
+                        .D5(tmds_internal[i][5]),
+                        .D6(tmds_internal[i][6]),
+                        .D7(tmds_internal[i][7]),
+                        .D8(tmds_internal[i][8]),
+                        .D9(tmds_internal[i][9]),
+                        .PCLK(clk_pixel),
+                        .FCLK(clk_pixel_x5),
+                        .RESET(reset)
+                      );
+                    end
+
+                    OSER10 tmds_clock_ser(
+                      .Q(tmds_clock),
+                      .D0(1'b1),
+                      .D1(1'b1),
+                      .D2(1'b1),
+                      .D3(1'b1),
+                      .D4(1'b1),
+                      .D5(1'b0),
+                      .D6(1'b0),
+                      .D7(1'b0),
+                      .D8(1'b0),
+                      .D9(1'b0),
+                      .PCLK(clk_pixel),
+                      .FCLK(clk_pixel_x5),
+                      .RESET(reset)
+                    );
                 `else
                     // We don't know what the platform is so the best bet is an IP-less implementation.
                     // Shift registers are loaded with a set of values from tmds_channels every clk_pixel.
@@ -246,6 +284,7 @@ module serializer
                         tmds_clock_negedge_temp1 <= tmds_clock_negedge_temp;
                     assign tmds_clock = clk_pixel_x5 ? tmds_clock_negedge_temp1 : tmds_clock_posedge_temp;
                 `endif
+            `endif
         `endif
     `endif
 `endif

@@ -21,7 +21,7 @@ module hdmi
 
     // Defaults to minimum bit lengths required to represent positions.
     // Modify these parameters if you have alternate desired bit lengths.
-    parameter int BIT_WIDTH = VIDEO_ID_CODE < 4 ? 10 : VIDEO_ID_CODE == 4 ? 11 : 12,
+    parameter int BIT_WIDTH = VIDEO_ID_CODE < 4 ? 10 : VIDEO_ID_CODE < 6 ? 11 : 12,
     parameter int BIT_HEIGHT = VIDEO_ID_CODE == 16 ? 11: 10,
 
     // A true HDMI signal sends auxiliary data (i.e. audio, preambles) which prevents it from being parsed by DVI signal sinks.
@@ -137,6 +137,18 @@ generate
             assign vsync_pulse_size = 5;
             assign invert = 0;
         end
+        5:
+        begin
+            assign frame_width = 1056;
+            assign frame_height = 628;
+            assign screen_width = 800;
+            assign screen_height = 600;
+            assign hsync_pulse_start = 40;
+            assign hsync_pulse_size = 128;
+            assign vsync_pulse_start = 1;
+            assign vsync_pulse_size = 4;
+            assign invert = 0;
+            end
         16, 34:
         begin
             assign frame_width = 2200;
@@ -203,6 +215,7 @@ end
 localparam real VIDEO_RATE = (VIDEO_ID_CODE == 1 ? 25.2E6
     : VIDEO_ID_CODE == 2 || VIDEO_ID_CODE == 3 ? 27.027E6
     : VIDEO_ID_CODE == 4 ? 74.25E6
+    : VIDEO_ID_CODE == 5 ? 40.0E6
     : VIDEO_ID_CODE == 16 ? 148.5E6
     : VIDEO_ID_CODE == 17 || VIDEO_ID_CODE == 18 ? 27E6
     : VIDEO_ID_CODE == 19 ? 74.25E6
