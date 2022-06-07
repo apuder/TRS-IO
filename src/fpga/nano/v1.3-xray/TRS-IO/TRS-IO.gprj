@@ -7,8 +7,11 @@
     <FileList>
         <File path="src/filter.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_clkdiv/gowin_clkdiv0.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_clkdiv/gowin_clkdiv1.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/blk_mem_gen_2.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpb0.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpb1.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_prom/blk_mem_gen_3.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll0.v" type="file.verilog" enable="1"/>
         <File path="src/hdmi/audio_clock_regeneration_packet.sv" type="file.verilog" enable="1"/>
@@ -23,6 +26,7 @@
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="src/main.v" type="file.verilog" enable="1"/>
         <File path="src/trigger.v" type="file.verilog" enable="1"/>
+        <File path="src/vga.v" type="file.verilog" enable="1"/>
         <File path="src/trs-io.cst" type="file.cst" enable="1"/>
     </FileList>
 </Project>

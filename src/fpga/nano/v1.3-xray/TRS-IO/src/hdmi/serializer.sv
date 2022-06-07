@@ -1,3 +1,5 @@
+`define GOWINSEMI
+
 module serializer
 #(
     parameter int NUM_CHANNELS = 3,

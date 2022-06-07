@@ -21,13 +21,14 @@ module main(
   output [2:0] ESP_S,
   output reg WAIT,
   input ESP_DONE,
+  input [1:0] sw,
   output reg [5:0] led,
 
   // HDMI
   output [2:0] tmds_p,
-  output [2:0] tmds_n,
-  output tmds_clock_p,
-  output tmds_clock_n
+  //output [2:0] tmds_n,
+  output tmds_clock_p
+  //output tmds_clock_n
 
 /*
   output VGA_RGB,
@@ -245,7 +246,7 @@ wire frehd_sel_in = ~TRS_A[16] && (TRS_A[7:4] == 4'hc) && !TRS_IN;
 wire frehd_sel_out = ~TRS_A[16] && (TRS_A[7:4] == 4'hc) && !TRS_OUT;
 wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
-wire z80_dsp_sel_wr = 0;//XXX ~TRS_A[16] && (TRS_A[15:10] == 6'b001111) && !TRS_WR;
+wire z80_dsp_sel_wr = ~TRS_A[16] && (TRS_A[15:10] == 6'b001111) && !TRS_WR;
 
 wire z80_le18_data_sel_in  = 0;//XXX ~TRS_A[16] && (TRS_A[7:0] == 8'hec) & ~TRS_IN;
 
@@ -980,36 +981,25 @@ trigger xram_peek_trigger(
   .two(xram_peek_done),
   .three());
 
-/*
 //-----VGA-------------------------------------------------------------------------------
 
-wire VGA_RGBx, VGA_HSYNCx, VGA_VSYNCx;
+wire vga_clk;
+wire VGA_RGB, VGA_HSYNC, VGA_VSYNC;
+wire sync;
 
 vga vga(
   .clk(clk),     // 100 MHz
   .vga_clk(vga_clk), // 20 MHz
   .TRS_A(TRS_A),
   .TRS_D(TRS_D),
-  .WR_falling_edge(WR_falling_edge),
+  .TRS_WR(~TRS_WR),
   .OUT_falling_edge(OUT_falling_edge),
-  .IN_falling_edge(IN_falling_edge),
-  .le18_dout(le18_dout),
-  .le18_dout_rdy(le18_dout_rdy),
-  .VGA_RGB(VGA_RGBx),
-  .VGA_HSYNC(VGA_HSYNCx),
-  .VGA_VSYNC(VGA_VSYNCx));
+  .VGA_RGB(VGA_RGB),
+  .VGA_HSYNC(VGA_HSYNC),
+  .VGA_VSYNC(VGA_VSYNC),
+  .sync(sync));
 
-assign VGA_RGB   = VGA_RGBx;
-assign VGA_HSYNC = VGA_HSYNCx;
-assign VGA_VSYNC = VGA_VSYNCx;
-
-assign VGA_R = VGA_RGBx;
-assign VGA_G = VGA_RGBx;
-assign VGA_B = VGA_RGBx;
-assign VGA_H = VGA_HSYNCx;
-assign VGA_V = VGA_VSYNCx;
-
-
+/*
 assign led[0] = xray_run_stub;
 
 
@@ -1069,7 +1059,6 @@ assign SPI_HLD_N =  1'bz;
 logic clk_pixel;
 logic clk_pixel_x5;
 logic clk_audio;
-logic reset = 1'b0;
 
 Gowin_rPLL0 pll0(
   .clkout(clk_pixel_x5), //output clkout
@@ -1079,6 +1068,12 @@ Gowin_rPLL0 pll0(
 Gowin_CLKDIV0 clkdiv0(
   .clkout(clk_pixel), //output clkout
   .hclkin(clk_pixel_x5), //input hclkin
+  .resetn(1'b1) //input resetn
+);
+
+Gowin_CLKDIV1 clkdiv1(
+  .clkout(vga_clk), //output clkout
+  .hclkin(clk_pixel), //input hclkin
   .resetn(1'b1) //input resetn
 );
 
@@ -1095,14 +1090,14 @@ logic [23:0] rgb = 24'd0;
 logic [9:0] cx, cy, screen_start_x, screen_start_y, frame_width, frame_height, screen_width, screen_height;
 // Border test (left = red, top = green, right = blue, bottom = blue, fill = black)
 always @(posedge clk_pixel)
-  rgb <= {cx == 0 ? ~8'd0 : 8'd0, cy == 0 ? ~8'd0 : 8'd0, cx == screen_width - 1'd1 || cy == screen_height - 1'd1 ? ~8'd0 : 8'd0};
+  rgb <= {cx < 16 ? ~8'd0 : {8{VGA_RGB}}, cy <12 ? ~8'd0 : {8{VGA_RGB}}, cx > screen_width - 16 - 1 || cy > screen_height - 12 - 1 ? ~8'd0 : {8{VGA_RGB}}};
 
-// 640x480 @ 59.94Hz
-hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(59.94), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi(
+// 800x600 @ 60Hz
+hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi(
   .clk_pixel_x5(clk_pixel_x5),
   .clk_pixel(clk_pixel),
   .clk_audio(clk_audio),
-  .reset(reset),
+  .reset(~sw[1]),
   .rgb(rgb),
   .audio_sample_word(audio_sample_word),
   .tmds(tmds_p),
@@ -1114,9 +1109,33 @@ hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(59.94), .AUDIO_RATE(48000), .AUDIO
   .screen_width(screen_width),
   .screen_height(screen_height)
 );
+/*
+ELVDS_OBUF tmds_2(
+  .O(tmds_p[2]),
+  .OB(tmds_n[2]),
+  .I(tmds_x[2])
+);
 
-assign tmds_n = ~tmds_p;
-assign tmds_clock_n = ~tmds_clock_p;
+ELVDS_OBUF tmds_1(
+  .O(tmds_p[1]),
+  .OB(tmds_n[1]),
+  .I(tmds_x[1])
+);
+
+ELVDS_OBUF tmds_0(
+  .O(tmds_p[0]),
+  .OB(tmds_n[0]),
+  .I(tmds_x[0])
+);
+
+ELVDS_OBUF tmds_clock(
+  .O(tmds_clock_p),
+  .OB(tmds_clock_n),
+  .I(tmds_clock_x)
+);
+*/
+
+assign sync = (cx == frame_width - 13 || cx == frame_width - 12) && cy == frame_height - 1;
 
 //-----Cassette out--------------------------------------------------------------------------
 
@@ -1130,12 +1149,11 @@ end
 
 always @(posedge clk_audio) begin
   case (sound_idx)
-    0: audio_sample_word <= '{127, -127};
-    1: audio_sample_word <= '{254, -254};
-    2: audio_sample_word <= '{0, 0};
-    3: audio_sample_word <= '{127, -127};
+    0: audio_sample_word <= '{0<<4, 0<<4};
+    1: audio_sample_word <= '{127<<4, 127<<4};
+    2: audio_sample_word <= '{-127<<4, -127<<4};
+    3: audio_sample_word <= '{0<<4, 0<<4};
   endcase
 end
-
 
 endmodule
