@@ -8,11 +8,11 @@ module vga(
   input [16:0] TRS_A,
   input [7:0] TRS_D,
   input TRS_WR,
-  input OUT_falling_edge,
+  input TRS_OUT,
   output VGA_RGB,
   output VGA_HSYNC,
   output VGA_VSYNC,
-  input sync);
+  input reset);
 
 // The VGA display is 800x600.
 // The pixel clock is divided by two and each row of the TRS-80 display is repeated three times
@@ -49,7 +49,7 @@ wire dsp_act = ((dsp_XXXXXXX < 7'd64) & (dsp_YYYYY < 5'd16));
 // 64/32 column display mode.
 // If modsel=1 then in 32 column mode.
 // in 32 column mode only the even columns are active.
-wire z80_outsig_sel_out = (TRS_A[7:0] == 8'hff) & OUT_falling_edge;
+wire z80_outsig_sel_out = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hff) & TRS_OUT;
 
 reg z80_outsig_modesel = 1'b0;
 
@@ -148,7 +148,7 @@ end
 // Bump the VGA counters.
 always @ (posedge vga_clk)
 begin
-   if(sync)
+   if(reset)
    begin
       vga_xxx <= 3'b000;
       vga_XXXXXXX <= 7'd0;

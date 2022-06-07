@@ -250,6 +250,10 @@ wire z80_dsp_sel_wr = ~TRS_A[16] && (TRS_A[15:10] == 6'b001111) && !TRS_WR;
 
 wire z80_le18_data_sel_in  = 0;//XXX ~TRS_A[16] && (TRS_A[7:0] == 8'hec) & ~TRS_IN;
 
+// orchestra-85
+wire z80_orch85l_sel    = ~TRS_A[16] && (TRS_A[7:0] == 8'hb5) && !TRS_OUT;
+wire z80_orch85r_sel    = ~TRS_A[16] && (TRS_A[7:0] == 8'hb9) && !TRS_OUT;
+
 /*
 wire z80_spi_ctrl_sel_out = (TRS_A[7:0] == 8'hfc) & OUT_falling_edge;
 wire z80_spi_data_sel_in  = (TRS_A[7:0] == 8'hfd) & ~TRS_IN;
@@ -983,9 +987,8 @@ trigger xram_peek_trigger(
 
 //-----VGA-------------------------------------------------------------------------------
 
-wire vga_clk;
-wire VGA_RGB, VGA_HSYNC, VGA_VSYNC;
-wire sync;
+wire VGA_RGB;
+reg sync;
 
 vga vga(
   .clk(clk),     // 100 MHz
@@ -993,11 +996,11 @@ vga vga(
   .TRS_A(TRS_A),
   .TRS_D(TRS_D),
   .TRS_WR(~TRS_WR),
-  .OUT_falling_edge(OUT_falling_edge),
+  .TRS_OUT(~TRS_OUT),
   .VGA_RGB(VGA_RGB),
-  .VGA_HSYNC(VGA_HSYNC),
-  .VGA_VSYNC(VGA_VSYNC),
-  .sync(sync));
+  .VGA_HSYNC(),
+  .VGA_VSYNC(),
+  .reset(sync));
 
 /*
 assign led[0] = xray_run_stub;
@@ -1053,6 +1056,21 @@ assign SPI_WP_N  =  z80_spi_ctrl_reg[6];
 assign SPI_HLD_N =  1'bz;
 */
 
+//-----ORCH85----------------------------------------------------------------------
+
+// orchestra-85 output registers
+reg signed [7:0] orch85l_reg;
+reg signed [7:0] orch85r_reg;
+
+always @ (posedge clk)
+begin
+   if(z80_orch85l_sel & ~TRS_OUT)
+      orch85l_reg <= TRS_D;
+
+   if(z80_orch85r_sel & ~TRS_OUT)
+      orch85r_reg <= TRS_D;
+end
+
 //-----HDMI------------------------------------------------------------------------
 
 
@@ -1079,15 +1097,16 @@ Gowin_CLKDIV1 clkdiv1(
 
 //pll pll(.c0(clk_pixel_x5), .c1(clk_pixel), .c2(clk_audio));
 
-logic [9:0] audio_cnt;
+logic [8:0] audio_cnt;
 
-always @(posedge clk_in) audio_cnt <= (audio_cnt == 281) ? 0 : audio_cnt + 1;
+always @(posedge clk_in) audio_cnt <= (audio_cnt == 280) ? 0 : audio_cnt + 1'b1;
 always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
 
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 
 logic [23:0] rgb = 24'd0;
-logic [9:0] cx, cy, screen_start_x, screen_start_y, frame_width, frame_height, screen_width, screen_height;
+logic [10:0] cx, screen_start_x, frame_width, screen_width;
+logic [9:0] cy, screen_start_y, frame_height, screen_height;
 // Border test (left = red, top = green, right = blue, bottom = blue, fill = black)
 always @(posedge clk_pixel)
   rgb <= {cx < 16 ? ~8'd0 : {8{VGA_RGB}}, cy <12 ? ~8'd0 : {8{VGA_RGB}}, cx > screen_width - 16 - 1 || cy > screen_height - 12 - 1 ? ~8'd0 : {8{VGA_RGB}}};
@@ -1135,13 +1154,15 @@ ELVDS_OBUF tmds_clock(
 );
 */
 
-assign sync = (cx == frame_width - 13 || cx == frame_width - 12) && cy == frame_height - 1;
+always @(posedge clk_pixel) begin
+  sync <= (cx == frame_width - 14 || cx == frame_width - 13) && cy == frame_height - 1 && sw[0];
+end
 
 //-----Cassette out--------------------------------------------------------------------------
 
 wire cass_sel_out = ~TRS_A[16] && (TRS_A[7:0] == 255) && !TRS_OUT;
 
-reg[1:0] sound_idx = 2;
+reg[1:0] sound_idx = 2'b00;
 
 always @(posedge clk) begin
   if (io_access && cass_sel_out) sound_idx <= TRS_D & 3;
@@ -1149,10 +1170,10 @@ end
 
 always @(posedge clk_audio) begin
   case (sound_idx)
-    0: audio_sample_word <= '{0<<4, 0<<4};
-    1: audio_sample_word <= '{127<<4, 127<<4};
-    2: audio_sample_word <= '{-127<<4, -127<<4};
-    3: audio_sample_word <= '{0<<4, 0<<4};
+    2'b00: audio_sample_word <= '{(   0<<4) + (orch85r_reg<<5), (   0<<4) + (orch85l_reg<<5)};
+    2'b01: audio_sample_word <= '{( 127<<4) + (orch85r_reg<<5), ( 127<<4) + (orch85l_reg<<5)};
+    2'b10: audio_sample_word <= '{(-127<<4) + (orch85r_reg<<5), (-127<<4) + (orch85l_reg<<5)};
+    2'b11: audio_sample_word <= '{(   0<<4) + (orch85r_reg<<5), (   0<<4) + (orch85l_reg<<5)};
   endcase
 end
 
