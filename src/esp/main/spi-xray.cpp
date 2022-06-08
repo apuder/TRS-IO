@@ -7,6 +7,7 @@
 #include "esp_task.h"
 #include "esp_event_loop.h"
 #include "spi.h"
+#include "storage.h"
 
 #define MCP23S_CHIP_ADDRESS 0x40
 #define MCP23S_WRITE 0x00
@@ -21,6 +22,14 @@ static spi_device_interface_config_t spi_mcp4351;
 spi_device_handle_t spi_mcp4351_h;
 
 static SemaphoreHandle_t mutex = NULL;
+
+#define KEY_SCREEN_RGB "screen_rgb"
+
+static const uint8_t screen_rgb_colors[][3] = {
+  {225, 225, 255}, // White
+  {51, 255, 51},   // Green
+  {255, 177, 0}};  // Amber
+
 
 uint8_t spi_get_cookie()
 {
@@ -309,6 +318,33 @@ void spi_set_full_addr(bool flag)
   ESP_ERROR_CHECK(ret);
 }
 
+#ifdef CONFIG_TRS_IO_NANO_9K
+// The Nano 9K generates a HDMI signal and we have to tell it the RGB value
+void spi_set_screen_color(uint8_t color)
+{
+  spi_transaction_ext_t trans;
+  if (color > 2) return;
+
+  storage_set_i32(KEY_SCREEN_RGB, color);
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_SET_SCREEN_COLOR;
+  trans.address_bits = 3 * 8;
+  const uint32_t b0 = screen_rgb_colors[color][0];
+  const uint32_t b1 = screen_rgb_colors[color][1];
+  const uint32_t b2 = screen_rgb_colors[color][2];
+  trans.base.addr = b2 | (b1 << 8) | (b0 << 16);
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+}
+
+#else
 
 static void writeDigiPot(uint8_t pot, uint8_t step)
 {
@@ -376,17 +412,15 @@ static uint8_t readDigiPot(uint8_t pot)
   return trans.rx_data[1];
 }
 
+// The Cmod-A7 version uses an external digi-pot that creates the different colors
 void spi_set_screen_color(uint8_t color)
 {
-  static const uint8_t wiper_settings[][3] = {
-    {225, 225, 255},
-    {51, 255, 51},
-    {255, 177, 0}};
-
   if (color > 2) return;
 
+  storage_set_i32(KEY_SCREEN_RGB, color);
+
   for (int i = 0; i < 3; i++) {
-    writeDigiPot(i, wiper_settings[color][i]);
+    writeDigiPot(i, screen_rgb_colors[color][i]);
   }
 }
 
@@ -413,6 +447,7 @@ static void test_digital_pot()
   while (true) vTaskDelay(1);
 }
 #endif
+#endif
 
 void init_spi()
 {
@@ -429,7 +464,7 @@ void init_spi()
   esp_err_t ret = spi_bus_initialize(HSPI_HOST, &spi_bus, 1);
   ESP_ERROR_CHECK(ret);
 
-  // Configure SPI device for the Cmod A7
+  // Configure SPI device for the Cmod A7/Nano 9K
   spi_cmod.address_bits = 0;
   spi_cmod.command_bits = 1 * 8;
   spi_cmod.dummy_bits = 0;
@@ -447,6 +482,7 @@ void init_spi()
   ret = spi_bus_add_device(HSPI_HOST, &spi_cmod, &spi_cmod_h);
   ESP_ERROR_CHECK(ret);
 
+#ifndef CONFIG_TRS_IO_NANO_9K
    // Configure SPI device for MCP4351
   spi_mcp4351.address_bits = 0;
   spi_mcp4351.command_bits = 0;
@@ -467,6 +503,11 @@ void init_spi()
 #ifdef CONFIG_TRS_IO_RUN_PCB_TESTS
   test_digital_pot();
 #endif
+#endif
 
-  spi_set_screen_color(1);
+  uint8_t color = 0;
+  if (storage_has_key(KEY_SCREEN_RGB)) {
+    color = storage_get_i32(KEY_SCREEN_RGB);
+  }
+  spi_set_screen_color(color);
 }

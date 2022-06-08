@@ -39,6 +39,7 @@
 #define FPGA_CMD_SET_FULL_ADDR 14
 #define FPGA_CMD_GET_FPGA_VERSION 15
 #define FPGA_CMD_GET_PRINTER_BYTE 16
+#define FPGA_CMD_SET_SCREEN_COLOR 17
 
 
 uint8_t spi_get_cookie();

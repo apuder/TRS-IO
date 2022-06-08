@@ -27,6 +27,14 @@ config TRS_IO_ENABLE_XRAY
         Enable support for the XRAY debugger. Note that this option
         requires the FPGA version of TRS-IO.
 
+config TRS_IO_NANO_9K
+    bool "Enable support for the Tang Nano 9K"
+    depends on TRS_IO_ENABLE_XRAY
+    default no
+    help
+        Enable support for the Tang Nano 9K. The default is support
+        for the Cmod-A7.
+
 config TRS_IO_RUN_PCB_TESTS
     bool "Run PCB tests"
     depends on TRS_IO_ENABLE_XRAY
