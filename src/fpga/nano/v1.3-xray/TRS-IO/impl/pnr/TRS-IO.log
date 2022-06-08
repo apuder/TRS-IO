@@ -7,6 +7,9 @@ Running placement......
 [10%] Placement Phase 0 completed
 [20%] Placement Phase 1 completed
 [30%] Placement Phase 2 completed
+WARN  (TA1117) : Can't calculate clocks' relationship between: "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk" and "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk"
+WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk"
+WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_audio_4" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
 [50%] Placement Phase 3 completed
 Running routing......
 [60%] Routing Phase 0 completed
@@ -25,5 +28,5 @@ Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.pin.
 Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.rpt.html" completed
 Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.rpt.txt" completed
 Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.tr.html" completed
-Wed Jun 01 14:38:00 2022
+Wed Jun 08 13:21:59 2022
 

@@ -349,7 +349,8 @@ localparam [7:0]
   xray_resume         = 8'd13,
   set_full_addr       = 8'd14,
   get_version         = 8'd15,
-  get_printer_byte    = 8'd16;
+  get_printer_byte    = 8'd16,
+  set_screen_color    = 8'd17;
   
 
 
@@ -437,6 +438,9 @@ always @(posedge clk) begin
             trigger_action <= 1'b1;
             bits_to_send <= 9;
             state <= idle;
+          end
+          set_screen_color: begin
+            bytes_to_read <= 3;
           end
           default:
             begin
@@ -1108,11 +1112,14 @@ always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 
 logic [23:0] rgb = 24'd0;
+logic [23:0] rgb_screen_color = 24'hffffff;
 logic [10:0] cx, screen_start_x, frame_width, screen_width;
 logic [9:0] cy, screen_start_y, frame_height, screen_height;
-// Border test (left = red, top = green, right = blue, bottom = blue, fill = black)
+
+always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
+
 always @(posedge clk_pixel)
-  rgb <= {cx < 16 ? ~8'd0 : {8{VGA_RGB}}, cy <12 ? ~8'd0 : {8{VGA_RGB}}, cx > screen_width - 16 - 1 || cy > screen_height - 12 - 1 ? ~8'd0 : {8{VGA_RGB}}};
+  rgb <= VGA_RGB ? rgb_screen_color : 24'b0;
 
 // 800x600 @ 60Hz
 hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi(

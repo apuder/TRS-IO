@@ -22,6 +22,11 @@
         <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv" type="verilog"/>
         <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v" type="verilog"/>
         <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\trigger.v" type="verilog"/>
+        <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\vga.v" type="verilog"/>
+        <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv1.v" type="verilog"/>
+        <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_2.v" type="verilog"/>
+        <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_prom\blk_mem_gen_3.v" type="verilog"/>
+        <File path="C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_4.v" type="verilog"/>
     </FileList>
     <OptionList>
         <Option type="disable_insert_pad" value="0"/>
