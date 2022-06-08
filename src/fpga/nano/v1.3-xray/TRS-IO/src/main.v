@@ -248,7 +248,7 @@ wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
 wire z80_dsp_sel_wr = ~TRS_A[16] && (TRS_A[15:10] == 6'b001111) && !TRS_WR;
 
-wire z80_le18_data_sel_in  = 0;//XXX ~TRS_A[16] && (TRS_A[7:0] == 8'hec) & ~TRS_IN;
+wire z80_le18_data_sel_in = ~TRS_A[16] && (TRS_A[7:0] == 8'hec) & ~TRS_IN;
 
 // orchestra-85
 wire z80_orch85l_sel    = ~TRS_A[16] && (TRS_A[7:0] == 8'hb5) && !TRS_OUT;
@@ -997,6 +997,9 @@ vga vga(
   .TRS_D(TRS_D),
   .TRS_WR(~TRS_WR),
   .TRS_OUT(~TRS_OUT),
+  .TRS_IN(~TRS_IN),
+  .le18_dout(le18_dout),
+  .le18_dout_rdy(le18_dout_rdy),
   .VGA_RGB(VGA_RGB),
   .VGA_HSYNC(),
   .VGA_VSYNC(),
@@ -1099,7 +1102,7 @@ Gowin_CLKDIV1 clkdiv1(
 
 logic [8:0] audio_cnt;
 
-always @(posedge clk_in) audio_cnt <= (audio_cnt == 280) ? 0 : audio_cnt + 1'b1;
+always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 0 : audio_cnt + 1'b1;
 always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
 
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};

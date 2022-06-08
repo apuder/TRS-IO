@@ -9,6 +9,9 @@ module vga(
   input [7:0] TRS_D,
   input TRS_WR,
   input TRS_OUT,
+  input TRS_IN,
+  output [7:0] le18_dout,
+  output le18_dout_rdy,
   output VGA_RGB,
   output VGA_HSYNC,
   output VGA_VSYNC,
@@ -35,7 +38,7 @@ wire vga_act = ( (vga_XXXXXXX < 7'd67)
 wire [7:0] _z80_dsp_data;
 wire [7:0] z80_dsp_data_b;
 
-// Center the 64x16 text display in the 800x600 VGA display.
+// Center the 64x16 text/le18 display in the 800x600 VGA display.
 //wire [6:0] dsp_XXXXXXX = vga_XXXXXXX - 7'd1;
 wire [6:0] dsp_XXXXXXX = ((|vga_xxx[2:1]) ? (vga_XXXXXXX - 7'd1) : (vga_XXXXXXX - 7'd2));
 wire [2:0] dsp_xxx     = ((|vga_xxx[2:1]) ? (vga_xxx   - 3'b010) : (vga_xxx   + 3'b100));
@@ -113,6 +116,82 @@ begin
    if(z80_dsp_sel & TRS_WR)
       splash_en <= 1'b0;
 end
+
+// le18 graphics.
+wire [6:0] le18_XXXXXXX = dsp_XXXXXXX;
+wire [7:0] le18_YYYYYYYY = (dsp_YYYYY << 3) + (dsp_YYYYY << 2) + dsp_yyyy_yy[5:2]; // 0-191 active
+
+wire z80_le18_data_sel = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hec);
+wire z80_le18_x_sel_out = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hed) & TRS_OUT;
+wire z80_le18_y_sel_out = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hee) & TRS_OUT;
+wire z80_le18_options_out = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hef) & TRS_OUT;
+
+reg [5:0] z80_le18_x_reg;
+reg [7:0] z80_le18_y_reg;
+reg [0:0] z80_le18_options_reg = 1'b0;
+
+always @(posedge clk)
+begin
+   if(z80_le18_x_sel_out)
+      z80_le18_x_reg <= TRS_D[5:0];
+
+   if(z80_le18_y_sel_out)
+      z80_le18_y_reg <= TRS_D;
+
+   if(z80_le18_options_out &~ splash_en)
+      z80_le18_options_reg <= TRS_D[0];
+end
+
+wire le18_enable = z80_le18_options_reg[0];
+
+
+wire [5:0] z80_le18_data_b;
+
+wire le18_rd_en, le18_rd_regce;
+
+trigger le18_rd_trigger (
+  .clk(clk),
+  .cond(TRS_IN & z80_le18_data_sel),
+  .one(le18_rd_en),
+  .two(le18_rd_regce),
+  .three(le18_dout_rdy)
+);
+
+wire le18_wr_en;
+
+trigger le18_wr_trigger (
+  .clk(clk),
+  .cond(TRS_OUT & z80_le18_data_sel),
+  .one(le18_wr_en)
+);
+
+/*
+ * True Dual Port RAM, Byte Write Enable, Byte size: 8
+ * Port A: Read/Write Width: 6, Write depth: 16384, Operating Mode: Write First,
+ *         Core Output Registers, REGCEA Pin
+ * Port B: Read/Write Width: 6, Write depth: 16384, Operating Mode: Read First,
+ *         Core Output Registers, REGCEB Pin
+ * Coe file: splash_le18.coe
+ */
+blk_mem_gen_4 z80_le18 (
+   .clka(clk), // input
+   .cea(le18_rd_en | le18_wr_en), // input
+   .ada({z80_le18_y_reg, z80_le18_x_reg}), // input [13:0]
+   .wrea(le18_wr_en), // input
+   .dina(TRS_D[5:0]), // input [5:0]
+   .douta(le18_dout[5:0]), // output [5:0]
+   .ocea(le18_rd_regce),
+   .reseta(1'b0),
+ 
+   .clkb(vga_clk), // input
+   .ceb(dsp_act & (dsp_xxx == 3'b010)), // input
+   .adb({le18_YYYYYYYY, le18_XXXXXXX[5:0]}), // input [13:0]
+   .wreb(1'b0), // input
+   .dinb(6'h00), // input [5:0]
+   .doutb(z80_le18_data_b), // output [5:0]
+   .oceb(dsp_act & (dsp_xxx == 3'b011)), // input
+   .resetb(1'b0)
+ );
  
 // Instantiate the character generator ROM.
 // The character ROM has a latency of 2 clock cycles.
@@ -190,8 +269,9 @@ begin
 end
 
 
-// Load the text pixel data into the pixel shift register, or shift current contents.
+// Load the text/le18 pixel data into the pixel shift register, or shift current contents.
 reg [5:0] txt_pixel_shift_reg;
+reg [5:0] le18_pixel_shift_reg;
 reg [5:0] dsp_pixel_act_shift_reg;
 
 always @ (posedge vga_clk)
@@ -231,18 +311,22 @@ begin
                2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
             endcase
       end
-
+      // For LE18 the leftmost bit is bit 0 so load the shift register in bit reversed order.
+      le18_pixel_shift_reg <= {z80_le18_data_b[0], z80_le18_data_b[1], z80_le18_data_b[2],
+                               z80_le18_data_b[3], z80_le18_data_b[4], z80_le18_data_b[5]};
       dsp_pixel_act_shift_reg <= 6'h3f;
    end
    else
    begin
       txt_pixel_shift_reg <= 6'h00;
+      le18_pixel_shift_reg <= 6'h00;
       dsp_pixel_act_shift_reg <= 6'h00;
    end
    end
    else
    begin
       txt_pixel_shift_reg <= {txt_pixel_shift_reg[4:0], 1'b0};
+      le18_pixel_shift_reg <= {le18_pixel_shift_reg[4:0], 1'b0};
       dsp_pixel_act_shift_reg <= {dsp_pixel_act_shift_reg[4:0], 1'b0};
    end
 end
@@ -252,9 +336,9 @@ reg [5:0] vga_pixel_shift_reg;
 
 always @ (posedge vga_clk)
 begin
-   // Because of the memory pipelining the text pixel shift registers
+   // Because of the memory pipelining the text/le18 pixel shift registers
    // always load when dsp_xxx == 3'b100.  The vga pixel shift register must do
-   // likewise to maintain the proper offset between the vga and display.
+   // likewise to maintain the proper offset between the vga and display/le18.
    // Load the vga pixel shift register when vga_xxx == 3'b100, otherwise shift. 
    if(vga_xxx == 3'b100)
    begin
@@ -290,7 +374,7 @@ reg vga_rgb_out, h_sync_out, v_sync_out;
 
 always @ (posedge vga_clk)
 begin
-   vga_rgb_out <= dsp_pixel_act_shift_reg[5] ? (txt_pixel_shift_reg[5])
+   vga_rgb_out <= dsp_pixel_act_shift_reg[5] ? (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_enable | splash_en)))
                                              : (vga_pixel_shift_reg[5] & splash_en);
    h_sync_out <= h_sync;
    v_sync_out <= v_sync;
@@ -299,5 +383,9 @@ end
 assign VGA_RGB   = vga_rgb_out;
 assign VGA_HSYNC = h_sync_out;
 assign VGA_VSYNC = v_sync_out;
+
+
+assign le18_dout[6] = le18_enable;
+assign le18_dout[7] = ~dsp_act;
 
 endmodule
