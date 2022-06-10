@@ -26,9 +26,9 @@ module main(
 
   // HDMI
   output [2:0] tmds_p,
-  //output [2:0] tmds_n,
-  output tmds_clock_p
-  //output tmds_clock_n
+  output [2:0] tmds_n,
+  output tmds_clock_p,
+  output tmds_clock_n
 
 /*
   output VGA_RGB,
@@ -1121,6 +1121,9 @@ always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_
 always @(posedge clk_pixel)
   rgb <= VGA_RGB ? rgb_screen_color : 24'b0;
 
+wire [2:0] tmds_x;
+wire tmds_clock_x;
+
 // 800x600 @ 60Hz
 hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi(
   .clk_pixel_x5(clk_pixel_x5),
@@ -1129,8 +1132,8 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .reset(~sw[1]),
   .rgb(rgb),
   .audio_sample_word(audio_sample_word),
-  .tmds(tmds_p),
-  .tmds_clock(tmds_clock_p),
+  .tmds(tmds_x),
+  .tmds_clock(tmds_clock_x),
   .cx(cx),
   .cy(cy),
   .frame_width(frame_width),
@@ -1138,23 +1141,11 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .screen_width(screen_width),
   .screen_height(screen_height)
 );
-/*
-ELVDS_OBUF tmds_2(
-  .O(tmds_p[2]),
-  .OB(tmds_n[2]),
-  .I(tmds_x[2])
-);
 
-ELVDS_OBUF tmds_1(
-  .O(tmds_p[1]),
-  .OB(tmds_n[1]),
-  .I(tmds_x[1])
-);
-
-ELVDS_OBUF tmds_0(
-  .O(tmds_p[0]),
-  .OB(tmds_n[0]),
-  .I(tmds_x[0])
+ELVDS_OBUF tmds [2:0] (
+  .O(tmds_p),
+  .OB(tmds_n),
+  .I(tmds_x)
 );
 
 ELVDS_OBUF tmds_clock(
@@ -1162,7 +1153,6 @@ ELVDS_OBUF tmds_clock(
   .OB(tmds_clock_n),
   .I(tmds_clock_x)
 );
-*/
 
 always @(posedge clk_pixel) begin
   sync <= (cx == frame_width - 14 || cx == frame_width - 13) && cy == frame_height - 1 && sw[0];
