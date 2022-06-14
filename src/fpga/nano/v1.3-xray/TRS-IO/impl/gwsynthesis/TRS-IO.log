@@ -2,8 +2,12 @@ GowinSynthesis start
 Running parser ...
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\filter.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv0.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv1.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_2.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_4.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb0.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb1.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_prom\blk_mem_gen_3.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll0.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_clock_regeneration_packet.sv'
@@ -25,10 +29,6 @@ WARN  (EX2478) : Non-net output port 'tmds' cannot be initialized at declaration
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\trigger.v'
 Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\vga.v'
-Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv1.v'
-Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_2.v'
-Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_prom\blk_mem_gen_3.v'
-Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_4.v'
 Compiling module 'main'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":3)
 Extracting RAM for identifier 'breakpoints'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":538)
 Extracting RAM for identifier 'breakpoint_active'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":539)
@@ -69,10 +69,10 @@ Compiling module 'tmds_channel'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\sr
 Compiling module 'tmds_channel(CN=1)'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":4)
 Compiling module 'tmds_channel(CN=2)'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":4)
 Compiling module 'serializer(VIDEO_RATE=40000000.0)'("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\serializer.sv":3)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1184)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1184)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1185)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1185)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1174)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1174)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1175)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1175)
 NOTE  (EX0101) : Current top module is "main"
 WARN  (EX0211) : The output port "led[5]" of module "main" has no driver("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
 WARN  (EX0211) : The output port "led[4]" of module "main" has no driver("C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)

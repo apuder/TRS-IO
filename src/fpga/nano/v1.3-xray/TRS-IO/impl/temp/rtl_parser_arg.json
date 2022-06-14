@@ -9,11 +9,27 @@
    "Type" : "verilog"
   },
   {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_clkdiv/gowin_clkdiv1.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/blk_mem_gen_2.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/blk_mem_gen_4.v",
+   "Type" : "verilog"
+  },
+  {
    "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/gowin_dpb0.v",
    "Type" : "verilog"
   },
   {
    "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/gowin_dpb1.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_prom/blk_mem_gen_3.v",
    "Type" : "verilog"
   },
   {
@@ -74,22 +90,6 @@
   },
   {
    "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/vga.v",
-   "Type" : "verilog"
-  },
-  {
-   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_clkdiv/gowin_clkdiv1.v",
-   "Type" : "verilog"
-  },
-  {
-   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/blk_mem_gen_2.v",
-   "Type" : "verilog"
-  },
-  {
-   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_prom/blk_mem_gen_3.v",
-   "Type" : "verilog"
-  },
-  {
-   "Path" : "C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/blk_mem_gen_4.v",
    "Type" : "verilog"
   }
  ],
