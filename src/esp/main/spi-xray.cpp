@@ -13,7 +13,6 @@
 #define MCP23S_WRITE 0x00
 #define MCP23S_READ  0x01
 
-static spi_bus_config_t spi_bus;
 
 static spi_device_interface_config_t spi_cmod;
 spi_device_handle_t spi_cmod_h;
@@ -453,7 +452,7 @@ void init_spi()
 {
   mutex = xSemaphoreCreateMutex();
 
-  spi_bus = {
+  spi_bus_config_t spi_bus = {
         .mosi_io_num = SPI_PIN_NUM_MOSI,
         .miso_io_num = SPI_PIN_NUM_MISO,
         .sclk_io_num = SPI_PIN_NUM_CLK,
