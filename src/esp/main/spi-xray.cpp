@@ -233,6 +233,26 @@ void spi_dbus_write(uint8_t d)
   ESP_ERROR_CHECK(ret);
 }
 
+uint8_t spi_abus_read()
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_VARIABLE_DUMMY;
+  trans.base.cmd = FPGA_CMD_ABUS_READ;
+  trans.address_bits = 0 * 8;
+  trans.dummy_bits = 2;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 1 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+
+  return trans.base.rx_data[0];
+}
+
 void spi_trs_io_done()
 {
   spi_transaction_ext_t trans;

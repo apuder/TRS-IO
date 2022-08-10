@@ -48,6 +48,7 @@ static volatile uint8_t DRAM_ATTR intr_event = 0;
 static volatile bool DRAM_ATTR intr_enabled = true;
 
 
+#ifndef CONFIG_TRS_IO_MODEL_3
 /***********************************************************************************
  * XRay
  ***********************************************************************************/
@@ -177,6 +178,7 @@ static void init_xray()
   init_trs_xray(ctx);
   setup_xram_stub();
 }
+#endif
 
 //-----------------------------------------------------------------
 
@@ -223,6 +225,18 @@ static inline void dbus_write(uint8_t d)
   }
 }
 
+static inline uint8_t abus_read()
+{
+  if (!intr_enabled) {
+    //portENABLE_INTERRUPTS();
+  }
+  uint8_t a = spi_abus_read();
+  if (!intr_enabled) {
+    //portDISABLE_INTERRUPTS();
+  }
+  return a;
+}
+
 static inline void trs_io_read() {
   if (!trigger_trs_io_action) {
     uint8_t data = dbus_read();
@@ -261,7 +275,9 @@ static void IRAM_ATTR esp_req_isr_handler(void* arg)
 
 static void IRAM_ATTR io_task(void* p)
 {
+#ifndef CONFIG_TRS_IO_MODEL_3
   init_xray();
+#endif
 
   while(true) {
     while (!esp_req_triggered) ;
@@ -276,17 +292,27 @@ static void IRAM_ATTR io_task(void* p)
       trs_io_read();
       break;
     case 0x20:
+#ifdef CONFIG_TRS_IO_MODEL_3
+      frehd_write(spi_abus_read());
+#else
       frehd_write(s);
+#endif
       break;
     case 0x30:
+#ifdef CONFIG_TRS_IO_MODEL_3
+      frehd_read(spi_abus_read());
+#else
       frehd_read(s);
+#endif
       break;
     case 0x40:
       printer_write();
       break;
+#ifndef CONFIG_TRS_IO_MODEL_3
     case 0x50:
       xray_status = XRAY_STATUS_BREAKPOINT;
       break;
+#endif
     }
     
     // Pulse a rising edge for ESP_DONE to mark end of operation
@@ -311,6 +337,7 @@ static void action_task(void* p)
       spi_trs_io_done();
     }
 
+#ifndef CONFIG_TRS_IO_MODEL_3
     if ((xray_upper_ram != NULL) && (xray_status != XRAY_STATUS_RUN)) {
       // Load upper 32K
       for(int i = 0; i < 32 * 1024; i++) {
@@ -322,6 +349,7 @@ static void action_task(void* p)
       spi_xray_resume();
       xray_status = XRAY_STATUS_RUN;
     }
+#endif
 
     if (is_button_long_press()) {
       storage_erase();
@@ -385,12 +413,14 @@ void init_io()
   // Set ESP_DONE to 0
   gpio_set_level((gpio_num_t) ESP_DONE, 0);
 
+#ifndef CONFIG_TRS_IO_MODEL_3
   // Configure ESP_FULL_ADDR
   gpioConfig.pin_bit_mask = MASK64_ESP_FULL_ADDR;
   gpioConfig.mode = GPIO_MODE_INPUT;
   gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
+#endif
 
   xTaskCreatePinnedToCore(io_task, "io", 6000, NULL, tskIDLE_PRIORITY + 2,
                           NULL, 1);

@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+#if defined(CONFIG_TRS_IO_ENABLE_XRAY) || defined(CONFIG_TRS_IO_MODEL_3)
 
 //-----XRAY configuration--------------------------------------------
 
@@ -40,6 +40,7 @@
 #define FPGA_CMD_GET_FPGA_VERSION 15
 #define FPGA_CMD_GET_PRINTER_BYTE 16
 #define FPGA_CMD_SET_SCREEN_COLOR 17
+#define FPGA_CMD_ABUS_READ 18
 
 
 uint8_t spi_get_cookie();
@@ -52,6 +53,7 @@ void spi_xram_poke_data(uint8_t addr, uint8_t data);
 uint8_t spi_xram_peek_data(uint8_t addr);
 uint8_t spi_dbus_read();
 void spi_dbus_write(uint8_t d);
+uint8_t spi_abus_read();
 void spi_set_breakpoint(uint8_t n, uint16_t addr);
 void spi_clear_breakpoint(uint8_t n);
 void spi_xray_resume();

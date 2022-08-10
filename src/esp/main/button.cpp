@@ -3,11 +3,7 @@
 #include "driver/gpio.h"
 #include "esp_event.h"
 
-#ifdef CONFIG_TRS_IO_MODEL_1
 #define GPIO_BUTTON GPIO_NUM_39
-#else
-#define GPIO_BUTTON GPIO_NUM_22
-#endif
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
