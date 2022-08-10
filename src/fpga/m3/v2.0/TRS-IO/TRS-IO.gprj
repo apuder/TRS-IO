@@ -1,0 +1,22 @@
+<?xml version="1" encoding="UTF-8"?>
+<!DOCTYPE gowin-fpga-project>
+<Project>
+    <Template>FPGA</Template>
+    <Version>5</Version>
+    <Device name="GW1NR-9C" pn="GW1NR-LV9QN88PC6/I5">gw1nr9c-004</Device>
+    <FileList>
+        <File path="src/filter.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_clkdiv/gowin_clkdiv0.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_clkdiv/gowin_clkdiv1.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/blk_mem_gen_2.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/blk_mem_gen_4.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/gowin_dpb0.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/gowin_dpb1.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_prom/blk_mem_gen_3.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_rpll/gowin_rpll.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_rpll/gowin_rpll0.v" type="file.verilog" enable="1"/>
+        <File path="src/main.v" type="file.verilog" enable="1"/>
+        <File path="src/trigger.v" type="file.verilog" enable="1"/>
+        <File path="src/trs-io.cst" type="file.cst" enable="1"/>
+    </FileList>
+</Project>
