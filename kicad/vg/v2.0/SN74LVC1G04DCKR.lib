@@ -1,0 +1,22 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#(c) SnapEDA 2016 (snapeda.com)
+#This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA) with Design Exception 1.0
+#
+# SN74LVC1G04DCKR
+#
+DEF SN74LVC1G04DCKR U 0 40 Y Y 1 L N
+F0 "U" -500 339 50 H V L BNN
+F1 "SN74LVC1G04DCKR" -500 -457 50 H V L BNN
+F2 "SOT65P210X110-5N" 0 0 50 H I L BNN
+F3 "" 0 0 50 H I L BNN
+DRAW
+S -500 -300 500 300 0 0 16 f
+X A 2 -700 0 200 R 40 40 0 0 I 
+X VCC 5 700 200 200 L 40 40 0 0 W 
+X Y 4 700 0 200 L 40 40 0 0 O 
+X GND 3 700 -200 200 L 40 40 0 0 W 
+ENDDRAW
+ENDDEF
+#
+# End Library
