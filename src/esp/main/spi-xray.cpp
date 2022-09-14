@@ -337,7 +337,7 @@ void spi_set_full_addr(bool flag)
   ESP_ERROR_CHECK(ret);
 }
 
-#ifdef CONFIG_TRS_IO_NANO_9K
+#ifdef CONFIG_TRS_IO_MODEL_3
 // The Nano 9K generates a HDMI signal and we have to tell it the RGB value
 void spi_set_screen_color(uint8_t color)
 {
@@ -501,7 +501,9 @@ void init_spi()
   ret = spi_bus_add_device(HSPI_HOST, &spi_cmod, &spi_cmod_h);
   ESP_ERROR_CHECK(ret);
 
-#ifndef CONFIG_TRS_IO_NANO_9K
+#if 0
+//#ifndef CONFIG_TRS_IO_NANO_9K
+  // XXX should be removed
    // Configure SPI device for MCP4351
   spi_mcp4351.address_bits = 0;
   spi_mcp4351.command_bits = 0;
@@ -523,6 +525,12 @@ void init_spi()
   test_digital_pot();
 #endif
 #endif
+
+  while(spi_get_cookie() != FPGA_COOKIE) {
+    ESP_LOGE("SPI", "FPGA not found");
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+  }
+  ESP_LOGI("SPI", "Found FPGA");
 
   uint8_t color = 0;
   if (storage_has_key(KEY_SCREEN_RGB)) {
