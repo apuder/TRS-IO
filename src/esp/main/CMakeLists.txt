@@ -1,10 +1,4 @@
-set(src button.cpp led.cpp main.cpp storage.cpp)
-
-if (CONFIG_TRS_IO_ENABLE_XRAY OR CONFIG_TRS_IO_MODEL_3)
-   set(src ${src} spi-xray.cpp io-xray.cpp)
-else()
-   set(src ${src} spi-m1.cpp io-m1.cpp)
-endif()
+set(src button.cpp led.cpp main.cpp storage.cpp spi.cpp io.cpp)
 
 if (CONFIG_TRS_IO_ENABLE_OTA)
    set(src ${src} ota.cpp)

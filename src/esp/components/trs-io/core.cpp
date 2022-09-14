@@ -3,7 +3,7 @@
 #include "esp_mock.h"
 #include "version.h"
 #include "led.h"
-#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+#ifdef CONFIG_TRS_IO_MODEL_1
 #include "io.h"
 #include "spi.h"
 #include "fileio.h"
@@ -58,14 +58,14 @@ public:
   }
 
   void setScreenColor() {
-#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+#ifdef CONFIG_TRS_IO_MODEL_1
     const uint8_t color = B(0);
     spi_set_screen_color(color);
 #endif
   }
 
   void loadXRAYState() {
-#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+#ifdef CONFIG_TRS_IO_MODEL_1
     FIL f;
     UINT br, btr;
     XRAY_Z80_REGS regs;
@@ -152,7 +152,7 @@ public:
   void sendFPGAVersion() {
     uint8_t version_major = 0xff;
     uint8_t version_minor = 0xff;
-#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+#ifdef CONFIG_TRS_IO_MODEL_1
     uint8_t v = spi_get_fpga_version();
     version_major = (v >> 5) & 7;
     version_minor = v & 0x1f;

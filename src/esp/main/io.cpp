@@ -240,7 +240,6 @@ static inline uint8_t abus_read()
 static inline void trs_io_read() {
   if (!trigger_trs_io_action) {
     uint8_t data = dbus_read();
-    printf("trsio_out: 0x%02x\n", data);
     if (!TrsIO::outZ80(data)) {
       trigger_trs_io_action = true;
     }
@@ -249,7 +248,6 @@ static inline void trs_io_read() {
 
 static inline void trs_io_write() {
   uint8_t d = trigger_trs_io_action ? 0xff : TrsIO::inZ80();
-  printf("trsio_in: 0x%02x\n", d);
   dbus_write(d);
 }
 
@@ -389,8 +387,15 @@ void init_io()
 
   gpio_config_t gpioConfig;
 
+#ifdef CONFIG_TRS_IO_MODEL_1
+// GPIO pins 12-18 (7 pins) are used for S0-S2 and A0-A4
+  gpioConfig.pin_bit_mask = GPIO_SEL_12 | GPIO_SEL_13 | GPIO_SEL_14 |
+    GPIO_SEL_15 | GPIO_SEL_16 |
+    GPIO_SEL_17 | GPIO_SEL_18;
+#else
   // GPIO pins 16-18 (3 pins) are used for S0-S2
   gpioConfig.pin_bit_mask = GPIO_SEL_16 | GPIO_SEL_17 | GPIO_SEL_18;
+#endif
   gpioConfig.mode = GPIO_MODE_INPUT;
   gpioConfig.pull_up_en = GPIO_PULLUP_DISABLE;
   gpioConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
