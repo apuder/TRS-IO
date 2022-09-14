@@ -1,0 +1,100 @@
+[
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_clkdiv/gowin_clkdiv0.v",
+  "InstLine" : 9,
+  "InstName" : "Gowin_CLKDIV0",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_clkdiv/gowin_clkdiv0.v",
+  "ModuleLine" : 9,
+  "ModuleName" : "Gowin_CLKDIV0"
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_clkdiv/gowin_clkdiv1.v",
+  "InstLine" : 9,
+  "InstName" : "Gowin_CLKDIV1",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_clkdiv/gowin_clkdiv1.v",
+  "ModuleLine" : 9,
+  "ModuleName" : "Gowin_CLKDIV1"
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_dpb/blk_mem_gen_2.v",
+  "InstLine" : 9,
+  "InstName" : "blk_mem_gen_2",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_dpb/blk_mem_gen_2.v",
+  "ModuleLine" : 9,
+  "ModuleName" : "blk_mem_gen_2"
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_dpb/blk_mem_gen_4.v",
+  "InstLine" : 9,
+  "InstName" : "blk_mem_gen_4",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_dpb/blk_mem_gen_4.v",
+  "ModuleLine" : 9,
+  "ModuleName" : "blk_mem_gen_4"
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_dpb/gowin_dpb0.v",
+  "InstLine" : 9,
+  "InstName" : "Gowin_DPB0",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_dpb/gowin_dpb0.v",
+  "ModuleLine" : 9,
+  "ModuleName" : "Gowin_DPB0"
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_dpb/gowin_dpb1.v",
+  "InstLine" : 9,
+  "InstName" : "Gowin_DPB1",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_dpb/gowin_dpb1.v",
+  "ModuleLine" : 9,
+  "ModuleName" : "Gowin_DPB1"
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_prom/blk_mem_gen_3.v",
+  "InstLine" : 9,
+  "InstName" : "blk_mem_gen_3",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_prom/blk_mem_gen_3.v",
+  "ModuleLine" : 9,
+  "ModuleName" : "blk_mem_gen_3"
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_rpll/gowin_rpll0.v",
+  "InstLine" : 9,
+  "InstName" : "Gowin_rPLL0",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_rpll/gowin_rpll0.v",
+  "ModuleLine" : 9,
+  "ModuleName" : "Gowin_rPLL0"
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/main.v",
+  "InstLine" : 3,
+  "InstName" : "main",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/main.v",
+  "ModuleLine" : 3,
+  "ModuleName" : "main",
+  "SubInsts" : [
+   {
+    "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/main.v",
+    "InstLine" : 50,
+    "InstName" : "clk_wiz_0",
+    "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_rpll/gowin_rpll.v",
+    "ModuleLine" : 9,
+    "ModuleName" : "Gowin_rPLL"
+   },
+   {
+    "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/main.v",
+    "InstLine" : 77,
+    "InstName" : "io",
+    "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/filter.v",
+    "ModuleLine" : 3,
+    "ModuleName" : "filter"
+   }
+  ]
+ },
+ {
+  "InstFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/trigger.v",
+  "InstLine" : 3,
+  "InstName" : "trigger",
+  "ModuleFile" : "C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/trigger.v",
+  "ModuleLine" : 3,
+  "ModuleName" : "trigger"
+ }
+]

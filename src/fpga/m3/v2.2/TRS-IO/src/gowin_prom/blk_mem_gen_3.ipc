@@ -1,0 +1,15 @@
+[General]
+ipc_version=4
+file=blk_mem_gen_3
+module=blk_mem_gen_3
+target_device=gw1nr9c-004
+type=ram_prom
+version=1.0
+
+[Config]
+DEPTH=1024
+LANG=0
+MEM_FILE=../trs80m1_chr.mi
+READ=1
+RESET_MODE=true
+WIDTH=5
