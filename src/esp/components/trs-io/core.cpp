@@ -3,7 +3,8 @@
 #include "esp_mock.h"
 #include "version.h"
 #include "led.h"
-#ifdef CONFIG_TRS_IO_MODEL_1
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+//#include "xray.h"
 #include "io.h"
 #include "spi.h"
 #include "fileio.h"
@@ -15,6 +16,12 @@ extern uint8_t* xray_upper_ram;
 extern const uint8_t xray_load_start[] asm("_binary_xray_load_bin_start");
 extern const uint8_t xray_load_end[] asm("_binary_xray_load_bin_end");
 static const uint8_t xray_load_len = xray_load_end - xray_load_start;
+
+
+#if 0
+static retrostore::RetroStore rs;
+retrostore::RsSystemState trs_state;
+#endif
 
 
 class TrsIOCoreModule : public TrsIO {
@@ -65,7 +72,11 @@ public:
   }
 
   void loadXRAYState() {
-#ifdef CONFIG_TRS_IO_MODEL_1
+#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+    //int token = 727;
+
+    //rs.downloadState(token, &trs_state);
+
     FIL f;
     UINT br, btr;
     XRAY_Z80_REGS regs;
@@ -135,7 +146,7 @@ public:
     rewind();
     addByte(0xff);
 #else
-   addByte(0xfe); // Not CRAY edition
+   addByte(0xfe); // Not XRAY edition
 #endif
   }
 

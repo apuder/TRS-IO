@@ -9,8 +9,6 @@
 #include "esp_event.h"
 #include "esp_log.h"
 
-#include "retrostore.h"
-#include "backend.h"
 #include "trs-io.h"
 #include "trs-fs.h"
 #include "spi.h"

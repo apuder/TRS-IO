@@ -82,6 +82,7 @@ private:
     static uint16_t numParamBlob16;
     static uint16_t numParamBlob32;
 
+    int id;
     uint16_t numCommands;
     command_t commands[TRS_IO_MAX_COMMANDS];
 
@@ -96,6 +97,7 @@ protected:
 public:
 
     explicit TrsIO(int id) {
+        this->id = id;
         assert(id < TRS_IO_MAX_MODULES);
         assert(modules[id] == nullptr);
         modules[id] = this;

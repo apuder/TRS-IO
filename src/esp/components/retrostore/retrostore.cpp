@@ -1,10 +1,13 @@
 
 #include <trs-io.h>
+#include "retrostore-defs.h"
 #include "retrostore.h"
 #include "version.h"
-#include "backend.h"
 #include "esp_mock.h"
 #include <string.h>
+
+
+static retrostore::RetroStore rs;
 
 
 // loader_cmd.bin
