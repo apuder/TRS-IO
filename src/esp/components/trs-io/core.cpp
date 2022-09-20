@@ -3,7 +3,7 @@
 #include "esp_mock.h"
 #include "version.h"
 #include "led.h"
-#ifdef CONFIG_TRS_IO_ENABLE_XRAY
+#ifdef CONFIG_TRS_IO_MODEL_1
 //#include "xray.h"
 #include "io.h"
 #include "spi.h"
@@ -19,7 +19,6 @@ static const uint8_t xray_load_len = xray_load_end - xray_load_start;
 
 
 #if 0
-static retrostore::RetroStore rs;
 retrostore::RsSystemState trs_state;
 #endif
 

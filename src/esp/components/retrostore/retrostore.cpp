@@ -33,7 +33,17 @@ extern unsigned char rsclient_cmd[];
 extern unsigned int rsclient_cmd_len;
 #endif
 
+#define SIZE_APP_PAGE 16
+
+
 class RetroStoreModule : public TrsIO {
+private:
+  std::vector<retrostore::RsAppNano> apps;
+  std::vector<retrostore::RsMediaImage> images;
+  std::string query;
+  int current_page = 0;
+  int num_apps  = 0;
+
 public:
   RetroStoreModule(int id) : TrsIO(id) {
     addCommand(static_cast<cmd_t>(&RetroStoreModule::sendVersion), "");
@@ -59,10 +69,15 @@ public:
   }
 
   void sendBASIC() {
-    unsigned char* buf;
-    int size;
-    get_last_app_code(&buf, &size);
-    addBlob16(buf, size);
+    retrostore::RsMediaImage* image = NULL;
+    for (int x = 0; x < images.size(); x++) {
+      image = &images[x];
+      if (image->type == retrostore::RsMediaType_BASIC) {
+        break;
+      }
+    }
+    assert(image != NULL);
+    addBlob16(image->data.get(), image->data_size);
   }
 
   void sendCMD() {
@@ -74,11 +89,14 @@ public:
       addBlob16((void*) rsclient_cmd, rsclient_cmd_len);
 #endif
     } else {
-      int type;
-      unsigned char* buf;
-      int size;
-      bool ok = get_app_code(idx, &type, &buf, &size);
-      if (!ok) {
+      std::vector<retrostore::RsMediaType> types;
+
+      types.push_back(retrostore::RsMediaType_COMMAND);
+      types.push_back(retrostore::RsMediaType_BASIC);
+      retrostore::RsAppNano* appNano = &apps[idx - current_page * SIZE_APP_PAGE];
+
+      images.clear();
+      if (!rs.FetchMediaImages(appNano->id, types, &images) || images.size() == 0) {
         // Error happened. Just send rsclient again so we send something legal
 #ifdef ESP_PLATFORM
         addBlob16((void*) rsclient_start, rsclient_end - rsclient_start);
@@ -86,34 +104,71 @@ public:
         addBlob16((void*) rsclient_cmd, rsclient_cmd_len);
 #endif
       } else {
-        if (type == 3 /* CMD */) {
-          addBlob16(buf, size);
+        retrostore::RsMediaImage* image = &images[0];
+        if (image->type == retrostore::RsMediaType_COMMAND) {
+          addBlob16(image->data.get(), image->data_size);
         } else {
           // BASIC loader
 #ifdef ESP_PLATFORM
           addBlob16((void*) loader_basic_start, loader_basic_end - loader_basic_start);
 #else
-	  addBlob16((void*) loader_basic_cmd, loader_basic_cmd_len);
+	        addBlob16((void*) loader_basic_cmd, loader_basic_cmd_len);
 #endif
         }
       }  
     }
   }
 
+  retrostore::RsAppNano* get_app_from_cache(int idx) {
+    int page_nr = idx / SIZE_APP_PAGE;
+    int offset = idx % SIZE_APP_PAGE;
+    if ((page_nr != current_page) || (num_apps == 0)) {
+      apps.clear();
+      std::vector<retrostore::RsMediaType> hasTypes;
+      hasTypes.push_back(retrostore::RsMediaType_COMMAND);
+      hasTypes.push_back(retrostore::RsMediaType_BASIC);
+      if (!rs.FetchAppsNano(page_nr * SIZE_APP_PAGE, SIZE_APP_PAGE, query, hasTypes, &apps)) {
+        return NULL;
+      }
+      current_page = page_nr;
+      num_apps = apps.size();
+    }
+    if (offset >= num_apps) {
+      return NULL;
+    }
+    return &apps[offset];
+  }
+
   void sendAppTitle() {
     uint16_t idx = I(0);
-    char* title = get_app_title(idx);
+    retrostore::RsAppNano* app = get_app_from_cache(idx);
+    if (app == NULL) {
+      addStr("");
+      return;
+    }
+    char title[64];
+    snprintf(title, sizeof(title), "%s (%s)", app->name.c_str(), app->author.c_str());
     addStr(title);
   }
 
   void sendAppDetails() {
     uint16_t idx = I(0);
-    char* details = get_app_details(idx);
-    addStr(details);
+    retrostore::RsAppNano* appNano = &apps[idx - current_page * SIZE_APP_PAGE];
+    retrostore::RsApp app;
+    rs.SetMaxDescriptionLength(1024);
+    if (!rs.FetchApp(appNano->id, &app)) {
+      addStr("");
+      return;
+    }
+    static char description[1024];
+    snprintf(description, sizeof(description), "%s\nAuthor: %s\n"
+               "Year: %d\n\n%s", app.name.c_str(), app.author.c_str(), app.release_year,
+               app.description.c_str());
+    addStr(description);
   }
 
   void setQuery() {
-    set_query(S(0));
+    query = S(0);
   }  
 };
 

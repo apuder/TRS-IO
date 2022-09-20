@@ -180,7 +180,6 @@ uint8_t TrsIO::inZ80() {
 
 #include <stdio.h>
 void TrsIO::processInBackground() {
-    printf("TRS-IO: %d, %d\n", currentModule->id, cmd);
   currentModule->process();
   nextByteToSend = sendBuffer;
 }
