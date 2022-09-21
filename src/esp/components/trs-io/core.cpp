@@ -3,23 +3,24 @@
 #include "esp_mock.h"
 #include "version.h"
 #include "led.h"
-#ifdef CONFIG_TRS_IO_MODEL_1
+
+#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_SDLTRS)
+#include "retrostore-defs.h"
 //#include "xray.h"
 #include "io.h"
 #include "spi.h"
 #include "fileio.h"
+
+retrostore::RsSystemState trs_state;
 #endif
 
-
-extern uint8_t* xray_upper_ram;
-
+#ifdef ESP_PLATFORM
 extern const uint8_t xray_load_start[] asm("_binary_xray_load_bin_start");
 extern const uint8_t xray_load_end[] asm("_binary_xray_load_bin_end");
 static const uint8_t xray_load_len = xray_load_end - xray_load_start;
-
-
-#if 0
-retrostore::RsSystemState trs_state;
+#else
+extern unsigned char xray_load_bin[];
+extern unsigned int xray_load_bin_len;
 #endif
 
 
@@ -71,73 +72,62 @@ public:
   }
 
   void loadXRAYState() {
-#ifdef CONFIG_TRS_IO_ENABLE_XRAY
-    //int token = 727;
+#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_SDLTRS)
+    uint8_t* buf = NULL;
+    int token = atoi(S(0));
 
-    //rs.downloadState(token, &trs_state);
+    if (token == 0) {
+      addByte(0xff);
+      return;
+    }
 
-    FIL f;
-    UINT br, btr;
-    XRAY_Z80_REGS regs;
-    uint8_t* buf = ((uint8_t*) &regs) + sizeof(XRAY_Z80_REGS) - 1;
+    if (!rs.DownloadState(token, &trs_state)) goto err;
+    if (trs_state.regions.size() != 2) goto err;
+    if (trs_state.regions[0].start != 0x3c00) goto err;
+    if (trs_state.regions[0].length < 1024) goto err;
+    if (trs_state.regions[1].start != 0x8000) goto err;
+    if (trs_state.regions[1].start != 32 * 1024) goto err;
 
     addByte(0);
 
-    // Open file containing state
-    FRESULT res = f_open(&f, S(0), FA_READ);
-    if (res != FR_OK) goto err;
+    XRAY_Z80_REGS regs;
 
-    // Read Z80 registers
-    res = f_read(&f, &regs, sizeof(XRAY_Z80_REGS), &br);
-    if (res != FR_OK || br != sizeof(XRAY_Z80_REGS)) goto err;
+    regs.af = trs_state.registers.af;
+    regs.bc = trs_state.registers.bc;
+    regs.de = trs_state.registers.de;
+    regs.hl = trs_state.registers.hl;
+    regs.af_p = trs_state.registers.af_prime;
+    regs.bc_p = trs_state.registers.bc_prime;
+    regs.de_p = trs_state.registers.de_prime;
+    regs.hl_p = trs_state.registers.hl_prime;
+    regs.ix = trs_state.registers.ix;
+    regs.iy = trs_state.registers.iy;
+    regs.pc = trs_state.registers.pc;
+    regs.sp = trs_state.registers.sp;
 
     // Poke Z80 register values to XRAM
     addInt(regs.pc);
     spi_set_breakpoint(0, regs.pc);
+    buf = ((uint8_t*) &regs) + sizeof(XRAY_Z80_REGS) - 1;
     for (int i = 0; i < sizeof(XRAY_Z80_REGS); i++) {
       spi_xram_poke_data(255 - i, *buf--);
     }
 
     buf = startBlob16();
-
-    // Read video RAM
-    btr = 1024;
-    while(true) {
-      res = f_read(&f, buf, btr, &br);
-      if (res != FR_OK) {
-        break;
-      }
-      if (btr == br) break;
-      buf += br;
-      btr -= br;
-    }
-    //if (res != FR_OK || btr != 0) goto err;
+    memcpy(buf, trs_state.regions[0].data.get(), 1024);
     skip(1024);
     endBlob16();
 
-    // Read 32K of RAM
-    xray_upper_ram = (uint8_t*) malloc(32 * 1024);
-    buf = xray_upper_ram;
-    assert(xray_upper_ram != NULL);
-    btr = 32 * 1024;
-    while(true) {
-      res = f_read(&f, buf, 1024, &br);
-      if (res != FR_OK) {
-        free(xray_upper_ram);
-        xray_upper_ram = NULL;
-        break;
-      }
-      if (btr == br) break;
-      buf += br;
-      btr -= br;
-    }
-    
-    f_close(&f);
-
     // Poke XRAY loader stub into XRAM that will load the context
+#ifdef ESP_PLATFORM
     for (int i = 0; i < xray_load_len; i++) {
       spi_xram_poke_code(i, xray_load_start[i]);
     }
+#else
+    for (int i = 0; i < xray_load_bin_len; i++) {
+      spi_xram_poke_code(i, xray_load_bin[i]);
+    }
+#endif
 
     return;
 

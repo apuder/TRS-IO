@@ -7,13 +7,13 @@
 
 typedef void (*pc_t)();
 
-#define FILE_NAME_LEN 30
+#define TOKEN_LEN 3
 
-static char file_name[FILE_NAME_LEN + 1] = "";
+static char token[TOKEN_LEN + 1] = "";
 
 static form_item_t form_load[] = {
-  { FORM_TYPE_INPUT, "Filename", .u.input.len = FILE_NAME_LEN,
-    .u.input.buf = file_name, .u.input.width = 0},
+  { FORM_TYPE_INPUT, "Token", .u.input.len = TOKEN_LEN,
+    .u.input.buf = token, .u.input.width = 0},
   { FORM_TYPE_END }
 };
 
@@ -29,8 +29,8 @@ static void load()
   out(TRS_IO_PORT, TRS_IO_CORE_MODULE_ID);
   out(TRS_IO_PORT, TRS_IO_LOAD_XRAY_STATE);
   do {
-    out(TRS_IO_PORT, file_name[i]);
-  } while(file_name[i++] != '\0');
+    out(TRS_IO_PORT, token[i]);
+  } while(token[i++] != '\0');
 
   wait_for_esp();
 
@@ -46,13 +46,12 @@ static void load()
 
   (*pc)();
   
-get_key();
+  get_key();
   return;
 
 err:
   wnd_popup("Error loading XRAY state");
-get_key();
-  
+  get_key();
 }
 
 void load_xray_state()

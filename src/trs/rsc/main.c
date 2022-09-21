@@ -127,8 +127,6 @@ void main() {
   while (true) {
     switch (check()) {
     case RS_STATUS_WIFI_NOT_NEEDED:
-      the_menu = &main_menu_wifi_not_needed;
-      break;
     case RS_STATUS_WIFI_CONNECTED:
       if (has_xray_support()) {
         the_menu = &main_menu_with_xray;
