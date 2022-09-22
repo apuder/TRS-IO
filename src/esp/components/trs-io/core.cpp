@@ -4,10 +4,10 @@
 #include "version.h"
 #include "led.h"
 
-#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_SDLTRS)
+#ifndef CONFIG_TRS_IO_MODEL_3
 #include "retrostore-defs.h"
-//#include "xray.h"
-#include "io.h"
+#include "xray.h"
+//#include "io.h"
 #include "spi.h"
 #include "fileio.h"
 
@@ -72,7 +72,7 @@ public:
   }
 
   void loadXRAYState() {
-#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_SDLTRS)
+#ifndef CONFIG_TRS_IO_MODEL_3
     uint8_t* buf = NULL;
     int token = atoi(S(0));
 
