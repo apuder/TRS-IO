@@ -38,10 +38,11 @@ static void load()
   if (b != 0) goto err;
   pc = (pc_t) (in(TRS_IO_PORT) | (in(TRS_IO_PORT) << 8));
   len = in(TRS_IO_PORT) | (in(TRS_IO_PORT) << 8);
-  if (len != 1024) goto err;
-
-  for(i = 0; i < len; i++) {
-    *video++ = in(TRS_IO_PORT);
+  if (len == 1024) {
+    // We have a screenshot
+    for(i = 0; i < len; i++) {
+      *video++ = in(TRS_IO_PORT);
+    }
   }
 
   (*pc)();

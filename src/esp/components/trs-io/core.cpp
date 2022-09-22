@@ -82,11 +82,7 @@ public:
     }
 
     if (!rs.DownloadState(token, &trs_state)) goto err;
-    if (trs_state.regions.size() != 2) goto err;
-    if (trs_state.regions[0].start != 0x3c00) goto err;
-    if (trs_state.regions[0].length < 1024) goto err;
-    if (trs_state.regions[1].start != 0x8000) goto err;
-    if (trs_state.regions[1].start != 32 * 1024) goto err;
+    if (trs_state.regions.size() == 0) goto err;
 
     addByte(0);
 
@@ -114,8 +110,16 @@ public:
     }
 
     buf = startBlob16();
-    memcpy(buf, trs_state.regions[0].data.get(), 1024);
-    skip(1024);
+    // Look for a memory region that represents a screenshot
+    for (int i = 0; i < trs_state.regions.size(); i++) {
+      retrostore::RsMemoryRegion* region = &trs_state.regions[i];
+      if (region->start == 0x3c00 && region->length == 1024) {
+        // Found one
+        memcpy(buf, trs_state.regions[i].data.get(), 1024);
+        skip(1024);
+        break;
+      }
+    }
     endBlob16();
 
     // Poke XRAY loader stub into XRAM that will load the context
