@@ -5,32 +5,32 @@
 1. PnR Messages
 
   <Report Title>: PnR Report
-  <Design File>: C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg
-  <Physical Constraints File>: C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\trs-io.cst
+  <Design File>: C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg
+  <Physical Constraints File>: C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\trs-io.cst
   <Timing Constraints File>: ---
   <PnR Version>: V1.9.8.06
   <Part Number>: GW1NR-LV9QN88PC6/I5
   <Device>: GW1NR-9C
-  <Created Time>:Tue Jun 14 16:41:07 2022
+  <Created Time>:Sat Sep 24 11:34:08 2022
 
 
 2. PnR Details
 
   Running placement:
-    Placement Phase 0: CPU time = 0h 0m 0.853s, Elapsed time = 0h 0m 0.853s
-    Placement Phase 1: CPU time = 0h 0m 0.05s, Elapsed time = 0h 0m 0.05s
-    Placement Phase 2: CPU time = 0h 0m 0.47s, Elapsed time = 0h 0m 0.47s
-    Placement Phase 3: CPU time = 0h 0m 1s, Elapsed time = 0h 0m 1s
-    Total Placement: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
+    Placement Phase 0: CPU time = 0h 0m 1s, Elapsed time = 0h 0m 1s
+    Placement Phase 1: CPU time = 0h 0m 0.137s, Elapsed time = 0h 0m 0.139s
+    Placement Phase 2: CPU time = 0h 0m 0.992s, Elapsed time = 0h 0m 0.998s
+    Placement Phase 3: CPU time = 0h 0m 5s, Elapsed time = 0h 0m 5s
+    Total Placement: CPU time = 0h 0m 7s, Elapsed time = 0h 0m 7s
  Running routing:
-    Routing Phase 0: CPU time = 0h 0m 0.001s, Elapsed time = 0h 0m 0.001s
-    Routing Phase 1: CPU time = 0h 0m 0.485s, Elapsed time = 0h 0m 0.486s
-    Routing Phase 2: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
-    Total Routing: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
+    Routing Phase 0: CPU time = 0h 0m 0s, Elapsed time = 0h 0m 0.002s
+    Routing Phase 1: CPU time = 0h 0m 0.932s, Elapsed time = 0h 0m 0.937s
+    Routing Phase 2: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
+    Total Routing: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
  Generate output files:
-    CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
+    CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
 
- Total Time and Memory Usage: CPU time = 0h 0m 7s, Elapsed time = 0h 0m 7s, Peak memory usage = 204MB
+ Total Time and Memory Usage: CPU time = 0h 0m 14s, Elapsed time = 0h 0m 14s, Peak memory usage = 219MB
 
 
 3. Resource Usage Summary
@@ -38,15 +38,15 @@
   ----------------------------------------------------------
   Resources                   | Usage
   ----------------------------------------------------------
-  Logic                       | 1633/8640  18%
-    --LUT,ALU,ROM16           | 1633(1481 LUT, 152 ALU, 0 ROM16)
+  Logic                       | 1845/8640  21%
+    --LUT,ALU,ROM16           | 1845(1665 LUT, 180 ALU, 0 ROM16)
     --SSRAM(RAM16)            | 0
-  Register                    | 1012/6693  15%
+  Register                    | 1170/6693  17%
     --Logic Register as Latch | 0/6480  0%
-    --Logic Register as FF    | 996/6480  15%
+    --Logic Register as FF    | 1154/6480  17%
     --I/O Register as Latch   | 0/213  0%
     --I/O Register as FF      | 16/213  7%
-  CLS                         | 1273/4320  29%
+  CLS                         | 1510/4320  34%
   I/O Port                    | 53
   I/O Buf                     | 48
     --Input Buf               | 19
@@ -105,7 +105,7 @@
   clk_audio_4    | PRIMARY        |  TL BL
   clk            | PRIMARY        |  TR TL BR BL
   clk_pixel      | PRIMARY        |  TR TL BR BL
-  vga_clk        | PRIMARY        |  TL BL
+  vga_clk        | PRIMARY        |  TL BR BL
   sw_d[1]        | SECONDARY      |  -
   n4054_4        | SECONDARY      |  -
   clk_pixel_x5   | HCLK           | TOP[0]

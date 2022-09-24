@@ -1,12 +1,13 @@
-Reading netlist file: "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg"
-Parsing netlist file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg" completed
+Reading netlist file: "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg"
+Parsing netlist file "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg" completed
 Processing netlist completed
-Reading constraint file: "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\src\trs-io.cst"
+Reading constraint file: "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\trs-io.cst"
 Physical Constraint parsed completed
 Running placement......
 [10%] Placement Phase 0 completed
 [20%] Placement Phase 1 completed
 [30%] Placement Phase 2 completed
+WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (TA1117) : Can't calculate clocks' relationship between: "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk" and "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk"
 WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_audio_4" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
@@ -23,10 +24,10 @@ Bitstream generation in progress......
 Bitstream generation completed
 Running power analysis......
 [100%] Power analysis completed
-Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.power.html" completed
-Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.pin.html" completed
-Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.rpt.html" completed
-Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.rpt.txt" completed
-Generate file "C:\git\TRS-IO\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.tr.html" completed
-Tue Jun 14 16:41:07 2022
+Generate file "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.power.html" completed
+Generate file "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.pin.html" completed
+Generate file "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.rpt.html" completed
+Generate file "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.rpt.txt" completed
+Generate file "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\TRS-IO.tr.html" completed
+Sat Sep 24 11:34:08 2022
 

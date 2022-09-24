@@ -577,9 +577,6 @@ trigger pre_ram_access_check_trigger(
   .three()
 );
 
-assign breakpoint_idx = 0;
-/*
-XXX
 assign breakpoint_idx = (({8{(breakpoint_active[0] && ({1'b0, breakpoints[0]} == TRS_A))}} & 8'd1) |
                         ({8{(breakpoint_active[1] && ({1'b0, breakpoints[1]} == TRS_A))}} & 8'd2) |
                         ({8{(breakpoint_active[2] && ({1'b0, breakpoints[2]} == TRS_A))}} & 8'd3) |
@@ -589,7 +586,6 @@ assign breakpoint_idx = (({8{(breakpoint_active[0] && ({1'b0, breakpoints[0]} ==
                         ({8{(breakpoint_active[6] && ({1'b0, breakpoints[6]} == TRS_A))}} & 8'd7) |
                         ({8{(breakpoint_active[7] && ({1'b0, breakpoints[7]} == TRS_A))}} & 8'd8)) &
                         {8{~TRS_RD}};
-*/
 
 
 reg [16:0] xray_base_addr;
@@ -734,8 +730,8 @@ trigger brama_write_trigger(
   .clk(clk),
   .cond(do_ram_access && !TRS_WR && !xray_run_stub),
   .one(),
-  .two(ena_write),
-  .three()
+  .two(),
+  .three(ena_write)
 );
 
 

@@ -6,15 +6,15 @@
 
 -mod_name Gowin_rPLL
 -file_name gowin_rpll
--path C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/
+-path C:/git/TRS-IO-M3/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/
 -type PLL
 -rPll true
 -file_type vlg
 -dev_type GW1NR-9C
 -dyn_idiv_sel false
--idiv_sel 1
+-idiv_sel 9
 -dyn_fbdiv_sel false
--fbdiv_sel 3
+-fbdiv_sel 28
 -dyn_odiv_sel false
 -odiv_sel 8
 -dyn_da_en true
