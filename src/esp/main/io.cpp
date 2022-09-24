@@ -53,7 +53,9 @@ static volatile bool DRAM_ATTR intr_enabled = true;
  * XRay
  ***********************************************************************************/
 
-uint8_t* xray_upper_ram;
+#include "retrostore.h"
+
+extern retrostore::RsSystemState trs_state;
 
 #define XRAY_PC_OFFSET 11
 
@@ -338,13 +340,19 @@ static void action_task(void* p)
     }
 
 #ifndef CONFIG_TRS_IO_MODEL_3
-    if ((xray_upper_ram != NULL) && (xray_status != XRAY_STATUS_RUN)) {
+    if ((trs_state.regions.size() != 0) && (xray_status != XRAY_STATUS_RUN)) {
       // Load upper 32K
-      for(int i = 0; i < 32 * 1024; i++) {
-        spi_bram_poke(0x8000 + i, xray_upper_ram[i]);
+      for (int i = 0; i < trs_state.regions.size(); i++) {
+        retrostore::RsMemoryRegion* region = &trs_state.regions[i];
+        if (region->start == 0x3c00) {
+          // Ignore screenshot
+          continue;
+        }
+        uint8_t* buf = region->data.get();
+        for (int j = 0; j < region->length; j++) {
+          spi_bram_poke(region->start + j, *buf++);
+        }
       }
-      free(xray_upper_ram);
-      xray_upper_ram = NULL;
       spi_clear_breakpoint(0);
       spi_xray_resume();
       xray_status = XRAY_STATUS_RUN;
