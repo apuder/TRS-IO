@@ -81,6 +81,9 @@ public:
       return;
     }
 
+    // Delete memory regions of old state
+    trs_state.regions.clear();
+
     if (!rs.DownloadState(token, &trs_state)) goto err;
     if (trs_state.regions.size() == 0) goto err;
 
