@@ -93,10 +93,12 @@ public:
 
       types.push_back(retrostore::RsMediaType_COMMAND);
       types.push_back(retrostore::RsMediaType_BASIC);
-      retrostore::RsAppNano* appNano = &apps[idx - current_page * SIZE_APP_PAGE];
-
+      std::string id = apps[idx - current_page * SIZE_APP_PAGE].id;
+      apps.clear();
+      num_apps = 0;
       images.clear();
-      if (!rs.FetchMediaImages(appNano->id, types, &images) || images.size() == 0) {
+
+      if (!rs.FetchMediaImages(id, types, &images) || images.size() == 0) {
         // Error happened. Just send rsclient again so we send something legal
 #ifdef ESP_PLATFORM
         addBlob16((void*) rsclient_start, rsclient_end - rsclient_start);
@@ -146,9 +148,15 @@ public:
       addStr("");
       return;
     }
-    char title[64];
+    char title[64] = {'\0'};
     snprintf(title, sizeof(title), "%s (%s)", app->name.c_str(), app->author.c_str());
     addStr(title);
+  }
+
+  void appendString(const char* s) {
+    while(*s != '\0') {
+      addByte(*s++);
+    }
   }
 
   void sendAppDetails() {
@@ -160,11 +168,15 @@ public:
       addStr("");
       return;
     }
-    static char description[1024];
-    snprintf(description, sizeof(description), "%s\nAuthor: %s\n"
-               "Year: %d\n\n%s", app.name.c_str(), app.author.c_str(), app.release_year,
-               app.description.c_str());
-    addStr(description);
+    appendString(app.name.c_str());
+    appendString("\nAuthor: ");
+    appendString(app.author.c_str());
+    appendString("\nYear: ");
+    char buf[10];
+    snprintf(buf, sizeof(buf), "%d", app.release_year);
+    appendString(buf);
+    appendString("\n\n");
+    addStr(app.description.c_str());
   }
 
   void setQuery() {
