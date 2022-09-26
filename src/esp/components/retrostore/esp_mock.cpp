@@ -6,8 +6,8 @@
 
 uint8_t* get_wifi_status()
 {
-  // RS_STATUS_WIFI_NOT_NEEDED
-  static uint8_t status = 0;
+  // RS_STATUS_WIFI_CONNECTED
+  static uint8_t status = 2;
   return &status;
 }
 
