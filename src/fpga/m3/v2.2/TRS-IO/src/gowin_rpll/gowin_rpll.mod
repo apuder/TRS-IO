@@ -6,7 +6,7 @@
 
 -mod_name Gowin_rPLL
 -file_name gowin_rpll
--path C:/git/TRS-IO-M3/src/fpga/m3/v2.1/TRS-IO/src/gowin_rpll/
+-path C:/git/TRS-IO-M3/src/fpga/m3/v2.2/TRS-IO/src/gowin_rpll/
 -type PLL
 -rPll true
 -file_type vlg
@@ -14,9 +14,9 @@
 -dyn_idiv_sel false
 -idiv_sel 1
 -dyn_fbdiv_sel false
--fbdiv_sel 3
+-fbdiv_sel 4
 -dyn_odiv_sel false
--odiv_sel 8
+-odiv_sel 4
 -dyn_da_en true
 -rst_sig false
 -rst_sig_p false

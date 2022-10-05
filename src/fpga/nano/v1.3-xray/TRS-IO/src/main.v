@@ -275,8 +275,6 @@ reg [5:0] count;
 always @(posedge clk) begin
   if (esp_sel_risingedge) begin
     // ESP needs to do something
-led[0] <= ~led[0];
-
     ESP_REQ <= 1;
     count <= 50;
     if (printer_sel) begin
@@ -630,6 +628,8 @@ end
 wire xray_run_stub = (state_xray != state_xray_run);
 
 assign xray_sel = xray_run_stub && stub_ran_once;
+
+assign led[0] = ~xray_run_stub;
 
 
 //--------BRAM-------------------------------------------------------------------------
@@ -1006,7 +1006,6 @@ vga vga(
   .reset(sync));
 
 /*
-assign led[0] = xray_run_stub;
 
 
 //----XFLASH---------------------------------------------------------------------

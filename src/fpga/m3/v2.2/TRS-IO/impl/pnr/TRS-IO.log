@@ -1,7 +1,7 @@
-Reading netlist file: "C:\git\TRS-IO-M3\src\fpga\m3\v2.1\TRS-IO\impl\gwsynthesis\TRS-IO.vg"
-Parsing netlist file "C:\git\TRS-IO-M3\src\fpga\m3\v2.1\TRS-IO\impl\gwsynthesis\TRS-IO.vg" completed
+Reading netlist file: "C:\git\TRS-IO-M3\src\fpga\m3\v2.2\TRS-IO\impl\gwsynthesis\TRS-IO.vg"
+Parsing netlist file "C:\git\TRS-IO-M3\src\fpga\m3\v2.2\TRS-IO\impl\gwsynthesis\TRS-IO.vg" completed
 Processing netlist completed
-Reading constraint file: "C:\git\TRS-IO-M3\src\fpga\m3\v2.1\TRS-IO\src\trs-io.cst"
+Reading constraint file: "C:\git\TRS-IO-M3\src\fpga\m3\v2.2\TRS-IO\src\trs-io.cst"
 Physical Constraint parsed completed
 Running placement......
 [10%] Placement Phase 0 completed
@@ -20,10 +20,10 @@ Bitstream generation in progress......
 Bitstream generation completed
 Running power analysis......
 [100%] Power analysis completed
-Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.1\TRS-IO\impl\pnr\TRS-IO.power.html" completed
-Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.1\TRS-IO\impl\pnr\TRS-IO.pin.html" completed
-Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.1\TRS-IO\impl\pnr\TRS-IO.rpt.html" completed
-Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.1\TRS-IO\impl\pnr\TRS-IO.rpt.txt" completed
-Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.1\TRS-IO\impl\pnr\TRS-IO.tr.html" completed
-Tue Sep 13 15:26:35 2022
+Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.2\TRS-IO\impl\pnr\TRS-IO.power.html" completed
+Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.2\TRS-IO\impl\pnr\TRS-IO.pin.html" completed
+Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.2\TRS-IO\impl\pnr\TRS-IO.rpt.html" completed
+Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.2\TRS-IO\impl\pnr\TRS-IO.rpt.txt" completed
+Generate file "C:\git\TRS-IO-M3\src\fpga\m3\v2.2\TRS-IO\impl\pnr\TRS-IO.tr.html" completed
+Sat Sep 24 18:15:11 2022
 
