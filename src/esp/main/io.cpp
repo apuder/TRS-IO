@@ -355,7 +355,7 @@ static void action_task(void* p)
         }
       }
 #else
-//spi_bram_poke(0xe007, 6); // LD B,c
+spi_bram_poke(0xe008, 6); // LD B,c
 #endif
       spi_clear_breakpoint(0);
       spi_xray_resume();
