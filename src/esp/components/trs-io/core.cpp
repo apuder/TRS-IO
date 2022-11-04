@@ -105,14 +105,17 @@ public:
     regs.sp = trs_state.registers.sp;
 
     // Poke Z80 register values to XRAM
-    addInt(regs.pc);
-    spi_set_breakpoint(0, regs.pc);
+    //addInt(regs.pc);
+    addInt(0xe000);
+    //spi_set_breakpoint(0, regs.pc);
+    spi_set_breakpoint(0, 0xe007);
     buf = ((uint8_t*) &regs) + sizeof(XRAY_Z80_REGS) - 1;
     for (int i = 0; i < sizeof(XRAY_Z80_REGS); i++) {
       spi_xram_poke_data(255 - i, *buf--);
     }
 
     buf = startBlob16();
+#if 0
     // Look for a memory region that represents a screenshot
     for (int i = 0; i < trs_state.regions.size(); i++) {
       retrostore::RsMemoryRegion* region = &trs_state.regions[i];
@@ -123,13 +126,34 @@ public:
         break;
       }
     }
+#endif
     endBlob16();
 
     // Poke XRAY loader stub into XRAM that will load the context
 #ifdef ESP_PLATFORM
+#if 0
     for (int i = 0; i < xray_load_len; i++) {
       spi_xram_poke_code(i, xray_load_start[i]);
     }
+#else
+static unsigned char test_bin[] = {
+  0x01, 0x30, 0x30, 0x11, 0x30, 0x30, 0xaf, 0x0e, 0x31, 0x21, 0x00, 0x3c,
+  0x71, 0x23, 0x70, 0x23, 0x73, 0x23, 0x72, 0x18, 0xfe
+};
+static uint16_t addr = 0xe000;
+
+for (int j = 0; j < sizeof(test_bin); j++) {
+  spi_bram_poke(addr++, test_bin[j]);
+}
+
+static unsigned char xray_bin[] = {
+  0x16, 0x32, 0xb7, 0x20, 0x02, 0x5a, 0x3c, 0x18, 0xf7
+};
+
+for (int i = 0; i < sizeof(xray_bin); i++) {
+ spi_xram_poke_code(i, xray_bin[i]);
+}
+#endif
 #else
     for (int i = 0; i < xray_load_bin_len; i++) {
       spi_xram_poke_code(i, xray_load_bin[i]);

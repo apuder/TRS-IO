@@ -341,6 +341,7 @@ static void action_task(void* p)
 
 #ifndef CONFIG_TRS_IO_MODEL_3
     if ((trs_state.regions.size() != 0) && (xray_status != XRAY_STATUS_RUN)) {
+#if 0
       // Load upper 32K
       for (int i = 0; i < trs_state.regions.size(); i++) {
         retrostore::RsMemoryRegion* region = &trs_state.regions[i];
@@ -353,6 +354,9 @@ static void action_task(void* p)
           spi_bram_poke(region->start + j, *buf++);
         }
       }
+#else
+spi_bram_poke(0xe007, 6); // LD B,c
+#endif
       spi_clear_breakpoint(0);
       spi_xray_resume();
       xray_status = XRAY_STATUS_RUN;
