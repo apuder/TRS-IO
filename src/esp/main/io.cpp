@@ -12,6 +12,7 @@
 #include "esp_event.h"
 #include "tcpip.h"
 #include "retrostore.h"
+#include "retrostore-defs.h"
 #include <string.h>
 #include "esp_system.h"
 #include "esp_log.h"
@@ -56,6 +57,7 @@ static volatile bool DRAM_ATTR intr_enabled = true;
 #include "retrostore.h"
 
 extern retrostore::RsSystemState trs_state;
+extern int trs_state_token;
 
 #define XRAY_PC_OFFSET 11
 
@@ -341,18 +343,31 @@ static void action_task(void* p)
 
 #ifndef CONFIG_TRS_IO_MODEL_3
     if ((trs_state.regions.size() != 0) && (xray_status != XRAY_STATUS_RUN)) {
-      // Load upper 32K
+      // Load memory regions
       for (int i = 0; i < trs_state.regions.size(); i++) {
         retrostore::RsMemoryRegion* region = &trs_state.regions[i];
         if (region->start == 0x3c00) {
           // Ignore screenshot
           continue;
         }
-        uint8_t* buf = region->data.get();
-        for (int j = 0; j < region->length; j++) {
-          spi_bram_poke(region->start + j, *buf++);
-        }
+        int start = region->start;
+        int left = region->length;
+        const int fragment_size = 4096;
+        do {
+          rs.DownloadStateMemoryRange(trs_state_token, start, fragment_size, region);
+          uint8_t* buf = region->data.get();
+          assert(region->start == start);
+          assert(region->length <= fragment_size);
+          for (int j = 0; j < region->length; j++) {
+            spi_bram_poke(start + j, *buf);
+            assert(spi_bram_peek(start + j == *buf));
+            buf++;
+          }
+          start += region->length;
+          left -= region->length;
+        } while (left > 0);
       }
+      trs_state.regions.clear();
       spi_clear_breakpoint(0);
       spi_xray_resume();
       xray_status = XRAY_STATUS_RUN;

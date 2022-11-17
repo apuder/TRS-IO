@@ -12,6 +12,7 @@
 #include "fileio.h"
 
 retrostore::RsSystemState trs_state;
+int trs_state_token;
 #endif
 
 #ifdef ESP_PLATFORM
@@ -74,9 +75,9 @@ public:
   void loadXRAYState() {
 #ifndef CONFIG_TRS_IO_MODEL_3
     uint8_t* buf = NULL;
-    int token = atoi(S(0));
+    trs_state_token = atoi(S(0));
 
-    if (token == 0) {
+    if (trs_state_token == 0) {
       addByte(0xff);
       return;
     }
@@ -84,7 +85,7 @@ public:
     // Delete memory regions of old state
     trs_state.regions.clear();
 
-    if (!rs.DownloadState(token, &trs_state)) goto err;
+    if (!rs.DownloadState(trs_state_token, true, &trs_state)) goto err;
     if (trs_state.regions.size() == 0) goto err;
 
     addByte(0);
@@ -113,15 +114,24 @@ public:
     }
 
     buf = startBlob16();
-    // Look for a memory region that represents a screenshot
+    // Look for a memory region that represents a screenshot.
     for (int i = 0; i < trs_state.regions.size(); i++) {
       retrostore::RsMemoryRegion* region = &trs_state.regions[i];
       if (region->start == 0x3c00 && region->length == 1024) {
         // Found one
-        memcpy(buf, trs_state.regions[i].data.get(), 1024);
+        retrostore::RsMemoryRegion region;
+        rs.DownloadStateMemoryRange(trs_state_token, 0x3c00, 1024, &region);
+        memcpy(buf, region.data.get(), 1024);
         skip(1024);
-        break;
+        continue;
       }
+#ifdef CONFIG_TRS_IO_MODEL_1
+      if (region->start < 0x8000) {
+        // Model I can only handle memory regions in the upper 32K
+        endBlob16();
+        goto err;
+      }
+#endif
     }
     endBlob16();
 
