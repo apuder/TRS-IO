@@ -233,8 +233,8 @@ wire fdc_37ef_sel_rd = (TRS_A == 17'h37ef) && !TRS_RD;
 wire fdc_sel_rd = fdc_37e0_sel_rd || fdc_37ec_sel_rd || fdc_37ef_sel_rd;
 wire fdc_sel = fdc_sel_rd;
 
-wire printer_sel_rd = 0;//XXX (TRS_A == 17'h37e8) && !TRS_RD;
-wire printer_sel_wr = 0;//XXX (TRS_A == 17'h37e8) && !TRS_WR;
+wire printer_sel_rd = (TRS_A == 17'h37e8) && !TRS_RD;
+wire printer_sel_wr = (TRS_A == 17'h37e8) && !TRS_WR;
 wire printer_sel = printer_sel_wr;
 reg printer_sel_reg = 0;
 

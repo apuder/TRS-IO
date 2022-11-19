@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="main" Register="418" Alu="63" Lut="471">
+<Module name="main" Register="427" Alu="63" Lut="529">
     <SubModule name="clk_wiz_0"/>
     <SubModule name="io" Register="12" Lut="5"/>
     <SubModule name="pre_ram_access_check_trigger" Register="1"/>
@@ -10,7 +10,7 @@
     <SubModule name="xram" Bsram="1"/>
     <SubModule name="xrama_read_trigger" Register="1"/>
     <SubModule name="xram_peek_trigger" Register="1"/>
-    <SubModule name="vga" Register="82" Alu="11" Lut="128">
+    <SubModule name="vga" Register="82" Alu="11" Lut="130">
         <SubModule name="z80_dsp" Bsram="1"/>
         <SubModule name="le18_rd_trigger" Register="2"/>
         <SubModule name="z80_le18" Bsram="6"/>
@@ -19,14 +19,14 @@
     <SubModule name="pll0"/>
     <SubModule name="clkdiv0"/>
     <SubModule name="clkdiv1"/>
-    <SubModule name="hdmi" Register="68" Alu="10" Lut="51">
-        <SubModule name="true_hdmi_output.packet_picker" Register="425" Lut="323">
+    <SubModule name="hdmi" Register="68" Alu="10" Lut="52">
+        <SubModule name="true_hdmi_output.packet_picker" Register="425" Lut="327">
             <SubModule name="audio_clock_regeneration_packet" Register="42" Alu="20" Lut="8"/>
         </SubModule>
-        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="330"/>
-        <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="16" Lut="123"/>
-        <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="16" Lut="97"/>
-        <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="16" Lut="87"/>
+        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="336"/>
+        <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="16" Lut="103"/>
+        <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="16" Lut="92"/>
+        <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="16" Lut="98"/>
         <SubModule name="serializer"/>
     </SubModule>
 </Module>
