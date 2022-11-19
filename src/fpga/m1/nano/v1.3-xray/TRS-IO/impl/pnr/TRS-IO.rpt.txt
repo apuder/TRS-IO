@@ -11,26 +11,26 @@
   <PnR Version>: V1.9.8.09
   <Part Number>: GW1NR-LV9QN88PC6/I5
   <Device>: GW1NR-9C
-  <Created Time>:Fri Nov 18 10:27:19 2022
+  <Created Time>:Fri Nov 18 22:07:15 2022
 
 
 2. PnR Details
 
   Running placement:
     Placement Phase 0: CPU time = 0h 0m 1s, Elapsed time = 0h 0m 1s
-    Placement Phase 1: CPU time = 0h 0m 0.076s, Elapsed time = 0h 0m 0.076s
-    Placement Phase 2: CPU time = 0h 0m 0.795s, Elapsed time = 0h 0m 0.794s
-    Placement Phase 3: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
-    Total Placement: CPU time = 0h 0m 5s, Elapsed time = 0h 0m 5s
+    Placement Phase 1: CPU time = 0h 0m 0.086s, Elapsed time = 0h 0m 0.086s
+    Placement Phase 2: CPU time = 0h 0m 0.738s, Elapsed time = 0h 0m 0.737s
+    Placement Phase 3: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
+    Total Placement: CPU time = 0h 0m 6s, Elapsed time = 0h 0m 6s
  Running routing:
-    Routing Phase 0: CPU time = 0h 0m 0.001s, Elapsed time = 0h 0m 0.002s
-    Routing Phase 1: CPU time = 0h 0m 0.775s, Elapsed time = 0h 0m 0.775s
-    Routing Phase 2: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
-    Total Routing: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
+    Routing Phase 0: CPU time = 0h 0m 0.002s, Elapsed time = 0h 0m 0.002s
+    Routing Phase 1: CPU time = 0h 0m 0.818s, Elapsed time = 0h 0m 0.817s
+    Routing Phase 2: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
+    Total Routing: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
  Generate output files:
     CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
 
- Total Time and Memory Usage: CPU time = 0h 0m 11s, Elapsed time = 0h 0m 11s, Peak memory usage = 233MB
+ Total Time and Memory Usage: CPU time = 0h 0m 12s, Elapsed time = 0h 0m 12s, Peak memory usage = 233MB
 
 
 3. Resource Usage Summary
@@ -38,15 +38,15 @@
   ----------------------------------------------------------
   Resources                   | Usage
   ----------------------------------------------------------
-  Logic                       | 1888/8640  21%
-    --LUT,ALU,ROM16           | 1888(1708 LUT, 180 ALU, 0 ROM16)
+  Logic                       | 1848/8640  21%
+    --LUT,ALU,ROM16           | 1848(1668 LUT, 180 ALU, 0 ROM16)
     --SSRAM(RAM16)            | 0
   Register                    | 1170/6693  17%
     --Logic Register as Latch | 0/6480  0%
     --Logic Register as FF    | 1154/6480  17%
     --I/O Register as Latch   | 0/213  0%
     --I/O Register as FF      | 16/213  7%
-  CLS                         | 1523/4320  35%
+  CLS                         | 1511/4320  34%
   I/O Port                    | 53
   I/O Buf                     | 48
     --Input Buf               | 19
@@ -102,10 +102,10 @@
   Signal         | Global Clock   | Location
   -------------------------------------------
   clk_in_d       | PRIMARY        |  TR TL BL
-  clk_audio_4    | PRIMARY        |  TL BR BL
+  clk_audio_4    | PRIMARY        |  TL BL
   clk            | PRIMARY        |  TR TL BR BL
   clk_pixel      | PRIMARY        |  TR TL BR BL
-  vga_clk        | PRIMARY        |  TR TL
+  vga_clk        | PRIMARY        |  TR TL BR BL
   sw_d[1]        | LW             |  -
   n4054_4        | LW             |  -
   clk_pixel_x5   | HCLK           | TOP[0]

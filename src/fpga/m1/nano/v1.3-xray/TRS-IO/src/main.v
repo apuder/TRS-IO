@@ -775,7 +775,7 @@ wire le18_dout_rdy;
 wire [7:0] spi_data_in;
 
 always @(posedge clk) begin
-  if (counter_25ms == 2500000)
+  if (counter_25ms == 2100000)
     begin
       counter_25ms <= 0;
       TRS_INT <= 1;
