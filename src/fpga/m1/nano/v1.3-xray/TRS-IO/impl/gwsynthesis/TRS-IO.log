@@ -1,89 +1,85 @@
 GowinSynthesis start
 Running parser ...
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\filter.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv0.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv1.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_2.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_4.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb0.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb1.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_prom\blk_mem_gen_3.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll0.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_clock_regeneration_packet.sv'
-WARN  (EX2478) : Non-net output port 'clk_audio_counter_wrap' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_clock_regeneration_packet.sv":13)
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_info_frame.sv'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_sample_packet.sv'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\auxiliary_video_information_info_frame.sv'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\hdmi.sv'
-WARN  (EX2478) : Non-net output port 'cx' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\hdmi.sv":81)
-WARN  (EX2478) : Non-net output port 'cy' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\hdmi.sv":82)
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_assembler.sv'
-WARN  (EX2478) : Non-net output port 'counter' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_assembler.sv":11)
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\serializer.sv'
-WARN  (EX3182) : Initial value of parameter 'VIDEO_RATE' is omitted("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\serializer.sv":6)
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\source_product_description_info_frame.sv'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv'
-WARN  (EX2478) : Non-net output port 'tmds' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":16)
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\trigger.v'
-Analyzing Verilog file 'C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\vga.v'
-Compiling module 'main'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":3)
-Compiling module 'Gowin_rPLL'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v":9)
-Compiling module 'filter'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\filter.v":3)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 6("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":299)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 8("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":516)
-Compiling module 'trigger'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\trigger.v":3)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 8("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":616)
-Compiling module 'Gowin_DPB0'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb0.v":9)
-WARN  (EX3791) : Expression size 25 truncated to fit in target size 24("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":785)
-WARN  (EX3791) : Expression size 9 truncated to fit in target size 8("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":804)
-Compiling module 'Gowin_DPB1'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb1.v":9)
-WARN  (EX3073) : Port 'two' remains unconnected for this instance("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\vga.v":81)
-WARN  (EX3073) : Port 'two' remains unconnected for this instance("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\vga.v":166)
-Compiling module 'vga'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\vga.v":5)
-Compiling module 'blk_mem_gen_2'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_2.v":9)
-Compiling module 'blk_mem_gen_4'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_4.v":9)
-Compiling module 'blk_mem_gen_3'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_prom\blk_mem_gen_3.v":9)
-Compiling module 'Gowin_rPLL0'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll0.v":9)
-Compiling module 'Gowin_CLKDIV0'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv0.v":9)
-Compiling module 'Gowin_CLKDIV1'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv1.v":9)
-WARN  (EX3791) : Expression size 10 truncated to fit in target size 9("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1104)
-Compiling module 'hdmi(VIDEO_ID_CODE=5,VIDEO_REFRESH_RATE=60,AUDIO_RATE=48000)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\hdmi.sv":4)
-Compiling module 'packet_picker(VIDEO_ID_CODE=5,VIDEO_RATE=40000000.0,IT_CONTENT=1'b1,AUDIO_BIT_WIDTH=16,AUDIO_RATE=48000,VENDOR_NAME=64'b0101010101101110011010110110111001101111011101110110111000000000,PRODUCT_DESCRIPTION=128'b01000110010100000100011101000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,SOURCE_DEVICE_INFORMATION=8'b00000000)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":4)
-Extracting RAM for identifier 'audio_sample_word_buffer'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":80)
-Compiling module 'audio_clock_regeneration_packet(VIDEO_RATE=40000000.0,AUDIO_RATE=48000)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_clock_regeneration_packet.sv":5)
-Compiling module 'audio_sample_packet(SAMPLING_FREQUENCY=4'b0010,WORD_LENGTH=4'b0010)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_sample_packet.sv":8)
-WARN  (EX3780) : Using initial value of 'CHANNEL_LEFT' since it is never assigned("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_sample_packet.sv":63)
-WARN  (EX3780) : Using initial value of 'CHANNEL_RIGHT' since it is never assigned("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_sample_packet.sv":64)
-Compiling module 'auxiliary_video_information_info_frame(IT_CONTENT=1'b1,VIDEO_ID_CODE=32'sb00000000000000000000000000000101)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\auxiliary_video_information_info_frame.sv":5)
-Compiling module 'source_product_description_info_frame(VENDOR_NAME=64'b0101010101101110011010110110111001101111011101110110111000000000,PRODUCT_DESCRIPTION=128'b01000110010100000100011101000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,SOURCE_DEVICE_INFORMATION=8'b00000000)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\source_product_description_info_frame.sv":5)
-Compiling module 'audio_info_frame'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\audio_info_frame.sv":5)
-WARN  (EX1998) : Net 'headers[255][23]' does not have a driver("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":29)
-WARN  (EX1998) : Net 'subs[255][3][55]' does not have a driver("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":30)
-Compiling module 'packet_assembler'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_assembler.sv":4)
-Compiling module 'tmds_channel'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":4)
-Compiling module 'tmds_channel(CN=1)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":4)
-Compiling module 'tmds_channel(CN=2)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":4)
-Compiling module 'serializer(VIDEO_RATE=40000000.0)'("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\serializer.sv":3)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1169)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1169)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1170)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":1170)
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\filter.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv0.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv1.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_2.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_4.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb0.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb1.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_prom\blk_mem_gen_3.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll0.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_clock_regeneration_packet.sv'
+WARN  (EX2478) : Non-net output port 'clk_audio_counter_wrap' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_clock_regeneration_packet.sv":13)
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_info_frame.sv'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_sample_packet.sv'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\auxiliary_video_information_info_frame.sv'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\hdmi.sv'
+WARN  (EX2478) : Non-net output port 'cx' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\hdmi.sv":81)
+WARN  (EX2478) : Non-net output port 'cy' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\hdmi.sv":82)
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_assembler.sv'
+WARN  (EX2478) : Non-net output port 'counter' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_assembler.sv":11)
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\serializer.sv'
+WARN  (EX3182) : Initial value of parameter 'VIDEO_RATE' is omitted("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\serializer.sv":6)
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\source_product_description_info_frame.sv'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv'
+WARN  (EX2478) : Non-net output port 'tmds' cannot be initialized at declaration in SystemVerilog mode("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":16)
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\trigger.v'
+Analyzing Verilog file 'C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\vga.v'
+Compiling module 'main'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":3)
+Compiling module 'Gowin_rPLL'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll.v":9)
+Compiling module 'filter'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\filter.v":3)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 6("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":299)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":516)
+Compiling module 'trigger'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\trigger.v":3)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":615)
+WARN  (EX3791) : Expression size 3 truncated to fit in target size 2("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":623)
+Compiling module 'Gowin_DPB0'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb0.v":9)
+WARN  (EX3791) : Expression size 25 truncated to fit in target size 24("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":785)
+WARN  (EX3791) : Expression size 9 truncated to fit in target size 8("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":804)
+Compiling module 'Gowin_DPB1'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_dpb\gowin_dpb1.v":9)
+WARN  (EX3073) : Port 'two' remains unconnected for this instance("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\vga.v":81)
+WARN  (EX3073) : Port 'two' remains unconnected for this instance("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\vga.v":166)
+Compiling module 'vga'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\vga.v":5)
+Compiling module 'blk_mem_gen_2'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_2.v":9)
+Compiling module 'blk_mem_gen_4'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_dpb\blk_mem_gen_4.v":9)
+Compiling module 'blk_mem_gen_3'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_prom\blk_mem_gen_3.v":9)
+Compiling module 'Gowin_rPLL0'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_rpll\gowin_rpll0.v":9)
+Compiling module 'Gowin_CLKDIV0'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv0.v":9)
+Compiling module 'Gowin_CLKDIV1'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\gowin_clkdiv\gowin_clkdiv1.v":9)
+WARN  (EX3791) : Expression size 10 truncated to fit in target size 9("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":1104)
+Compiling module 'hdmi(VIDEO_ID_CODE=5,VIDEO_REFRESH_RATE=60,AUDIO_RATE=48000)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\hdmi.sv":4)
+Compiling module 'packet_picker(VIDEO_ID_CODE=5,VIDEO_RATE=40000000.0,IT_CONTENT=1'b1,AUDIO_BIT_WIDTH=16,AUDIO_RATE=48000,VENDOR_NAME=64'b0101010101101110011010110110111001101111011101110110111000000000,PRODUCT_DESCRIPTION=128'b01000110010100000100011101000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,SOURCE_DEVICE_INFORMATION=8'b00000000)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":4)
+Extracting RAM for identifier 'audio_sample_word_buffer'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":80)
+Compiling module 'audio_clock_regeneration_packet(VIDEO_RATE=40000000.0,AUDIO_RATE=48000)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_clock_regeneration_packet.sv":5)
+Compiling module 'audio_sample_packet(SAMPLING_FREQUENCY=4'b0010,WORD_LENGTH=4'b0010)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_sample_packet.sv":8)
+WARN  (EX3780) : Using initial value of 'CHANNEL_LEFT' since it is never assigned("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_sample_packet.sv":63)
+WARN  (EX3780) : Using initial value of 'CHANNEL_RIGHT' since it is never assigned("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_sample_packet.sv":64)
+Compiling module 'auxiliary_video_information_info_frame(IT_CONTENT=1'b1,VIDEO_ID_CODE=32'sb00000000000000000000000000000101)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\auxiliary_video_information_info_frame.sv":5)
+Compiling module 'source_product_description_info_frame(VENDOR_NAME=64'b0101010101101110011010110110111001101111011101110110111000000000,PRODUCT_DESCRIPTION=128'b01000110010100000100011101000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,SOURCE_DEVICE_INFORMATION=8'b00000000)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\source_product_description_info_frame.sv":5)
+Compiling module 'audio_info_frame'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\audio_info_frame.sv":5)
+WARN  (EX1998) : Net 'headers[255][23]' does not have a driver("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":29)
+WARN  (EX1998) : Net 'subs[255][3][55]' does not have a driver("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":30)
+Compiling module 'packet_assembler'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_assembler.sv":4)
+Compiling module 'tmds_channel'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":4)
+Compiling module 'tmds_channel(CN=1)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":4)
+Compiling module 'tmds_channel(CN=2)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\tmds_channel.sv":4)
+Compiling module 'serializer(VIDEO_RATE=40000000.0)'("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\serializer.sv":3)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":1169)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":1169)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":1170)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 16("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":1170)
 NOTE  (EX0101) : Current top module is "main"
-WARN  (EX0211) : The output port "led[5]" of module "main" has no driver("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
-WARN  (EX0211) : The output port "led[4]" of module "main" has no driver("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
-WARN  (EX0211) : The output port "led[3]" of module "main" has no driver("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
-WARN  (EX0211) : The output port "led[2]" of module "main" has no driver("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
-WARN  (EX0211) : The output port "led[1]" of module "main" has no driver("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
+WARN  (EX0211) : The output port "led[5]" of module "main" has no driver, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":25)
+WARN  (EX0211) : The output port "led[4]" of module "main" has no driver, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":25)
+WARN  (EX0211) : The output port "led[3]" of module "main" has no driver, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":25)
+WARN  (EX0211) : The output port "led[2]" of module "main" has no driver, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":25)
+WARN  (EX0211) : The output port "led[1]" of module "main" has no driver, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":25)
 [5%] Running netlist conversion ...
-WARN  (CV0016) : Input TRS_RAS is unused("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":18)
-WARN  (CV0003) : Output "led[1]" has undriven bits, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
-WARN  (CV0003) : Output "led[2]" has undriven bits, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
-WARN  (CV0003) : Output "led[3]" has undriven bits, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
-WARN  (CV0003) : Output "led[4]" has undriven bits, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
-WARN  (CV0003) : Output "led[5]" has undriven bits, assigning undriven bits to Z, simulation mismatch possible("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":25)
+WARN  (CV0016) : Input TRS_RAS is unused("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":18)
 Running device independent optimization ...
 [10%] Optimizing Phase 0 completed
 [15%] Optimizing Phase 1 completed
@@ -99,19 +95,19 @@ Running technical mapping ...
 [75%] Tech-Mapping Phase 2 completed
 [80%] Tech-Mapping Phase 3 completed
 [90%] Tech-Mapping Phase 4 completed
-WARN  (NL0002) : The module "trigger" instantiated to "bram_poke_trigger" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":853)
-WARN  (NL0002) : The module "audio_info_frame" instantiated to "audio_info_frame" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":143)
-WARN  (NL0002) : The module "audio_sample_packet" instantiated to "audio_sample_packet" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":131)
-WARN  (NL0002) : The module "auxiliary_video_information_info_frame" instantiated to "auxiliary_video_information_info_frame" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":137)
-WARN  (NL0002) : The module "source_product_description_info_frame" instantiated to "source_product_description_info_frame" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":140)
-WARN  (NL0002) : The module "trigger" instantiated to "le18_wr_trigger" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\vga.v":166)
-WARN  (NL0002) : The module "trigger" instantiated to "z80_dsp_wr_trigger" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\vga.v":81)
-WARN  (NL0002) : The module "trigger" instantiated to "xram_poke_trigger" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":979)
-WARN  (NL0002) : The module "trigger" instantiated to "xrama_write_trigger" is swept in optimizing("C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\main.v":964)
-[95%] Generate netlist file "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg" completed
+WARN  (NL0002) : The module "trigger" instantiated to "bram_poke_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":853)
+WARN  (NL0002) : The module "audio_info_frame" instantiated to "audio_info_frame" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":143)
+WARN  (NL0002) : The module "audio_sample_packet" instantiated to "audio_sample_packet" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":131)
+WARN  (NL0002) : The module "auxiliary_video_information_info_frame" instantiated to "auxiliary_video_information_info_frame" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":137)
+WARN  (NL0002) : The module "source_product_description_info_frame" instantiated to "source_product_description_info_frame" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\hdmi\packet_picker.sv":140)
+WARN  (NL0002) : The module "trigger" instantiated to "le18_wr_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\vga.v":166)
+WARN  (NL0002) : The module "trigger" instantiated to "z80_dsp_wr_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\vga.v":81)
+WARN  (NL0002) : The module "trigger" instantiated to "xram_poke_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":979)
+WARN  (NL0002) : The module "trigger" instantiated to "xrama_write_trigger" is swept in optimizing("C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\main.v":964)
+[95%] Generate netlist file "C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg" completed
 WARN  (CK3000) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (CK3000) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (CK3000) : Can't calculate clocks' relationship between: "clk_audio_4" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (CK3000) : Can't calculate clocks' relationship between: "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk" and "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk"
-[100%] Generate report file "C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO_syn.rpt.html" completed
+[100%] Generate report file "C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO_syn.rpt.html" completed
 GowinSynthesis finish

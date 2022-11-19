@@ -600,7 +600,7 @@ localparam [1:0]
   state_xray_stop = 2'b01,
   state_xray_resume = 2'b11;
 
-reg stub_ran_once = 1'b0;
+reg [1:0] stub_run_count = 0;
 
 reg [1:0] state_xray = state_xray_run;
 
@@ -608,26 +608,26 @@ reg [1:0] state_xray = state_xray_run;
 always @(posedge clk) begin
   if (trigger_action && (cmd == xray_resume) && (state_xray == state_xray_stop)) begin
     state_xray <= state_xray_resume;
-    stub_ran_once <= 1'b0;
   end
   if (pre_ram_access_check && (state_xray == state_xray_run) && (breakpoint_idx != 0)) begin
     state_xray <= state_xray_stop;
     xray_base_addr <= TRS_A;
     current_breakpoint_idx <= breakpoint_idx - 1;
-    stub_ran_once <= 1'b0;
+    stub_run_count <= 0;
   end
   if (pre_ram_access_check && (state_xray == state_xray_resume) && (xray_base_addr == TRS_A)) begin
     state_xray <= state_xray_run;
-    stub_ran_once <= 1'b0;
+    stub_run_count <= 0;
   end
-  if (pre_ram_access_check && (state_xray == state_xray_stop) && (xray_base_addr == TRS_A)) begin
-    stub_ran_once <= 1'b1;
+  if (pre_ram_access_check && (state_xray == state_xray_stop) && (xray_base_addr == TRS_A) && (stub_run_count != 2)) begin
+    stub_run_count <= stub_run_count + 1;
   end
 end
 
 wire xray_run_stub = (state_xray != state_xray_run);
 
-assign xray_sel = xray_run_stub && stub_ran_once;
+// The "+ 1" will trigger the ESP at the beginning of the second iteration of the stub
+assign xray_sel = (stub_run_count == 1) && ((xray_base_addr + 1) == TRS_A);
 
 assign led[0] = ~xray_run_stub;
 

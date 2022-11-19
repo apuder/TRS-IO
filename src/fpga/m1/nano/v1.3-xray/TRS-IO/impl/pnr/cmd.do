@@ -1,10 +1,11 @@
--d C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg
+-d C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\impl\gwsynthesis\TRS-IO.vg
 -p GW1NR-9C-QFN88P-6
 -pn GW1NR-LV9QN88PC6/I5
--cst C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\src\trs-io.cst
--cfg C:\git\TRS-IO-M3\src\fpga\nano\v1.3-xray\TRS-IO\impl\pnr\device.cfg
+-cst C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\src\trs-io.cst
+-cfg C:\git\TRS-IO\src\fpga\m1\nano\v1.3-xray\TRS-IO\impl\pnr\device.cfg
 -bit
 -tr
 -ph
 -timing
 -cst_error
+-route_maxfan 23
