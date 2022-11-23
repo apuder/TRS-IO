@@ -20,7 +20,7 @@ card is available.
 ### Overview
 
 The figure below depicts the overall architecture. The TRS-80 machine
-is connected to TRS-IO via the I/O Bus.  TRS-IO has a WiFi module that
+is connected to TRS-IO via the I/O bus.  TRS-IO has a WiFi module that
 connects to the local WiFi router. This allows TRS-IO to connect to
 the Internet and access various services. Note that TRS-IO can only
 connect to a 2.4 GHz WiFi network. It is recommended to use an IPEX
@@ -64,13 +64,13 @@ The following figure shows the top view of the TRS-IO card for the Model III:
 9. Status button
 
 The TRS-IO card needs to be connected to the TRS-80 Model III's I/O
-Bus via a 50-pin ribbon cable (1). Furthermore, the TRS-IO card needs
+bus via a 50-pin ribbon cable (1). Furthermore, the TRS-IO card needs
 a separate power supply via a standard 5V USB charger. Please refer
 to the previous section regarding the power supply. The status button
 (9) and the multi-color status LED (7) will be explained in the
 configuration section. The micro-SD card reader is underneath the
 Nano 9K module (6). The 3.5mm audio jack (3) can be connected to a standard
-speaker for game sound and Orchestra 95 support. If the high resolution
+speaker for game sound and Orchestra 90 support. If the high resolution
 connectors (2) are connected to the TRS-80, the HDMI connector (5) will
 generate a video signal.
 
@@ -90,7 +90,7 @@ The following figure shows the top view of the TRS-IO card for the Model 1:
 7. VU jumper
 
 The TRS-IO version for the Model 1 features a 40-pin connector that can
-directly be connected via a ribbon cable to the expansion interface of a Model 1.
+directly be connected via a ribbon cable to the I/O bus of a Model 1.
 This version of TRS-IO offers the following features:
 
 * HDMI signal of the M1's video screen that includes game sound.
@@ -221,7 +221,7 @@ floppy disks. TRS-IO acts as a gateway to the <a
 href="https://retrostore.org">RetroStore</a>. This requires to run a
 program on the TRS-80 that interfaces with TRS-IO. This program is
 available as a regular <a
-href="https://github.com/apuder/tpk/raw/master/src/main/resources/apps/rsclient/RSCLIENT.CMD">CMD</a>
+href="https://github.com/apuder/TRS-IO/raw/master/src/esp/components/retrostore/rsclient.cmd">CMD</a>
 executable.  For TRS-80 machines with attached physical floppy disks,
 this CMD executable can be copied to a floppy disk and launched the
 usual way. For TRS-80 machines that have neither floppy disk drives
