@@ -10,7 +10,7 @@ following capabilities:
 4. Access to remote servers via TCP
 5. Virtual printer support
 
-The TRS-IO versions for the Model 1 have some additional features that
+The TRS-IO versions for the Model 1 and Model III have some additional features that
 are explained below. The following sections give an overview of TRS-IO as well as setup
 instructions. This Github repository contains the complete source code
 as well as the KiCad schematics for the PCB (Printed Circuit Board).
@@ -23,10 +23,10 @@ The figure below depicts the overall architecture. The TRS-80 machine
 is connected to TRS-IO via the I/O Bus.  TRS-IO has a WiFi module that
 connects to the local WiFi router. This allows TRS-IO to connect to
 the Internet and access various services. Note that TRS-IO can only
-connect to a 2.4 GHz WiFi network.
+connect to a 2.4 GHz WiFi network. It is recommended to use an IPEX
+antenna to improve WiFi reception.
 
 <img src="doc/trs-io-architecture.png" />
-
 
 ### Prerequisites
 
@@ -34,95 +34,77 @@ TRS-IO requires a TRS-80 Model III with 48kB of RAM or a Model 1 with 16kB of RA
 Floppy disk drives or a cassette tape are not required.
 
 
-### Feature list
+### Power Supply
 
-TRS-IO support
-TRS-IO comes in three different versions:
+There are two versions of TRS-IO that are tailored to the Model 1 and Model III. Each version makes use of an ESP32 microcontroller
+as well as a Tang Nano 9K FPGA. Both the ESP32 microcontroller as well as the Nano 9K need to be powered. There are two ways of doing
+this.
 
-* TRS-IO for the Model III
-* TRS-IO for the Model I using a builtin 32kB SRAM
-* TRS-IO for the Model I using an FPGA
-
-In the following, each of the versions is explained in detail.
+* Power each module independently via two USB cables that connect to the ESP32's micro-USB and the Nano 9K's USB-C connector.
+  For this option, the "VU" jumper (mentioned below), <b>SHOULD NOT BE USED</b>.
+* Power the ESP32 via the Nano 9K or vice versa. For this option, only one of the modules need to be provided with power. This option
+  requires the "VU" jumper.
+  
+In the following, each variant of TRS-IO is explained in detail.
 
 ### TRS-IO for the Model III
 
 The following figure shows the top view of the TRS-IO card for the Model III:
 
-<img src="doc/TRS-IO-MIII-labels.png" width="60%" />
+<img src="doc/TRS-IO-M3-v2_2-labels.png" width="60%" />
 
-1. Power supply via a micro-USB connector
-2. Multi-color status LED
-3. Status button
-4. TRS-80 I/O bus connector
-5. Micro-SD card reader
-6. Disable FreHD jumper
+1. 50-pin I/O bus connector
+2. High resolution graphics connector
+3. 3.5mm audio jack
+4. VU jumper
+5. HDMI connector
+6. Micro-SD card reader
+7. Multi-color status LED
+8. Micro-USB and USB-C connector
+9. Status button
 
 The TRS-IO card needs to be connected to the TRS-80 Model III's I/O
-Bus via a 50-pin ribbon cable (4). Furthermore, the TRS-IO card needs
-a separate power supply via a standard 5V USB charger. The micro-USB
-connector (1) plugs into the side of the TRS-IO card. The push button
-(3) and the multi-color status LED (2) will be explained in the
-configuration section.
+Bus via a 50-pin ribbon cable (1). Furthermore, the TRS-IO card needs
+a separate power supply via a standard 5V USB charger. Please refer
+to the previous section regarding the power supply. The status button
+(9) and the multi-color status LED (7) will be explained in the
+configuration section. The micro-SD card reader is underneath the
+Nano 9K module (6). The 3.5mm audio jack (3) can be connected to a standard
+speaker for game sound and Orchestra 95 support. If the high resolution
+connectors (2) are connected to the TRS-80, the HDMI connector (5) will
+generate a video signal.
 
 
-### TRS-IO for the Model 1 (SRAM edition)
+### TRS-IO for the Model 1
 
 The following figure shows the top view of the TRS-IO card for the Model 1:
 
-<img src="doc/TRS-IO-M1-labels.png" width="60%" />
+<img src="doc/TRS-IO-M1-v1_3-labels.png" width="60%" />
 
-1. Power supply via a micro-USB connector
-2. Multi-color status LED
-3. Status button
-4. TRS-80 I/O bus connector
-5. Micro-SD card reader
+1. 40-pin I/O bus connector
+2. Micro-SD card reader
+3. HDMI connector
+4. Micro-USB and USB-C connector
+5. Multi-color status LED
+6. Status button
+7. VU jumper
 
-The TRS-IO version for the Model 1 is almost identical to the Model III.
-One difference is the I/O bus connector (4) is compatible with the 40-pin
-expansion interface of the Model 1. There are several additional features
-for the Model 1 version that are not relevant to the Model III version:
+The TRS-IO version for the Model 1 features a 40-pin connector that can
+directly be connected via a ribbon cable to the expansion interface of a Model 1.
+This version of TRS-IO offers the following features:
 
-* A 32kB SRAM chip for a total of 48kB of total RAM.
+* HDMI signal of the M1's video screen that includes game sound.
+* Upper 32kB RAM (emulated by the Nano 9K FPGA) for a total of 48kB of total RAM.
 * 25ms heartbeat timer to trigger the realtime clock.
 * FreHD auto-boot for an unmodified M1.
 
-
-### TRS-IO for the Model 1 (FPGA edition)
-
-The TRS-IO project features a second version for the Model 1 that makes use
-of an FGPA (Field Programmable Gate Array). Using an FPGA allows for some
-advanced features not possible with the SRAM edition of TRS-IO. The following
-figure shows the top view of the FPGA version for the Model 1:
-
-<img src="doc/TRS-IO-M1-XRAY-labels.png" width="60%" />
-
-1. Power supply via a micro-USB connector
-2. Multi-color status LED
-3. Status button
-4. TRS-80 I/O bus connector
-5. Micro-SD card reader
-6. N/A
-7. VGA connector
-8. A15/VU configuration jumpers
-
-This version of TRS-IO offers all the features of the SRAM edition of TRS-IO
-as outlined in the previous section. Additionally, the FPGA edition also
-offers a VGA connector (7) that can be used instead of a CRT monitor. This version
-of TRS-IO also emlates the LE18 graphics cards. The color of the VGA signal can
+The HDMI connector (3) can be used instead of a CRT monitor. TRS-IO for the M1
+also emulates the LE18 graphics cards. The color of the HDMI signal can
 be set to white (X=0), green (X=1), and amber (X=2) via the following OUT statements:
 
 ```OUT 31,0:OUT 31,5:OUT 31,X```
 
-There are two configuation jumpers (8):
-With the VU jumper, the ESP also powers the FPGA. When using this jumper, the FPGA
-SHOULD NOT be powered via its own micro-USB connector; power should only be supplied
-to the ESP's micro-USB connector (1). The A15 jumper regulates
-the address range the FPGA responds to. Without the A15 jumper, the FPGA only
-responds to memory read/write requests for the upper 32 kB (essentially mimicking the
-upper RAM of the SRAM edition). With the A15 jumper, the FPGA will respond to the
-complete 64kB address space of the Z80. This requires a modified Model 1 as the FPGA also
-responds to ROM read requests.
+Please refer to an earlier section on how to provide power to TRS-IO.
 
 
 ### Configuring TRS-IO
