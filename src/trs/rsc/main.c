@@ -18,9 +18,7 @@ static void copy_boot_loader()
 
 void load_cmd(uint16_t id) {
   __asm
-    pop bc
-    pop hl
-    jp BOOT_LOADER_ADDR + 3
+    jp BOOT_LOADER_ADDR + 3 ; HL will hold id
   __endasm;
 }
 
@@ -36,16 +34,15 @@ static uint8_t check() {
   uint8_t status;
   uint16_t version;
   
-  set_screen_to_foreground();
   if (first_time) {
     wnd_popup("Scanning...");
   }
   first_time = false;
 
-  status = scan();
+  status = trs_io_status();
   
-  if (status == RS_STATUS_NO_RETROSTORE_CARD) {
-    wnd_popup("No RetroStore card found!");
+  if (status == TRS_IO_STATUS_NO_TRS_IO) {
+    wnd_popup("No TRS-IO card found!");
     while(1);
   }
 
@@ -55,7 +52,6 @@ static uint8_t check() {
     while(1);
   }
   
-  set_screen_to_background();
   return status;
 }
   
@@ -65,66 +61,84 @@ static uint8_t check() {
 #define MENU_LOAD 2
 #define MENU_WIFI 3
 #define MENU_HELP 4
-#define MENU_ABOUT 5
+#define MENU_STATUS 5
+#define MENU_EXIT 6
 
 static menu_item_t main_menu_items[] = {
-  {MENU_BROWSE, "Browse RetroStore"},
-  {MENU_SEARCH, "Search RetroStore"},
-  {MENU_WIFI, "Configure WiFi"},
-  {MENU_HELP, "Help"},
-  {MENU_ABOUT, "About"}
+  MENU_ITEM(MENU_BROWSE, "Browse RetroStore"),
+  MENU_ITEM(MENU_SEARCH, "Search RetroStore"),
+  MENU_ITEM(MENU_WIFI, "Configure WiFi"),
+  MENU_ITEM(MENU_STATUS, "Status"),
+  MENU_ITEM(MENU_HELP, "Help"),
+  MENU_ITEM(MENU_EXIT, "Exit"),
+  MENU_ITEM_END
 };
 
-MENU(main_menu, "RetroStore");
+static menu_t main_menu = {
+  .title = "RetroStore",
+  .items = main_menu_items
+};
 
 
 static menu_item_t main_menu_with_xray_items[] = {
-  {MENU_BROWSE, "Browse RetroStore"},
-  {MENU_SEARCH, "Search RetroStore"},
-  {MENU_LOAD, "Load XRAY state"},
-  {MENU_WIFI, "Configure WiFi"},
-  {MENU_HELP, "Help"},
-  {MENU_ABOUT, "About"}
+  MENU_ITEM(MENU_BROWSE, "Browse RetroStore"),
+  MENU_ITEM(MENU_SEARCH, "Search RetroStore"),
+  MENU_ITEM(MENU_LOAD, "Load XRAY state"),
+  MENU_ITEM(MENU_WIFI, "Configure WiFi"),
+  MENU_ITEM(MENU_STATUS, "Status"),
+  MENU_ITEM(MENU_HELP, "Help"),
+  MENU_ITEM(MENU_EXIT, "Exit"),
+  MENU_ITEM_END
 };
 
-MENU(main_menu_with_xray, "RetroStore");
+static menu_t main_menu_with_xray = {
+  .title = "RetroStore",
+  .items = main_menu_with_xray_items
+};
 
 
 static menu_item_t main_menu_wifi_not_needed_items[] = {
-  {MENU_BROWSE, "Browse RetroStore"},
-  {MENU_SEARCH, "Search RetroStore"},
-  {MENU_HELP, "Help"},
-  {MENU_ABOUT, "About"}
+  MENU_ITEM(MENU_BROWSE, "Browse RetroStore"),
+  MENU_ITEM(MENU_SEARCH, "Search RetroStore"),
+  MENU_ITEM(MENU_STATUS, "Status"),
+  MENU_ITEM(MENU_HELP, "Help"),
+  MENU_ITEM(MENU_EXIT, "Exit"),
+  MENU_ITEM_END
 };
 
-MENU(main_menu_wifi_not_needed, "RetroStore");
+static menu_t main_menu_wifi_not_needed = {
+  .title = "RetroStore",
+  .items = main_menu_wifi_not_needed_items
+};
 
 
 static menu_item_t main_menu_not_connected_items[] = {
-  {MENU_WIFI, "Configure WiFi"},
-  {MENU_HELP, "Help"},
-  {MENU_ABOUT, "About"}
+  MENU_ITEM(MENU_WIFI, "Configure WiFi"),
+  MENU_ITEM(MENU_STATUS, "Status"),
+  MENU_ITEM(MENU_HELP, "Help"),
+  MENU_ITEM(MENU_EXIT, "Exit"),
+  MENU_ITEM_END
 };
 
-MENU(main_menu_not_connected, "Offline");
+static menu_t main_menu_not_connected = {
+  .title = "Offline",
+  .items = main_menu_not_connected_items
+};
 
 
 static window_t wnd;
 
-void main() {
+int main() {
   int idx;
   bool show_from_left = false;
+  bool run = true;
   menu_t* the_menu;
-  uint8_t status;
   
-  // For M4, turn on MIII memory map. Nop on a MIII
-  out(0x84, 0);
-
-  init_hardware();
+  init_trs_lib();
   
   init_window(&wnd, 0, 0, 0, 0);
 
-  while (true) {
+  while (run) {
     switch (check()) {
     case RS_STATUS_WIFI_NOT_NEEDED:
       the_menu = &main_menu_wifi_not_needed;
@@ -141,8 +155,7 @@ void main() {
       break;
     }
   
-    status = menu(the_menu, show_from_left, false);
-    switch (status) {
+    switch (menu(the_menu, show_from_left, true)) {
     case MENU_BROWSE:
       wnd_popup("Loading...");
       idx = browse_retrostore(&wnd);
@@ -167,10 +180,18 @@ void main() {
     case MENU_HELP:
       help();
       break;
-    case MENU_ABOUT:
-      about();
+    case MENU_STATUS:
+      status();
+      break;
+    case MENU_ABORT:
+    case MENU_EXIT:
+      run = false;
       break;
     }
     show_from_left = true;
   }
+
+  exit_trs_lib();
+
+  return 0;
 }

@@ -5,7 +5,7 @@
 #include "inout.h"
 #include "wifi.h"
 #include "browse.h"
-#include "about.h"
+#include "status.h"
 #include "help.h"
 #include "esp.h"
 #include "version.h"

@@ -26,25 +26,51 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-; Modified by AP for TRS-80
-
 	.module crt0
 	.globl	_main
+	.globl  l__DATA
+	.globl  s__DATA
 	.globl  l__INITIALIZER
 	.globl  s__INITIALIZER
 	.globl  s__INITIALIZED
-	.globl  l__DATA
-	.globl  s__DATA
 
 init:
-	;; Set stack pointer directly above top of memory.
-	ld	sp,#0x0000
+	;; For M4, turn on MIII memory map. NOP on a M1/III
+	xor	a
+	out	(0x84), a
+
+	;; Determine the highest memory address for the stack
+	ld	(sp_save),sp
+	ld	a,(0x125)
+	sub	#'I'
+	jr	z,is_m3
+	ld	hl,(0x4049)	; Highest memory for the M1
+	jr	cont
+is_m3:
+	ld	hl,(0x4411)	; Highest memory for the M3
+cont:
+	inc	hl
+	ld	a,#0x80
+	and	h
+	jr	nz,cont1
+	ld	hl,#0 ; SP was pointing below 0x8000
+cont1:
+	ld	sp,hl
 
 	;; Initialise global variables
 	call	gsinit
 	call	_main
-_halt:	
-	jp	_halt
+	push	hl
+	pop	de
+	ld	sp,(sp_save)
+	ld	a,e
+	or	d
+	jr	z,ok
+	jp	0x4030
+ok:	jp	0x402d
+
+sp_save:
+	.dw	0
 
 	;; Ordering of segments for the linker.
 	.area	_HOME
@@ -63,6 +89,25 @@ _halt:
 
 	.area   _GSINIT
 gsinit::
+
+	; Default-initialized global variables.
+        ld      bc, #l__DATA
+        ld      a, b
+        or      a, c
+        jr      Z, zeroed_data
+        ld      hl, #s__DATA
+        ld      (hl), #0x00
+        dec     bc
+        ld      a, b
+        or      a, c
+        jr      Z, zeroed_data
+        ld      e, l
+        ld      d, h
+        inc     de
+        ldir
+zeroed_data:
+
+	; Explicitly initialized global variables.
 	ld	bc, #l__INITIALIZER
 	ld	a, b
 	or	a, c
@@ -70,6 +115,7 @@ gsinit::
 	ld	de, #s__INITIALIZED
 	ld	hl, #s__INITIALIZER
 	ldir
+
 gsinit_next:
 
 	.area   _GSFINAL

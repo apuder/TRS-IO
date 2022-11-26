@@ -2,23 +2,22 @@
 OBJS = \
 	crt0.rel \
 	main.rel \
-	inout.rel \
 	browse.rel \
 	load.rel \
 	wifi.rel \
 	esp.rel \
 	help.rel \
-	about.rel
+	status.rel
 
-TRS_LIB = ../trs-libx/trs-lib.lib
+TRS_LIB = ../TRS-LIB
 
 CC = sdcc
 AS = sdasz80
 LD = sdldz80
-IHEX2CMD = ../../ihex2cmd/ihex2cmd
-CFLAGS = -mz80 --std-sdcc99 --opt-code-size -I../trs-libx
+IHEX2CMD = $(TRS_LIB)/ihex2cmd/ihex2cmd
+CFLAGS = -mz80 --std-sdcc99 --opt-code-size -I$(TRS_LIB)/lib/include
 ASFLAGS = -l
-LDFLAGS = -mjwx -b _CODE=0x5200 -l $(TRS_LIB) -l $(SDCC_PATH)/lib/z80/z80.lib
+LDFLAGS = -mjwx -b _CODE=0x5200 -l $(TRS_LIB)/lib/trs-lib.lib -l $(SDCC_PATH)/lib/z80/z80.lib
 
 %.rel: %.c
 	$(CC) $(CFLAGS) -c $< 

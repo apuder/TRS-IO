@@ -7,13 +7,20 @@
 static char ssid[32 + 1] = "";
 static char passwd[32 + 1] = "";
 
-static form_item_t form_wifi[] = {
-  { FORM_TYPE_INPUT, "SSID", .u.input.len = sizeof(ssid) - 1,
-    .u.input.buf = ssid, .u.input.width = 0},
-  { FORM_TYPE_INPUT, "Password", .u.input.len = sizeof(passwd) - 1,
-    .u.input.buf = passwd, .u.input.width = 0},
-  { FORM_TYPE_END }
-  };
+static bool ssid_dirty;
+static bool passwd_dirty;
+
+static form_item_t form_wifi_items[] = {
+  FORM_ITEM_INPUT("SSID", ssid, sizeof(ssid) - 1, 0, &ssid_dirty),
+  FORM_ITEM_INPUT("Password", passwd, sizeof(passwd) - 1, 0, &passwd_dirty),
+  FORM_ITEM_END
+};
+
+static form_t form_wifi = {
+	.title = "Configure WiFi",
+	.form_items = form_wifi_items
+};
+
 
 static window_t wnd;
 
@@ -22,22 +29,26 @@ void configure_wifi()
   uint16_t i, j;
   
   init_window(&wnd, 0, 0, 0, 0);
-  if (form("Configure WiFi", form_wifi, false) == FORM_ABORT) {
+  if (form(&form_wifi, false) == FORM_ABORT) {
     return;
   }
   if (ssid[0] == '\0') {
     // No SSID provided. Exit
     return;
   }
-  out(TRS_IO_PORT, TRS_IO_CORE_MODULE_ID);
-  out(TRS_IO_PORT, TRS_IO_CMD_CONFIGURE_WIFI);
+  if (!ssid_dirty && !passwd_dirty) {
+    // User didn't change anything
+    return;
+  }
+  out31(TRS_IO_CORE_MODULE_ID);
+  out31(TRS_IO_CMD_CONFIGURE_WIFI);
   i = 0;
   do {
-    out(TRS_IO_PORT, ssid[i]);
+    out31(ssid[i]);
   } while (ssid[i++] != '\0');
   i = 0;
   do {
-    out(TRS_IO_PORT, passwd[i]);
+    out31(passwd[i]);
   } while (passwd[i++] != '\0');
   wnd_popup("Reconfiguring WiFi...");
   for (i = 0; i < 10; i++) {

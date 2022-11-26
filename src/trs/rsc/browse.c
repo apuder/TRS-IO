@@ -1,17 +1,19 @@
 
+#include <trs-lib.h>
 #include "retrostore.h"
-#include "inout.h"
-#include "esp.h"
-#include "trs-lib.h"
 
 #define MAX_SEARCH_TERMS_LEN 50
 
 static char search_terms[MAX_SEARCH_TERMS_LEN + 1] = "";
 
-static form_item_t form_search[] = {
-  { FORM_TYPE_INPUT, "Search", .u.input.len = MAX_SEARCH_TERMS_LEN,
-    .u.input.buf = search_terms, .u.input.width = 0},
-  { FORM_TYPE_END }
+static form_item_t form_search_items[] = {
+  FORM_ITEM_INPUT("Search", search_terms, MAX_SEARCH_TERMS_LEN, 0, NULL),
+  FORM_ITEM_END
+};
+
+static form_t form_search = {
+	.title = "Search RetroStore",
+	.form_items = form_search_items
 };
 
 static list_t list_apps;
@@ -22,12 +24,12 @@ static void set_query(const char* query)
 {
   int i = 0;
   
-  out(TRS_IO_PORT, RETROSTORE_MODULE_ID);
-  out(TRS_IO_PORT, RS_CMD_SET_QUERY);
+  out31(RETROSTORE_MODULE_ID);
+  out31(RS_CMD_SET_QUERY);
   while (query != NULL && query[i] != '\0') {
-    out(TRS_IO_PORT, query[i++]);
+    out31(query[i++]);
   }
-  out(TRS_IO_PORT, 0);
+  out31(0);
 
   wait_for_esp();
 }
@@ -37,10 +39,10 @@ static bool get_response(uint8_t cmd, uint16_t idx, const char** resp)
   int i;
   uint8_t ch;
   
-  out(TRS_IO_PORT, RETROSTORE_MODULE_ID);
-  out(TRS_IO_PORT, cmd);
-  out(TRS_IO_PORT, idx & 0xff);
-  out(TRS_IO_PORT, idx >> 8);
+  out31(RETROSTORE_MODULE_ID);
+  out31(cmd);
+  out31(idx & 0xff);
+  out31(idx >> 8);
 
   wait_for_esp();
 
@@ -49,7 +51,7 @@ static bool get_response(uint8_t cmd, uint16_t idx, const char** resp)
     if (i == sizeof(response) - 1) {
       break;
     }
-    ch = in(TRS_IO_PORT);
+    ch = in31();
     if (ch == '\0') {
       break;
     }
@@ -85,7 +87,7 @@ static uint16_t show_details(uint16_t idx)
   }
   *descr++ = '\0';
   header(details);
-  wnd_print(&wnd, false, descr);
+  wnd_print_str(&wnd, descr);
   screen_show(false);
   do {
     key = get_key();
@@ -106,7 +108,7 @@ static uint16_t show_app_list(window_t* wnd,
   while (true) {
     idx = list(&list_apps, show_from_left, true);
     if (idx == LIST_ABORT) {
-      return LIST_ABORT;
+      break;
     }
     wnd_popup("Loading details...");
     idx = show_details(idx);
@@ -125,7 +127,7 @@ uint16_t browse_retrostore(window_t* wnd)
 
 uint16_t search_retrostore(window_t* wnd)
 {
-  if (form("Search RetroStore", form_search, false) == FORM_ABORT) {
+  if (form(&form_search, false) == FORM_ABORT) {
     return LIST_ABORT;
   }
   wnd_popup("Searching...");
