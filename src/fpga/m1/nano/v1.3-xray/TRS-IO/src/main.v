@@ -6,15 +6,15 @@ module main(
   input MOSI,
   output MISO,
   input CS,
-  input [7:0] TRS_AH,
+  input [7:0] TRS_AH_raw,
   output [1:0] MUX_A,
   inout [7:0] TRS_D,
   output TRS_OE,
   output TRS_DIR,
-  input TRS_RD,
-  input TRS_WR,
-  input TRS_IN,
-  input TRS_OUT,
+  input TRS_RD_raw,
+  input TRS_WR_raw,
+  input TRS_IN_raw,
+  input TRS_OUT_raw,
   input TRS_RAS,
   output reg TRS_INT,
   output reg ESP_REQ,
@@ -85,6 +85,13 @@ reg byte_received = 1'b0;
 //----Address Decoder------------------------------------------------------------
 
 reg[16:0] TRS_A = 17'h10000;
+reg[7:0] TRS_AH;
+reg TRS_RD;
+reg TRS_WR;
+reg TRS_IN;
+reg TRS_OUT;
+
+
 
 wire io_access_raw = !TRS_RD || !TRS_WR || !TRS_IN || !TRS_OUT;
 
@@ -125,6 +132,12 @@ trigger io_trigger(
 assign MUX_A = (io_trigger[3:0] != 0) ? 2'b01 : 2'b10;
 
 always @(posedge clk) begin
+  TRS_RD <= TRS_RD_raw;
+  TRS_WR <= TRS_WR_raw;
+  TRS_IN <= TRS_IN_raw;
+  TRS_OUT <= TRS_OUT_raw;
+  TRS_AH <= TRS_AH_raw;
+
   if (read_a0_a7 == 1) begin
     TRS_A[7:0] <= TRS_AH;
     TRS_A[16] <= 0; // TRS_A holds a valid address

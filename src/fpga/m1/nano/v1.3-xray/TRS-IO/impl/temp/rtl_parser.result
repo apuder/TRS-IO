@@ -17,7 +17,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 96,
+    "InstLine" : 103,
     "InstName" : "io",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/filter.v",
     "ModuleLine" : 3,
@@ -25,7 +25,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 570,
+    "InstLine" : 583,
     "InstName" : "pre_ram_access_check_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -33,7 +33,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 681,
+    "InstLine" : 694,
     "InstName" : "bram",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/gowin_dpb/gowin_dpb0.v",
     "ModuleLine" : 9,
@@ -41,7 +41,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 721,
+    "InstLine" : 734,
     "InstName" : "brama_read_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -49,7 +49,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 729,
+    "InstLine" : 742,
     "InstName" : "brama_write_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -57,7 +57,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 848,
+    "InstLine" : 861,
     "InstName" : "bram_poke_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -65,7 +65,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 855,
+    "InstLine" : 868,
     "InstName" : "bram_peek_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -73,7 +73,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 921,
+    "InstLine" : 934,
     "InstName" : "xram",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/gowin_dpb/gowin_dpb1.v",
     "ModuleLine" : 9,
@@ -81,7 +81,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 950,
+    "InstLine" : 963,
     "InstName" : "xrama_read_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -89,7 +89,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 958,
+    "InstLine" : 971,
     "InstName" : "xrama_write_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -97,7 +97,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 974,
+    "InstLine" : 987,
     "InstName" : "xram_poke_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -105,7 +105,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 981,
+    "InstLine" : 994,
     "InstName" : "xram_peek_trigger",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/trigger.v",
     "ModuleLine" : 3,
@@ -113,7 +113,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 993,
+    "InstLine" : 1006,
     "InstName" : "vga",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/vga.v",
     "ModuleLine" : 5,
@@ -171,7 +171,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 1083,
+    "InstLine" : 1096,
     "InstName" : "pll0",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/gowin_rpll/gowin_rpll0.v",
     "ModuleLine" : 9,
@@ -179,7 +179,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 1088,
+    "InstLine" : 1101,
     "InstName" : "clkdiv0",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/gowin_clkdiv/gowin_clkdiv0.v",
     "ModuleLine" : 9,
@@ -187,7 +187,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 1094,
+    "InstLine" : 1107,
     "InstName" : "clkdiv1",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/gowin_clkdiv/gowin_clkdiv1.v",
     "ModuleLine" : 9,
@@ -195,7 +195,7 @@
    },
    {
     "InstFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/main.v",
-    "InstLine" : 1123,
+    "InstLine" : 1136,
     "InstName" : "hdmi",
     "ModuleFile" : "C:/git/TRS-IO/src/fpga/m1/nano/v1.3-xray/TRS-IO/src/hdmi/hdmi.sv",
     "ModuleLine" : 4,

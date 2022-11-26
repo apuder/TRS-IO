@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="main" Register="427" Alu="63" Lut="529">
+<Module name="main" Register="439" Alu="63" Lut="529">
     <SubModule name="clk_wiz_0"/>
     <SubModule name="io" Register="12" Lut="5"/>
     <SubModule name="pre_ram_access_check_trigger" Register="1"/>
