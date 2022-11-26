@@ -359,9 +359,7 @@ static void action_task(void* p)
           assert(region->start == start);
           assert(region->length <= fragment_size);
           for (int j = 0; j < region->length; j++) {
-            spi_bram_poke(start + j, *buf);
-            assert(spi_bram_peek(start + j == *buf));
-            buf++;
+            spi_bram_poke(start + j, *buf++);
           }
           start += region->length;
           left -= region->length;
