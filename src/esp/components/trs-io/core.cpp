@@ -66,7 +66,7 @@ public:
   }
 
   void setScreenColor() {
-#ifdef CONFIG_TRS_IO_MODEL_1
+#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_TRS_IO_NEXT_TRS)
     const uint8_t color = B(0);
     spi_set_screen_color(color);
 #endif
@@ -169,11 +169,9 @@ public:
   void sendFPGAVersion() {
     uint8_t version_major = 0xff;
     uint8_t version_minor = 0xff;
-#ifdef CONFIG_TRS_IO_MODEL_1
     uint8_t v = spi_get_fpga_version();
     version_major = (v >> 5) & 7;
     version_minor = v & 0x1f;
-#endif
     addByte(version_major);
     addByte(version_minor);
   }

@@ -3,8 +3,10 @@
 #include "driver/gpio.h"
 #include "esp_event.h"
 
-#ifdef CONFIG_TRS_IO_MODEL_1
+#if defined(CONFIG_TRS_IO_MODEL_1)
 #define GPIO_BUTTON GPIO_NUM_39
+#elif defined(CONFIG_TRS_IO_NEXT_TRS)
+#define GPIO_BUTTON GPIO_NUM_35
 #else
 #define GPIO_BUTTON GPIO_NUM_22
 #endif
@@ -61,7 +63,7 @@ void init_button()
   // Configure push button
   gpioConfig.pin_bit_mask = (1ULL << GPIO_BUTTON);
   gpioConfig.mode = GPIO_MODE_INPUT;
-#ifdef CONFIG_TRS_IO_MODEL_1
+#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_TRS_IO_NEXT_TRS)
   gpioConfig.pull_up_en = GPIO_PULLUP_DISABLE;
 #else
   gpioConfig.pull_up_en = GPIO_PULLUP_ENABLE;
@@ -81,7 +83,7 @@ void init_button()
 
 bool is_button_pressed()
 {
-#ifdef CONFIG_TRS_IO_MODEL_1
+#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_TRS_IO_NEXT_TRS)
   return (GPIO.in1.data & (1 << (GPIO_BUTTON - 32))) == 0;
 #else
   return (GPIO.in & (1 << GPIO_BUTTON)) == 0;

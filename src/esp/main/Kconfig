@@ -17,6 +17,8 @@ config TRS_IO_MODEL_1
     bool "TRS-80 Model 1"
 config TRS_IO_MODEL_3
     bool "TRS-80 Model III"
+config TRS_IO_NEXT_TRS
+    bool "NextTRS"
 endchoice
 
 config TRS_IO_GPIO_LED_RED

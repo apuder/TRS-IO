@@ -296,14 +296,14 @@ static void IRAM_ATTR io_task(void* p)
       trs_io_read();
       break;
     case 0x20:
-#ifdef CONFIG_TRS_IO_MODEL_3
+#if defined(CONFIG_TRS_IO_MODEL_3) || defined(CONFIG_TRS_IO_NEXT_TRS)
       frehd_write(spi_abus_read());
 #else
       frehd_write(s);
 #endif
       break;
     case 0x30:
-#ifdef CONFIG_TRS_IO_MODEL_3
+#if defined(CONFIG_TRS_IO_MODEL_3) || defined(CONFIG_TRS_IO_NEXT_TRS)
       frehd_read(spi_abus_read());
 #else
       frehd_read(s);
@@ -439,7 +439,7 @@ void init_io()
   // Set ESP_DONE to 0
   gpio_set_level((gpio_num_t) ESP_DONE, 0);
 
-#ifndef CONFIG_TRS_IO_MODEL_3
+#if !defined(CONFIG_TRS_IO_MODEL_3) && !defined(CONFIG_TRS_IO_NEXT_TRS)
   // Configure ESP_FULL_ADDR
   gpioConfig.pin_bit_mask = MASK64_ESP_FULL_ADDR;
   gpioConfig.mode = GPIO_MODE_INPUT;

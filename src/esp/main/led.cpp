@@ -98,6 +98,7 @@ static void led_task(void* p)
 
 void init_led()
 {
+#ifndef CONFIG_TRS_IO_NEXT_TRS
   gpio_config_t gpioConfig;
 
   // Configure LED
@@ -115,11 +116,13 @@ void init_led()
 #ifdef CONFIG_TRS_IO_TEST_LED
   test_led();
 #endif
+#endif
 }
     
 
 void set_led(bool r, bool g, bool b, bool blink, bool auto_off)
 {
+#ifndef CONFIG_TRS_IO_NEXT_TRS
   EventBits_t mask = BIT_TRIGGER;
 
   if (r) {
@@ -138,4 +141,5 @@ void set_led(bool r, bool g, bool b, bool blink, bool auto_off)
     mask |= BIT_AUTO_OFF;
   }
   xEventGroupSetBits(event_group, mask);
+#endif
 }
