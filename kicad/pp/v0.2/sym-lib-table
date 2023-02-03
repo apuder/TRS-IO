@@ -1,0 +1,6 @@
+(sym_lib_table
+  (lib (name "Tang20K")(type "KiCad")(uri "${KIPRJMOD}/Tang20K.kicad_sym")(options "")(descr ""))
+  (lib (name "ESP32-WROVER-B")(type "KiCad")(uri "${KIPRJMOD}/ESP32-WROVER-B.kicad_sym")(options "")(descr ""))
+  (lib (name "SDCard")(type "KiCad")(uri "${KIPRJMOD}/SDCard.kicad_sym")(options "")(descr ""))
+  (lib (name "MYLIB")(type "KiCad")(uri "${KIPRJMOD}/MYLIB.kicad_sym")(options "")(descr ""))
+)
