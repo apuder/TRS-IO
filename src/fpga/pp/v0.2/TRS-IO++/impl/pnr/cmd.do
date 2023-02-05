@@ -1,0 +1,11 @@
+-d C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg
+-p GW2A-18C-PBGA256-8
+-pn GW2A-LV18PG256C8/I7
+-cst C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\src\TRS-IO++.cst
+-cfg C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\pnr\device.cfg
+-bit
+-tr
+-ph
+-timing
+-cst_error
+-route_maxfan 23
