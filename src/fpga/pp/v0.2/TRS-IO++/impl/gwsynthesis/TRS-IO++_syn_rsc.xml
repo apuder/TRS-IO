@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="top" Register="297" Alu="183" Lut="303">
+<Module name="top" Register="297" Alu="183" Lut="294">
     <SubModule name="clk_wiz_0"/>
     <SubModule name="io" Register="12" Lut="4"/>
     <SubModule name="pre_ram_access_check_trigger" Register="1"/>
@@ -12,14 +12,14 @@
     <SubModule name="xram_peek_trigger" Register="1"/>
     <SubModule name="pll0"/>
     <SubModule name="clkdiv0"/>
-    <SubModule name="hdmi" Register="44" Alu="19" Lut="49">
-        <SubModule name="true_hdmi_output.packet_picker" Register="406" Lut="295">
+    <SubModule name="hdmi" Register="44" Alu="19" Lut="45">
+        <SubModule name="true_hdmi_output.packet_picker" Register="406" Lut="297">
             <SubModule name="audio_clock_regeneration_packet" Register="42" Alu="20" Lut="8"/>
         </SubModule>
-        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="373"/>
-        <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="4" Lut="35"/>
+        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="370"/>
+        <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="4" Lut="36"/>
         <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="4" Lut="27"/>
-        <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="4" Lut="28"/>
+        <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="4" Lut="27"/>
         <SubModule name="serializer"/>
     </SubModule>
 </Module>

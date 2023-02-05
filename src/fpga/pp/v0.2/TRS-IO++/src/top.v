@@ -322,13 +322,12 @@ localparam [2:0]
   esp_xray = 3'd5;
 
 
-assign ESP_S = (esp_trs_io_in & {3{trs_io_sel_in}}) |
-               (esp_trs_io_out & {3{trs_io_sel_out}}) |
-               (esp_frehd_in & {3{frehd_sel_in}}) |
-               (esp_frehd_out & {3{frehd_sel_out}}) |
-               (esp_printer_wr & {3{printer_sel_reg}}) |
-               (esp_xray & {3{xray_sel}});
-
+assign ESP_S = ~((~esp_trs_io_in & {3{trs_io_sel_in}}) |
+                 (~esp_trs_io_out & {3{trs_io_sel_out}}) |
+                 (~esp_frehd_in & {3{frehd_sel_in}}) |
+                 (~esp_frehd_out & {3{frehd_sel_out}}) |
+                 (~esp_printer_wr & {3{printer_sel_reg}}) |
+                 (~esp_xray & {3{xray_sel}}));
 
 
 //---main-------------------------------------------------------------------------
