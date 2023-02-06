@@ -31,7 +31,7 @@ namespace VFS {
 #define SPI_CS GPIO_NUM_23
 #elif defined(CONFIG_TRS_IO_MODEL_3)
 #define SPI_CS GPIO_NUM_13
-#elif defined(CONFIG_TRS_IO_NEXT_TRS)
+#elif defined(CONFIG_TRS_IO_PP)
 #define SPI_CS GPIO_NUM_21
 #else
 // PocketTRS

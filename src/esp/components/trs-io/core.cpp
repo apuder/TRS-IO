@@ -66,7 +66,7 @@ public:
   }
 
   void setScreenColor() {
-#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_TRS_IO_NEXT_TRS)
+#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_TRS_IO_PP)
     const uint8_t color = B(0);
     spi_set_screen_color(color);
 #endif

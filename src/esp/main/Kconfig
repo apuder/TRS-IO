@@ -8,17 +8,17 @@ config TRS_IO_USE_RETROSTORE_PCB
         RetroStoreCard. By default, the TRS-IO settings will be used.
 
 choice
-    prompt "TRS-80 Model"
+    prompt "Target"
     default TRS_IO_MODEL_3
     help
-        TRS-80 model that TRS-IO is targetting...
+        Select the platform that TRS-IO is targetting...
 
 config TRS_IO_MODEL_1
     bool "TRS-80 Model 1"
 config TRS_IO_MODEL_3
     bool "TRS-80 Model III"
-config TRS_IO_NEXT_TRS
-    bool "NextTRS"
+config TRS_IO_PP
+    bool "TRS-IO++"
 endchoice
 
 config TRS_IO_GPIO_LED_RED
