@@ -7,3 +7,6 @@
 [submodule "src/esp/components/retrostore-c-sdk"]
 	path = src/esp/components/retrostore-c-sdk
 	url = https://github.com/shaeberling/retrostore-c-sdk.git
+[submodule "src/esp/components/FabGL"]
+	path = src/esp/components/FabGL
+	url = https://github.com/fdivitto/FabGL.git

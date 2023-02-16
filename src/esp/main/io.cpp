@@ -20,6 +20,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/timers.h"
 #include "web_debugger.h"
+#include "keyb.h"
 #include "spi.h"
 
 #define ESP_REQ GPIO_NUM_34
@@ -349,6 +350,9 @@ static void action_task(void* p)
 
   while (true) {
     frehd_check_action();
+#ifdef CONFIG_TRS_IO_PP
+    check_keyb();
+#endif
 
     if (trigger_trs_io_action) {
       TrsIO::processInBackground();

@@ -12,10 +12,12 @@
 #include "trs-io.h"
 #include "trs-fs.h"
 #include "spi.h"
+#include "keyb.h"
 
 
 extern const char* GIT_REV;
 extern const char* GIT_BRANCH;
+
 
 extern "C" {
 
@@ -28,6 +30,9 @@ void app_main(void)
   init_led();
   init_button();
   init_storage();
+#ifdef CONFIG_TRS_IO_PP
+  init_keyb();
+#endif
 
   if (is_button_pressed()) {
 #ifdef TRS_IO_BUTTON_ONLY_AT_STARTUP

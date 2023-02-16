@@ -51,6 +51,7 @@
 #define FPGA_CMD_GET_PRINTER_BYTE 16
 #define FPGA_CMD_SET_SCREEN_COLOR 17
 #define FPGA_CMD_ABUS_READ 18
+#define FPGA_CMD_SEND_KEYB 19
 
 
 uint8_t spi_get_cookie();
@@ -70,6 +71,7 @@ void spi_xray_resume();
 void spi_trs_io_done();
 void spi_set_full_addr(bool flag);
 void spi_set_screen_color(uint8_t color);
+void spi_send_keyb(uint8_t idx, uint8_t mask);
 
 void init_spi();
 

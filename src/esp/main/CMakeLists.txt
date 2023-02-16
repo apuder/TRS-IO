@@ -30,4 +30,5 @@ idf_component_register(SRCS ${src}
                                 retrostore
                                 tcpip
                                 trs-fs
-                                trs-io)
+                                trs-io
+                                keyb)
