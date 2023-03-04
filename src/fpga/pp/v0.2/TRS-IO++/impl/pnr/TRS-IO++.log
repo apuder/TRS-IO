@@ -1,7 +1,7 @@
-Reading netlist file: "C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg"
-Parsing netlist file "C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg" completed
+Reading netlist file: "E:\Documents\FPGA\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg"
+Parsing netlist file "E:\Documents\FPGA\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg" completed
 Processing netlist completed
-Reading constraint file: "C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\src\TRS-IO++.cst"
+Reading constraint file: "E:\Documents\FPGA\TRS-IO++\src\TRS-IO++.cst"
 Physical Constraint parsed completed
 Running placement......
 [10%] Placement Phase 0 completed
@@ -21,10 +21,10 @@ Bitstream generation in progress......
 Bitstream generation completed
 Running power analysis......
 [100%] Power analysis completed
-Generate file "C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\pnr\TRS-IO++.power.html" completed
-Generate file "C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\pnr\TRS-IO++.pin.html" completed
-Generate file "C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\pnr\TRS-IO++.rpt.html" completed
-Generate file "C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\pnr\TRS-IO++.rpt.txt" completed
-Generate file "C:\git\TRS-IO\src\fpga\pp\v0.2\TRS-IO++\impl\pnr\TRS-IO++.tr.html" completed
-Sun Feb 05 15:40:00 2023
+Generate file "E:\Documents\FPGA\TRS-IO++\impl\pnr\TRS-IO++.power.html" completed
+Generate file "E:\Documents\FPGA\TRS-IO++\impl\pnr\TRS-IO++.pin.html" completed
+Generate file "E:\Documents\FPGA\TRS-IO++\impl\pnr\TRS-IO++.rpt.html" completed
+Generate file "E:\Documents\FPGA\TRS-IO++\impl\pnr\TRS-IO++.rpt.txt" completed
+Generate file "E:\Documents\FPGA\TRS-IO++\impl\pnr\TRS-IO++.tr.html" completed
+Sat Mar 04 08:49:43 2023
 

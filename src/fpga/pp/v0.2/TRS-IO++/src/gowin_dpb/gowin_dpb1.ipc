@@ -2,7 +2,7 @@
 ipc_version=4
 file=gowin_dpb1
 module=Gowin_DPB1
-target_device=gw1nr9c-004
+target_device=gw2a18c-011
 type=ram_dpb
 version=1.0
 

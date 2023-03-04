@@ -50,8 +50,7 @@ module top(
 
 
 reg TRS_INT;
-assign INT = TRS_INT;
-wire[3:0] led = LED;
+assign INT = 1'b0;//TRS_INT;
 reg ESP_REQ;
 assign REQ = ESP_REQ;
 wire ESP_DONE = DONE;
@@ -78,6 +77,8 @@ wire TRS_RD = _RD_N;
 wire TRS_WR = _WR_N;
 wire TRS_IN = _IN_N;
 wire TRS_OUT = _OUT_N;
+
+assign _A = 16'hZZZZ;
 
 assign ABUS_DIR = 1;
 assign ABUS_DIR_N = ~ABUS_DIR;
@@ -313,21 +314,21 @@ always @(posedge clk) begin
 end
 
       
-localparam [2:0]
-  esp_trs_io_in = 3'd0,
-  esp_trs_io_out = 3'd1,
-  esp_frehd_in = 3'd2,
-  esp_frehd_out = 3'd3,
-  esp_printer_wr = 3'd4,
-  esp_xray = 3'd5;
+localparam [3:0]
+  esp_trs_io_in = 4'd0,
+  esp_trs_io_out = 4'd1,
+  esp_frehd_in = 4'd2,
+  esp_frehd_out = 4'd3,
+  esp_printer_wr = 4'd4,
+  esp_xray = 4'd5;
 
 
-assign ESP_S = ~((~esp_trs_io_in & {3{trs_io_sel_in}}) |
-                 (~esp_trs_io_out & {3{trs_io_sel_out}}) |
-                 (~esp_frehd_in & {3{frehd_sel_in}}) |
-                 (~esp_frehd_out & {3{frehd_sel_out}}) |
-                 (~esp_printer_wr & {3{printer_sel_reg}}) |
-                 (~esp_xray & {3{xray_sel}}));
+assign ESP_S = ~((~esp_trs_io_in & {4{trs_io_sel_in}}) |
+                 (~esp_trs_io_out & {4{trs_io_sel_out}}) |
+                 (~esp_frehd_in & {4{frehd_sel_in}}) |
+                 (~esp_frehd_out & {4{frehd_sel_out}}) |
+                 (~esp_printer_wr & {4{printer_sel_reg}}) |
+                 (~esp_xray & {4{xray_sel}}));
 
 
 //---main-------------------------------------------------------------------------
@@ -491,11 +492,11 @@ wire SCK_falling_edge = (SCKr[2:1] == 2'b10);
 
 reg [2:0] CSr;  always @(posedge clk) CSr <= {CSr[1:0], CS};
 wire CS_active = ~CSr[1];
-wire CS_startmessage = (CSr[2:1]==2'b10);
-wire CS_endmessage = (CSr[2:1]==2'b01);
+//wire CS_startmessage = (CSr[2:1]==2'b10);
+//wire CS_endmessage = (CSr[2:1]==2'b01);
 
-assign start_msg = CS_startmessage;
-wire end_msg = CS_endmessage;
+//assign start_msg = CS_startmessage;
+//wire end_msg = CS_endmessage;
 
 reg [1:0] MOSIr;  always @(posedge clk) MOSIr <= {MOSIr[0], MOSI};
 wire MOSI_data = MOSIr[1];
@@ -646,7 +647,7 @@ wire xray_run_stub = (state_xray != state_xray_run);
 // The "+ 1" will trigger the ESP at the beginning of the second iteration of the stub
 assign xray_sel = (stub_run_count == 1) && ((xray_base_addr + 1) == TRS_A);
 
-assign led[0] = ~xray_run_stub;
+assign LED[0] = ~xray_run_stub;
 
 
 //--------BRAM-------------------------------------------------------------------------
@@ -724,8 +725,8 @@ assign dina = !TRS_WR ? TRS_D : 8'bz;
 //assign TRS_OE = !((TRS_A[16:8] == 9'h0ff) && (!TRS_WR || !TRS_RD));
 
 
-assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel || z80_dsp_sel_wr ||
-                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
+assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_OUT);// || fdc_sel || z80_dsp_sel_wr ||
+//                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
 
 assign TRS_DIR = TRS_RD && TRS_IN;
 
@@ -756,7 +757,7 @@ trigger brama_write_trigger(
 assign wea = !TRS_WR;
 
 reg[7:0] trs_data;
-assign TRS_D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
+assign _D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
 
 /*
   ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
@@ -786,8 +787,8 @@ reg [23:0] counter_25ms;
 wire [7:0] xdouta;
 wire xrama_data_ready;
 
-wire [7:0] le18_dout;
-wire le18_dout_rdy;
+wire [7:0] le18_dout = 8'b0;
+wire le18_dout_rdy = 1'b0;
 
 wire [7:0] spi_data_in;
 
@@ -1097,8 +1098,8 @@ logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 
 logic [23:0] rgb = 24'd0;
 logic [23:0] rgb_screen_color = 24'hffffff;
-logic [10:0] cx, screen_start_x, frame_width, screen_width;
-logic [9:0] cy, screen_start_y, frame_height, screen_height;
+logic [10:0] cx, frame_width, screen_width;
+logic [9:0] cy, frame_height, screen_height;
 
 always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
 
@@ -1124,13 +1125,13 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .screen_height(screen_height)
 );
 
-ELVDS_OBUF tmds [2:0] (
+TLVDS_OBUF tmds [2:0] (
   .O(tmds_p),
   .OB(tmds_n),
   .I(tmds_x)
 );
 
-ELVDS_OBUF tmds_clock(
+TLVDS_OBUF tmds_clock(
   .O(tmds_clock_p),
   .OB(tmds_clock_n),
   .I(tmds_clock_x)
@@ -1157,5 +1158,12 @@ always @(posedge clk_audio) begin
   endcase
 end
 */
+
+reg [25:0] heartbeat;
+
+always @ (posedge clk)
+   heartbeat <= heartbeat + 26'b1;
+
+assign LED[3:1] = {heartbeat[25:24] == 2'b10, heartbeat[25:24] == 2'b11 || heartbeat[25:24] == 2'b01, heartbeat[25:24] == 2'b00};
 
 endmodule
