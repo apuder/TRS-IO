@@ -4,14 +4,20 @@
 //GOWIN Version: V1.9.8.09 Education
 //Part Number: GW2A-LV18PG256C8/I7
 //Device: GW2A-18C
-//Created Time: Sun Mar 05 10:34:34 2023
+//Created Time: Sun Mar 05 07:52:22 2023
 
 //Change the instance name and port connections to the signal names
 //--------Copy here to design--------
 
-    Gowin_rPLL your_instance_name(
-        .clkout(clkout_o), //output clkout
-        .clkin(clkin_i) //input clkin
+    blk_mem_gen_3 your_instance_name(
+        .dout(dout_o), //output [4:0] dout
+        .clk(clk_i), //input clk
+        .oce(oce_i), //input oce
+        .ce(ce_i), //input ce
+        .reset(reset_i), //input reset
+        .wre(wre_i), //input wre
+        .ad(ad_i), //input [9:0] ad
+        .din(din_i) //input [4:0] din
     );
 
 //--------Copy end-------------------

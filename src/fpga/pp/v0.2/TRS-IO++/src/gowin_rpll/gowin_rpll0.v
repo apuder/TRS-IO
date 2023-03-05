@@ -4,7 +4,7 @@
 //GOWIN Version: V1.9.8.09 Education
 //Part Number: GW2A-LV18PG256C8/I7
 //Device: GW2A-18C
-//Created Time: Mon Feb 13 04:51:14 2023
+//Created Time: Sun Mar 05 10:35:41 2023
 
 module Gowin_rPLL0 (clkout, clkin);
 

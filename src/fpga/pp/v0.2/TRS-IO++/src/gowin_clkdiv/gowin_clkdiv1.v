@@ -2,9 +2,9 @@
 //All rights reserved.
 //File Title: IP file
 //GOWIN Version: V1.9.8.09 Education
-//Part Number: GW1NR-LV9QN88PC6/I5
-//Device: GW1NR-9C
-//Created Time: Mon Feb 13 04:48:40 2023
+//Part Number: GW2A-LV18PG256C8/I7
+//Device: GW2A-18C
+//Created Time: Sun Mar 05 10:38:09 2023
 
 module Gowin_CLKDIV1 (clkout, hclkin, resetn);
 

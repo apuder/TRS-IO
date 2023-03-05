@@ -62,15 +62,6 @@ assign DBUS_EN = TRS_OE;
 wire TRS_DIR;
 assign DBUS_DIR = TRS_DIR;
 
-wire[2:0] tmds_p;
-wire[2:0] tmds_n;
-wire tmds_clock_p;
-wire tmds_clock_n;
-assign HDMI_TX_P = tmds_p;
-assign HDMI_TX_N = tmds_n;
-assign HDMI_TXC_P = tmds_clock_p;
-assign HDMI_TXC_N = tmds_clock_n;
-
 wire CS = CS_FPGA;
 wire[1:0] sw = 2'b11;
 wire TRS_RD = _RD_N;
@@ -725,7 +716,7 @@ assign dina = !TRS_WR ? TRS_D : 8'bz;
 //assign TRS_OE = !((TRS_A[16:8] == 9'h0ff) && (!TRS_WR || !TRS_RD));
 
 
-assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_OUT);// || fdc_sel || z80_dsp_sel_wr ||
+assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_WR || !TRS_OUT);// || fdc_sel || z80_dsp_sel_wr ||
 //                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
 
 assign TRS_DIR = TRS_RD && TRS_IN;
@@ -787,8 +778,8 @@ reg [23:0] counter_25ms;
 wire [7:0] xdouta;
 wire xrama_data_ready;
 
-wire [7:0] le18_dout = 8'b0;
-wire le18_dout_rdy = 1'b0;
+wire [7:0] le18_dout;
+wire le18_dout_rdy;
 
 wire [7:0] spi_data_in;
 
@@ -1103,6 +1094,12 @@ logic [9:0] cy, frame_height, screen_height;
 
 always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
 
+logic vga_rgb;
+
+always @(posedge clk_pixel)
+begin
+  rgb <= vga_rgb ? rgb_screen_color : 24'b0;
+end
 
 wire [2:0] tmds_x;
 wire tmds_clock_x;
@@ -1112,7 +1109,7 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .clk_pixel_x5(clk_pixel_x5),
   .clk_pixel(clk_pixel),
   .clk_audio(clk_audio),
-  .reset(~sw[1]),
+  .reset(1'b0),
   .rgb(rgb),
   .audio_sample_word(audio_sample_word),
   .tmds(tmds_x),
@@ -1126,17 +1123,39 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
 );
 
 TLVDS_OBUF tmds [2:0] (
-  .O(tmds_p),
-  .OB(tmds_n),
+  .O(HDMI_TX_P),
+  .OB(HDMI_TX_N),
   .I(tmds_x)
 );
 
 TLVDS_OBUF tmds_clock(
-  .O(tmds_clock_p),
-  .OB(tmds_clock_n),
+  .O(HDMI_TXC_P),
+  .OB(HDMI_TXC_N),
   .I(tmds_clock_x)
 );
 
+//-----VGA-------------------------------------------------------------------------------
+
+reg sync;
+
+vga vga(
+  .clk(clk),
+  .vga_clk(vga_clk), // 20 MHz
+  .TRS_A(_A),
+  .TRS_D(_D),
+  .TRS_WR(~_WR_N),
+  .TRS_OUT(~_OUT_N),
+  .TRS_IN(~_IN_N),
+  .le18_dout(le18_dout),
+  .le18_dout_rdy(le18_dout_rdy),
+  .VGA_RGB(vga_rgb),
+  .VGA_HSYNC(),
+  .VGA_VSYNC(),
+  .reset(sync));
+
+always @(posedge clk_pixel) begin
+  sync <= (cx == frame_width - 14 || cx == frame_width - 13) && cy == frame_height - 1;
+end
 
 //-----Cassette out--------------------------------------------------------------------------
 

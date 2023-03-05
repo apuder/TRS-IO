@@ -4,22 +4,22 @@
 -part_number GW2A-LV18PG256C8/I7
 
 
--mod_name blk_mem_gen_4
--file_name blk_mem_gen_4
+-mod_name display_ram
+-file_name display_ram
 -path E:/Documents/FPGA/TRS-IO++/src/gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
 -dev_type GW2A-18C
--depth_0 16384
--depth_1 16384
--width_0 6
--width_1 6
+-depth_0 1024
+-depth_1 1024
+-width_0 8
+-width_1 8
 -read_mode_0 pipeline
 -read_mode_1 pipeline
 -write_mode_0 normal
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file E:\Documents\FPGA\TRS-IO++\src\splash_le18.mi
+-init_file E:\Documents\FPGA\TRS-IO++\src\cls.mi
 -init_match port_A
