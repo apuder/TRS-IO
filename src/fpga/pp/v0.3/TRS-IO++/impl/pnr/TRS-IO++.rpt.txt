@@ -1,0 +1,427 @@
+//Copyright (C)2014-2022 Gowin Semiconductor Corporation.
+//All rights reserved.
+
+
+1. PnR Messages
+
+  <Report Title>: PnR Report
+  <Design File>: E:\Documents\FPGA\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg
+  <Physical Constraints File>: E:\Documents\FPGA\TRS-IO++\src\TRS-IO++.cst
+  <Timing Constraints File>: ---
+  <PnR Version>: V1.9.8.09 Education
+  <Part Number>: GW2A-LV18PG256C8/I7
+  <Device>: GW2A-18C
+  <Created Time>:Sat Mar 04 08:49:43 2023
+
+
+2. PnR Details
+
+  Running placement:
+    Placement Phase 0: CPU time = 0h 0m 0.245s, Elapsed time = 0h 0m 0.244s
+    Placement Phase 1: CPU time = 0h 0m 0.316s, Elapsed time = 0h 0m 0.316s
+    Placement Phase 2: CPU time = 0h 0m 0.428s, Elapsed time = 0h 0m 0.428s
+    Placement Phase 3: CPU time = 0h 0m 1s, Elapsed time = 0h 0m 1s
+    Total Placement: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
+ Running routing:
+    Routing Phase 0: CPU time = 0h 0m 0.001s, Elapsed time = 0h 0m 0.001s
+    Routing Phase 1: CPU time = 0h 0m 0.336s, Elapsed time = 0h 0m 0.336s
+    Routing Phase 2: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
+    Total Routing: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
+ Generate output files:
+    CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
+
+ Total Time and Memory Usage: CPU time = 0h 0m 8s, Elapsed time = 0h 0m 8s, Peak memory usage = 393MB
+
+
+3. Resource Usage Summary
+
+  ----------------------------------------------------------
+  Resources                   | Usage
+  ----------------------------------------------------------
+  Logic                       | 1548/20736  7%
+    --LUT,ALU,ROM16           | 1548(1248 LUT, 300 ALU, 0 ROM16)
+    --SSRAM(RAM16)            | 0
+  Register                    | 939/16173  5%
+    --Logic Register as Latch | 0/15552  0%
+    --Logic Register as FF    | 909/15552  5%
+    --I/O Register as Latch   | 0/621  0%
+    --I/O Register as FF      | 30/621  4%
+  CLS                         | 1188/10368  11%
+  I/O Port                    | 82
+  I/O Buf                     | 65
+    --Input Buf               | 9
+    --Output Buf              | 32
+    --Inout Buf               | 24
+  IOLOGIC                     | 3%
+    --OSER10                  | 4
+  BSRAM                       | 36%
+    --DPB                     | 17
+  DSP                         | 0%
+  PLL                         | 2/4  50%
+  DCS                         | 0/8  0%
+  DQCE                        | 0/24  0%
+  OSC                         | 0/1  0%
+  CLKDIV                      | 1/8  12%
+  DLLDLY                      | 0/8  0%
+  DQS                         | 0/9  0%
+  DHCEN                       | 0/16  0%
+  ==========================================================
+
+
+
+4. I/O Bank Usage Summary
+
+  -----------------------
+  I/O Bank  | Usage       
+  -----------------------
+  bank 0   | 23/29(79%)  
+  bank 1   | 20/20(100%) 
+  bank 2   | 9/20(45%)   
+  bank 3   | 19/32(59%)  
+  bank 4   | 0/36(0%)    
+  bank 5   | 0/36(0%)    
+  bank 6   | 0/18(0%)    
+  bank 7   | 11/16(68%)  
+  =======================
+
+
+5. Global Clock Usage Summary
+
+  -------------------------------
+  Global Clock  | Usage       
+  -------------------------------
+  PRIMARY       | 4/8(50%)
+  LW            | 6/8(75%)
+  GCLK_PIN      | 4/8(50%)
+  PLL           | 2/4(50%)
+  CLKDIV        | 1/8(12%)
+  DLLDLY        | 0/8(0%)
+  ===============================
+
+
+6. Global Clock Signals
+
+  -------------------------------------------
+  Signal         | Global Clock   | Location
+  -------------------------------------------
+  clk_in_d       | PRIMARY        |  TR TL BR
+  clk_audio_4    | PRIMARY        |  TR TL BR
+  clk            | PRIMARY        |  TR TL BR
+  clk_pixel      | PRIMARY        |  TR TL BR BL
+  audio_sample_word_buffer_92| LW             |  -
+  audio_sample_word_buffer_94| LW             |  -
+  audio_sample_word_buffer_98| LW             |  -
+  audio_sample_word_buffer_100| LW             |  -
+  audio_sample_word_buffer_102| LW             |  -
+  n4054_8        | LW             |  -
+  clk_pixel_x5   | HCLK           | TOP[0]
+  ===========================================
+
+
+7. Pinout by Port Name
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Port Name      | Diff Pair | Loc./Bank     | Constraint | Dir.  | Site     | IO Type    | Drive | Pull Mode | PCI Clamp | Hysteresis | Open Drain | Slew Rate | Vref       | Single Resistor | Diff Resistor | BankVccio 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+clk_in         |           | H11/0         | Y          | in    | IOT27[A] | LVCMOS18   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3       
+CONF[0]        |           | A12/7         | Y          | in    | IOL13[B] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+CONF[1]        |           | C11/7         | Y          | in    | IOL15[B] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+CONF[2]        |           | B11/7         | Y          | in    | IOL13[A] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+CONF[3]        |           | A11/7         | Y          | in    | IOL15[A] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+CS_FPGA        |           | K11/1         | Y          | in    | IOT38[A] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3       
+SCK            |           | K12/1         | Y          | in    | IOT36[B] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3       
+MOSI           |           | H13/0         | Y          | in    | IOT18[A] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3       
+DONE           |           | E16/0         | Y          | in    | IOT6[A]  | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3       
+VIDEOX         |           | N7/3          | Y          | in    | IOR47[B] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+VSYNCX         |           | M6/3          | Y          | in    | IOR44[A] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+HSYNCX         |           | L8/3          | Y          | in    | IOR44[B] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+EXTIOSEL_IN_N  |           | E10/7         | Y          | in    | IOL17[B] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+WAIT_IN_N      |           | R7/3          | Y          | in    | IOR49[A] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+CTRL_DIR       |           | T6/3          | Y          | out   | IOR53[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+CTRL_EN        |           | P6/3          | Y          | out   | IOR53[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+ABUS_DIR       |           | R11/2         | Y          | out   | IOR17[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+ABUS_EN        |           | T12/2         | Y          | out   | IOR17[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+ABUS_DIR_N     |           | R16/1         | Y          | out   | IOT54[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+HDMI_TX_P[0]   | HDMI_TX_N[0] | H14,H16/0     | Y          | out   | IOT20    | LVDS25     | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3       
+HDMI_TX_P[1]   | HDMI_TX_N[1] | J15,K16/0     | Y          | out   | IOT24    | LVDS25     | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3       
+HDMI_TX_P[2]   | HDMI_TX_N[2] | K14,K15/1     | Y          | out   | IOT30    | LVDS25     | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3       
+HDMI_TXC_P     | HDMI_TXC_N | G16,H15/0     | Y          | out   | IOT16    | LVDS25     | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3       
+DBUS_DIR       |           | T15/2         | Y          | out   | IOR7[A]  | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+DBUS_EN        |           | J16/0         | Y          | out   | IOT22[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+CASS_OUT       |           | C10/3         | Y          | out   | IOR39[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+MISO           |           | K13/1         | Y          | out   | IOT36[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+ESP_S[0]       |           | J12/0         | Y          | out   | IOT18[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+ESP_S[1]       |           | H12/0         | Y          | out   | IOT14[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+ESP_S[2]       |           | G11/0         | Y          | out   | IOT14[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+ESP_S[3]       |           | B10/3         | Y          | out   | IOR31[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+REQ            |           | A13/3         | Y          | out   | IOR32[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+LED[0]         |           | E14/0         | Y          | out   | IOT4[B]  | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+LED[1]         |           | D16/0         | Y          | out   | IOT4[A]  | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+LED[2]         |           | C13/3         | Y          | out   | IOR32[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+LED[3]         |           | F15/0         | Y          | out   | IOT6[B]  | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+HSYNC_O        |           | R9/3          | Y          | out   | IOR35[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+VSYNC_O        |           | N8/3          | Y          | out   | IOR40[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+VIDEO_O        |           | L9/3          | Y          | out   | IOR40[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+LED_GREEN      |           | C9/7          | Y          | out   | IOL27[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+LED_RED        |           | L12/1         | Y          | out   | IOT32[B] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+LED_BLUE       |           | A9/7          | Y          | out   | IOL27[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+INT            |           | J11/1         | Y          | out   | IOT32[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+WAIT           |           | F10/7         | Y          | out   | IOL11[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+EXTIOSEL       |           | D11/7         | Y          | out   | IOL22[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+CTRL1_EN       |           | D10/7         | Y          | out   | IOL17[A] | LVCMOS33   | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_IN_N          |           | T7/3          | Y          | io    | IOR29[A] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+_RD_N          |           | R8/3          | Y          | io    | IOR29[B] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+_WR_N          |           | T8/3          | Y          | io    | IOR42[B] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+_OUT_N         |           | P8/3          | Y          | io    | IOR42[A] | LVCMOS33   | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3       
+_RAS_N         |           | T9/3          | Y          | io    | IOR38[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_IOREQ_N       |           | P9/3          | Y          | io    | IOR38[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_M1_N          |           | P11/2         | Y          | io    | IOR24[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_RESET_N       |           | T11/2         | Y          | io    | IOR24[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_A[0]          |           | G12/0         | Y          | io    | IOT8[B]  | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[1]          |           | F13/0         | Y          | io    | IOT8[A]  | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[2]          |           | M14/1         | Y          | io    | IOT40[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[3]          |           | M15/1         | Y          | io    | IOT40[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[4]          |           | T14/2         | Y          | io    | IOR20[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_A[5]          |           | R13/2         | Y          | io    | IOR20[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_A[6]          |           | P13/2         | Y          | io    | IOR11[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_A[7]          |           | R12/2         | Y          | io    | IOR11[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_A[8]          |           | P15/1         | Y          | io    | IOT54[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[9]          |           | L13/1         | Y          | io    | IOT38[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[10]         |           | L14/1         | Y          | io    | IOT34[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[11]         |           | P16/1         | Y          | io    | IOT48[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[12]         |           | L16/1         | Y          | io    | IOT34[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[13]         |           | N14/1         | Y          | io    | IOT52[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[14]         |           | N15/1         | Y          | io    | IOT48[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_A[15]         |           | N16/1         | Y          | io    | IOT52[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_D[0]          |           | A15/7         | Y          | io    | IOL2[B]  | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3       
+_D[1]          |           | D14/1         | Y          | io    | IOT44[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_D[2]          |           | E15/1         | Y          | io    | IOT44[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_D[3]          |           | F16/0         | Y          | io    | IOT9[B]  | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_D[4]          |           | F14/0         | Y          | io    | IOT9[A]  | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_D[5]          |           | G15/0         | Y          | io    | IOT13[A] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_D[6]          |           | G14/0         | Y          | io    | IOT13[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+_D[7]          |           | J14/0         | Y          | io    | IOT22[B] | LVCMOS33   | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3       
+======================================================================================================================================================================================================================
+
+
+
+
+8. All Package Pins
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Loc./Bank| Signal         | Dir.  | Site     | IO Type  | Drive | Pull Mode | PCI Clamp | Hysteresis | Open Drain | Slew Rate | Vref       | Single Resistor | Diff Resistor | Bank Vccio
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+L15/0    | -              | in    | IOT2[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+D16/0    | LED[1]         | out   | IOT4[A]  | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+E14/0    | LED[0]         | out   | IOT4[B]  | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+C16/0    | -              | in    | IOT5[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+D15/0    | -              | in    | IOT5[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+E16/0    | DONE           | in    | IOT6[A]  | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+F15/0    | LED[3]         | out   | IOT6[B]  | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+F13/0    | _A[1]          | io    | IOT8[A]  | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+G12/0    | _A[0]          | io    | IOT8[B]  | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+F14/0    | _D[4]          | io    | IOT9[A]  | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+F16/0    | _D[3]          | io    | IOT9[B]  | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+F12/0    | -              | in    | IOT12[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+G13/0    | -              | in    | IOT12[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+G15/0    | _D[5]          | io    | IOT13[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+G14/0    | _D[6]          | io    | IOT13[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+G11/0    | ESP_S[2]       | out   | IOT14[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+H12/0    | ESP_S[1]       | out   | IOT14[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+G16/0    | HDMI_TXC_P     | out   | IOT16[A] | LVDS25   | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3  
+H15/0    | HDMI_TXC_N     | out   | IOT16[B] | LVDS25   | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3  
+H13/0    | MOSI           | in    | IOT18[A] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+J12/0    | ESP_S[0]       | out   | IOT18[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+H14/0    | HDMI_TX_P[0]   | out   | IOT20[A] | LVDS25   | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3  
+H16/0    | HDMI_TX_N[0]   | out   | IOT20[B] | LVDS25   | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3  
+J16/0    | DBUS_EN        | out   | IOT22[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+J14/0    | _D[7]          | io    | IOT22[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+J15/0    | HDMI_TX_P[1]   | out   | IOT24[A] | LVDS25   | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3  
+K16/0    | HDMI_TX_N[1]   | out   | IOT24[B] | LVDS25   | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3  
+H11/0    | clk_in         | in    | IOT27[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+J13/0    | -              | in    | IOT27[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+K14/1    | HDMI_TX_P[2]   | out   | IOT30[A] | LVDS25   | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3  
+K15/1    | HDMI_TX_N[2]   | out   | IOT30[B] | LVDS25   | 3.5   | NONE      | NA        | NA         | NA         | NA        | NA         | NA              | NA            | 3.3  
+J11/1    | INT            | out   | IOT32[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+L12/1    | LED_RED        | out   | IOT32[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+L16/1    | _A[12]         | io    | IOT34[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+L14/1    | _A[10]         | io    | IOT34[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+K13/1    | MISO           | out   | IOT36[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+K12/1    | SCK            | in    | IOT36[B] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+K11/1    | CS_FPGA        | in    | IOT38[A] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+L13/1    | _A[9]          | io    | IOT38[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+M14/1    | _A[2]          | io    | IOT40[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+M15/1    | _A[3]          | io    | IOT40[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+D14/1    | _D[1]          | io    | IOT44[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+E15/1    | _D[2]          | io    | IOT44[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+N15/1    | _A[14]         | io    | IOT48[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+P16/1    | _A[11]         | io    | IOT48[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+N16/1    | _A[15]         | io    | IOT52[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+N14/1    | _A[13]         | io    | IOT52[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+P15/1    | _A[8]          | io    | IOT54[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+R16/1    | ABUS_DIR_N     | out   | IOT54[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+A4/5     | -              | in    | IOB2[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+C5/5     | -              | in    | IOB2[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+D6/5     | -              | in    | IOB3[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+E7/5     | -              | in    | IOB3[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+A3/5     | -              | in    | IOB4[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+B4/5     | -              | in    | IOB4[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+A5/5     | -              | in    | IOB7[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+B6/5     | -              | in    | IOB7[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+B1/5     | -              | in    | IOB8[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+C2/5     | -              | in    | IOB8[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+D3/5     | -              | in    | IOB9[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+D1/5     | -              | in    | IOB9[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+E2/5     | -              | in    | IOB12[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+E3/5     | -              | in    | IOB12[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+B3/5     | -              | in    | IOB13[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+A2/5     | -              | in    | IOB13[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+C1/5     | -              | in    | IOB14[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+D2/5     | -              | in    | IOB14[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+E1/5     | -              | in    | IOB16[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+F2/5     | -              | in    | IOB16[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+F4/5     | -              | in    | IOB18[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+G6/5     | -              | in    | IOB18[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+F3/5     | -              | in    | IOB19[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+F1/5     | -              | in    | IOB19[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+G5/5     | -              | in    | IOB20[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+G4/5     | -              | in    | IOB20[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+G2/5     | -              | in    | IOB21[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+G3/5     | -              | in    | IOB21[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+F5/5     | -              | in    | IOB22[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+H6/5     | -              | in    | IOB22[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+G1/5     | -              | in    | IOB24[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+H2/5     | -              | in    | IOB24[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+H4/5     | -              | in    | IOB26[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+J6/5     | -              | in    | IOB26[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+J1/5     | -              | in    | IOB27[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+J3/5     | -              | in    | IOB27[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+L2/4     | -              | in    | IOB30[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+M1/4     | -              | in    | IOB30[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+H3/4     | -              | in    | IOB32[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+H1/4     | -              | in    | IOB32[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+J2/4     | -              | in    | IOB34[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+K1/4     | -              | in    | IOB34[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+H5/4     | -              | in    | IOB35[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+J4/4     | -              | in    | IOB35[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+K3/4     | -              | in    | IOB36[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+K2/4     | -              | in    | IOB36[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+J5/4     | -              | in    | IOB37[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+K6/4     | -              | in    | IOB37[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+L1/4     | -              | in    | IOB38[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+L3/4     | -              | in    | IOB38[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+K4/4     | -              | in    | IOB39[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+L5/4     | -              | in    | IOB39[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+K5/4     | -              | in    | IOB40[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+L4/4     | -              | in    | IOB40[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+N2/4     | -              | in    | IOB41[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+P1/4     | -              | in    | IOB41[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+M3/4     | -              | in    | IOB42[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+N1/4     | -              | in    | IOB42[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+M2/4     | -              | in    | IOB43[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+N3/4     | -              | in    | IOB43[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+R1/4     | -              | in    | IOB44[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+P2/4     | -              | in    | IOB44[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+P4/4     | -              | in    | IOB45[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+T4/4     | -              | in    | IOB45[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+R3/4     | -              | in    | IOB48[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+T2/4     | -              | in    | IOB48[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+P5/4     | -              | in    | IOB50[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+R5/4     | -              | in    | IOB50[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+R4/4     | -              | in    | IOB52[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+T3/4     | -              | in    | IOB52[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+R6/4     | -              | in    | IOB54[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+T5/4     | -              | in    | IOB54[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+B14/7    | -              | in    | IOL2[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+A15/7    | _D[0]          | io    | IOL2[B]  | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+C12/7    | -              | in    | IOL7[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+B12/7    | -              | in    | IOL7[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+B13/7    | -              | in    | IOL8[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+A14/7    | -              | in    | IOL8[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+F10/7    | WAIT           | out   | IOL11[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+B11/7    | CONF[2]        | in    | IOL13[A] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+A12/7    | CONF[0]        | in    | IOL13[B] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+A11/7    | CONF[3]        | in    | IOL15[A] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+C11/7    | CONF[1]        | in    | IOL15[B] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+D10/7    | CTRL1_EN       | out   | IOL17[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+E10/7    | EXTIOSEL_IN_N  | in    | IOL17[B] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+D11/7    | EXTIOSEL       | out   | IOL22[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+A9/7     | LED_BLUE       | out   | IOL27[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+C9/7     | LED_GREEN      | out   | IOL27[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+C8/6     | -              | in    | IOL29[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+A8/6     | -              | in    | IOL29[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+F9/6     | -              | in    | IOL31[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+E11/6    | -              | in    | IOL31[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+B9/6     | -              | in    | IOL33[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+A10/6    | -              | in    | IOL33[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+F8/6     | -              | in    | IOL35[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+D9/6     | -              | in    | IOL35[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+D8/6     | -              | in    | IOL38[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+E9/6     | -              | in    | IOL38[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+B7/6     | -              | in    | IOL40[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+C7/6     | -              | in    | IOL40[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+F7/6     | -              | in    | IOL45[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+E8/6     | -              | in    | IOL45[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+C4/6     | -              | in    | IOL47[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+B5/6     | -              | in    | IOL47[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+E6/6     | -              | in    | IOL53[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+D7/6     | -              | in    | IOL53[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | -    
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+T15/2    | DBUS_DIR       | out   | IOR7[A]  | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+R14/2    | -              | in    | IOR7[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+P12/2    | -              | in    | IOR8[A]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+T13/2    | -              | in    | IOR8[B]  | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+R12/2    | _A[7]          | io    | IOR11[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+P13/2    | _A[6]          | io    | IOR11[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+R11/2    | ABUS_DIR       | out   | IOR17[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+T12/2    | ABUS_EN        | out   | IOR17[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+R13/2    | _A[5]          | io    | IOR20[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+T14/2    | _A[4]          | io    | IOR20[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+M10/2    | -              | in    | IOR22[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+N11/2    | -              | in    | IOR22[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+T11/2    | _RESET_N       | io    | IOR24[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+P11/2    | _M1_N          | io    | IOR24[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+C6/2     | -              | out   | IOR25[A] | LVCMOS18 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | NA              | NA            | 3.3  
+B8/2     | -              | in    | IOR25[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+A7/2     | -              | in    | IOR26[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+A6/2     | -              | in    | IOR26[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+N10/2    | -              | in    | IOR27[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+M11/2    | -              | in    | IOR27[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+T7/3     | _IN_N          | in    | IOR29[A] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+R8/3     | _RD_N          | in    | IOR29[B] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+M16/3    | -              | in    | IOR30[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+B16/3    | -              | in    | IOR30[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+C15/3    | -              | in    | IOR31[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+B10/3    | ESP_S[3]       | out   | IOR31[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+A13/3    | REQ            | out   | IOR32[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+C13/3    | LED[2]         | out   | IOR32[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+P10/3    | -              | in    | IOR33[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+R10/3    | -              | in    | IOR33[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+M9/3     | -              | in    | IOR34[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+L10/3    | -              | in    | IOR34[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+R9/3     | HSYNC_O        | out   | IOR35[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+T10/3    | -              | in    | IOR35[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+M8/3     | -              | in    | IOR36[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+N9/3     | -              | in    | IOR36[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+T9/3     | _RAS_N         | io    | IOR38[A] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+P9/3     | _IOREQ_N       | io    | IOR38[B] | LVCMOS33 | 8     | UP        | NA        | NONE       | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+C10/3    | CASS_OUT       | out   | IOR39[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+N8/3     | VSYNC_O        | out   | IOR40[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+L9/3     | VIDEO_O        | out   | IOR40[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+P8/3     | _OUT_N         | in    | IOR42[A] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+T8/3     | _WR_N          | in    | IOR42[B] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+M6/3     | VSYNCX         | in    | IOR44[A] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+L8/3     | HSYNCX         | in    | IOR44[B] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+M7/3     | -              | in    | IOR47[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+N7/3     | VIDEOX         | in    | IOR47[B] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+R7/3     | WAIT_IN_N      | in    | IOR49[A] | LVCMOS33 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | OFF             | NA            | 3.3  
+P7/3     | -              | in    | IOR49[B] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+N6/3     | -              | in    | IOR51[A] | LVCMOS18 | NA    | UP        | ON        | NONE       | NA         | NA        | NA         | NA              | NA            | 3.3  
+P6/3     | CTRL_EN        | out   | IOR53[A] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+T6/3     | CTRL_DIR       | out   | IOR53[B] | LVCMOS33 | 8     | UP        | NA        | NA         | OFF        | FAST      | NA         | OFF             | NA            | 3.3  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+===========================================================================================================================================================================================
+
+
