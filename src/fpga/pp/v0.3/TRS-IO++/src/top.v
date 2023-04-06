@@ -32,12 +32,6 @@ module top(
   output REQ,
   input DONE,
   output [3:0] LED,
-  input VIDEOX,
-  input VSYNCX,
-  input HSYNCX,
-  output HSYNC_O,
-  output VSYNC_O,
-  output VIDEO_O,
   output LED_GREEN,
   output LED_RED,
   output LED_BLUE,
@@ -46,7 +40,8 @@ module top(
   output EXTIOSEL,
   output CTRL1_EN,
   input EXTIOSEL_IN_N,
-  input WAIT_IN_N);
+  input WAIT_IN_N,
+  inout [7:0] PMOD);
 
 
 reg TRS_INT;
@@ -353,7 +348,8 @@ localparam [7:0]
   get_version         = 8'd15,
   get_printer_byte    = 8'd16,
   set_screen_color    = 8'd17,
-  abus_read           = 8'd18;
+  abus_read           = 8'd18,
+  send_keyb           = 8'd19;
 
 
 
@@ -449,6 +445,9 @@ always @(posedge clk) begin
           set_screen_color: begin
             bytes_to_read <= 3;
           end
+          send_keyb: begin
+            bytes_to_read <= 2;
+          end
           default:
             begin
               state <= idle;
@@ -536,6 +535,17 @@ assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
 always @(posedge clk) begin
   if (trigger_action && cmd == set_full_addr) begin
     full_addr <= (params[0] != 0);
+  end
+end
+
+
+//---Keyboard-----------------------------------------------------------------------------
+
+reg [7:0] keyb_matrix[0:7];
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == send_keyb) begin
+    keyb_matrix[params[0]] <= params[1];
   end
 end
 
@@ -638,7 +648,8 @@ wire xray_run_stub = (state_xray != state_xray_run);
 // The "+ 1" will trigger the ESP at the beginning of the second iteration of the stub
 assign xray_sel = (stub_run_count == 1) && ((xray_base_addr + 1) == TRS_A);
 
-assign LED[0] = ~xray_run_stub;
+//assign LED[0] = ~xray_run_stub;
+assign LED[0] = keyb_matrix[0][1];
 
 
 //--------BRAM-------------------------------------------------------------------------
@@ -716,7 +727,7 @@ assign dina = !TRS_WR ? TRS_D : 8'bz;
 //assign TRS_OE = !((TRS_A[16:8] == 9'h0ff) && (!TRS_WR || !TRS_RD));
 
 
-assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_WR || !TRS_OUT);// || fdc_sel || z80_dsp_sel_wr ||
+assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_WR || !TRS_OUT || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
 //                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
 
 assign TRS_DIR = TRS_RD && TRS_IN;
@@ -1184,5 +1195,38 @@ always @ (posedge clk)
    heartbeat <= heartbeat + 26'b1;
 
 assign LED[3:1] = {heartbeat[25:24] == 2'b10, heartbeat[25:24] == 2'b11 || heartbeat[25:24] == 2'b01, heartbeat[25:24] == 2'b00};
+
+
+//------------LightBright-80-------------------------------------------------------------
+
+wire mem_access_raw = !TRS_RD || !TRS_WR;
+
+wire mem_access;
+
+filter mem(
+  .clk(clk),
+  .in(mem_access_raw),
+  .out(),
+  .rising_edge(mem_access),
+  .falling_edge()
+);
+
+reg [7:0] pmod_a;
+
+assign PMOD[4] = pmod_a[0];
+assign PMOD[0] = pmod_a[1];
+assign PMOD[5] = pmod_a[2];
+assign PMOD[6] = pmod_a[3];
+assign PMOD[7] = pmod_a[4];
+assign PMOD[1] = pmod_a[5];
+assign PMOD[2] = pmod_a[6];
+assign PMOD[3] = pmod_a[7];
+
+
+always @ (posedge clk)
+begin
+   if(mem_access)
+      pmod_a <= TRS_A[15:8];
+end
 
 endmodule
