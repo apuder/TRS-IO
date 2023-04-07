@@ -43,9 +43,27 @@ module top(
   input WAIT_IN_N,
   inout [7:0] PMOD);
 
+wire clk;
+wire vga_clk;
 
-reg TRS_INT;
-assign INT = 1'b0;//TRS_INT;
+
+Gowin_rPLL clk_wiz_0(
+   .clkout(clk), //output clkout
+   .clkin(clk_in) //input clkin
+);
+
+//-------Configuration-----------------------------------------------------------
+
+reg is_m1;
+reg is_m3;
+
+always @(posedge clk) begin
+  is_m1 <= CONF[1];
+  is_m3 <= ~CONF[1];
+end
+
+//-------------------------------------------------------------------------------
+
 reg ESP_REQ;
 assign REQ = ESP_REQ;
 wire ESP_DONE = DONE;
@@ -59,10 +77,15 @@ assign DBUS_DIR = TRS_DIR;
 
 wire CS = CS_FPGA;
 wire[1:0] sw = 2'b11;
-wire TRS_RD = _RD_N;
-wire TRS_WR = _WR_N;
-wire TRS_IN = _IN_N;
-wire TRS_OUT = _OUT_N;
+
+wire TRS_RD = (is_m1 & _RD_N) | is_m3;
+wire TRS_WR = (is_m1 & _WR_N) | is_m3;
+wire TRS_IN = (is_m1 & _IN_N) | (is_m3 & !(!_IOREQ_N && !_IN_N));
+wire TRS_OUT = (is_m1 & _OUT_N) | (is_m3 & !(!_IOREQ_N && !_OUT_N));
+
+reg TRS_INT;
+reg trs_io_data_ready = 1'b0;
+assign INT = (is_m1 & TRS_INT) | (is_m3 & trs_io_data_ready);
 
 assign _A = 16'hZZZZ;
 
@@ -80,36 +103,14 @@ localparam [4:0] VERSION_MINOR = 3;
 
 localparam [7:0] COOKIE = 8'haf;
 
-wire clk;
-wire vga_clk;
-
-/*
- * Clocking Wizard
- * Clock primary: 12 MHz
- * clk_out1 frequency: 100 MHz
- * clk_out2: 20 MHz
- */
-/*
-clk_wiz_0 clk_wiz_0(
-   .clk_out1(clk),
-   .clk_out2(vga_clk),
-   .reset(1'b0),
-   .locked(),
-   .clk_in1(clk_in)
-);
-*/
-
-Gowin_rPLL clk_wiz_0(
-   .clkout(clk), //output clkout
-   .clkin(clk_in) //input clkin
-);
 
 reg[7:0] byte_in, byte_out;
 reg byte_received = 1'b0;
 
 //----Address Decoder------------------------------------------------------------
 
-wire io_access_raw = !TRS_RD || !TRS_WR || !TRS_IN || !TRS_OUT;
+wire io_access_raw = (is_m1 & (!TRS_RD || !TRS_WR || !TRS_IN || !TRS_OUT)) |
+                     (is_m3 & (!TRS_IN || !TRS_OUT));
 
 wire io_access_filtered;
 
@@ -225,16 +226,16 @@ wire trs_ram_sel = (full_addr
 
 
 // map rom and ram
-wire trs_mem_sel = trs_rom_sel | trs_ram_sel;
+wire trs_mem_sel = is_m1 & (trs_rom_sel | trs_ram_sel);
 
-wire fdc_37e0_sel_rd = (TRS_A == 17'h37e0) && !TRS_RD;
-wire fdc_37ec_sel_rd = (TRS_A == 17'h37ec) && !TRS_RD;
-wire fdc_37ef_sel_rd = (TRS_A == 17'h37ef) && !TRS_RD;
+wire fdc_37e0_sel_rd = (TRS_A == 16'h37e0) && !TRS_RD;
+wire fdc_37ec_sel_rd = (TRS_A == 16'h37ec) && !TRS_RD;
+wire fdc_37ef_sel_rd = (TRS_A == 16'h37ef) && !TRS_RD;
 wire fdc_sel_rd = fdc_37e0_sel_rd || fdc_37ec_sel_rd || fdc_37ef_sel_rd;
-wire fdc_sel = fdc_sel_rd;
+wire fdc_sel = is_m1 & fdc_sel_rd;
 
-wire printer_sel_rd = (TRS_A == 17'h37e8) && !TRS_RD;
-wire printer_sel_wr = (TRS_A == 17'h37e8) && !TRS_WR;
+wire printer_sel_rd = (TRS_A == 16'h37e8) && !TRS_RD;
+wire printer_sel_wr = (TRS_A == 16'h37e8) && !TRS_WR;
 wire printer_sel = printer_sel_wr;
 reg printer_sel_reg = 0;
 
@@ -299,6 +300,7 @@ always @(posedge clk) begin
   if (count != 0) count <= count - 1;
 end
 
+assign EXTIOSEL = esp_sel;
       
 localparam [3:0]
   esp_trs_io_in = 4'd0,
@@ -358,7 +360,6 @@ reg [2:0] bytes_to_read;
 reg [7:0] bits_to_send;
 reg [2:0] idx;
 reg [7:0] cmd;
-reg trs_io_data_ready = 1'b0;
 
 
 reg trigger_action = 1'b0;
@@ -795,7 +796,7 @@ wire le18_dout_rdy;
 wire [7:0] spi_data_in;
 
 always @(posedge clk) begin
-  if (counter_25ms == 2100000)
+  if (is_m1 & (counter_25ms == 2100000))
     begin
       counter_25ms <= 0;
       TRS_INT <= 1;

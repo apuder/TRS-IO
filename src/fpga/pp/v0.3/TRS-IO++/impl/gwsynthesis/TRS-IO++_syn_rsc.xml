@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="top" Register="339" Alu="214" Lut="370">
+<Module name="top" Register="399" Alu="215" Lut="376">
     <SubModule name="clk_wiz_0"/>
-    <SubModule name="io" Register="12" Lut="3"/>
+    <SubModule name="io" Register="12" Lut="4"/>
     <SubModule name="pre_ram_access_check_trigger" Register="1"/>
     <SubModule name="bram" Register="2" Lut="18" Bsram="16"/>
     <SubModule name="brama_read_trigger" Register="1"/>
     <SubModule name="brama_write_trigger" Register="2"/>
     <SubModule name="bram_peek_trigger" Register="1" Lut="1"/>
     <SubModule name="xram" Bsram="1"/>
-    <SubModule name="xrama_read_trigger" Register="1"/>
+    <SubModule name="xrama_read_trigger" Register="1" Lut="1"/>
     <SubModule name="xram_peek_trigger" Register="1"/>
     <SubModule name="pll0"/>
     <SubModule name="clkdiv0"/>
-    <SubModule name="hdmi" Register="44" Alu="19" Lut="47">
-        <SubModule name="true_hdmi_output.packet_picker" Register="406" Lut="297">
+    <SubModule name="clkdiv1"/>
+    <SubModule name="hdmi" Register="68" Alu="19" Lut="42">
+        <SubModule name="true_hdmi_output.packet_picker" Register="406" Lut="296">
             <SubModule name="audio_clock_regeneration_packet" Register="42" Alu="20" Lut="8"/>
         </SubModule>
-        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="388"/>
-        <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="4" Lut="38"/>
-        <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="4" Lut="27"/>
-        <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="4" Lut="27"/>
-        <SubModule name="serializer"/>
+        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="331"/>
+        <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="16" Lut="109"/>
+        <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="16" Lut="98"/>
+        <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="16" Lut="88"/>
+        <SubModule name="serializer" Lut="30"/>
     </SubModule>
+    <SubModule name="vga" Register="82" Alu="11" Lut="127">
+        <SubModule name="z80_dsp" Bsram="1"/>
+        <SubModule name="le18_rd_trigger" Register="2"/>
+        <SubModule name="z80_le18" Bsram="6"/>
+        <SubModule name="char_rom" Bsram="1"/>
+    </SubModule>
+    <SubModule name="mem" Register="12" Lut="4"/>
 </Module>

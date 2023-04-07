@@ -59,11 +59,11 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Design File</td>
-<td>E:\Documents\FPGA\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg</td>
+<td>\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg</td>
 </tr>
 <tr>
 <td class="label">Physical Constraints File</td>
-<td>E:\Documents\FPGA\TRS-IO++\src\TRS-IO++.cst</td>
+<td>\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\TRS-IO++.cst</td>
 </tr>
 <tr>
 <td class="label">Timing Constraints File</td>
@@ -71,7 +71,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Version</td>
-<td>V1.9.8.09 Education</td>
+<td>V1.9.8.10</td>
 </tr>
 <tr>
 <td class="label">Part Number</td>
@@ -79,11 +79,15 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Device</td>
-<td>GW2A-18C</td>
+<td>GW2A-18</td>
+</tr>
+<tr>
+<td class="label">Device Version</td>
+<td>C</td>
 </tr>
 <tr>
 <td class="label">Created Time</td>
-<td>Sat Mar 04 08:49:43 2023
+<td>Thu Apr 06 18:52:33 2023
 </td>
 </tr>
 <tr>
@@ -96,22 +100,22 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <table class="summary_table">
 <tr>
 <td class="label">Total Power (mW)</td>
-<td>328.378</td>
+<td>362.894</td>
 </tr>
 <tr>
 <td class="label">Quiescent Power (mW)</td>
-<td>170.148</td>
+<td>171.269</td>
 </tr>
 <tr>
 <td class="label">Dynamic Power (mW)</td>
-<td>158.230</td>
+<td>191.625</td>
 </tr>
 </table>
 <h2><a name="Thermal_Info">Thermal Information:</a></h2>
 <table class="summary_table">
 <tr>
 <td class="label">Junction Temperature</td>
-<td>35.515</td>
+<td>36.620</td>
 </tr>
 <tr>
 <td class="label">Theta JA</td>
@@ -119,7 +123,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Max Allowed Ambient Temperature</td>
-<td>74.485</td>
+<td>73.380</td>
 </tr>
 </table>
 <h2><a name="Configure_Info">Configure Information:</a></h2>
@@ -188,23 +192,23 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <tr>
 <td>VCC</td>
 <td>1.000</td>
-<td>132.507</td>
-<td>103.873</td>
-<td>236.380</td>
+<td>159.324</td>
+<td>104.111</td>
+<td>263.435</td>
 </tr>
 <tr>
 <td>VCCX</td>
 <td>2.500</td>
-<td>2.371</td>
+<td>3.505</td>
 <td>23.366</td>
-<td>64.340</td>
+<td>67.176</td>
 </tr>
 <tr>
-<td>VCCO33</td>
+<td>VCCIO33</td>
 <td>3.300</td>
-<td>5.999</td>
-<td>2.382</td>
-<td>27.658</td>
+<td>7.133</td>
+<td>2.650</td>
+<td>32.283</td>
 </tr>
 </table>
 <h1><a name="Detail">Power Details</a></h1>
@@ -218,19 +222,19 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td>Logic</td>
-<td>2.013</td>
+<td>2.295</td>
 <td>NA</td>
-<td>7.180</td>
+<td>6.765</td>
 </tr>
 <tr>
 <td>IO</td>
-<td>44.444
-<td>16.244
-<td>5.555
+<td>53.979
+<td>18.066
+<td>6.681
 </tr>
 <tr>
 <td>BSRAM</td>
-<td>98.258
+<td>123.654
 <td>NA</td>
 <td>NA</td>
 </tr>
@@ -250,8 +254,8 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td>top</td>
-<td>129.957</td>
-<td>129.957(128.634)</td>
+<td>155.635</td>
+<td>155.635(154.272)</td>
 <tr>
 <td>top/bram/</td>
 <td>92.264</td>
@@ -274,24 +278,28 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>8.787(0.000)</td>
 <tr>
 <td>top/hdmi/</td>
-<td>0.636</td>
-<td>0.636(0.552)</td>
+<td>0.809</td>
+<td>0.809(0.721)</td>
+<tr>
+<td>top/hdmi/serializer/</td>
+<td>0.012</td>
+<td>0.012(0.000)</td>
 <tr>
 <td>top/hdmi/tmds_gen[0].tmds_channel/</td>
-<td>0.029</td>
-<td>0.029(0.000)</td>
+<td>0.090</td>
+<td>0.090(0.000)</td>
 <tr>
 <td>top/hdmi/tmds_gen[1].tmds_channel/</td>
-<td>0.024</td>
-<td>0.024(0.000)</td>
+<td>0.086</td>
+<td>0.086(0.000)</td>
 <tr>
 <td>top/hdmi/tmds_gen[2].tmds_channel/</td>
-<td>0.024</td>
-<td>0.024(0.000)</td>
+<td>0.082</td>
+<td>0.082(0.000)</td>
 <tr>
 <td>top/hdmi/true_hdmi_output.packet_assembler/</td>
-<td>0.173</td>
-<td>0.173(0.000)</td>
+<td>0.151</td>
+<td>0.151(0.000)</td>
 <tr>
 <td>top/hdmi/true_hdmi_output.packet_picker/</td>
 <td>0.301</td>
@@ -302,8 +310,12 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>0.098(0.000)</td>
 <tr>
 <td>top/io/</td>
-<td>0.008</td>
-<td>0.008(0.000)</td>
+<td>0.009</td>
+<td>0.009(0.000)</td>
+<tr>
+<td>top/mem/</td>
+<td>0.009</td>
+<td>0.009(0.000)</td>
 <tr>
 <td>top/pll0/</td>
 <td>20.900</td>
@@ -312,6 +324,26 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>top/pre_ram_access_check_trigger/</td>
 <td>0.000</td>
 <td>0.000(0.000)</td>
+<tr>
+<td>top/vga/</td>
+<td>25.456</td>
+<td>25.456(25.402)</td>
+<tr>
+<td>top/vga/char_rom/</td>
+<td>0.256</td>
+<td>0.256(0.000)</td>
+<tr>
+<td>top/vga/le18_rd_trigger/</td>
+<td>0.001</td>
+<td>0.001(0.000)</td>
+<tr>
+<td>top/vga/z80_dsp/</td>
+<td>3.737</td>
+<td>3.737(0.000)</td>
+<tr>
+<td>top/vga/z80_le18/</td>
+<td>21.408</td>
+<td>21.408(0.000)</td>
 <tr>
 <td>top/xram/</td>
 <td>6.037</td>
@@ -322,8 +354,8 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>0.000(0.000)</td>
 <tr>
 <td>top/xrama_read_trigger/</td>
-<td>0.000</td>
-<td>0.000(0.000)</td>
+<td>0.001</td>
+<td>0.001(0.000)</td>
 </table>
 <h2><a name="By_Clock_Domain">Power By Clock Domain:</a></h2>
 <table class="detail_table">
@@ -335,17 +367,22 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <tr>
 <td>clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk</td>
 <td>39.960</td>
-<td>0.602</td>
+<td>0.782</td>
 </tr>
 <tr>
 <td>clk_audio_4</td>
 <td>100.000</td>
-<td>0.063</td>
+<td>0.057</td>
 </tr>
 <tr>
 <td>clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk</td>
 <td>84.000</td>
-<td>99.629</td>
+<td>119.998</td>
+</tr>
+<tr>
+<td>clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk</td>
+<td>19.980</td>
+<td>5.138</td>
 </tr>
 <tr>
 <td>NO CLOCK DOMAIN</td>
@@ -355,7 +392,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <tr>
 <td>clk_in</td>
 <td>27.000</td>
-<td>29.708</td>
+<td>29.709</td>
 </tr>
 <tr>
 <td>pll0/rpll_inst/CLKOUT.default_gen_clk</td>

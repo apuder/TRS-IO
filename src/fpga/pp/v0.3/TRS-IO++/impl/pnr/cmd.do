@@ -1,8 +1,8 @@
--d E:\Documents\FPGA\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg
+-d \\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg
 -p GW2A-18C-PBGA256-8
 -pn GW2A-LV18PG256C8/I7
--cst E:\Documents\FPGA\TRS-IO++\src\TRS-IO++.cst
--cfg E:\Documents\FPGA\TRS-IO++\impl\pnr\device.cfg
+-cst \\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\TRS-IO++.cst
+-cfg \\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\pnr\device.cfg
 -bit
 -tr
 -ph
