@@ -12,26 +12,26 @@
   <Part Number>: GW2A-LV18PG256C8/I7
   <Device>: GW2A-18
   <Device Version>: C
-  <Created Time>:Thu Apr 06 18:52:38 2023
+  <Created Time>:Sat Apr 08 22:12:59 2023
 
 
 2. PnR Details
 
   Running placement:
-    Placement Phase 0: CPU time = 0h 0m 0.63s, Elapsed time = 0h 0m 0.63s
-    Placement Phase 1: CPU time = 0h 0m 0.525s, Elapsed time = 0h 0m 0.525s
-    Placement Phase 2: CPU time = 0h 0m 0.75s, Elapsed time = 0h 0m 0.75s
-    Placement Phase 3: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
-    Total Placement: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
+    Placement Phase 0: CPU time = 0h 0m 0.447s, Elapsed time = 0h 0m 0.447s
+    Placement Phase 1: CPU time = 0h 0m 0.34s, Elapsed time = 0h 0m 0.341s
+    Placement Phase 2: CPU time = 0h 0m 0.766s, Elapsed time = 0h 0m 0.766s
+    Placement Phase 3: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
+    Total Placement: CPU time = 0h 0m 5s, Elapsed time = 0h 0m 5s
  Running routing:
-    Routing Phase 0: CPU time = 0h 0m 0.024s, Elapsed time = 0h 0m 0.024s
-    Routing Phase 1: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
-    Routing Phase 2: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
+    Routing Phase 0: CPU time = 0h 0m 0.001s, Elapsed time = 0h 0m 0.001s
+    Routing Phase 1: CPU time = 0h 0m 0.855s, Elapsed time = 0h 0m 0.855s
+    Routing Phase 2: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
     Total Routing: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
  Generate output files:
     CPU time = 0h 0m 7s, Elapsed time = 0h 0m 7s
 
- Total Time and Memory Usage: CPU time = 0h 0m 15s, Elapsed time = 0h 0m 15s, Peak memory usage = 327MB
+ Total Time and Memory Usage: CPU time = 0h 0m 17s, Elapsed time = 0h 0m 17s, Peak memory usage = 388MB
 
 
 3. Resource Usage Summary
@@ -39,15 +39,15 @@
   ----------------------------------------------------------
   Resources                   | Usage
   ----------------------------------------------------------
-  Logic                       | 1920/20736  10%
-    --LUT,ALU,ROM16           | 1920(1561 LUT, 359 ALU, 0 ROM16)
-    --SSRAM(RAM16)            | 0
-  Register                    | 1144/16173  8%
+  Logic                       | 2506/20736  13%
+    --LUT,ALU,ROM16           | 2458(2081 LUT, 377 ALU, 0 ROM16)
+    --SSRAM(RAM16)            | 8
+  Register                    | 1154/16173  8%
     --Logic Register as Latch | 0/15552  0%
-    --Logic Register as FF    | 1111/15552  8%
+    --Logic Register as FF    | 1122/15552  8%
     --I/O Register as Latch   | 0/621  0%
-    --I/O Register as FF      | 33/621  6%
-  CLS                         | 1468/10368  15%
+    --I/O Register as FF      | 32/621  6%
+  CLS                         | 1828/10368  18%
   I/O Port                    | 84
   I/O Buf                     | 72
     --Input Buf               | 11
@@ -55,9 +55,9 @@
     --Inout Buf               | 24
   IOLOGIC                     | 4%
     --OSER10                  | 4
-  BSRAM                       | 55%
+  BSRAM                       | 20%
     --SP                      | 1
-    --DPB                     | 24
+    --DPB                     | 8
   DSP                         | 0%
   PLL                         | 2/4  50%
   DCS                         | 0/8  0%
@@ -93,7 +93,7 @@
   Global Clock  | Usage       
   -------------------------------
   PRIMARY       | 5/8(63%)
-  LW            | 3/8(38%)
+  LW            | 6/8(75%)
   GCLK_PIN      | 4/8(50%)
   PLL           | 2/4(50%)
   CLKDIV        | 2/8(25%)
@@ -106,14 +106,17 @@
   -------------------------------------------
   Signal         | Global Clock   | Location
   -------------------------------------------
-  clk_in_d       | PRIMARY        |  TR TL BR
+  clk_in_d       | PRIMARY        |  TR TL
   clk_audio_4    | PRIMARY        |  TR BL
-  clk            | PRIMARY        |  TR TL BR BL
-  clk_pixel      | PRIMARY        |  TR TL BR BL
+  clk            | PRIMARY        |  TR TL BR
+  clk_pixel      | PRIMARY        |  TR TL BL
   vga_clk        | PRIMARY        |  TR TL BR BL
   n4054_4        | LW             |  -
+  audio_sample_word_buffer_90| LW             |  -
+  audio_sample_word_buffer_92| LW             |  -
   audio_sample_word_buffer_94| LW             |  -
   audio_sample_word_buffer_98| LW             |  -
+  audio_sample_word_buffer_100| LW             |  -
   clk_pixel_x5   | HCLK           | TOP[0]
   clk_pixel      | HCLK           | RIGHT[0]
   ===========================================

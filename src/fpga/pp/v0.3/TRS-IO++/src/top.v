@@ -351,7 +351,8 @@ localparam [7:0]
   get_printer_byte    = 8'd16,
   set_screen_color    = 8'd17,
   abus_read           = 8'd18,
-  send_keyb           = 8'd19;
+  send_keyb           = 8'd19,
+  ptrs_rst            = 8'd20;
 
 
 
@@ -650,7 +651,7 @@ wire xray_run_stub = (state_xray != state_xray_run);
 assign xray_sel = (stub_run_count == 1) && ((xray_base_addr + 1) == TRS_A);
 
 //assign LED[0] = ~xray_run_stub;
-assign LED[0] = keyb_matrix[0][1];
+//assign LED[0] = keyb_matrix[0][1];
 
 
 //--------BRAM-------------------------------------------------------------------------
@@ -699,6 +700,7 @@ blk_mem_gen_0 bram(
 */
 
 
+/*
 Gowin_DPB0 bram(
         .douta(douta), //output [7:0] douta
         .doutb(doutb), //output [7:0] doutb
@@ -717,6 +719,7 @@ Gowin_DPB0 bram(
         .adb(addrb), //input [14:0] adb
         .dinb(dinb) //input [7:0] dinb
 );
+*/
 
 
 
@@ -1150,6 +1153,7 @@ TLVDS_OBUF tmds_clock(
 
 reg sync;
 
+/*
 vga vga(
   .clk(clk),
   .vga_clk(vga_clk), // 20 MHz
@@ -1164,6 +1168,7 @@ vga vga(
   .VGA_HSYNC(),
   .VGA_VSYNC(),
   .reset(sync));
+*/
 
 always @(posedge clk_pixel) begin
   sync <= (cx == frame_width - 14 || cx == frame_width - 13) && cy == frame_height - 1;
@@ -1195,7 +1200,7 @@ reg [25:0] heartbeat;
 always @ (posedge clk)
    heartbeat <= heartbeat + 26'b1;
 
-assign LED[3:1] = {heartbeat[25:24] == 2'b10, heartbeat[25:24] == 2'b11 || heartbeat[25:24] == 2'b01, heartbeat[25:24] == 2'b00};
+//assign LED[3:1] = {heartbeat[25:24] == 2'b10, heartbeat[25:24] == 2'b11 || heartbeat[25:24] == 2'b01, heartbeat[25:24] == 2'b00};
 
 
 //------------LightBright-80-------------------------------------------------------------
@@ -1229,5 +1234,172 @@ begin
    if(mem_access)
       pmod_a <= TRS_A[15:8];
 end
+
+
+//------PocketTRS-------------------------------------------------------------
+// Adapted from maboytim's NextTRS
+
+wire z80_clk;
+
+assign z80_clk = clk;
+
+reg [3:0] z80_rst_trigger;
+
+always @(posedge clk) z80_rst_trigger <= {z80_rst_trigger[2:0], trigger_action && (cmd == ptrs_rst)};
+
+// Assert RST for 4 cycles in case of WAIT
+wire z80_rst = z80_rst_trigger != 0;
+
+//wire [14:0] z80_kbd_reg;
+
+//wire pixel_data;
+//wire [19:0] display_counter;
+
+wire [15:0] z80_addr;
+wire [7:0] z80_data_in, z80_data_out;
+wire z80_mreq, z80_iorq;
+wire z80_wr;
+wire z80_rd = ~z80_wr;
+wire z80_int = 1'b0;
+wire z80_nmi = 1'b0;
+
+wire z80_mem_rd = z80_mreq & z80_rd;
+wire z80_mem_wr = z80_mreq & z80_wr;
+wire z80_io_rd = z80_iorq & z80_rd;
+wire z80_io_wr = z80_iorq & z80_wr;
+
+// The memory read latency is 2 cycles (3 cycles total).
+// Wait will be asserted for the first two cyles and released for the third.
+// mem_rd0 is high on the first cycle
+// mem_rd1 is high on the second cycle
+// mem_rd2 is high on the third cycle
+reg z80_mem_rd1, z80_mem_rd2;
+wire z80_mem_rd0 = z80_mem_rd & ({z80_mem_rd2, z80_mem_rd1} == 2'b00);
+// The memory write latency is 0 cycles.
+wire z80_mem_wr0 = z80_mem_wr;
+
+// The io read latency is 1 cycle (2 cycles total).
+// Wait will be asserted for the first cyle and released for the second.
+// io_rd0 is high on the first cycle
+// io_rd1 is high on the second cycle
+reg z80_io_rd1;
+wire z80_io_rd0 = z80_io_rd & (z80_io_rd1 == 1'b0);
+// The io write latency is 0 cycles.
+wire z80_io_wr0 = z80_io_wr;
+
+// Wait is asserted for the first two memory read cycles and the first io read cycle.
+wire z80_wait = z80_mem_rd0 | z80_mem_rd1 | z80_io_rd0;
+
+// Generate the z80_mem_rd1, z80_mem_rd2, and z80_mem_rd1 signals.
+always @ (posedge z80_clk)
+begin
+   if(z80_wait)
+   begin
+      z80_mem_rd1 <= z80_mem_rd0;
+      z80_mem_rd2 <= z80_mem_rd1;
+
+      z80_io_rd1 <= z80_io_rd0;
+   end
+   else
+   begin
+      z80_mem_rd1 <= 1'b0;
+      z80_mem_rd2 <= 1'b0;
+
+      z80_io_rd1 <= 1'b0;
+   end
+end
+
+// Instantiate the z80 core.
+NextZ80 NextZ80 (
+   .CLK(z80_clk), // input
+   .RESET(z80_rst), // input
+   .DI(z80_data_in), // input [7:0]
+   .INT(z80_int), // input
+   .NMI(z80_nmi), // input
+   .WAIT(z80_wait), // input
+
+   .ADDR(z80_addr), // output [15:0]
+   .DO(z80_data_out), // output [7:0]
+   .WR(z80_wr), // output
+   .MREQ(z80_mreq), // output
+   .IORQ(z80_iorq), // output
+   .HALT(), // output
+   .M1() // output
+);
+
+// Generate the memory decodes for the ROM, RAM, display, and keyboard.
+//wire z80_rom_sel = (z80_addr[15:13] == 3'b000) | (z80_addr[15:12] == 4'b0010); // 8k+4k=12k @ 0x0000-0x2fff
+wire z80_rom_sel = (z80_addr[15:13] == 3'b000) | (z80_addr[15:12] == 4'b0010) | (z80_addr[15:11] == 5'b00110); // 8k+4k+2k=14k @ 0x0000-0x37ff
+wire z80_kbd_sel = (z80_addr[15:10] == 6'b001110); // 1k @ 0x3800-0x3bff
+wire z80_dsp_sel = (z80_addr[15:10] == 6'b001111); // 1k @ 0x3c00-0x3fff
+wire z80_ram_sel = (z80_addr[15:14] == 2'b01) | (z80_addr[15] == 1'b1); // 48k @ 0x4000-0xffff
+
+// Generate the M3 io decodes for the interrupt status and floppy status.
+// These aren't needed, these just make it see a disk controller so you get the Diskette? message,
+// and for an RTC to get a blinking cursor.
+wire z80_int_sel = (z80_addr[7:0] == 8'he0);
+wire z80_flp_cmdsta_sel = (z80_addr[7:0] == 8'hf0);
+
+// Instantiate the ROM.
+wire [7:0] z80_rom_data;
+
+Gowin_pROM_M3 z80_rom(
+        .dout(z80_rom_data), //output [7:0] dout
+        .clk(z80_clk), //input clk
+        .oce(1'b0), //z80_rom_sel & z80_mem_rd1), //input oce
+        .ce(z80_rom_sel & z80_mem_rd0), //input ce
+        .reset(1'b0), //input reset
+        .ad(z80_addr[13:0]) //input [13:0] ad
+    );
+
+// Instantiate the RAM.
+wire [7:0] z80_ram_data;
+
+Gowin_SP_RAM z80_ram(
+        .dout(z80_ram_data), //output [7:0] dout
+        .clk(z80_clk), //input clk
+        .oce(1'b0), //z80_ram_sel & z80_mem_rd1), //input oce
+        .ce(z80_ram_sel & (z80_mem_rd0 | z80_mem_wr0)), //input ce
+        .reset(1'b0), //input reset
+        .wre(z80_mem_wr0), //input wre
+        .ad({z80_addr[15:14] - 2'b01, z80_addr[13:0]}), //input [15:0] ad
+        .din(z80_data_out) //input [7:0] din
+    );
+
+/*
+assign z80_data_in = (z80_rom_data & {8{z80_rom_sel & z80_mem_rd2}}) |
+                     (z80_ram_data & {8{z80_ram_sel & z80_mem_rd2}}) |
+                     //(z80_dsp_data & {8{z80_dsp_sel & z80_mem_rd2}}) |
+                     //(z80_kbd_data & {8{z80_kbd_sel & z80_mem_rd2}}) |
+                     (8'hfb & {8{z80_int_sel & z80_io_rd1}}) |
+                     (8'h24 & {8{z80_flp_cmdsta_sel & z80_io_rd1}});
+*/
+
+assign test_rom = ({8{z80_addr == 16'd0}} & 8'hf3) |
+                  ({8{z80_addr == 16'd1}} & 8'h21) |
+                  ({8{z80_addr == 16'd2}} & 8'h00) |
+                  ({8{z80_addr == 16'd3}} & 8'h3c) |
+                  ({8{z80_addr == 16'd4}} & 8'h36) |
+                  ({8{z80_addr == 16'd5}} & 8'hbf) |
+                  ({8{z80_addr == 16'd6}} & 8'h18) |
+                  ({8{z80_addr == 16'd7}} & 8'hf8);
+
+assign z80_data_in = test_rom;
+
+vga vga(
+  .clk(z80_clk),
+  .vga_clk(vga_clk), // 20 MHz
+  .TRS_A(z80_addr),
+  .TRS_D(z80_data_out),
+  .TRS_WR(z80_wr),
+  .TRS_OUT(z80_io_wr),
+  .TRS_IN(z80_io_rd),
+  .le18_dout(le18_dout),
+  .le18_dout_rdy(le18_dout_rdy),
+  .VGA_RGB(vga_rgb),
+  .VGA_HSYNC(),
+  .VGA_VSYNC(),
+  .reset(sync));
+
 
 endmodule

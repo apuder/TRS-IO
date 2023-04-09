@@ -300,7 +300,101 @@
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/filter.v",
     "ModuleLine" : 3,
     "ModuleName" : "filter"
+   },
+   {
+    "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
+    "InstLine" : 1301,
+    "InstName" : "NextZ80",
+    "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+    "ModuleLine" : 63,
+    "ModuleName" : "NextZ80",
+    "SubInsts" : [
+     {
+      "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+      "InstLine" : 119,
+      "InstName" : "CPU_REGS",
+      "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+      "ModuleLine" : 1504,
+      "ModuleName" : "Z80Reg",
+      "SubInsts" : [
+       {
+        "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "InstLine" : 1548,
+        "InstName" : "regs_lo",
+        "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "ModuleLine" : 1662,
+        "ModuleName" : "RAM16X8D_regs"
+       },
+       {
+        "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "InstLine" : 1560,
+        "InstName" : "regs_hi",
+        "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "ModuleLine" : 1662,
+        "ModuleName" : "RAM16X8D_regs"
+       },
+       {
+        "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "InstLine" : 1613,
+        "InstName" : "WSelectW",
+        "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "ModuleLine" : 1632,
+        "ModuleName" : "RegSelect"
+       },
+       {
+        "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "InstLine" : 1621,
+        "InstName" : "WSelectR",
+        "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "ModuleLine" : 1632,
+        "ModuleName" : "RegSelect"
+       }
+      ]
+     },
+     {
+      "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+      "InstLine" : 146,
+      "InstName" : "CPU_ALU8",
+      "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+      "ModuleLine" : 1725,
+      "ModuleName" : "ALU8",
+      "SubInsts" : [
+       {
+        "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "InstLine" : 1741,
+        "InstName" : "daa_adjust",
+        "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+        "ModuleLine" : 1966,
+        "ModuleName" : "daa"
+       }
+      ]
+     },
+     {
+      "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+      "InstLine" : 159,
+      "InstName" : "CPU_ALU16",
+      "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+      "ModuleLine" : 2001,
+      "ModuleName" : "ALU16"
+     }
+    ]
    }
   ]
+ },
+ {
+  "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_prom/gowin_prom.v",
+  "InstLine" : 10,
+  "InstName" : "Gowin_pROM_M3",
+  "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_prom/gowin_prom.v",
+  "ModuleLine" : 10,
+  "ModuleName" : "Gowin_pROM_M3"
+ },
+ {
+  "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_sp/gowin_sp.v",
+  "InstLine" : 10,
+  "InstName" : "Gowin_SP_RAM",
+  "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_sp/gowin_sp.v",
+  "ModuleLine" : 10,
+  "ModuleName" : "Gowin_SP_RAM"
  }
 ]

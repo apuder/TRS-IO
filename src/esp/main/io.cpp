@@ -397,6 +397,9 @@ static void action_task(void* p)
     }
 
     if (is_button_short_press()) {
+#ifdef CONFIG_TRS_IO_PP
+      spi_ptrs_rst();
+#endif
       // Check Wifi status
       if (*get_wifi_status() == RS_STATUS_WIFI_CONNECTED) {
         set_led(false, true, false, false, false);
