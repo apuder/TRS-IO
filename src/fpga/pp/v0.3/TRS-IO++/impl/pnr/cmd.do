@@ -8,4 +8,5 @@
 -ph
 -timing
 -cst_error
+-correct_hold 1
 -route_maxfan 23

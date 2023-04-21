@@ -1,6 +1,10 @@
 {
  "Files" : [
   {
+   "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
+   "Type" : "verilog"
+  },
+  {
    "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/filter.v",
    "Type" : "verilog"
   },
@@ -29,6 +33,10 @@
    "Type" : "verilog"
   },
   {
+   "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_prom/gowin_prom.v",
+   "Type" : "verilog"
+  },
+  {
    "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_rpll/gowin_rpll.v",
    "Type" : "verilog"
   },
@@ -38,6 +46,10 @@
   },
   {
    "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_sp/blk_mem_gen_3.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_sp/gowin_sp.v",
    "Type" : "verilog"
   },
   {
@@ -90,18 +102,6 @@
   },
   {
    "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/vga.v",
-   "Type" : "verilog"
-  },
-  {
-   "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
-   "Type" : "verilog"
-  },
-  {
-   "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_prom/gowin_prom.v",
-   "Type" : "verilog"
-  },
-  {
-   "Path" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_sp/gowin_sp.v",
    "Type" : "verilog"
   }
  ],

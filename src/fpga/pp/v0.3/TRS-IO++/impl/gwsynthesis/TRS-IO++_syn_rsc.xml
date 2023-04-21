@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="top" Register="378" Alu="189" Lut="363">
+<Module name="top" Register="444" Alu="189" Lut="473">
     <SubModule name="clk_wiz_0"/>
     <SubModule name="io" Register="12" Lut="4"/>
     <SubModule name="pre_ram_access_check_trigger" Register="1"/>
@@ -11,29 +11,35 @@
     <SubModule name="pll0"/>
     <SubModule name="clkdiv0"/>
     <SubModule name="clkdiv1"/>
-    <SubModule name="hdmi" Register="68" Alu="19" Lut="44">
-        <SubModule name="true_hdmi_output.packet_picker" Register="406" Lut="298">
+    <SubModule name="hdmi" Register="68" Alu="19" Lut="47">
+        <SubModule name="true_hdmi_output.packet_picker" Register="406" Lut="299">
             <SubModule name="audio_clock_regeneration_packet" Register="42" Alu="20" Lut="8"/>
         </SubModule>
-        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="334"/>
+        <SubModule name="true_hdmi_output.packet_assembler" Register="45" Alu="4" Lut="330"/>
         <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="16" Lut="92"/>
-        <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="16" Lut="88"/>
+        <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="16" Lut="87"/>
         <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="16" Lut="86"/>
         <SubModule name="serializer" Lut="30"/>
     </SubModule>
     <SubModule name="mem" Register="12" Lut="3"/>
-    <SubModule name="NextZ80" Register="11" Lut="37">
-        <SubModule name="CPU_REGS" Register="49" Lut="425">
+    <SubModule name="z80_clkdiv"/>
+    <SubModule name="z80_clkdiv1"/>
+    <SubModule name="z80_clkdiv2"/>
+    <SubModule name="NextZ80" Register="24" Lut="155">
+        <SubModule name="CPU_REGS" Register="64" Lut="665">
             <SubModule name="regs_lo" Ssram="4"/>
             <SubModule name="regs_hi" Ssram="4"/>
-            <SubModule name="WSelectW" Lut="18"/>
-            <SubModule name="WSelectR" Lut="17"/>
+            <SubModule name="WSelectW" Lut="48"/>
+            <SubModule name="WSelectR" Lut="70"/>
         </SubModule>
-        <SubModule name="CPU_ALU8" Alu="23" Lut="110"/>
-        <SubModule name="CPU_ALU16" Alu="16" Lut="14"/>
+        <SubModule name="CPU_ALU8" Alu="23" Lut="140"/>
+        <SubModule name="CPU_ALU16" Alu="16" Lut="45"/>
     </SubModule>
-    <SubModule name="vga" Register="65" Alu="11" Lut="113">
+    <SubModule name="z80_rom" Register="2" Lut="19" Bsram="7"/>
+    <SubModule name="z80_ram" Register="2" Lut="17" Bsram="24"/>
+    <SubModule name="vga" Register="82" Alu="11" Lut="135">
         <SubModule name="z80_dsp" Bsram="1"/>
+        <SubModule name="le18_rd_trigger" Register="2" Lut="1"/>
         <SubModule name="z80_le18" Bsram="6"/>
         <SubModule name="char_rom" Bsram="1"/>
     </SubModule>

@@ -9,8 +9,10 @@ Running placement......
 [30%] Placement Phase 2 completed
 WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (TA1117) : Can't calculate clocks' relationship between: "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk" and "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk"
+WARN  (TA1117) : Can't calculate clocks' relationship between: "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk" and "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk"
 WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_audio_4" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
-WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk"
+WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk"
+WARN  (TA1117) : Can't calculate clocks' relationship between: "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk" and "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk"
 [50%] Placement Phase 3 completed
 Running routing......
 [60%] Routing Phase 0 completed
@@ -29,5 +31,5 @@ Generate file "\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.
 Generate file "\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\pnr\TRS-IO++.rpt.html" completed
 Generate file "\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\pnr\TRS-IO++.rpt.txt" completed
 Generate file "\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\pnr\TRS-IO++.tr.html" completed
-Sat Apr 08 22:13:02 2023
+Thu Apr 20 19:47:12 2023
 

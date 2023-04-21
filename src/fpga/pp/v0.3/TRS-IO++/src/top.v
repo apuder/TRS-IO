@@ -450,6 +450,10 @@ always @(posedge clk) begin
           send_keyb: begin
             bytes_to_read <= 2;
           end
+          ptrs_rst: begin
+            trigger_action <= 1'b1;
+            state <= idle;
+          end
           default:
             begin
               state <= idle;
@@ -1239,13 +1243,30 @@ end
 //------PocketTRS-------------------------------------------------------------
 // Adapted from maboytim's NextTRS
 
-wire z80_clk;
+wire z80_clk1, z80_clk2;
 
-assign z80_clk = clk;
+Gowin_CLKDIV0 z80_clkdiv(
+  .clkout(z80_clk1), //output clkout
+  .hclkin(clk), //input hclkin
+  .resetn(1'b1) //input resetn
+);
 
-reg [3:0] z80_rst_trigger;
+Gowin_CLKDIV0 z80_clkdiv1(
+  .clkout(z80_clk2), //output clkout
+  .hclkin(z80_clk1), //input hclkin
+  .resetn(1'b1) //input resetn
+);
 
-always @(posedge clk) z80_rst_trigger <= {z80_rst_trigger[2:0], trigger_action && (cmd == ptrs_rst)};
+Gowin_CLKDIV0 z80_clkdiv2(
+  .clkout(z80_clk), //output clkout
+  .hclkin(z80_clk2), //input hclkin
+  .resetn(1'b1) //input resetn
+);
+
+
+reg [5:0] z80_rst_trigger;
+
+always @(posedge clk) z80_rst_trigger <= {z80_rst_trigger[4:0], trigger_action && (cmd == ptrs_rst)};
 
 // Assert RST for 4 cycles in case of WAIT
 wire z80_rst = z80_rst_trigger != 0;
@@ -1268,13 +1289,12 @@ wire z80_mem_wr = z80_mreq & z80_wr;
 wire z80_io_rd = z80_iorq & z80_rd;
 wire z80_io_wr = z80_iorq & z80_wr;
 
-// The memory read latency is 2 cycles (3 cycles total).
-// Wait will be asserted for the first two cyles and released for the third.
+// The memory read latency is 1 cycle (2 cycles total).
+// Wait will be asserted for the first cycle and released for the second.
 // mem_rd0 is high on the first cycle
 // mem_rd1 is high on the second cycle
-// mem_rd2 is high on the third cycle
-reg z80_mem_rd1, z80_mem_rd2;
-wire z80_mem_rd0 = z80_mem_rd & ({z80_mem_rd2, z80_mem_rd1} == 2'b00);
+reg z80_mem_rd1;
+wire z80_mem_rd0 = z80_mem_rd & ({z80_mem_rd1} == 1'b0);
 // The memory write latency is 0 cycles.
 wire z80_mem_wr0 = z80_mem_wr;
 
@@ -1288,7 +1308,7 @@ wire z80_io_rd0 = z80_io_rd & (z80_io_rd1 == 1'b0);
 wire z80_io_wr0 = z80_io_wr;
 
 // Wait is asserted for the first two memory read cycles and the first io read cycle.
-wire z80_wait = z80_mem_rd0 | z80_mem_rd1 | z80_io_rd0;
+wire z80_wait = z80_mem_rd0 | z80_io_rd0;
 
 // Generate the z80_mem_rd1, z80_mem_rd2, and z80_mem_rd1 signals.
 always @ (posedge z80_clk)
@@ -1296,14 +1316,12 @@ begin
    if(z80_wait)
    begin
       z80_mem_rd1 <= z80_mem_rd0;
-      z80_mem_rd2 <= z80_mem_rd1;
 
       z80_io_rd1 <= z80_io_rd0;
    end
    else
    begin
       z80_mem_rd1 <= 1'b0;
-      z80_mem_rd2 <= 1'b0;
 
       z80_io_rd1 <= 1'b0;
    end
@@ -1346,7 +1364,7 @@ wire [7:0] z80_rom_data;
 Gowin_pROM_M3 z80_rom(
         .dout(z80_rom_data), //output [7:0] dout
         .clk(z80_clk), //input clk
-        .oce(1'b0), //z80_rom_sel & z80_mem_rd1), //input oce
+        .oce(z80_rom_sel & z80_mem_rd0), //input oce
         .ce(z80_rom_sel & z80_mem_rd0), //input ce
         .reset(1'b0), //input reset
         .ad(z80_addr[13:0]) //input [13:0] ad
@@ -1358,7 +1376,7 @@ wire [7:0] z80_ram_data;
 Gowin_SP_RAM z80_ram(
         .dout(z80_ram_data), //output [7:0] dout
         .clk(z80_clk), //input clk
-        .oce(1'b0), //z80_ram_sel & z80_mem_rd1), //input oce
+        .oce(z80_ram_sel & z80_mem_rd0), //input oce
         .ce(z80_ram_sel & (z80_mem_rd0 | z80_mem_wr0)), //input ce
         .reset(1'b0), //input reset
         .wre(z80_mem_wr0), //input wre
@@ -1366,25 +1384,22 @@ Gowin_SP_RAM z80_ram(
         .din(z80_data_out) //input [7:0] din
     );
 
-/*
-assign z80_data_in = (z80_rom_data & {8{z80_rom_sel & z80_mem_rd2}}) |
-                     (z80_ram_data & {8{z80_ram_sel & z80_mem_rd2}}) |
-                     //(z80_dsp_data & {8{z80_dsp_sel & z80_mem_rd2}}) |
-                     //(z80_kbd_data & {8{z80_kbd_sel & z80_mem_rd2}}) |
-                     (8'hfb & {8{z80_int_sel & z80_io_rd1}}) |
-                     (8'h24 & {8{z80_flp_cmdsta_sel & z80_io_rd1}});
-*/
+wire [7:0] z80_kbd_data = ({8{z80_addr == 16'h3801}} & keyb_matrix[0]) |
+                          ({8{z80_addr == 16'h3802}} & keyb_matrix[1]) |
+                          ({8{z80_addr == 16'h3804}} & keyb_matrix[2]) |
+                          ({8{z80_addr == 16'h3808}} & keyb_matrix[3]) |
+                          ({8{z80_addr == 16'h3810}} & keyb_matrix[4]) |
+                          ({8{z80_addr == 16'h3820}} & keyb_matrix[5]) |
+                          ({8{z80_addr == 16'h3840}} & keyb_matrix[6]) |
+                          ({8{z80_addr == 16'h3880}} & keyb_matrix[7]);
 
-assign test_rom = ({8{z80_addr == 16'd0}} & 8'hf3) |
-                  ({8{z80_addr == 16'd1}} & 8'h21) |
-                  ({8{z80_addr == 16'd2}} & 8'h00) |
-                  ({8{z80_addr == 16'd3}} & 8'h3c) |
-                  ({8{z80_addr == 16'd4}} & 8'h36) |
-                  ({8{z80_addr == 16'd5}} & 8'hbf) |
-                  ({8{z80_addr == 16'd6}} & 8'h18) |
-                  ({8{z80_addr == 16'd7}} & 8'hf8);
+assign z80_data_in = (z80_rom_data & {8{z80_rom_sel & z80_mem_rd1}}) |
+                     (z80_ram_data & {8{z80_ram_sel & z80_mem_rd1}}) |
+                     //(z80_dsp_data & {8{z80_dsp_sel & z80_mem_rd1}}) |
+                     (z80_kbd_data & {8{z80_kbd_sel & z80_mem_rd1}}) |
+                     (8'hfb & {8{z80_int_sel & z80_io_rd1}});
+//                     (8'h24 & {8{z80_flp_cmdsta_sel & z80_io_rd1}});
 
-assign z80_data_in = test_rom;
 
 vga vga(
   .clk(z80_clk),

@@ -4,6 +4,7 @@
     <Version>beta</Version>
     <Device id="GW2A-18C" package="PBGA256" speed="8" partNumber="GW2A-LV18PG256C8/I7"/>
     <FileList>
+        <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\NextZ80CPU.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\filter.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_clkdiv\gowin_clkdiv0.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_clkdiv\gowin_clkdiv1.v" type="verilog"/>
@@ -11,9 +12,11 @@
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_dpb\display_ram.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_dpb\gowin_dpb0.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_dpb\gowin_dpb1.v" type="verilog"/>
+        <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_prom\gowin_prom.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_rpll\gowin_rpll.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_rpll\gowin_rpll0.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_sp\blk_mem_gen_3.v" type="verilog"/>
+        <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_sp\gowin_sp.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\hdmi\audio_clock_regeneration_packet.sv" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\hdmi\audio_info_frame.sv" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\hdmi\audio_sample_packet.sv" type="verilog"/>
@@ -27,9 +30,6 @@
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\trigger.v" type="verilog"/>
         <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\vga.v" type="verilog"/>
-        <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\NextZ80CPU.v" type="verilog"/>
-        <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_prom\gowin_prom.v" type="verilog"/>
-        <File path="\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_sp\gowin_sp.v" type="verilog"/>
     </FileList>
     <OptionList>
         <Option type="disable_insert_pad" value="0"/>

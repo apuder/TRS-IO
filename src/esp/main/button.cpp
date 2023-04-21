@@ -6,7 +6,7 @@
 #if defined(CONFIG_TRS_IO_MODEL_1)
 #define GPIO_BUTTON GPIO_NUM_39
 #elif defined(CONFIG_TRS_IO_PP)
-#define GPIO_BUTTON GPIO_NUM_35
+#define GPIO_BUTTON GPIO_NUM_0
 #else
 #define GPIO_BUTTON GPIO_NUM_22
 #endif
@@ -83,7 +83,7 @@ void init_button()
 
 bool is_button_pressed()
 {
-#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_TRS_IO_PP)
+#if defined(CONFIG_TRS_IO_MODEL_1)
   return (GPIO.in1.data & (1 << (GPIO_BUTTON - 32))) == 0;
 #else
   return (GPIO.in & (1 << GPIO_BUTTON)) == 0;
