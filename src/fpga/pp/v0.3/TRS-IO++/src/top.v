@@ -1274,12 +1274,20 @@ Gowin_CLKDIV0 z80_clkdiv2(
 );
 
 
-reg [5:0] z80_rst_trigger;
-
-always @(posedge clk) z80_rst_trigger <= {z80_rst_trigger[4:0], trigger_action && (cmd == ptrs_rst)};
-
 // Assert RST for 4 cycles in case of WAIT
-wire z80_rst = z80_rst_trigger != 0;
+wire z80_rst;
+
+wire rst_button = trigger_action && (cmd == ptrs_rst);
+reg [3:0] rst_trigger = 0;
+
+always @(posedge z80_clk or posedge rst_button) begin
+  if (rst_button)
+    rst_trigger <= {rst_trigger[2:0], 1'b1};
+  else
+    rst_trigger <= {rst_trigger[2:0], 1'b0};
+end
+
+assign z80_rst = rst_trigger != 0;
 
 //wire [14:0] z80_kbd_reg;
 
