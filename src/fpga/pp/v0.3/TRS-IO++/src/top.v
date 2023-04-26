@@ -36,16 +36,18 @@ module top(
   output LED_RED,
   output LED_BLUE,
   output INT,
-  output reg WAIT,
+  output WAIT,
   output EXTIOSEL,
   output CTRL1_EN,
   input EXTIOSEL_IN_N,
   input WAIT_IN_N,
+  input INT_IN_N,
   inout [7:0] PMOD);
 
 wire clk;
 wire vga_clk;
 
+assign WAIT = 1'b0;//XXX
 
 Gowin_rPLL clk_wiz_0(
    .clkout(clk), //output clkout
@@ -56,6 +58,7 @@ Gowin_rPLL clk_wiz_0(
 
 reg is_m1;
 reg is_m3;
+wire is_ptrs = 1'b1;
 
 always @(posedge clk) begin
   is_m1 <= CONF[1];
@@ -63,6 +66,9 @@ always @(posedge clk) begin
 end
 
 //-------------------------------------------------------------------------------
+
+wire [15:0] z80_addr;
+wire [7:0] z80_data_in, z80_data_out;
 
 reg ESP_REQ;
 assign REQ = ESP_REQ;
@@ -85,15 +91,15 @@ wire TRS_OUT = (is_m1 & _OUT_N) | (is_m3 & !(!_IOREQ_N && !_OUT_N));
 
 reg TRS_INT;
 reg trs_io_data_ready = 1'b0;
-assign INT = (is_m1 & TRS_INT) | (is_m3 & trs_io_data_ready);
+assign INT = is_ptrs ? 0 : (is_m1 & TRS_INT) | (is_m3 & trs_io_data_ready);
 
-assign _A = 16'hZZZZ;
+assign _A = is_ptrs ? z80_addr : 16'hZZZZ;
 
-assign ABUS_DIR = 1;
+assign ABUS_DIR = ~is_ptrs;
 assign ABUS_DIR_N = ~ABUS_DIR;
 assign ABUS_EN = 0;
 
-assign CTRL_DIR = 1;
+assign CTRL_DIR = ~is_ptrs;
 assign CTRL_EN = 0;
 assign CTRL1_EN = 0;
 
@@ -263,7 +269,7 @@ wire z80_spi_data_sel_out = (TRS_A[7:0] == 8'hfd) & OUT_falling_edge;
 
 wire xray_sel;
 
-wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel;
+wire esp_sel = ~is_ptrs && (trs_io_sel || frehd_sel || printer_sel || xray_sel);
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
@@ -286,13 +292,13 @@ always @(posedge clk) begin
     end
     else begin
       // This is not a write to 0x37e8 (the printer). Need to assert WAIT
-      WAIT <= 1;
+      //XXX WAIT <= 1;
     end
   end
   else if (esp_done_risingedge)
     begin
       // When ESP is done, de-assert WAIT
-      WAIT <= 0;
+      //XXX WAIT <= 0;
       printer_sel_reg <= 0;
       printer_status <= PRINTER_STATUS_READY;
     end
@@ -300,7 +306,7 @@ always @(posedge clk) begin
   if (count != 0) count <= count - 1;
 end
 
-assign EXTIOSEL = esp_sel;
+assign EXTIOSEL = is_ptrs ? 1'b0 : esp_sel;
       
 localparam [3:0]
   esp_trs_io_in = 4'd0,
@@ -735,10 +741,13 @@ assign dina = !TRS_WR ? TRS_D : 8'bz;
 //assign TRS_OE = !((TRS_A[16:8] == 9'h0ff) && (!TRS_WR || !TRS_RD));
 
 
-assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_WR || !TRS_OUT || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
+//assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_WR || !TRS_OUT || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
 //                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
 
-assign TRS_DIR = TRS_RD && TRS_IN;
+assign TRS_OE = 0;//XXX ~(z80_io_rd | z80_io_wr);
+
+//XXX assign TRS_DIR = TRS_RD && TRS_IN;
+assign TRS_DIR = z80_io_rd;
 
 wire ena_read;
 wire ena_write;
@@ -767,7 +776,8 @@ trigger brama_write_trigger(
 assign wea = !TRS_WR;
 
 reg[7:0] trs_data;
-assign _D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
+
+assign _D = (is_ptrs && z80_io_wr) ? z80_data_out : ((!TRS_RD || !TRS_IN) ? trs_data : 8'bz);
 
 /*
   ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
@@ -1276,18 +1286,22 @@ wire z80_rst = z80_rst_trigger != 0;
 //wire pixel_data;
 //wire [19:0] display_counter;
 
-wire [15:0] z80_addr;
-wire [7:0] z80_data_in, z80_data_out;
 wire z80_mreq, z80_iorq;
 wire z80_wr;
 wire z80_rd = ~z80_wr;
-wire z80_int = 1'b0;
+wire z80_int = is_ptrs ? ~INT_IN_N :  1'b0;
 wire z80_nmi = 1'b0;
+wire z80_m1;
 
 wire z80_mem_rd = z80_mreq & z80_rd;
 wire z80_mem_wr = z80_mreq & z80_wr;
 wire z80_io_rd = z80_iorq & z80_rd;
 wire z80_io_wr = z80_iorq & z80_wr;
+
+assign _IN_N = is_ptrs ? ~z80_io_rd : 1'bZ;
+assign _OUT_N = is_ptrs ? ~z80_io_wr : 1'bZ;
+assign _IOREQ_N = is_ptrs ? ~z80_iorq : 1'bZ;
+assign _M1_N = is_ptrs ? ~z80_m1 : 1'bZ;
 
 // The memory read latency is 1 cycle (2 cycles total).
 // Wait will be asserted for the first cycle and released for the second.
@@ -1308,7 +1322,11 @@ wire z80_io_rd0 = z80_io_rd & (z80_io_rd1 == 1'b0);
 wire z80_io_wr0 = z80_io_wr;
 
 // Wait is asserted for the first two memory read cycles and the first io read cycle.
-wire z80_wait = z80_mem_rd0 | z80_io_rd0;
+wire ext_wait = is_ptrs ? (~WAIT_IN_N & ~EXTIOSEL_IN_N) : 0;
+assign LED[0] = WAIT_IN_N;
+assign LED[1] = EXTIOSEL_IN_N;
+assign LED[2] = INT_IN_N;
+wire z80_wait = z80_mem_rd0 | z80_io_rd0 | ext_wait;
 
 // Generate the z80_mem_rd1, z80_mem_rd2, and z80_mem_rd1 signals.
 always @ (posedge z80_clk)
@@ -1332,7 +1350,7 @@ NextZ80 NextZ80 (
    .CLK(z80_clk), // input
    .RESET(z80_rst), // input
    .DI(z80_data_in), // input [7:0]
-   .INT(z80_int), // input
+   .INT(0),//z80_int), // input
    .NMI(z80_nmi), // input
    .WAIT(z80_wait), // input
 
@@ -1342,7 +1360,7 @@ NextZ80 NextZ80 (
    .MREQ(z80_mreq), // output
    .IORQ(z80_iorq), // output
    .HALT(), // output
-   .M1() // output
+   .M1(z80_m1) // output
 );
 
 // Generate the memory decodes for the ROM, RAM, display, and keyboard.
@@ -1384,16 +1402,17 @@ Gowin_SP_RAM z80_ram(
         .din(z80_data_out) //input [7:0] din
     );
 
-wire [7:0] z80_kbd_data = ({8{z80_addr == 16'h3801}} & keyb_matrix[0]) |
-                          ({8{z80_addr == 16'h3802}} & keyb_matrix[1]) |
-                          ({8{z80_addr == 16'h3804}} & keyb_matrix[2]) |
-                          ({8{z80_addr == 16'h3808}} & keyb_matrix[3]) |
-                          ({8{z80_addr == 16'h3810}} & keyb_matrix[4]) |
-                          ({8{z80_addr == 16'h3820}} & keyb_matrix[5]) |
-                          ({8{z80_addr == 16'h3840}} & keyb_matrix[6]) |
-                          ({8{z80_addr == 16'h3880}} & keyb_matrix[7]);
+wire [7:0] z80_kbd_data = ({8{z80_addr[0]}} & keyb_matrix[0]) |
+                          ({8{z80_addr[1]}} & keyb_matrix[1]) |
+                          ({8{z80_addr[2]}} & keyb_matrix[2]) |
+                          ({8{z80_addr[3]}} & keyb_matrix[3]) |
+                          ({8{z80_addr[4]}} & keyb_matrix[4]) |
+                          ({8{z80_addr[5]}} & keyb_matrix[5]) |
+                          ({8{z80_addr[6]}} & keyb_matrix[6]) |
+                          ({8{z80_addr[7]}} & keyb_matrix[7]);
 
-assign z80_data_in = (z80_rom_data & {8{z80_rom_sel & z80_mem_rd1}}) |
+assign z80_data_in = (_D & {8{~z80_int_sel & z80_io_rd1}}) |
+                     (z80_rom_data & {8{z80_rom_sel & z80_mem_rd1}}) |
                      (z80_ram_data & {8{z80_ram_sel & z80_mem_rd1}}) |
                      //(z80_dsp_data & {8{z80_dsp_sel & z80_mem_rd1}}) |
                      (z80_kbd_data & {8{z80_kbd_sel & z80_mem_rd1}}) |

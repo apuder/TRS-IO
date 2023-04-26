@@ -17,7 +17,7 @@
   "SubInsts" : [
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 50,
+    "InstLine" : 52,
     "InstName" : "clk_wiz_0",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_rpll/gowin_rpll.v",
     "ModuleLine" : 9,
@@ -25,7 +25,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 121,
+    "InstLine" : 127,
     "InstName" : "io",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/filter.v",
     "ModuleLine" : 3,
@@ -33,7 +33,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 595,
+    "InstLine" : 601,
     "InstName" : "pre_ram_access_check_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -41,7 +41,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 749,
+    "InstLine" : 758,
     "InstName" : "brama_read_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -49,7 +49,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 757,
+    "InstLine" : 766,
     "InstName" : "brama_write_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -57,7 +57,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 874,
+    "InstLine" : 884,
     "InstName" : "bram_poke_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -65,7 +65,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 881,
+    "InstLine" : 891,
     "InstName" : "bram_peek_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -73,7 +73,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 948,
+    "InstLine" : 958,
     "InstName" : "xram",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_dpb/gowin_dpb1.v",
     "ModuleLine" : 9,
@@ -81,7 +81,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 977,
+    "InstLine" : 987,
     "InstName" : "xrama_read_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -89,7 +89,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 985,
+    "InstLine" : 995,
     "InstName" : "xrama_write_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -97,7 +97,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1001,
+    "InstLine" : 1011,
     "InstName" : "xram_poke_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -105,7 +105,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1008,
+    "InstLine" : 1018,
     "InstName" : "xram_peek_trigger",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/trigger.v",
     "ModuleLine" : 3,
@@ -113,7 +113,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1083,
+    "InstLine" : 1093,
     "InstName" : "pll0",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_rpll/gowin_rpll0.v",
     "ModuleLine" : 9,
@@ -121,7 +121,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1088,
+    "InstLine" : 1098,
     "InstName" : "clkdiv0",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_clkdiv/gowin_clkdiv0.v",
     "ModuleLine" : 9,
@@ -129,7 +129,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1094,
+    "InstLine" : 1104,
     "InstName" : "clkdiv1",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_clkdiv/gowin_clkdiv1.v",
     "ModuleLine" : 9,
@@ -137,7 +137,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1127,
+    "InstLine" : 1137,
     "InstName" : "hdmi",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/hdmi/hdmi.sv",
     "ModuleLine" : 4,
@@ -237,7 +237,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1216,
+    "InstLine" : 1226,
     "InstName" : "mem",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/filter.v",
     "ModuleLine" : 3,
@@ -245,7 +245,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1248,
+    "InstLine" : 1258,
     "InstName" : "z80_clkdiv",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_clkdiv/gowin_clkdiv0.v",
     "ModuleLine" : 9,
@@ -253,7 +253,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1254,
+    "InstLine" : 1264,
     "InstName" : "z80_clkdiv1",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_clkdiv/gowin_clkdiv0.v",
     "ModuleLine" : 9,
@@ -261,7 +261,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1260,
+    "InstLine" : 1270,
     "InstName" : "z80_clkdiv2",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_clkdiv/gowin_clkdiv0.v",
     "ModuleLine" : 9,
@@ -269,7 +269,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1347,
+    "InstLine" : 1349,
     "InstName" : "NextZ80",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/NextZ80CPU.v",
     "ModuleLine" : 63,
@@ -347,7 +347,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1380,
+    "InstLine" : 1382,
     "InstName" : "z80_rom",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_prom/gowin_prom.v",
     "ModuleLine" : 10,
@@ -355,7 +355,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1392,
+    "InstLine" : 1394,
     "InstName" : "z80_ram",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/gowin_sp/gowin_sp.v",
     "ModuleLine" : 10,
@@ -363,7 +363,7 @@
    },
    {
     "InstFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/top.v",
-    "InstLine" : 1420,
+    "InstLine" : 1423,
     "InstName" : "vga",
     "ModuleFile" : "//wsl.localhost/Ubuntu-20.04/home/arno/git/TRS-IO/src/fpga/pp/v0.3/TRS-IO++/src/vga.v",
     "ModuleLine" : 5,
