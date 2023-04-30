@@ -1,0 +1,8 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP GAL16V8
+D Programmable Logic Array, DIP-20/SOIC-20/PLCC-20
+K GAL PLD 16V8
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,10 @@
+(sym_lib_table
+  (lib (name "ESP-AP")(type "KiCad")(uri "${KIPRJMOD}/ESP-AP.kicad_sym")(options "")(descr ""))
+  (lib (name "SRAM-PDIP-AP")(type "KiCad")(uri "${KIPRJMOD}/SRAM-PDIP-AP.kicad_sym")(options "")(descr ""))
+  (lib (name "ATF22V10-PDIP-AP")(type "KiCad")(uri "${KIPRJMOD}/ATF22V10-PDIP-AP.kicad_sym")(options "")(descr ""))
+  (lib (name "ATF16V8-PDIP-AP")(type "KiCad")(uri "${KIPRJMOD}/ATF16V8-PDIP-AP.kicad_sym")(options "")(descr ""))
+  (lib (name "MYLIB")(type "KiCad")(uri "${KIPRJMOD}/MYLIB.kicad_sym")(options "")(descr ""))
+  (lib (name "FPGA-AP")(type "KiCad")(uri "${KIPRJMOD}/FPGA-AP.kicad_sym")(options "")(descr ""))
+  (lib (name "MCP43X1")(type "KiCad")(uri "${KIPRJMOD}/MCP43X1.kicad_sym")(options "")(descr ""))
+  (lib (name "SN74LVC1G04DCKR")(type "KiCad")(uri "${KIPRJMOD}/SN74LVC1G04DCKR.kicad_sym")(options "")(descr ""))
+)
