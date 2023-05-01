@@ -282,7 +282,7 @@ reg [5:0] count;
 always @(posedge clk) begin
   if (esp_sel_risingedge) begin
     // ESP needs to do something
-    ESP_REQ <= 1;
+    //XX ESP_REQ <= 1;
     count <= 50;
     if (printer_sel) begin
       // The next byte for the printer is ready

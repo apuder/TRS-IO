@@ -12,27 +12,27 @@
   <Part Number>: GW2A-LV18PG256C8/I7
   <Device>: GW2A-18
   <Device Version>: C
-  <Created Time>:Tue Apr 25 16:34:10 2023
+  <Created Time>:Sun Apr 30 17:10:06 2023
 
 
 2. PnR Details
 
   Running placement:
-    Placement Phase 0: CPU time = 0h 0m 0.796s, Elapsed time = 0h 0m 0.795s
-    Placement Phase 1: CPU time = 0h 0m 0.41s, Elapsed time = 0h 0m 0.411s
-    Placement Phase 2: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
+    Placement Phase 0: CPU time = 0h 0m 0.641s, Elapsed time = 0h 0m 0.641s
+    Placement Phase 1: CPU time = 0h 0m 0.341s, Elapsed time = 0h 0m 0.34s
+    Placement Phase 2: CPU time = 0h 0m 0.966s, Elapsed time = 0h 0m 0.967s
     Placement Phase 3: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
-    Total Placement: CPU time = 0h 0m 5s, Elapsed time = 0h 0m 5s
+    Total Placement: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
  Running routing:
     Routing Phase 0: CPU time = 0h 0m 0.002s, Elapsed time = 0h 0m 0.002s
-    Routing Phase 1: CPU time = 0h 0m 1s, Elapsed time = 0h 0m 1s
+    Routing Phase 1: CPU time = 0h 0m 0.994s, Elapsed time = 0h 0m 0.994s
     Routing Phase 2: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
     Routing Phase 3: CPU time = 0h 0m 0s, Elapsed time = 0h 0m 0s
     Total Routing: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
  Generate output files:
     CPU time = 0h 0m 6s, Elapsed time = 0h 0m 6s
 
- Total Time and Memory Usage: CPU time = 0h 0m 15s, Elapsed time = 0h 0m 15s, Peak memory usage = 340MB
+ Total Time and Memory Usage: CPU time = 0h 0m 13s, Elapsed time = 0h 0m 13s, Peak memory usage = 340MB
 
 
 3. Resource Usage Summary
@@ -40,15 +40,15 @@
   ----------------------------------------------------------
   Resources                   | Usage
   ----------------------------------------------------------
-  Logic                       | 3174/20736  16%
-    --LUT,ALU,ROM16           | 3126(2748 LUT, 378 ALU, 0 ROM16)
+  Logic                       | 3210/20736  16%
+    --LUT,ALU,ROM16           | 3162(2784 LUT, 378 ALU, 0 ROM16)
     --SSRAM(RAM16)            | 8
-  Register                    | 1257/16173  8%
-    --Logic Register as Latch | 0/15552  0%
-    --Logic Register as FF    | 1236/15552  8%
+  Register                    | 1261/16173  8%
+    --Logic Register as Latch | 3/15552  <1%
+    --Logic Register as FF    | 1237/15552  8%
     --I/O Register as Latch   | 0/621  0%
     --I/O Register as FF      | 21/621  4%
-  CLS                         | 2268/10368  22%
+  CLS                         | 2274/10368  22%
   I/O Port                    | 85
   I/O Buf                     | 75
     --Input Buf               | 10
@@ -109,13 +109,14 @@
   Signal         | Global Clock   | Location
   -------------------------------------------
   clk_in_d       | PRIMARY        |  TR TL BR
-  clk_audio_4    | PRIMARY        |  TL BR
+  rst_button     | PRIMARY        |  BR BL
   clk            | PRIMARY        |  TR TL BR
   clk_pixel      | PRIMARY        |  TR TL BR
-  vga_clk        | PRIMARY        |  TR TL BR BL
+  vga_clk        | PRIMARY        |  TR BR
   z80_clk1       | PRIMARY        |  BL
   z80_clk2       | PRIMARY        |  BL
   z80_clk        | PRIMARY        |  TR TL BR BL
+  clk_audio_4    | LW             |  -
   n4054_4        | LW             |  -
   audio_sample_word_buffer_90| LW             |  -
   audio_sample_word_buffer_92| LW             |  -
@@ -123,7 +124,6 @@
   audio_sample_word_buffer_96| LW             |  -
   audio_sample_word_buffer_98| LW             |  -
   audio_sample_word_buffer_100| LW             |  -
-  audio_sample_word_buffer_102| LW             |  -
   clk            | HCLK           | LEFT[0]
   clk_pixel_x5   | HCLK           | TOP[0]
   clk_pixel      | HCLK           | RIGHT[0]

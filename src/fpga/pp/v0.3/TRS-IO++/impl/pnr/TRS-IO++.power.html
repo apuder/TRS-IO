@@ -87,7 +87,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Created Time</td>
-<td>Tue Apr 25 16:34:08 2023
+<td>Sun Apr 30 17:10:05 2023
 </td>
 </tr>
 <tr>
@@ -100,7 +100,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <table class="summary_table">
 <tr>
 <td class="label">Total Power (mW)</td>
-<td>241.126</td>
+<td>241.194</td>
 </tr>
 <tr>
 <td class="label">Quiescent Power (mW)</td>
@@ -108,14 +108,14 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Dynamic Power (mW)</td>
-<td>69.323</td>
+<td>69.390</td>
 </tr>
 </table>
 <h2><a name="Thermal_Info">Thermal Information:</a></h2>
 <table class="summary_table">
 <tr>
 <td class="label">Junction Temperature</td>
-<td>32.721</td>
+<td>32.723</td>
 </tr>
 <tr>
 <td class="label">Theta JA</td>
@@ -123,7 +123,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td class="label">Max Allowed Ambient Temperature</td>
-<td>77.279</td>
+<td>77.277</td>
 </tr>
 </table>
 <h2><a name="Configure_Info">Configure Information:</a></h2>
@@ -192,9 +192,9 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <tr>
 <td>VCC</td>
 <td>1.000</td>
-<td>45.469</td>
+<td>45.536</td>
 <td>104.225</td>
-<td>149.693</td>
+<td>149.761</td>
 </tr>
 <tr>
 <td>VCCX</td>
@@ -222,9 +222,9 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td>Logic</td>
-<td>2.045</td>
+<td>2.102</td>
 <td>NA</td>
-<td>4.369</td>
+<td>4.554</td>
 </tr>
 <tr>
 <td>IO</td>
@@ -254,8 +254,8 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 </tr>
 <tr>
 <td>top</td>
-<td>43.248</td>
-<td>43.248(42.080)</td>
+<td>43.305</td>
+<td>43.305(42.084)</td>
 <tr>
 <td>top/NextZ80/</td>
 <td>0.010</td>
@@ -302,8 +302,8 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>8.787(0.000)</td>
 <tr>
 <td>top/hdmi/</td>
-<td>0.799</td>
-<td>0.799(0.712)</td>
+<td>0.804</td>
+<td>0.804(0.715)</td>
 <tr>
 <td>top/hdmi/serializer/</td>
 <td>0.012</td>
@@ -314,16 +314,16 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>0.085(0.000)</td>
 <tr>
 <td>top/hdmi/tmds_gen[1].tmds_channel/</td>
+<td>0.083</td>
+<td>0.083(0.000)</td>
+<tr>
+<td>top/hdmi/tmds_gen[2].tmds_channel/</td>
 <td>0.082</td>
 <td>0.082(0.000)</td>
 <tr>
-<td>top/hdmi/tmds_gen[2].tmds_channel/</td>
-<td>0.081</td>
-<td>0.081(0.000)</td>
-<tr>
 <td>top/hdmi/true_hdmi_output.packet_assembler/</td>
-<td>0.151</td>
-<td>0.151(0.000)</td>
+<td>0.153</td>
+<td>0.153(0.000)</td>
 <tr>
 <td>top/hdmi/true_hdmi_output.packet_picker/</td>
 <td>0.301</td>
@@ -399,17 +399,7 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <tr>
 <td>clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk</td>
 <td>39.960</td>
-<td>0.771</td>
-</tr>
-<tr>
-<td>clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk</td>
-<td>84.000</td>
-<td>7.210</td>
-</tr>
-<tr>
-<td>z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk</td>
-<td>0.672</td>
-<td>0.405</td>
+<td>0.775</td>
 </tr>
 <tr>
 <td>clk_audio_4</td>
@@ -417,9 +407,19 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>0.057</td>
 </tr>
 <tr>
-<td>NO CLOCK DOMAIN</td>
-<td>0.000</td>
-<td>0.000</td>
+<td>z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk</td>
+<td>0.672</td>
+<td>0.405</td>
+</tr>
+<tr>
+<td>clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk</td>
+<td>19.980</td>
+<td>5.136</td>
+</tr>
+<tr>
+<td>clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk</td>
+<td>84.000</td>
+<td>7.251</td>
 </tr>
 <tr>
 <td>clk_in</td>
@@ -427,9 +427,14 @@ table.detail_table th.label {  min-width: 8%; width: 8%; }
 <td>29.707</td>
 </tr>
 <tr>
-<td>clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk</td>
-<td>19.980</td>
-<td>5.138</td>
+<td>NO CLOCK DOMAIN</td>
+<td>0.000</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>rst_button</td>
+<td>100.000</td>
+<td>0.025</td>
 </tr>
 <tr>
 <td>pll0/rpll_inst/CLKOUT.default_gen_clk</td>

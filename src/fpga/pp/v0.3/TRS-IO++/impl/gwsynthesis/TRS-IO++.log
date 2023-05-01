@@ -66,7 +66,7 @@ Compiling module 'tmds_channel'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-
 Compiling module 'tmds_channel(CN=1)'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\hdmi\tmds_channel.sv":4)
 Compiling module 'tmds_channel(CN=2)'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\hdmi\tmds_channel.sv":4)
 Compiling module 'serializer(VIDEO_RATE=40000000.0)'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\hdmi\serializer.sv":4)
-WARN  (EX3791) : Expression size 32 truncated to fit in target size 1("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1332)
+WARN  (EX3791) : Expression size 32 truncated to fit in target size 1("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1333)
 Compiling module 'NextZ80'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\NextZ80CPU.v":63)
 WARN  (EX2664) : Variable 'mux_rdor' is used before it is assigned in an always_comb or always @* block, synthesis - simulation differences may occur("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\NextZ80CPU.v":1606)
 WARN  (EX2664) : Variable 'mux_rdor' is used before it is assigned in an always_comb or always @* block, synthesis - simulation differences may occur("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\NextZ80CPU.v":1607)
@@ -80,7 +80,7 @@ Compiling module 'RegSelect'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\
 Compiling module 'ALU8'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\NextZ80CPU.v":1725)
 Compiling module 'daa'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\NextZ80CPU.v":1966)
 Compiling module 'ALU16'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\NextZ80CPU.v":2001)
-WARN  (EX3670) : Actual bit length 32 differs from formal bit length 1 for port 'INT'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1362)
+WARN  (EX3670) : Actual bit length 32 differs from formal bit length 1 for port 'INT'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1361)
 Compiling module 'Gowin_pROM_M3'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_prom\gowin_prom.v":10)
 Compiling module 'Gowin_SP_RAM'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\gowin_sp\gowin_sp.v":10)
 Compiling module 'vga'("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\vga.v":5)
@@ -102,6 +102,10 @@ WARN  (CV0018) : Input CONF[0] is unused("\\wsl.localhost\Ubuntu-20.04\home\arno
 WARN  (CV0017) : Inout _RAS_N is unused("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":10)
 WARN  (CV0017) : Inout _RESET_N is unused("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":13)
 Running device independent optimization ...
+WARN  (DI0003) : Latch inferred for net 'rst_trigger[3]';We do not recommend the use of latches in FPGA designs, as they may lead to timing problems("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1287)
+WARN  (DI0003) : Latch inferred for net 'rst_trigger[2]';We do not recommend the use of latches in FPGA designs, as they may lead to timing problems("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1287)
+WARN  (DI0003) : Latch inferred for net 'rst_trigger[1]';We do not recommend the use of latches in FPGA designs, as they may lead to timing problems("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1287)
+WARN  (DI0002) : Asynchronous register "rst_trigger[0]" initial values do not match with the Gowin library, simulation mismatch possible("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1287)
 [10%] Optimizing Phase 0 completed
 [15%] Optimizing Phase 1 completed
 [25%] Optimizing Phase 2 completed
@@ -129,10 +133,12 @@ WARN  (NL0002) : The module "trigger" instantiated to "xram_poke_trigger" is swe
 WARN  (NL0002) : The module "trigger" instantiated to "xrama_write_trigger" is swept in optimizing("\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\top.v":1001)
 [95%] Generate netlist file "\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg" completed
 WARN  (CK3000) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
+WARN  (CK3000) : Can't calculate clocks' relationship between: "rst_button" and "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (CK3000) : Can't calculate clocks' relationship between: "clk_audio_4" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (CK3000) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (CK3000) : Can't calculate clocks' relationship between: "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk" and "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk"
 WARN  (CK3000) : Can't calculate clocks' relationship between: "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk" and "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk"
 WARN  (CK3000) : Can't calculate clocks' relationship between: "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk" and "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk"
+WARN  (CK3000) : Can't calculate clocks' relationship between: "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk" and "rst_button"
 [100%] Generate report file "\\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\gwsynthesis\TRS-IO++_syn.rpt.html" completed
 GowinSynthesis finish
