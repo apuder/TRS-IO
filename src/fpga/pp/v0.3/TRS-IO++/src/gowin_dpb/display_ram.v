@@ -4,7 +4,7 @@
 //GOWIN Version: V1.9.8.09 Education
 //Part Number: GW2A-LV18PG256C8/I7
 //Device: GW2A-18C
-//Created Time: Sun Mar 05 07:33:29 2023
+//Created Time: Tue May 09 11:06:33 2023
 
 module display_ram (douta, doutb, clka, ocea, cea, reseta, wrea, clkb, oceb, ceb, resetb, wreb, ada, dina, adb, dinb);
 
@@ -52,7 +52,7 @@ DPB dpb_inst_0 (
     .DIB({gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,dinb[7:0]})
 );
 
-defparam dpb_inst_0.READ_MODE0 = 1'b1;
+defparam dpb_inst_0.READ_MODE0 = 1'b0;
 defparam dpb_inst_0.READ_MODE1 = 1'b1;
 defparam dpb_inst_0.WRITE_MODE0 = 2'b00;
 defparam dpb_inst_0.WRITE_MODE1 = 2'b00;

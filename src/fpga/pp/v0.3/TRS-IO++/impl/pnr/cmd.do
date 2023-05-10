@@ -1,12 +1,11 @@
--d \\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\gwsynthesis\TRS-IO++.vg
+-d E:\Documents\FPGA\TRS-IO++PTRS\impl\gwsynthesis\TRS-IO++.vg
 -p GW2A-18C-PBGA256-8
 -pn GW2A-LV18PG256C8/I7
--cst \\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\src\TRS-IO++.cst
--cfg \\wsl.localhost\Ubuntu-20.04\home\arno\git\TRS-IO\src\fpga\pp\v0.3\TRS-IO++\impl\pnr\device.cfg
+-cst E:\Documents\FPGA\TRS-IO++PTRS\src\TRS-IO++.cst
+-cfg E:\Documents\FPGA\TRS-IO++PTRS\impl\pnr\device.cfg
 -bit
 -tr
 -ph
 -timing
 -cst_error
--correct_hold 1
 -route_maxfan 23

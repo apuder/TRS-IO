@@ -8,8 +8,10 @@ module vga(
   input [15:0] TRS_A,
   input [7:0] TRS_D,
   input TRS_WR,
+  input TRS_RD,
   input TRS_OUT,
   input TRS_IN,
+  output [7:0] TRS_Q,
   output [7:0] le18_dout,
   output le18_dout_rdy,
   output VGA_RGB,
@@ -82,6 +84,16 @@ trigger z80_dsp_wr_trigger (
   .three()
 );
 
+wire z80_dsp_rd_en;
+
+trigger z80_dsp_rd_trigger (
+  .clk(clk),
+  .cond(TRS_RD & z80_dsp_sel),
+  .one(z80_dsp_rd_en),
+  .two(),
+  .three()
+);
+
 /*
  * True Dual Port RAM, Byte Write Enable, Byte size: 8
  * Port A: Read/Write Width: 8, Write depth: 1024, Operating Mode: Write First,
@@ -92,11 +104,11 @@ trigger z80_dsp_wr_trigger (
  */
 display_ram z80_dsp (
    .clka(clk), // input
-   .cea(z80_dsp_wr_en), // input
+   .cea(z80_dsp_rd_en | z80_dsp_wr_en), // input
    .ada(TRS_A[9:0]), // input [9:0]
    .wrea(z80_dsp_wr_en), // input
    .dina(TRS_D), // input [7:0]
-   .douta(), // output [7:0]
+   .douta(TRS_Q), // output [7:0]
    .ocea(1'b0),
    .reseta(1'b0),
 
