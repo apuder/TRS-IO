@@ -1,0 +1,7 @@
+(fp_lib_table
+  (lib (name "PocketTRS_Connectors")(type "KiCad")(uri "${KIPRJMOD}/PocketTRS_Connectors.pretty")(options "")(descr ""))
+  (lib (name "esp32-wrover")(type "KiCad")(uri "${KIPRJMOD}/esp32-wrover.pretty")(options "")(descr ""))
+  (lib (name "trs-io-m1")(type "KiCad")(uri "${KIPRJMOD}/trs-io-m1.pretty")(options "")(descr ""))
+  (lib (name "trs-io-m3")(type "KiCad")(uri "${KIPRJMOD}/trs-io-m3.pretty")(options "")(descr ""))
+  (lib (name "Tang20K")(type "KiCad")(uri "${KIPRJMOD}/Tang20K.pretty")(options "")(descr ""))
+)
