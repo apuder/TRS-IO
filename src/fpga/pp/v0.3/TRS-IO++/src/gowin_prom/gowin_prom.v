@@ -1,11 +1,10 @@
 //Copyright (C)2014-2022 Gowin Semiconductor Corporation.
 //All rights reserved.
 //File Title: IP file
-//GOWIN Version: V1.9.8.10
+//GOWIN Version: V1.9.8.09 Education
 //Part Number: GW2A-LV18PG256C8/I7
-//Device: GW2A-18
-//Device Version: C
-//Created Time: Fri Apr 07 21:21:49 2023
+//Device: GW2A-18C
+//Created Time: Sat Apr 22 10:08:17 2023
 
 module Gowin_pROM_M3 (dout, clk, oce, ce, reset, ad);
 

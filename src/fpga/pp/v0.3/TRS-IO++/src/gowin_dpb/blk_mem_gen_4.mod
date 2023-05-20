@@ -6,20 +6,18 @@
 
 -mod_name blk_mem_gen_4
 -file_name blk_mem_gen_4
--path E:/Documents/FPGA/TRS-IO++/src/gowin_dpb/
+-path E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
 -dev_type GW2A-18C
--depth_0 16384
--depth_1 16384
--width_0 6
--width_1 6
--read_mode_0 pipeline
+-depth_0 20480
+-depth_1 20480
+-width_0 4
+-width_1 4
+-read_mode_0 bypass
 -read_mode_1 pipeline
 -write_mode_0 normal
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file E:\Documents\FPGA\TRS-IO++\src\splash_le18.mi
--init_match port_A

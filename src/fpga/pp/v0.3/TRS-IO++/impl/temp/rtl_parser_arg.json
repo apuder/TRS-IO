@@ -1,116 +1,142 @@
 {
  "Files" : [
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/NextZ80CPU.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/filter.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/filter.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_clkdiv/gowin_clkdiv0.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_clkdiv/gowin_clkdiv0.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_clkdiv/gowin_clkdiv1.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_clkdiv/gowin_clkdiv1.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_dpb/blk_mem_gen_4.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_dpb/blk_mem_gen_4.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_rpll/gowin_rpll.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_dpb/display_ram.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_rpll/gowin_rpll0.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_dpb/gowin_dpb0.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/audio_clock_regeneration_packet.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_dpb/gowin_dpb1.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/audio_info_frame.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_prom/gowin_prom.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/audio_sample_packet.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_rpll/gowin_rpll.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/auxiliary_video_information_info_frame.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_rpll/gowin_rpll0.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/hdmi.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_sp/blk_mem_gen_3.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/packet_assembler.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_sp/gowin_sp.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/packet_picker.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/audio_clock_regeneration_packet.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/serializer.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/audio_info_frame.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/source_product_description_info_frame.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/audio_sample_packet.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/hdmi/tmds_channel.sv",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/auxiliary_video_information_info_frame.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/top.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/hdmi.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/trigger.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/packet_assembler.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/TTRS80.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/packet_picker.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_prom/blk_mem_gen_3.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/serializer.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_prom/blk_mem_gen_0.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/source_product_description_info_frame.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_sp/blk_mem_gen_1.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/hdmi/tmds_channel.sv",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_dpb/blk_mem_gen_2.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/top.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_clkdiv/gowin_clkdiv2.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/trigger.v",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_dcs/gowin_dcs0.v",
    "Type" : "verilog"
   },
   {
-   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS/src/vga.v",
-   "Type" : "verilog"
+   "Library" : "work",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/t80/T80.vhd",
+   "Type" : "vhdl"
+  },
+  {
+   "Library" : "work",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/t80/T80_ALU.vhd",
+   "Type" : "vhdl"
+  },
+  {
+   "Library" : "work",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/t80/T80_MCode.vhd",
+   "Type" : "vhdl"
+  },
+  {
+   "Library" : "work",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/t80/T80_Pack.vhd",
+   "Type" : "vhdl"
+  },
+  {
+   "Library" : "work",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/t80/T80_Reg.vhd",
+   "Type" : "vhdl"
+  },
+  {
+   "Library" : "work",
+   "Path" : "E:/Documents/FPGA/TRS-IO++PTRS-working/src/t80/T80a.vhd",
+   "Type" : "vhdl"
   }
  ],
  "IncludePath" : [
 
  ],
  "LoopLimit" : 2000,
- "ResultFile" : "E:/Documents/FPGA/TRS-IO++PTRS/impl/temp/rtl_parser.result",
+ "ResultFile" : "E:/Documents/FPGA/TRS-IO++PTRS-working/impl/temp/rtl_parser.result",
  "Top" : "",
  "VerilogStd" : "sysv",
- "VhdlStd" : "vhdl_93"
+ "VhdlStd" : "vhdl_2008"
 }

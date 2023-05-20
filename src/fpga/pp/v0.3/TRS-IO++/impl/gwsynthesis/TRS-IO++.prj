@@ -4,41 +4,46 @@
     <Version>beta</Version>
     <Device id="GW2A-18C" package="PBGA256" speed="8" partNumber="GW2A-LV18PG256C8/I7"/>
     <FileList>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\NextZ80CPU.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\filter.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_clkdiv\gowin_clkdiv0.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_clkdiv\gowin_clkdiv1.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_dpb\blk_mem_gen_4.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_dpb\display_ram.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_dpb\gowin_dpb0.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_dpb\gowin_dpb1.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_prom\gowin_prom.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_rpll\gowin_rpll.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_rpll\gowin_rpll0.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_sp\blk_mem_gen_3.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\gowin_sp\gowin_sp.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\audio_clock_regeneration_packet.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\audio_info_frame.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\audio_sample_packet.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\auxiliary_video_information_info_frame.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\hdmi.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\packet_assembler.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\packet_picker.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\serializer.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\source_product_description_info_frame.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\hdmi\tmds_channel.sv" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\top.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\trigger.v" type="verilog"/>
-        <File path="E:\Documents\FPGA\TRS-IO++PTRS\src\vga.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\filter.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_clkdiv\gowin_clkdiv0.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_clkdiv\gowin_clkdiv1.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_dpb\blk_mem_gen_4.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_rpll\gowin_rpll.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_rpll\gowin_rpll0.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\audio_clock_regeneration_packet.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\audio_info_frame.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\audio_sample_packet.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\auxiliary_video_information_info_frame.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\hdmi.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\packet_assembler.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\packet_picker.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\serializer.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\source_product_description_info_frame.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\hdmi\tmds_channel.sv" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\top.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\trigger.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\TTRS80.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_prom\blk_mem_gen_3.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_prom\blk_mem_gen_0.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_sp\blk_mem_gen_1.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_dpb\blk_mem_gen_2.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_clkdiv\gowin_clkdiv2.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\gowin_dcs\gowin_dcs0.v" type="verilog"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\t80\T80.vhd" type="vhdl"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\t80\T80_ALU.vhd" type="vhdl"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\t80\T80_MCode.vhd" type="vhdl"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\t80\T80_Pack.vhd" type="vhdl"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\t80\T80_Reg.vhd" type="vhdl"/>
+        <File path="E:\Documents\FPGA\TRS-IO++PTRS-working\src\t80\T80a.vhd" type="vhdl"/>
     </FileList>
     <OptionList>
         <Option type="disable_insert_pad" value="0"/>
         <Option type="dsp_balance" value="0"/>
         <Option type="looplimit" value="2000"/>
-        <Option type="output_file" value="E:\Documents\FPGA\TRS-IO++PTRS\impl\gwsynthesis\TRS-IO++.vg"/>
+        <Option type="output_file" value="E:\Documents\FPGA\TRS-IO++PTRS-working\impl\gwsynthesis\TRS-IO++.vg"/>
         <Option type="print_all_synthesis_warning" value="0"/>
         <Option type="ram_rw_check" value="1"/>
         <Option type="verilog_language" value="sysv-2017"/>
-        <Option type="vhdl_language" value="vhdl-1993"/>
+        <Option type="vhdl_language" value="vhdl-2008"/>
     </OptionList>
 </Project>

@@ -4,7 +4,7 @@
 //GOWIN Version: V1.9.8.09 Education
 //Part Number: GW2A-LV18PG256C8/I7
 //Device: GW2A-18C
-//Created Time: Tue May 09 06:33:24 2023
+//Created Time: Wed Apr 19 12:55:28 2023
 
 module Gowin_SP_RAM (dout, clk, oce, ce, reset, wre, ad, din);
 

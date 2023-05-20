@@ -5,19 +5,19 @@
     <Version>5</Version>
     <Device name="GW2A-18C" pn="GW2A-LV18PG256C8/I7">gw2a18c-011</Device>
     <FileList>
-        <File path="src/NextZ80CPU.v" type="file.verilog" enable="1"/>
+        <File path="src/TTRS80.v" type="file.verilog" enable="1"/>
         <File path="src/filter.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_clkdiv/gowin_clkdiv0.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_clkdiv/gowin_clkdiv1.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_clkdiv/gowin_clkdiv2.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dcs/gowin_dcs0.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/blk_mem_gen_2.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/blk_mem_gen_4.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_dpb/display_ram.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_dpb/gowin_dpb0.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_dpb/gowin_dpb1.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_prom/gowin_prom.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_prom/blk_mem_gen_0.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_prom/blk_mem_gen_3.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll0.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_sp/blk_mem_gen_3.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_sp/gowin_sp.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_sp/blk_mem_gen_1.v" type="file.verilog" enable="1"/>
         <File path="src/hdmi/audio_clock_regeneration_packet.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/audio_info_frame.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/audio_sample_packet.sv" type="file.verilog" enable="1"/>
@@ -30,7 +30,12 @@
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="src/top.v" type="file.verilog" enable="1"/>
         <File path="src/trigger.v" type="file.verilog" enable="1"/>
-        <File path="src/vga.v" type="file.verilog" enable="1"/>
+        <File path="src/t80/T80.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t80/T80_ALU.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t80/T80_MCode.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t80/T80_Pack.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t80/T80_Reg.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t80/T80a.vhd" type="file.vhdl" enable="1"/>
         <File path="src/TRS-IO++.cst" type="file.cst" enable="1"/>
     </FileList>
 </Project>

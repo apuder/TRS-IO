@@ -6,7 +6,7 @@
 
 -mod_name display_ram
 -file_name display_ram
--path E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_dpb/
+-path E:/Documents/FPGA/TRS-IO++/src/gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
@@ -15,11 +15,11 @@
 -depth_1 1024
 -width_0 8
 -width_1 8
--read_mode_0 bypass
+-read_mode_0 pipeline
 -read_mode_1 pipeline
 -write_mode_0 normal
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file E:\Documents\FPGA\TRS-IO++PTRS\src\cls.mi
+-init_file E:\Documents\FPGA\TRS-IO++\src\cls.mi
 -init_match port_A

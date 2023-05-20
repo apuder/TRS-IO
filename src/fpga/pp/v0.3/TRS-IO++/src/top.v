@@ -22,7 +22,7 @@ module top(
   output DBUS_DIR,
   output DBUS_EN,
   inout [7:0] _D,
-  input [3:0] CONF,
+  output [3:0] CONF,
   output CASS_OUT,
   input CS_FPGA,
   input SCK,
@@ -32,6 +32,12 @@ module top(
   output REQ,
   input DONE,
   output [3:0] LED,
+  input VIDEOX,
+  input VSYNCX,
+  input HSYNCX,
+  output HSYNC_O,
+  output VSYNC_O,
+  output VIDEO_O,
   output LED_GREEN,
   output LED_RED,
   output LED_BLUE,
@@ -41,12 +47,11 @@ module top(
   output CTRL1_EN,
   input EXTIOSEL_IN_N,
   input WAIT_IN_N,
-  input INT_IN_N,
-  inout [7:0] PMOD);
+  input INT_IN_N);
+//  inout [7:0] PMOD);
+
 
 wire clk;
-wire vga_clk;
-
 
 Gowin_rPLL clk_wiz_0(
    .clkout(clk), //output clkout
@@ -60,13 +65,16 @@ wire is_m3 = ~is_m1;
 wire is_ptrs = 1'b1;
 
 always @(posedge clk) begin
-  is_m1 <= CONF[1];
+  is_m1 <= 1'b0;//CONF[1];
 end
 
 //-------------------------------------------------------------------------------
 
-wire [15:0] z80_addr;
-wire [7:0] z80_data_in, z80_data_out;
+// External M3/M4 IO bus control signals from the TRS-80 subsystem.
+// xio_enab is high when the external io bus is enabled.
+// xio_dir_out is high the data bus direction is output and being driven.
+wire xio_enab;
+wire xio_dir_out;
 
 reg ESP_REQ;
 assign REQ = ESP_REQ;
@@ -74,10 +82,8 @@ wire ESP_DONE = DONE;
 wire[15:0] TRS_A = _A;
 wire[7:0] TRS_D = _D;
 
-wire TRS_OE;
-assign DBUS_EN = TRS_OE;
-wire TRS_DIR;
-assign DBUS_DIR = TRS_DIR;
+assign DBUS_EN  = is_ptrs ? (~xio_enab)    : 1'b0;
+assign DBUS_DIR = is_ptrs ? (~xio_dir_out) : 1'b0;  // FIXME!! is_ptrs==0 case
 
 wire CS = CS_FPGA;
 wire[1:0] sw = 2'b11;
@@ -91,15 +97,13 @@ reg TRS_INT;
 reg trs_io_data_ready = 1'b0;
 assign INT = is_ptrs ? 1'b0 : ((is_m1 & TRS_INT) | (is_m3 & trs_io_data_ready));
 
-assign _A = is_ptrs ? z80_addr : 16'hZZZZ;
-
-assign ABUS_DIR = ~is_ptrs;
-assign ABUS_DIR_N = ~ABUS_DIR;
-assign ABUS_EN = 0;
+assign ABUS_DIR   = is_ptrs ? 1'b0 : 1'b1;
+assign ABUS_DIR_N = is_ptrs ? 1'b1 : 1'b0;
+assign ABUS_EN    = is_ptrs ? (~xio_enab) : 1'b0;
 
 assign CTRL_DIR = ~is_ptrs;
-assign CTRL_EN = 0;
-assign CTRL1_EN = 0;
+assign CTRL_EN  = is_ptrs ? (~xio_enab) : 1'b0;;
+assign CTRL1_EN = is_ptrs ? (~xio_enab) : 1'b0;;
 
 
 localparam [2:0] VERSION_MAJOR = 0;
@@ -267,7 +271,7 @@ wire z80_spi_data_sel_out = (TRS_A[7:0] == 8'hfd) & OUT_falling_edge;
 
 wire xray_sel;
 
-wire esp_sel = is_ptrs ? 1'b0 : (trs_io_sel || frehd_sel || printer_sel || xray_sel);
+wire esp_sel = 1'b0;//trs_io_sel || frehd_sel || printer_sel || xray_sel;
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
@@ -561,6 +565,9 @@ always @(posedge clk) begin
   end
 end
 
+wire keyb_matrix_pressed = |(keyb_matrix[7] | keyb_matrix[6] | keyb_matrix[5] | keyb_matrix[4] |
+                             keyb_matrix[3] | keyb_matrix[2] | keyb_matrix[1] | keyb_matrix[0]);
+
 
 //---Breakpoint Management-----------------------------------------------------------------
 
@@ -710,45 +717,10 @@ blk_mem_gen_0 bram(
 */
 
 
-/*
-Gowin_DPB0 bram(
-        .douta(douta), //output [7:0] douta
-        .doutb(doutb), //output [7:0] doutb
-        .clka(clk), //input clka
-        .ocea(1'b0), //input ocea
-        .cea(ena), //input cea
-        .reseta(1'b0), //input reseta
-        .wrea(wea), //input wrea
-        .clkb(clk), //input clkb
-        .oceb(1'b0), //input oceb
-        .ceb(enb), //input ceb
-        .resetb(1'b0), //input resetb
-        .wreb(web), //input wreb
-        .ada(addra), //input [14:0] ada
-        .dina(dina), //input [7:0] dina
-        .adb(addrb), //input [14:0] adb
-        .dinb(dinb) //input [7:0] dinb
-);
-*/
-
-
 
 assign addra = TRS_A[14:0];
 assign dina = !TRS_WR ? TRS_D : 8'bz;
 
-//XXX
-//assign TRS_OE = !(trs_mem_sel && (!TRS_WR || !TRS_RD));
-//assign TRS_OE = !((TRS_A[16:8] == 9'h0ff) && (!TRS_WR || !TRS_RD));
-
-
-//assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_WR || !TRS_OUT || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
-//                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
-
-wire z80_iorq, z80_wr;
-assign TRS_OE = 1'b0;//~z80_iorq;
-
-//XXX assign TRS_DIR = TRS_RD && TRS_IN;
-assign TRS_DIR = ~z80_wr;
 
 wire ena_read;
 wire ena_write;
@@ -777,8 +749,6 @@ trigger brama_write_trigger(
 assign wea = !TRS_WR;
 
 reg[7:0] trs_data;
-
-assign _D = is_ptrs ? (z80_wr ? z80_data_out : 8'bz) : ((!TRS_RD || !TRS_IN) ? trs_data : 8'bz);
 
 /*
   ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
@@ -852,11 +822,6 @@ always @(posedge clk) begin
 */
 end
 
-
-/*
-assign TRS_OE = !(TRS_A[15] && (!TRS_WR || !TRS_RD));
-assign TRS_DIR = TRS_RD;
-*/
 
 /*
 assign RamOEn = !(TRS_A[15] && (!TRS_WR || !TRS_RD));
@@ -1069,21 +1034,6 @@ assign SPI_WP_N  =  z80_spi_ctrl_reg[6];
 assign SPI_HLD_N =  1'bz;
 */
 
-//-----ORCH85----------------------------------------------------------------------
-
-// orchestra-85 output registers
-reg signed [7:0] orch85l_reg;
-reg signed [7:0] orch85r_reg;
-
-always @ (posedge clk)
-begin
-   if(z80_orch85l_sel & ~TRS_OUT)
-      orch85l_reg <= TRS_D;
-
-   if(z80_orch85r_sel & ~TRS_OUT)
-      orch85r_reg <= TRS_D;
-end
-
 //-----HDMI------------------------------------------------------------------------
 
 
@@ -1102,11 +1052,6 @@ Gowin_CLKDIV0 clkdiv0(
   .resetn(1'b1) //input resetn
 );
 
-Gowin_CLKDIV1 clkdiv1(
-  .clkout(vga_clk), //output clkout
-  .hclkin(clk_pixel), //input hclkin
-  .resetn(1'b1) //input resetn
-);
 
 //pll pll(.c0(clk_pixel_x5), .c1(clk_pixel), .c2(clk_audio));
 
@@ -1134,8 +1079,8 @@ end
 wire [2:0] tmds_x;
 wire tmds_clock_x;
 
-// 800x600 @ 60Hz
-hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi(
+// 640x480 @ 60Hz
+hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi(
   .clk_pixel_x5(clk_pixel_x5),
   .clk_pixel(clk_pixel),
   .clk_audio(clk_audio),
@@ -1168,54 +1113,10 @@ TLVDS_OBUF tmds_clock(
 
 reg sync;
 
-/*
-vga vga(
-  .clk(clk),
-  .vga_clk(vga_clk), // 20 MHz
-  .TRS_A(_A),
-  .TRS_D(_D),
-  .TRS_WR(~_WR_N),
-  .TRS_OUT(~_OUT_N),
-  .TRS_IN(~_IN_N),
-  .le18_dout(le18_dout),
-  .le18_dout_rdy(le18_dout_rdy),
-  .VGA_RGB(vga_rgb),
-  .VGA_HSYNC(),
-  .VGA_VSYNC(),
-  .reset(sync));
-*/
 
 always @(posedge clk_pixel) begin
   sync <= (cx == frame_width - 14 || cx == frame_width - 13) && cy == frame_height - 1;
 end
-
-//-----Cassette out--------------------------------------------------------------------------
-
-/*
-wire cass_sel_out = ~TRS_A[16] && (TRS_A[7:0] == 255) && !TRS_OUT;
-
-reg[1:0] sound_idx = 2'b00;
-
-always @(posedge clk) begin
-  if (io_access && cass_sel_out) sound_idx <= TRS_D & 3;
-end
-
-always @(posedge clk_audio) begin
-  case (sound_idx)
-    2'b00: audio_sample_word <= '{(   0<<4) + (orch85r_reg<<5), (   0<<4) + (orch85l_reg<<5)};
-    2'b01: audio_sample_word <= '{( 127<<4) + (orch85r_reg<<5), ( 127<<4) + (orch85l_reg<<5)};
-    2'b10: audio_sample_word <= '{(-127<<4) + (orch85r_reg<<5), (-127<<4) + (orch85l_reg<<5)};
-    2'b11: audio_sample_word <= '{(   0<<4) + (orch85r_reg<<5), (   0<<4) + (orch85l_reg<<5)};
-  endcase
-end
-*/
-
-wire z80_clk;
-
-reg [25:0] heartbeat;
-
-always @ (posedge z80_clk)
-   heartbeat <= heartbeat + 26'b1;
 
 //------------LightBright-80-------------------------------------------------------------
 
@@ -1231,39 +1132,55 @@ filter mem(
   .falling_edge()
 );
 
-reg [7:0] pmod_a;
+//reg [7:0] pmod_a;
 
-assign PMOD[4] = pmod_a[0];
-assign PMOD[0] = pmod_a[1];
-assign PMOD[5] = pmod_a[2];
-assign PMOD[6] = pmod_a[3];
-assign PMOD[7] = pmod_a[4];
-assign PMOD[1] = pmod_a[5];
-assign PMOD[2] = pmod_a[6];
-assign PMOD[3] = pmod_a[7];
+//assign PMOD[4] = pmod_a[0];
+//assign PMOD[0] = pmod_a[1];
+//assign PMOD[5] = pmod_a[2];
+//assign PMOD[6] = pmod_a[3];
+//assign PMOD[7] = pmod_a[4];
+//assign PMOD[1] = pmod_a[5];
+//assign PMOD[2] = pmod_a[6];
+//assign PMOD[3] = pmod_a[7];
 
 
 //------PocketTRS-------------------------------------------------------------
 // Adapted from maboytim's NextTRS
 
-wire z80_clk1, z80_clk2;
+wire z80_clk1, z80_clkH, z80_clkL;
 
-Gowin_CLKDIV0 z80_clkdiv(
+// 84/5 = 16.8
+Gowin_CLKDIV0 z80_clkdiv0(
   .clkout(z80_clk1), //output clkout
   .hclkin(clk), //input hclkin
   .resetn(1'b1) //input resetn
 );
 
-Gowin_CLKDIV0 z80_clkdiv1(
-  .clkout(z80_clk2), //output clkout
+// 16.8/4 = 4.2
+Gowin_CLKDIV1 z80_clkdiv1(
+  .clkout(z80_clkH), //output clkout
   .hclkin(z80_clk1), //input hclkin
   .resetn(1'b1) //input resetn
 );
 
-Gowin_CLKDIV0 z80_clkdiv2(
-  .clkout(z80_clk), //output clkout
-  .hclkin(z80_clk2), //input hclkin
+// 4.2/2 = 2.1
+Gowin_CLKDIV2 z80_clkdiv2(
+  .clkout(z80_clkL), //output clkout
+  .hclkin(z80_clkH), //input hclkin
   .resetn(1'b1) //input resetn
+);
+
+
+wire z80_clk;
+wire cpu_fast;
+
+Gowin_DCS0 z80_clkdcs(
+  .clkout(z80_clk), //output clkout
+  .clksel({2'b00, cpu_fast, ~cpu_fast}), //input [3:0] clksel
+  .clk0(z80_clkL), //input clk0
+  .clk1(z80_clkH), //input clk1
+  .clk2(), //input clk2
+  .clk3() //input clk3
 );
 
 
@@ -1277,173 +1194,78 @@ reg [7:0] z80_rst_shr = 8'b0;
 always @ (posedge z80_clk) z80_rst_shr <= {z80_rst_shr[6:0], ~keyb_matrix[7][1]};
 wire z80_rst = ~z80_rst_shr[7];
 
-//wire [14:0] z80_kbd_reg;
 
-//wire pixel_data;
-//wire [19:0] display_counter;
+wire [1:0] cass_out;
+wire [7:0] pmod_a;
 
-wire z80_mreq; // z80_iorq;
-//wire z80_wr;
-wire z80_rd = ~z80_wr;
-wire z80_int = is_ptrs ? ~INT_IN_N :  1'b0;
-wire z80_nmi = 1'b0;
-wire z80_m1;
+TTRS80 TTRS80 (
+   // Inputs
+   .z80_clk(z80_clk),
+   .z80_rst_n(~z80_rst),
+   .keyb_matrix(keyb_matrix),
+   .vga_clk(clk_pixel),
 
-wire z80_mem_rd = z80_mreq & z80_rd;
-wire z80_mem_wr = z80_mreq & z80_wr;
-wire z80_io_rd = z80_iorq & z80_rd;
-wire z80_io_wr = z80_iorq & z80_wr;
+   // Outputs
+   .cpu_fast(cpu_fast),
+   .pixel_data(vga_rgb),
+   .h_sync(),
+   .v_sync(),
+   .cass_out(cass_out),
+   .orch90l_out(),
+   .orch90r_out(),
+   .lb80(pmod_a),
 
-assign _IN_N    = is_ptrs ? ~z80_io_rd : 1'bz;
-assign _OUT_N   = is_ptrs ? ~z80_io_wr : 1'bz;
-assign _IOREQ_N = is_ptrs ? ~z80_iorq  : 1'bz;
-assign _M1_N    = is_ptrs ? ~z80_m1    : 1'bz;
-
-// The memory read latency is 1 cycle (2 cycles total).
-// Wait will be asserted for the first cycle and released for the second.
-// mem_rd0 is high on the first cycle
-// mem_rd1 is high on the second cycle
-reg z80_mem_rd1;
-wire z80_mem_rd0 = z80_mem_rd & ({z80_mem_rd1} == 1'b0);
-// The memory write latency is 0 cycles.
-wire z80_mem_wr0 = z80_mem_wr;
-
-// The io read latency is 1 cycle (2 cycles total).
-// Wait will be asserted for the first cyle and released for the second.
-// io_rd0 is high on the first cycle
-// io_rd1 is high on the second cycle
-reg z80_io_rd1;
-wire z80_io_rd0 = z80_io_rd & (z80_io_rd1 == 1'b0);
-// The io write latency is 0 cycles.
-wire z80_io_wr0 = z80_io_wr;
-
-// Wait is asserted for the first memory read cycle and the first io read cycle.
-wire ext_wait = is_ptrs ? (z80_iorq & ~WAIT_IN_N /*& ~EXTIOSEL_IN_N*/) : 1'b0;
-wire int_wait = is_ptrs ? (z80_mem_rd0 | z80_io_rd0) : 1'b0;
-wire z80_wait = int_wait | ext_wait;
-
-// Generate the z80_mem_rd1, z80_mem_rd2, and z80_mem_rd1 signals.
-always @ (posedge z80_clk)
-begin
-   if(z80_wait)
-   begin
-      z80_mem_rd1 <= z80_mem_rd0;
-
-      z80_io_rd1 <= z80_io_rd0;
-   end
-   else
-   begin
-      z80_mem_rd1 <= 1'b0;
-
-      z80_io_rd1 <= 1'b0;
-   end
-end
-
-// Instantiate the z80 core.
-NextZ80 NextZ80 (
-   .CLK(z80_clk), // input
-   .RESET(z80_rst), // input
-   .DI(z80_data_in), // input [7:0]
-   .INT(z80_int), // input
-   .NMI(z80_nmi), // input
-   .WAIT(z80_wait), // input
-
-   .ADDR(z80_addr), // output [15:0]
-   .DO(z80_data_out), // output [7:0]
-   .WR(z80_wr), // output
-   .MREQ(z80_mreq), // output
-   .IORQ(z80_iorq), // output
-   .HALT(), // output
-   .M1(z80_m1) // output
+   // Expansion connector
+   // Inputs
+   .xio_int_n(INT_IN_N),
+   .xio_wait_n(WAIT_IN_N),
+   .xio_sel_n(EXTIOSEL_IN_N),
+   // Outputs
+   .xio_ioreq_n(_IOREQ_N),
+   .xio_iord_n(_IN_N),
+   .xio_iowr_n(_OUT_N),
+   .xio_addr(_A[7:0]),
+   .xio_enab(xio_enab),
+   .xio_dir_out(xio_dir_out),
+   // Inputs/Outputs
+   .xio_data(_D)
 );
 
-// Generate the memory decodes for the ROM, RAM, display, and keyboard.
-//wire z80_rom_sel = (z80_addr[15:13] == 3'b000) | (z80_addr[15:12] == 4'b0010); // 8k+4k=12k @ 0x0000-0x2fff
-wire z80_rom_sel = (z80_addr[15:13] == 3'b000) | (z80_addr[15:12] == 4'b0010) | (z80_addr[15:11] == 5'b00110); // 8k+4k+2k=14k @ 0x0000-0x37ff
-wire z80_kbd_sel = (z80_addr[15:10] == 6'b001110); // 1k @ 0x3800-0x3bff
-wire z80_dsp_sel = (z80_addr[15:10] == 6'b001111); // 1k @ 0x3c00-0x3fff
-wire z80_ram_sel = (z80_addr[15:14] == 2'b01) | (z80_addr[15] == 1'b1); // 48k @ 0x4000-0xffff
+assign _A[15:8] = 8'h00;
 
-// Generate the M3 io decodes for the interrupt status and floppy status.
-// These aren't needed, these just make it see a disk controller so you get the Diskette? message,
-// and for an RTC to get a blinking cursor.
-wire z80_int_sel = (z80_addr[7:0] == 8'he0);
-wire z80_flp_cmdsta_sel = (z80_addr[7:0] == 8'hf0);
-
-// Instantiate the ROM.
-wire [7:0] z80_rom_data;
-
-Gowin_pROM_M3 z80_rom(
-        .dout(z80_rom_data), //output [7:0] dout
-        .clk(z80_clk), //input clk
-        .oce(z80_rom_sel & z80_mem_rd0), //input oce
-        .ce(z80_rom_sel & z80_mem_rd0), //input ce
-        .reset(1'b0), //input reset
-        .ad(z80_addr[13:0]) //input [13:0] ad
-    );
-
-// Instantiate the RAM.
-wire [7:0] z80_ram_data;
-
-Gowin_SP_RAM z80_ram(
-        .dout(z80_ram_data), //output [7:0] dout
-        .clk(z80_clk), //input clk
-        .oce(z80_ram_sel & z80_mem_rd0), //input oce
-        .ce(z80_ram_sel & (z80_mem_rd0 | z80_mem_wr0)), //input ce
-        .reset(1'b0), //input reset
-        .wre(z80_mem_wr0), //input wre
-        .ad({z80_addr[15:14] - 2'b01, z80_addr[13:0]}), //input [15:0] ad
-        .din(z80_data_out) //input [7:0] din
-    );
-
-wire [7:0] z80_kbd_data = ({8{z80_addr[0]}} & keyb_matrix[0]) |
-                          ({8{z80_addr[1]}} & keyb_matrix[1]) |
-                          ({8{z80_addr[2]}} & keyb_matrix[2]) |
-                          ({8{z80_addr[3]}} & keyb_matrix[3]) |
-                          ({8{z80_addr[4]}} & keyb_matrix[4]) |
-                          ({8{z80_addr[5]}} & keyb_matrix[5]) |
-                          ({8{z80_addr[6]}} & keyb_matrix[6]) |
-                          ({8{z80_addr[7]}} & keyb_matrix[7]);
-
-wire [7:0] z80_dsp_data;
-
-assign z80_data_in = ~( (~_D & {8{~EXTIOSEL_IN_N & z80_io_rd1}}) |
-                        (~z80_rom_data & {8{z80_rom_sel & z80_mem_rd1}}) |
-                        (~z80_ram_data & {8{z80_ram_sel & z80_mem_rd1}}) |
-                        (~z80_dsp_data & {8{z80_dsp_sel & z80_mem_rd1}}) |
-                        (~z80_kbd_data & {8{z80_kbd_sel & z80_mem_rd1}}) );
-                        //(~8'hfb & {8{z80_int_sel & z80_io_rd1}}) |
-                        //(~8'h24 & {8{z80_flp_cmdsta_sel & z80_io_rd1}});
-
-
-vga vga(
-  .clk(z80_clk),
-  .vga_clk(vga_clk), // 20 MHz
-  .TRS_A(z80_addr),
-  .TRS_D(z80_data_out),
-  .TRS_WR(z80_mem_wr),
-  .TRS_RD(z80_mem_rd),
-  .TRS_OUT(z80_io_wr),
-  .TRS_IN(z80_io_rd),
-  .TRS_Q(z80_dsp_data),
-  .le18_dout(le18_dout),
-  .le18_dout_rdy(le18_dout_rdy),
-  .VGA_RGB(vga_rgb),
-  .VGA_HSYNC(),
-  .VGA_VSYNC(),
-  .reset(sync));
+reg cass_out_reg;
 
 always @ (posedge z80_clk)
 begin
-   if(z80_mreq)
-      pmod_a <= {z80_addr[15:10], 2'b00};
+   cass_out_reg <= (cass_out == 2'b00) ? 1'b0 : ((cass_out == 2'b11) ? 1'b1 : ~cass_out_reg);
 end
 
-assign LED[0] = z80_rst;
+assign CASS_OUT = cass_out_reg;
+
+
+reg [21:0] heartbeat;
+
+always @ (posedge z80_clk)
+   heartbeat <= heartbeat + 21'b1;
+
+
+assign HSYNC_O = pmod_a[2];
+assign VSYNC_O = pmod_a[3];
+assign VIDEO_O = pmod_a[4];
+assign CONF[3] = pmod_a[5];
+assign CONF[2] = pmod_a[6];
+assign CONF[1] = pmod_a[7];
+assign CONF[0] = 1'b1;
+
+//assign LED[0] = z80_rst;
 
 //assign LED[0] = ~EXTIOSEL_IN_N;
-assign LED[1] = ~WAIT_IN_N;
-assign LED[2] = ~INT_IN_N;
-assign LED[3] = heartbeat[19];
+//assign LED[1] = ~WAIT_IN_N;
+//assign LED[2] = ~INT_IN_N;
+assign LED[0] = cass_out_reg;
+//assign LED[1] = keyb_matrix_pressed;
+assign LED[1] = xio_enab;
+assign LED[2] = cpu_fast;
+assign LED[3] = heartbeat[21];
 
 endmodule

@@ -14,4 +14,4 @@
 -read_mode bypass
 -write_mode normal
 -reset_mode sync
--init_file E:/Documents/FPGA/TRS-IO++PTRS/src/lb80txt9.mi
+-init_file E:\Documents\FPGA\TRS-IO++PTRS\src\lb80txt9.mi

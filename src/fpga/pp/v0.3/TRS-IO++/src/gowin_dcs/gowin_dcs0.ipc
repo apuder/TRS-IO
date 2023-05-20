@@ -1,0 +1,12 @@
+[General]
+ipc_version=4
+file=gowin_dcs0
+module=Gowin_DCS0
+target_device=gw2a18c-011
+type=clock_dcs
+version=1.0
+
+[Config]
+DCS_Mode=RISING
+Glitchless_Mode=false
+Language=0

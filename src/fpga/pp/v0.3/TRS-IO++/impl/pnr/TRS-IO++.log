@@ -1,16 +1,12 @@
-Reading netlist file: "E:\Documents\FPGA\TRS-IO++PTRS\impl\gwsynthesis\TRS-IO++.vg"
-Parsing netlist file "E:\Documents\FPGA\TRS-IO++PTRS\impl\gwsynthesis\TRS-IO++.vg" completed
+Reading netlist file: "E:\Documents\FPGA\TRS-IO++PTRS-working\impl\gwsynthesis\TRS-IO++.vg"
+Parsing netlist file "E:\Documents\FPGA\TRS-IO++PTRS-working\impl\gwsynthesis\TRS-IO++.vg" completed
 Processing netlist completed
-Reading constraint file: "E:\Documents\FPGA\TRS-IO++PTRS\src\TRS-IO++.cst"
+Reading constraint file: "E:\Documents\FPGA\TRS-IO++PTRS-working\src\TRS-IO++.cst"
 Physical Constraint parsed completed
 Running placement......
 [10%] Placement Phase 0 completed
 [20%] Placement Phase 1 completed
 [30%] Placement Phase 2 completed
-WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
-WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_wiz_0/rpll_inst/CLKOUT.default_gen_clk" and "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk"
-WARN  (TA1117) : Can't calculate clocks' relationship between: "clk_audio_4" and "clkdiv0/clkdiv_inst/CLKOUT.default_gen_clk"
-WARN  (TA1117) : Can't calculate clocks' relationship between: "z80_clkdiv2/clkdiv_inst/CLKOUT.default_gen_clk" and "clkdiv1/clkdiv_inst/CLKOUT.default_gen_clk"
 [50%] Placement Phase 3 completed
 Running routing......
 [60%] Routing Phase 0 completed
@@ -24,10 +20,10 @@ Bitstream generation in progress......
 Bitstream generation completed
 Running power analysis......
 [100%] Power analysis completed
-Generate file "E:\Documents\FPGA\TRS-IO++PTRS\impl\pnr\TRS-IO++.power.html" completed
-Generate file "E:\Documents\FPGA\TRS-IO++PTRS\impl\pnr\TRS-IO++.pin.html" completed
-Generate file "E:\Documents\FPGA\TRS-IO++PTRS\impl\pnr\TRS-IO++.rpt.html" completed
-Generate file "E:\Documents\FPGA\TRS-IO++PTRS\impl\pnr\TRS-IO++.rpt.txt" completed
-Generate file "E:\Documents\FPGA\TRS-IO++PTRS\impl\pnr\TRS-IO++.tr.html" completed
-Tue May 09 13:39:22 2023
+Generate file "E:\Documents\FPGA\TRS-IO++PTRS-working\impl\pnr\TRS-IO++.power.html" completed
+Generate file "E:\Documents\FPGA\TRS-IO++PTRS-working\impl\pnr\TRS-IO++.pin.html" completed
+Generate file "E:\Documents\FPGA\TRS-IO++PTRS-working\impl\pnr\TRS-IO++.rpt.html" completed
+Generate file "E:\Documents\FPGA\TRS-IO++PTRS-working\impl\pnr\TRS-IO++.rpt.txt" completed
+Generate file "E:\Documents\FPGA\TRS-IO++PTRS-working\impl\pnr\TRS-IO++.tr.html" completed
+Fri May 19 08:12:29 2023
 

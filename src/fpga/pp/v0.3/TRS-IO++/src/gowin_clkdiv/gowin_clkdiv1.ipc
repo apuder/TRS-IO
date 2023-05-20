@@ -8,5 +8,5 @@ version=1.0
 
 [Config]
 Calibration=false
-Division_Factor=2
+Division_Factor=4
 Language=0

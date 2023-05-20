@@ -1,10 +1,10 @@
 //Copyright (C)2014-2022 Gowin Semiconductor Corporation.
 //All rights reserved.
 //File Title: Template file for instantiation
-//GOWIN Version: V1.9.8.05
-//Part Number: GW1NR-LV9QN88PC6/I5
-//Device: GW1NR-9C
-//Created Time: Wed Jun 08 05:53:31 2022
+//GOWIN Version: V1.9.8.09 Education
+//Part Number: GW2A-LV18PG256C8/I7
+//Device: GW2A-18C
+//Created Time: Mon May 15 21:42:45 2023
 
 //Change the instance name and port connections to the signal names
 //--------Copy here to design--------
@@ -22,9 +22,9 @@
         .ceb(ceb_i), //input ceb
         .resetb(resetb_i), //input resetb
         .wreb(wreb_i), //input wreb
-        .ada(ada_i), //input [9:0] ada
+        .ada(ada_i), //input [10:0] ada
         .dina(dina_i), //input [7:0] dina
-        .adb(adb_i), //input [9:0] adb
+        .adb(adb_i), //input [10:0] adb
         .dinb(dinb_i) //input [7:0] dinb
     );
 

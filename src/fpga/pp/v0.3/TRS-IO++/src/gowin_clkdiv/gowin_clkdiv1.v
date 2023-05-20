@@ -4,7 +4,7 @@
 //GOWIN Version: V1.9.8.09 Education
 //Part Number: GW2A-LV18PG256C8/I7
 //Device: GW2A-18C
-//Created Time: Sun Mar 05 10:38:09 2023
+//Created Time: Wed May 17 06:34:36 2023
 
 module Gowin_CLKDIV1 (clkout, hclkin, resetn);
 
@@ -23,7 +23,7 @@ CLKDIV clkdiv_inst (
     .CALIB(gw_gnd)
 );
 
-defparam clkdiv_inst.DIV_MODE = "2";
+defparam clkdiv_inst.DIV_MODE = "4";
 defparam clkdiv_inst.GSREN = "false";
 
 endmodule //Gowin_CLKDIV1
