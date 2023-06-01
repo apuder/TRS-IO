@@ -22,7 +22,7 @@ module top(
   output DBUS_DIR,
   output DBUS_EN,
   inout [7:0] _D,
-  output [3:0] CONF,
+  input [3:0] CONF,
   output CASS_OUT,
   input CS_FPGA,
   input SCK,
@@ -32,12 +32,6 @@ module top(
   output REQ,
   input DONE,
   output [3:0] LED,
-  input VIDEOX,
-  input VSYNCX,
-  input HSYNCX,
-  output HSYNC_O,
-  output VSYNC_O,
-  output VIDEO_O,
   output LED_GREEN,
   output LED_RED,
   output LED_BLUE,
@@ -47,8 +41,8 @@ module top(
   output CTRL1_EN,
   input EXTIOSEL_IN_N,
   input WAIT_IN_N,
-  input INT_IN_N);
-//  inout [7:0] PMOD);
+  input INT_IN_N,
+  inout [7:0] PMOD);
 
 
 wire clk;
@@ -1132,16 +1126,15 @@ filter mem(
   .falling_edge()
 );
 
-//reg [7:0] pmod_a;
 
-//assign PMOD[4] = pmod_a[0];
-//assign PMOD[0] = pmod_a[1];
-//assign PMOD[5] = pmod_a[2];
-//assign PMOD[6] = pmod_a[3];
-//assign PMOD[7] = pmod_a[4];
-//assign PMOD[1] = pmod_a[5];
-//assign PMOD[2] = pmod_a[6];
-//assign PMOD[3] = pmod_a[7];
+assign PMOD[4] = pmod_a[0];
+assign PMOD[0] = pmod_a[1];
+assign PMOD[5] = pmod_a[2];
+assign PMOD[6] = pmod_a[3];
+assign PMOD[7] = pmod_a[4];
+assign PMOD[1] = pmod_a[5];
+assign PMOD[2] = pmod_a[6];
+assign PMOD[3] = pmod_a[7];
 
 
 //------PocketTRS-------------------------------------------------------------
@@ -1248,14 +1241,6 @@ reg [21:0] heartbeat;
 always @ (posedge z80_clk)
    heartbeat <= heartbeat + 21'b1;
 
-
-assign HSYNC_O = pmod_a[2];
-assign VSYNC_O = pmod_a[3];
-assign VIDEO_O = pmod_a[4];
-assign CONF[3] = pmod_a[5];
-assign CONF[2] = pmod_a[6];
-assign CONF[1] = pmod_a[7];
-assign CONF[0] = 1'b1;
 
 //assign LED[0] = z80_rst;
 
