@@ -57,6 +57,7 @@ Gowin_rPLL clk_wiz_0(
 reg is_m1 = 0;
 wire is_m3 = ~is_m1;
 wire is_ptrs = 1'b1;
+wire use_internal_trs_io = 1'b1;
 
 always @(posedge clk) begin
   is_m1 <= 1'b0;//CONF[1];
@@ -69,6 +70,9 @@ end
 // xio_dir_out is high the data bus direction is output and being driven.
 wire xio_enab;
 wire xio_dir_out;
+wire xio_ioreq_n;
+wire xio_iord_n;
+wire xio_iowr_n;
 
 reg ESP_REQ;
 assign REQ = ESP_REQ;
@@ -84,8 +88,14 @@ wire[1:0] sw = 2'b11;
 
 wire TRS_RD = (is_m1 & _RD_N) | is_m3;
 wire TRS_WR = (is_m1 & _WR_N) | is_m3;
-wire TRS_IN = (is_m1 & _IN_N) | (is_m3 & !(!_IOREQ_N && !_IN_N));
-wire TRS_OUT = (is_m1 & _OUT_N) | (is_m3 & !(!_IOREQ_N && !_OUT_N));
+
+wire TRS_IN_EXT = (is_m1 & _IN_N) | (is_m3 & !(!_IOREQ_N && !_IN_N));
+wire TRS_IN_INT = !(!xio_ioreq_n && !xio_iord_n);
+wire TRS_IN = (is_ptrs & use_internal_trs_io) ? TRS_IN_INT : TRS_IN_EXT;
+
+wire TRS_OUT_EXT = (is_m1 & _OUT_N) | (is_m3 & !(!_IOREQ_N && !_OUT_N));
+wire TRS_OUT_INT = !(!xio_ioreq_n && !xio_iowr_n);
+wire TRS_OUT = (is_ptrs & use_internal_trs_io) ? TRS_OUT_INT : TRS_OUT_EXT;
 
 reg TRS_INT;
 reg trs_io_data_ready = 1'b0;
@@ -265,7 +275,7 @@ wire z80_spi_data_sel_out = (TRS_A[7:0] == 8'hfd) & OUT_falling_edge;
 
 wire xray_sel;
 
-wire esp_sel = 1'b0;//trs_io_sel || frehd_sel || printer_sel || xray_sel;
+wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel;
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
@@ -303,8 +313,6 @@ always @(posedge clk) begin
   if (count != 0) count <= count - 1;
 end
 
-assign WAIT     = is_ptrs ? 1'b0 : WAIT_REG;
-assign EXTIOSEL = is_ptrs ? 1'b0 : esp_sel;
       
 localparam [3:0]
   esp_trs_io_in = 4'd0,
@@ -743,6 +751,7 @@ trigger brama_write_trigger(
 assign wea = !TRS_WR;
 
 reg[7:0] trs_data;
+assign _D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
 
 /*
   ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
@@ -862,7 +871,7 @@ trigger bram_peek_trigger(
 always @(posedge clk) begin
   if (bram_peek_done) byte_out <= doutb;
   else if (xram_peek_done) byte_out <= xdoutb;
-  else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
+  else if (trigger_action && cmd == dbus_read) byte_out <= use_internal_trs_io ? trs_data : TRS_D;
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
@@ -1190,6 +1199,10 @@ wire z80_rst = ~z80_rst_shr[7];
 
 wire [1:0] cass_out;
 wire [7:0] pmod_a;
+wire wait_in_n;
+wire int_in_n;
+wire extiosel_in_n;
+
 
 TTRS80 TTRS80 (
    // Inputs
@@ -1210,19 +1223,32 @@ TTRS80 TTRS80 (
 
    // Expansion connector
    // Inputs
-   .xio_int_n(INT_IN_N),
-   .xio_wait_n(WAIT_IN_N),
-   .xio_sel_n(EXTIOSEL_IN_N),
+   .xio_int_n(int_in_n),
+   .xio_wait_n(wait_in_n),
+   .xio_sel_n(extiosel_in_n),
    // Outputs
-   .xio_ioreq_n(_IOREQ_N),
-   .xio_iord_n(_IN_N),
-   .xio_iowr_n(_OUT_N),
+   .xio_ioreq_n(xio_ioreq_n),
+   .xio_iord_n(xio_iord_n),
+   .xio_iowr_n(xio_iowr_n),
+   //.xio_ioreq_n(_IOREQ_N),
+   //.xio_iord_n(_IN_N),
+   //.xio_iowr_n(_OUT_N),
    .xio_addr(_A[7:0]),
    .xio_enab(xio_enab),
    .xio_dir_out(xio_dir_out),
    // Inputs/Outputs
    .xio_data(_D)
 );
+
+assign wait_in_n     = use_internal_trs_io ? ~WAIT_REG : WAIT_IN_N;
+assign int_in_n      = use_internal_trs_io ? 1'b1      : INT_IN_N;
+assign extiosel_in_n = use_internal_trs_io ? esp_sel   : EXTIOSEL_IN_N;
+assign WAIT          = use_internal_trs_io ? 1'bz      : WAIT_REG;
+assign EXTIOSEL      = use_internal_trs_io ? 1'bz      : esp_sel;
+
+assign _IOREQ_N      = use_internal_trs_io ? 1'bz      : xio_ioreq_n;
+assign _IN_N         = use_internal_trs_io ? 1'bz      : xio_iord_n;
+assign _OUT_N        = use_internal_trs_io ? 1'bz      : xio_iowr_n;
 
 assign _A[15:8] = 8'h00;
 
