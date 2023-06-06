@@ -1242,15 +1242,15 @@ TTRS80 TTRS80 (
    .xio_data(_DX)
 );
 
-assign wait_in_n     = use_internal_trs_io ? ~WAIT_REG : WAIT_IN_N;
-assign int_in_n      = use_internal_trs_io ? 1'b1      : INT_IN_N;
-assign extiosel_in_n = use_internal_trs_io ? ~esp_sel  : EXTIOSEL_IN_N;
-assign WAIT          = use_internal_trs_io ? 1'b0      : WAIT_REG;
-assign EXTIOSEL      = use_internal_trs_io ? 1'b0      : esp_sel;
+assign wait_in_n     = use_internal_trs_io ? ~WAIT_REG          : WAIT_IN_N;
+assign int_in_n      = use_internal_trs_io ? ~trs_io_data_ready : INT_IN_N;
+assign extiosel_in_n = use_internal_trs_io ? ~esp_sel           : EXTIOSEL_IN_N;
+assign WAIT          = use_internal_trs_io ? 1'b0               : WAIT_REG;
+assign EXTIOSEL      = use_internal_trs_io ? 1'b0               : esp_sel;
 
-assign _IOREQ_N      = use_internal_trs_io ? 1'bz      : xio_ioreq_n;
-assign _IN_N         = use_internal_trs_io ? 1'bz      : xio_iord_n;
-assign _OUT_N        = use_internal_trs_io ? 1'bz      : xio_iowr_n;
+assign _IOREQ_N      = use_internal_trs_io ? 1'bz               : xio_ioreq_n;
+assign _IN_N         = use_internal_trs_io ? 1'bz               : xio_iord_n;
+assign _OUT_N        = use_internal_trs_io ? 1'bz               : xio_iowr_n;
 
 assign _A[15:8] = 8'h00;
 
