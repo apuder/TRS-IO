@@ -751,7 +751,9 @@ trigger brama_write_trigger(
 assign wea = !TRS_WR;
 
 reg[7:0] trs_data;
-assign _D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
+//assign _D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
+wire [7:0] _DX;
+assign _DX = (!xio_dir_out) ? trs_data : 8'bz;
 
 /*
   ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
@@ -871,7 +873,7 @@ trigger bram_peek_trigger(
 always @(posedge clk) begin
   if (bram_peek_done) byte_out <= doutb;
   else if (xram_peek_done) byte_out <= xdoutb;
-  else if (trigger_action && cmd == dbus_read) byte_out <= use_internal_trs_io ? trs_data : TRS_D;
+  else if (trigger_action && cmd == dbus_read) byte_out <= use_internal_trs_io ? _DX : TRS_D;
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
@@ -1237,14 +1239,14 @@ TTRS80 TTRS80 (
    .xio_enab(xio_enab),
    .xio_dir_out(xio_dir_out),
    // Inputs/Outputs
-   .xio_data(_D)
+   .xio_data(_DX)
 );
 
 assign wait_in_n     = use_internal_trs_io ? ~WAIT_REG : WAIT_IN_N;
 assign int_in_n      = use_internal_trs_io ? 1'b1      : INT_IN_N;
-assign extiosel_in_n = use_internal_trs_io ? esp_sel   : EXTIOSEL_IN_N;
-assign WAIT          = use_internal_trs_io ? 1'bz      : WAIT_REG;
-assign EXTIOSEL      = use_internal_trs_io ? 1'bz      : esp_sel;
+assign extiosel_in_n = use_internal_trs_io ? ~esp_sel  : EXTIOSEL_IN_N;
+assign WAIT          = use_internal_trs_io ? 1'b0      : WAIT_REG;
+assign EXTIOSEL      = use_internal_trs_io ? 1'b0      : esp_sel;
 
 assign _IOREQ_N      = use_internal_trs_io ? 1'bz      : xio_ioreq_n;
 assign _IN_N         = use_internal_trs_io ? 1'bz      : xio_iord_n;
@@ -1270,13 +1272,13 @@ always @ (posedge z80_clk)
 
 //assign LED[0] = z80_rst;
 
-//assign LED[0] = ~EXTIOSEL_IN_N;
-//assign LED[1] = ~WAIT_IN_N;
-//assign LED[2] = ~INT_IN_N;
-assign LED[0] = cass_out_reg;
+assign LED[0] = ~extiosel_in_n;
+assign LED[1] = ~wait_in_n;
+assign LED[2] = ~int_in_n;
+//assign LED[0] = cass_out_reg;
 //assign LED[1] = keyb_matrix_pressed;
-assign LED[1] = xio_enab;
-assign LED[2] = cpu_fast;
+//assign LED[1] = xio_enab;
+//assign LED[2] = cpu_fast;
 assign LED[3] = heartbeat[21];
 
 endmodule
