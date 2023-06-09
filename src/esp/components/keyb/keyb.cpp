@@ -323,6 +323,12 @@ void check_keyb()
   if (keyboard->virtualKeyAvailable()) {
     bool down;
     auto vk = keyboard->getNextVirtualKey(&down);
+    if (down && vk == fabgl::VK_F5) {
+      spi_z80_pause();
+    }
+    if (down && vk == fabgl::VK_F6) {
+      spi_z80_resume();
+    }
     //printf("VirtualKey = %s\n", keyboard->virtualKeyToString(vk));
 #if 0
     if (down && vk == fabgl::VK_F5 && trs_screen.isTextMode()) {

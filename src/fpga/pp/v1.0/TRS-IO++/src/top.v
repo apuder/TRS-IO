@@ -364,7 +364,9 @@ localparam [7:0]
   set_screen_color    = 8'd17,
   abus_read           = 8'd18,
   send_keyb           = 8'd19,
-  ptrs_rst            = 8'd20;
+  ptrs_rst            = 8'd20,
+  z80_pause           = 8'd21,
+  z80_resume          = 8'd22;
 
 
 
@@ -463,6 +465,14 @@ always @(posedge clk) begin
             bytes_to_read <= 2;
           end
           ptrs_rst: begin
+            trigger_action <= 1'b1;
+            state <= idle;
+          end
+          z80_pause: begin
+            trigger_action <= 1'b1;
+            state <= idle;
+          end
+          z80_resume: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
@@ -1205,11 +1215,19 @@ wire wait_in_n;
 wire int_in_n;
 wire extiosel_in_n;
 
+reg z80_is_paused = 1'b0;
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == z80_pause) z80_is_paused <= 1'b1;
+  if (trigger_action && cmd == z80_resume) z80_is_paused <= 1'b0;
+end
 
 TTRS80 TTRS80 (
    // Inputs
+   .clk(clk),
    .z80_clk(z80_clk),
    .z80_rst_n(~z80_rst),
+   .z80_pause(z80_is_paused),
    .keyb_matrix(keyb_matrix),
    .vga_clk(clk_pixel),
 

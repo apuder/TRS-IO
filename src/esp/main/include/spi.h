@@ -53,6 +53,8 @@
 #define FPGA_CMD_ABUS_READ 18
 #define FPGA_CMD_SEND_KEYB 19
 #define FPGA_CMD_PTRS_RST 20
+#define FPGA_CMD_Z80_PAUSE 21
+#define FPGA_CMD_Z80_RESUME 22
 
 
 uint8_t spi_get_cookie();
@@ -74,6 +76,8 @@ void spi_set_full_addr(bool flag);
 void spi_set_screen_color(uint8_t color);
 void spi_send_keyb(uint8_t idx, uint8_t mask);
 void spi_ptrs_rst();
+void spi_z80_pause();
+void spi_z80_resume();
 
 void init_spi();
 

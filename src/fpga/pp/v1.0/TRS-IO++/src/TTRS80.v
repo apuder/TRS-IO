@@ -16,10 +16,19 @@
 
 module TTRS80 (
    // Inputs
+   clk,
    z80_clk,
    z80_rst_n,
+   z80_pause,
    keyb_matrix,
    vga_clk,
+
+   // Display RAM interface
+   dsp_ce, // input
+   dsp_addr, // input [10:0]
+   dsp_wre, // input
+   dsp_din, // input [7:0]
+   dsp_dout, // output [7:0]
 
    // Outputs
    cpu_fast,
@@ -47,11 +56,19 @@ module TTRS80 (
    xio_data
 );
 
+input clk;
 input z80_clk;
 input z80_rst_n;
+input z80_pause;
 
 input [7:0] keyb_matrix[0:7];
 input vga_clk;
+
+input dsp_ce;
+input [10:0] dsp_addr;
+input dsp_wre;
+input [7:0] dsp_din;
+output [7:0] dsp_dout;
 
 output cpu_fast;
 output pixel_data;
@@ -89,13 +106,15 @@ wire nBUSACK;
 wire [15:0] z80_addr;
 wire [7:0] z80_data;
 
+wire z80_is_running;
+
 T80a T80a (
    .RESET_n(z80_rst_n), //: in std_logic;
    .CLK_n(z80_clk),     //: in std_logic;
    .WAIT_n(WAIT_n),     //: in std_logic;
    .INT_n(INT_n),       //: in std_logic;
    .NMI_n(NMI_n),       //: in std_logic;
-   .BUSRQ_n(1'b1),      //: in std_logic;
+   .BUSRQ_n(~z80_pause), //: in std_logic;
    .M1_n(nM1),          //: out std_logic;
    .MREQ_n(nMREQ),      //: out std_logic;
    .IORQ_n(nIORQ),      //: out std_logic;
@@ -103,7 +122,7 @@ T80a T80a (
    .WR_n(nWR),          //: out std_logic;
    .RFSH_n(nRFSH),      //: out std_logic;
    .HALT_n(),           //: out std_logic;
-   .BUSAK_n(),          //: out std_logic;
+   .BUSAK_n(z80_is_running), //: out std_logic;
    .A(z80_addr),        //: out std_logic_vector(15 downto 0);
    .D(z80_data),        //: inout std_logic_vector(7 downto 0)
    .R800_mode(1'b0)
@@ -219,13 +238,21 @@ wire dsp_act = vga_80_64_n ?
 // in 32/40 column mode only the even columns are active.
 wire mod_modsel; // forward reference
 wire col_act = (mod_modsel ? ~dsp_XXXXXXX[0] : 1'b1);
-  
+
+wire        dsp_clka  = z80_is_running ? z80_clk                                                     : clk;
+wire        dsp_cea   = z80_is_running ? z80_dsp_sel & (~nRD | ~nWR)                                 : dsp_ce;
+wire [10:0] dsp_ada   = z80_is_running ? {(opreg_sel[1] ? z80_addr[10] : opreg_page), z80_addr[9:0]} : dsp_addr;
+wire        dsp_wrea  = z80_is_running ? ~nWR                                                        : dsp_wre;
+wire [7:0]  dsp_dina  = z80_is_running ? z80_data                                                    : dsp_din;
+
+assign dsp_dout = _z80_dsp_data;
+
 blk_mem_gen_2 z80_dsp (
-   .clka(z80_clk), // input
-   .cea(z80_dsp_sel & (~nRD | ~nWR)), // input
-   .ada({(opreg_sel[1] ? z80_addr[10] : opreg_page), z80_addr[9:0]}), // input [10:0]
-   .wrea(~nWR), // input
-   .dina(z80_data), // input [7:0]
+   .clka(dsp_clka), // input
+   .cea(dsp_cea), // input
+   .ada(dsp_ada), // input [10:0]
+   .wrea(dsp_wrea), // input
+   .dina(dsp_dina), // input [7:0]
    .douta(_z80_dsp_data), // output [7:0]
    .ocea(1'b1),
    .reseta(1'b0),
