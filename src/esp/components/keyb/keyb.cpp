@@ -325,6 +325,9 @@ void check_keyb()
     auto vk = keyboard->getNextVirtualKey(&down);
     if (down && vk == fabgl::VK_F5) {
       spi_z80_pause();
+      spi_z80_dsp_poke(0, 65);
+      spi_z80_dsp_poke(1, 66);
+      spi_z80_dsp_poke(2, 67);
     }
     if (down && vk == fabgl::VK_F6) {
       spi_z80_resume();

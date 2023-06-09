@@ -55,6 +55,7 @@
 #define FPGA_CMD_PTRS_RST 20
 #define FPGA_CMD_Z80_PAUSE 21
 #define FPGA_CMD_Z80_RESUME 22
+#define FPGA_CMD_Z80_DSP_POKE 23
 
 
 uint8_t spi_get_cookie();
@@ -78,6 +79,7 @@ void spi_send_keyb(uint8_t idx, uint8_t mask);
 void spi_ptrs_rst();
 void spi_z80_pause();
 void spi_z80_resume();
+void spi_z80_dsp_poke(uint16_t addr, uint8_t v);
 
 void init_spi();
 

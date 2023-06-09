@@ -366,7 +366,8 @@ localparam [7:0]
   send_keyb           = 8'd19,
   ptrs_rst            = 8'd20,
   z80_pause           = 8'd21,
-  z80_resume          = 8'd22;
+  z80_resume          = 8'd22,
+  z80_dsp_poke        = 8'd23;
 
 
 
@@ -475,6 +476,9 @@ always @(posedge clk) begin
           z80_resume: begin
             trigger_action <= 1'b1;
             state <= idle;
+          end
+          z80_dsp_poke: begin
+            bytes_to_read <= 3;
           end
           default:
             begin
@@ -1222,6 +1226,12 @@ always @(posedge clk) begin
   if (trigger_action && cmd == z80_resume) z80_is_paused <= 1'b0;
 end
 
+wire dsp_ce = trigger_action && cmd == z80_dsp_poke;
+wire [10:0] dsp_addr = {params[1], params[0]}[10:0];
+wire dsp_wre = 1'b1;
+wire [7:0] dsp_din = params[2];
+
+
 TTRS80 TTRS80 (
    // Inputs
    .clk(clk),
@@ -1230,6 +1240,12 @@ TTRS80 TTRS80 (
    .z80_pause(z80_is_paused),
    .keyb_matrix(keyb_matrix),
    .vga_clk(clk_pixel),
+
+   // Display RAM interface
+   .dsp_ce(dsp_ce),
+   .dsp_addr(dsp_addr),
+   .dsp_wre(dsp_wre),
+   .dsp_din(dsp_din),
 
    // Outputs
    .cpu_fast(cpu_fast),

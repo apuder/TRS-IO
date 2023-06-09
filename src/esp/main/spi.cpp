@@ -426,6 +426,28 @@ void spi_z80_resume()
   ESP_ERROR_CHECK(ret);
 }
 
+void spi_z80_dsp_poke(uint16_t addr, uint8_t v)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_Z80_DSP_POKE;
+  trans.address_bits = 3 * 8;
+  const uint32_t b0 = addr & 0xff;
+  const uint32_t b1 = addr >> 8;
+  const uint32_t b2 = v;
+  trans.base.addr = b2 | (b1 << 8) | (b0 << 16);
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+}
+
+
 void init_spi()
 {
   mutex = xSemaphoreCreateMutex();
