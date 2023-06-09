@@ -26,6 +26,7 @@
 #define ESP_REQ GPIO_NUM_34
 #ifdef CONFIG_TRS_IO_PP
 #define ESP_DONE GPIO_NUM_18
+#define SD_CARD GPIO_NUM_4
 #else
 #define ESP_DONE GPIO_NUM_27
 #define ESP_FULL_ADDR GPIO_NUM_33
@@ -282,10 +283,16 @@ static inline void printer_write() {
 }
 
 static volatile bool DRAM_ATTR esp_req_triggered = false;
+static volatile uint8_t DRAM_ATTR sd_card_eject_countdown = 0;
 
 static void IRAM_ATTR esp_req_isr_handler(void* arg)
 {
   esp_req_triggered = true;
+}
+
+static void IRAM_ATTR sd_card_eject_isr_handler(void* arg)
+{
+  sd_card_eject_countdown = 0xff;
 }
 
 static void IRAM_ATTR io_task(void* p)
@@ -349,6 +356,17 @@ static void action_task(void* p)
   is_button_long_press();
 
   while (true) {
+    if (sd_card_eject_countdown != 0) {
+      sd_card_eject_countdown--;
+      if (sd_card_eject_countdown == 1) {
+        if (gpio_get_level(SD_CARD)) {
+          printf("SD card ejected\n");
+        } else {
+          printf("SD card inserted\n");
+        }
+      }
+    }
+
     frehd_check_action();
 #ifdef CONFIG_TRS_IO_PP
     check_keyb();
@@ -454,6 +472,14 @@ void init_io()
   gpio_config(&gpioConfig);
   //gpio_install_isr_service(0);
   gpio_isr_handler_add(ESP_REQ, esp_req_isr_handler, NULL);    
+
+#ifdef CONFIG_TRS_IO_PP
+  // Configure SD Card eject trigger
+  gpioConfig.pin_bit_mask = GPIO_SEL_4;
+  gpioConfig.intr_type = GPIO_INTR_ANYEDGE;
+  gpio_config(&gpioConfig);
+  gpio_isr_handler_add(SD_CARD, sd_card_eject_isr_handler, NULL);
+#endif
 
   // Configure ESP_DONE
   gpioConfig.pin_bit_mask = MASK64_ESP_DONE;
