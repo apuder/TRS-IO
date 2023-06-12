@@ -367,7 +367,9 @@ localparam [7:0]
   ptrs_rst            = 8'd20,
   z80_pause           = 8'd21,
   z80_resume          = 8'd22,
-  z80_dsp_poke        = 8'd23;
+  z80_dsp_set_addr    = 8'd23,
+  z80_dsp_poke        = 8'd24,
+  z80_dsp_peek        = 8'd25;
 
 
 
@@ -477,8 +479,16 @@ always @(posedge clk) begin
             trigger_action <= 1'b1;
             state <= idle;
           end
+          z80_dsp_set_addr: begin
+            bytes_to_read <= 2;
+          end
           z80_dsp_poke: begin
-            bytes_to_read <= 3;
+            bytes_to_read <= 1;
+          end
+          z80_dsp_peek: begin
+            trigger_action <= 1'b1;
+            bits_to_send <= 9;
+            state <= idle;
           end
           default:
             begin
@@ -687,6 +697,43 @@ assign xray_sel = (stub_run_count == 1) && ((xray_base_addr + 1) == TRS_A);
 //assign LED[0] = keyb_matrix[0][1];
 
 
+//------Video RAM peek/poke interface-----------------------------------------
+
+wire do_dsp_poke = trigger_action && cmd == z80_dsp_poke;
+wire do_dsp_peek = trigger_action && cmd == z80_dsp_peek;
+wire dsp_ce = do_dsp_peek || do_dsp_poke;
+reg [10:0] dsp_addr;
+wire dsp_wre = do_dsp_poke;
+wire [7:0] dsp_din = params[0];
+wire [7:0] _dsp_dout;
+reg [7:0] dsp_dout;
+wire dsp_ram_data_read;
+wire dsp_ram_data_ready;
+wire dsp_incr_addr;
+
+trigger dsp_ram_read_trigger(
+  .clk(clk),
+  .cond(do_dsp_peek),
+  .one(),
+  .two(dsp_ram_data_read),
+  .three(dsp_ram_data_ready)
+);
+
+trigger dsp_incr_trigger(
+  .clk(clk),
+  .cond(dsp_ce),
+  .one(),
+  .two(),
+  .three(dsp_incr_addr)
+);
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == z80_dsp_set_addr) dsp_addr <= {params[1], params[0]}[10:0];
+  if (dsp_ram_data_read) dsp_dout <= _dsp_dout;
+  if (dsp_incr_addr) dsp_addr <= dsp_addr + 1;
+end
+
+
 //--------BRAM-------------------------------------------------------------------------
 
 wire ena;
@@ -886,6 +933,7 @@ trigger bram_peek_trigger(
 
 always @(posedge clk) begin
   if (bram_peek_done) byte_out <= doutb;
+  else if (dsp_ram_data_ready) byte_out <= dsp_dout;
   else if (xram_peek_done) byte_out <= xdoutb;
   else if (trigger_action && cmd == dbus_read) byte_out <= use_internal_trs_io ? _DX : TRS_D;
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
@@ -1226,11 +1274,6 @@ always @(posedge clk) begin
   if (trigger_action && cmd == z80_resume) z80_is_paused <= 1'b0;
 end
 
-wire dsp_ce = trigger_action && cmd == z80_dsp_poke;
-wire [10:0] dsp_addr = {params[1], params[0]}[10:0];
-wire dsp_wre = 1'b1;
-wire [7:0] dsp_din = params[2];
-
 
 TTRS80 TTRS80 (
    // Inputs
@@ -1246,6 +1289,7 @@ TTRS80 TTRS80 (
    .dsp_addr(dsp_addr),
    .dsp_wre(dsp_wre),
    .dsp_din(dsp_din),
+   .dsp_dout(_dsp_dout),
 
    // Outputs
    .cpu_fast(cpu_fast),

@@ -1,7 +1,8 @@
 
-#include "spi.h"
 #include "keyb.h"
 #include "fabgl.h"
+#include "ptrs.h"
+#include "spi.h"
 
 static fabgl::PS2Controller PS2Controller;
 
@@ -324,13 +325,7 @@ void check_keyb()
     bool down;
     auto vk = keyboard->getNextVirtualKey(&down);
     if (down && vk == fabgl::VK_F5) {
-      spi_z80_pause();
-      spi_z80_dsp_poke(0, 65);
-      spi_z80_dsp_poke(1, 66);
-      spi_z80_dsp_poke(2, 67);
-    }
-    if (down && vk == fabgl::VK_F6) {
-      spi_z80_resume();
+      configure_pocket_trs();
     }
     //printf("VirtualKey = %s\n", keyboard->virtualKeyToString(vk));
 #if 0

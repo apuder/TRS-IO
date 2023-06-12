@@ -10,3 +10,6 @@
 [submodule "src/esp/components/FabGL"]
 	path = src/esp/components/FabGL
 	url = https://github.com/fdivitto/FabGL.git
+[submodule "src/esp/components/TRS-LIB"]
+	path = src/esp/components/TRS-LIB
+	url = https://github.com/apuder/TRS-LIB.git
