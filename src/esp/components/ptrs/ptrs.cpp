@@ -40,22 +40,11 @@ void configure_pocket_trs()
     if (status == MENU_ABORT || status == MENU_EXIT) {
       break;
     }
-#if 0
     switch (status) {
-    case MENU_ABOUT:
-      about();
-      break;
-    case MENU_INPUT_FORM:
-      form_demo();
-      break;
-    case MENU_TRS_NIC:
-      demo_trs_nic();
-      break;
-    case MENU_TRS_FS:
-      demo_trs_fs();
+    case MENU_CONFIGURE:
+      configure_ptrs_settings();
       break;
     }
-#endif
     show_from_left = true;
   }
 

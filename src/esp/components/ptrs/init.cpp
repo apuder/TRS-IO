@@ -3,7 +3,18 @@
 #include <trs-lib.h>
 #include "spi.h"
 #include "fabgl.h"
+#include <esp_log.h>
 
+
+bool is_m3()
+{
+  return true;
+}
+
+void panic(uint8_t err)
+{
+  ESP_LOGE("TRS-LIB", "err: %d", err);
+}
 
 extern fabgl::PS2Controller PS2Controller;
 
