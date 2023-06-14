@@ -31,4 +31,5 @@ idf_component_register(SRCS ${src}
                                 tcpip
                                 trs-fs
                                 trs-io
-                                keyb)
+                                keyb
+                                ptrs)

@@ -13,6 +13,7 @@
 #include "trs-fs.h"
 #include "spi.h"
 #include "keyb.h"
+#include "ptrs.h"
 
 
 extern const char* GIT_REV;
@@ -32,6 +33,7 @@ void app_main(void)
   init_storage();
 #ifdef CONFIG_TRS_IO_PP
   init_keyb();
+  init_ptrs();
 #endif
 
   if (is_button_pressed()) {

@@ -107,3 +107,8 @@ void configure_pocket_trsx()
   trs_screen.pop();
 }
 #endif
+
+void init_ptrs()
+{
+  // Do nothing
+}
