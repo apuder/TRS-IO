@@ -16,19 +16,23 @@
 
 module TTRS80 (
    // Inputs
-   clk,
    z80_clk,
    z80_rst_n,
    z80_pause,
    keyb_matrix,
    vga_clk,
 
-   // Display RAM interface
+   // Display RAM and ROM/RAM interface
+   clk,
    dsp_ce, // input
-   dsp_addr, // input [10:0]
-   dsp_wre, // input
-   dsp_din, // input [7:0]
+   rom_ce, // input
+   ram_ce, // input
+   dsp_rom_ram_addr, // input [15:0]
+   dsp_rom_ram_wre, // input
+   dsp_rom_ram_din, // input [7:0]
    dsp_dout, // output [7:0]
+   rom_dout, // output [7:0]
+   ram_dout, // output [7:0]
 
    // Outputs
    cpu_fast,
@@ -39,6 +43,9 @@ module TTRS80 (
    orch90l_out,
    orch90r_out,
    lb80,
+   is_80col,
+   is_doublwide,
+   is_hires,
 
    // Expansion connector
    // Inputs
@@ -56,7 +63,6 @@ module TTRS80 (
    xio_data
 );
 
-input clk;
 input z80_clk;
 input z80_rst_n;
 input z80_pause;
@@ -64,11 +70,16 @@ input z80_pause;
 input [7:0] keyb_matrix[0:7];
 input vga_clk;
 
+input clk;
 input dsp_ce;
-input [10:0] dsp_addr;
-input dsp_wre;
-input [7:0] dsp_din;
+input rom_ce;
+input ram_ce;
+input [15:0] dsp_rom_ram_addr;
+input dsp_rom_ram_wre;
+input [7:0] dsp_rom_ram_din;
 output [7:0] dsp_dout;
+output [7:0] rom_dout;
+output [7:0] ram_dout;
 
 output cpu_fast;
 output pixel_data;
@@ -78,6 +89,9 @@ output [1:0] cass_out;
 output orch90l_out;
 output orch90r_out;
 output [7:0] lb80;
+output is_80col;
+output is_doublwide;
+output is_hires;
 
 input xio_int_n;
 input xio_wait_n;
@@ -153,50 +167,70 @@ wire z80_ram_sel = ~nMREQ & (((opreg_sel == 2'b00) & ((z80_addr[15:14] == 2'b01)
 
 
 // Instantiate the ROM.
-wire [7:0] _z80_rom_data;
+wire [7:0] z80_rom_data;
 
 blk_mem_gen_0 z80_rom (
-   .clk(z80_clk), // input
-   .ce(z80_rom_sel & ~nRD), // input
-   .ad(z80_addr[13:0]), // input [13:0]
-   .dout(_z80_rom_data), // output [7:0]
-   .oce(1'b1),
-   .reset(1'b0)
+   .clka(z80_clk), // input
+   .cea(z80_rom_sel & ~nRD), // input
+   .ada(z80_addr[13:0]), // input [13:0]
+   .wrea(1'b0), // input
+   .dina(8'b00000000), // input
+   .douta(z80_rom_data), // output [7:0]
+   .ocea(1'b1),
+   .reseta(1'b0),
+
+   .clkb(clk), // input
+   .ceb(rom_ce), // input
+   .adb(dsp_rom_ram_addr[13:0]), // input [13:0]
+   .wreb(dsp_rom_ram_wre), // input
+   .dinb(dsp_rom_ram_din), // input
+   .doutb(rom_dout), // output [7:0]
+   .oceb(1'b1),
+   .resetb(1'b0)
 );
 
-reg [7:0] z80_rom_data;
+//reg [7:0] z80_rom_data;
 
-always @ (negedge z80_clk)
-begin
-   if(z80_rom_sel & ~nRD)
-      z80_rom_data <= _z80_rom_data;
-end
+//always @ (negedge z80_clk)
+//begin
+//   if(z80_rom_sel & ~nRD)
+//      z80_rom_data <= _z80_rom_data;
+//end
 
 
 // Forward reference
 reg [1:0] bnk_addr; // forward reference
 
 // Instantiate the RAM.
-wire [7:0] _z80_ram_data;
+wire [7:0] z80_ram_data;
 
 blk_mem_gen_1 z80_ram (
-   .clk(z80_clk), // input
-   .ce(z80_ram_sel & (~nRD | ~nWR)), // input
-   .ad({bnk_addr[0], z80_addr[14:0]}), // input [15:0]
-   .wre(~nWR), // input
-   .din(z80_data), // input [7:0]
-   .dout(_z80_ram_data), // output [7:0]
-   .oce(1'b1),
-   .reset(1'b0)
+   .clka(z80_clk), // input
+   .cea(z80_ram_sel & (~nRD | ~nWR)), // input
+   .ada({bnk_addr[0], z80_addr[14:0]}), // input [15:0]
+   .wrea(~nWR), // input
+   .dina(z80_data), // input [7:0]
+   .douta(z80_ram_data), // output [7:0]
+   .ocea(1'b1),
+   .reseta(1'b0),
+
+   .clkb(clk), // input
+   .ceb(ram_ce), // input
+   .adb(dsp_rom_ram_addr), // input [15:0]
+   .wreb(dsp_rom_ram_wre), // input
+   .dinb(dsp_rom_ram_din), // input
+   .doutb(ram_dout), // output [7:0]
+   .oceb(1'b1),
+   .resetb(1'b0)
 );
 
-reg [7:0] z80_ram_data;
+//reg [7:0] z80_ram_data;
 
-always @ (negedge z80_clk)
-begin
-   if(z80_ram_sel & ~nRD)
-      z80_ram_data <= _z80_ram_data;
-end
+//always @ (negedge z80_clk)
+//begin
+//   if(z80_ram_sel & ~nRD)
+//      z80_ram_data <= _z80_ram_data;
+//end
 
 
 // Forward references
@@ -223,7 +257,7 @@ wire vga_act = vga_80_64_n ?
 // Instantiate the display RAM.  The display RAM is dual port.
 // The A port is connected to the z80.
 // The B port is connected to the video logic.
-wire [7:0] _z80_dsp_data;
+wire [7:0] z80_dsp_data;
 wire [7:0] z80_dsp_data_b;
 
 // Center the 64x16 text display in the 640x480 VGA display.
@@ -241,11 +275,11 @@ wire col_act = (mod_modsel ? ~dsp_XXXXXXX[0] : 1'b1);
 
 wire        dsp_clka  = z80_is_running ? z80_clk                                                     : clk;
 wire        dsp_cea   = z80_is_running ? z80_dsp_sel & (~nRD | ~nWR)                                 : dsp_ce;
-wire [10:0] dsp_ada   = z80_is_running ? {(opreg_sel[1] ? z80_addr[10] : opreg_page), z80_addr[9:0]} : dsp_addr;
-wire        dsp_wrea  = z80_is_running ? ~nWR                                                        : dsp_wre;
-wire [7:0]  dsp_dina  = z80_is_running ? z80_data                                                    : dsp_din;
+wire [10:0] dsp_ada   = z80_is_running ? {(opreg_sel[1] ? z80_addr[10] : opreg_page), z80_addr[9:0]} : dsp_rom_ram_addr;
+wire        dsp_wrea  = z80_is_running ? ~nWR                                                        : dsp_rom_ram_wre;
+wire [7:0]  dsp_dina  = z80_is_running ? z80_data                                                    : dsp_rom_ram_din;
 
-assign dsp_dout = _z80_dsp_data;
+assign dsp_dout = z80_dsp_data;
 
 blk_mem_gen_2 z80_dsp (
    .clka(dsp_clka), // input
@@ -253,7 +287,7 @@ blk_mem_gen_2 z80_dsp (
    .ada(dsp_ada), // input [10:0]
    .wrea(dsp_wrea), // input
    .dina(dsp_dina), // input [7:0]
-   .douta(_z80_dsp_data), // output [7:0]
+   .douta(z80_dsp_data), // output [7:0]
    .ocea(1'b1),
    .reseta(1'b0),
 
@@ -269,13 +303,13 @@ blk_mem_gen_2 z80_dsp (
    .resetb(1'b0)
 );
 
-reg [7:0] z80_dsp_data;
+//reg [7:0] z80_dsp_data;
 
-always @ (negedge z80_clk)
-begin
-   if(z80_dsp_sel & ~nRD)
-      z80_dsp_data <= _z80_dsp_data;
-end
+//always @ (negedge z80_clk)
+//begin
+//   if(z80_dsp_sel & ~nRD)
+//      z80_dsp_data <= _z80_dsp_data;
+//end
 
 
 // Instantiate the hires display RAM.  The hires display RAM is dual port.
@@ -676,6 +710,9 @@ assign WAIT_n = ~(z80_xio_sel & mod_enextio & ~xio_wait_n);
 assign cass_out = {~z80_cass_reg[1], z80_cass_reg[0]};
 assign cpu_fast = mod_cpufast;
 
+assign is_80col = vga_80_64_n;
+assign is_doublwide = mod_modsel;
+assign is_hires = hires_options_graphics_alpha_n;
 
 reg h_sync, v_sync;
 

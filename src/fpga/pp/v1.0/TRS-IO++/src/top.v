@@ -1277,19 +1277,23 @@ end
 
 TTRS80 TTRS80 (
    // Inputs
-   .clk(clk),
    .z80_clk(z80_clk),
    .z80_rst_n(~z80_rst),
    .z80_pause(z80_is_paused),
    .keyb_matrix(keyb_matrix),
    .vga_clk(clk_pixel),
 
-   // Display RAM interface
+   // Display RAM and ROM/RAM interface
+   .clk(clk),
    .dsp_ce(dsp_ce),
-   .dsp_addr(dsp_addr),
-   .dsp_wre(dsp_wre),
-   .dsp_din(dsp_din),
+   .rom_ce(1'b0),
+   .ram_ce(1'b0),
+   .dsp_rom_ram_addr({5'b00000, dsp_addr}),
+   .dsp_rom_ram_wre(dsp_wre),
+   .dsp_rom_ram_din(dsp_din),
    .dsp_dout(_dsp_dout),
+   .rom_dout(),
+   .ram_dout(),
 
    // Outputs
    .cpu_fast(cpu_fast),
@@ -1300,6 +1304,9 @@ TTRS80 TTRS80 (
    .orch90l_out(),
    .orch90r_out(),
    .lb80(pmod_a),
+   .is_80col(),
+   .is_doublwide(),
+   .is_hires(),
 
    // Expansion connector
    // Inputs
