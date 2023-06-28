@@ -12,6 +12,7 @@
 #include "event.h"
 #include "ntp_sync.h"
 #include "esp_wifi.h"
+#include "esp_spiffs.h"
 #include "esp_mock.h"
 #include "version.h"
 #include "mdns.h"
@@ -30,10 +31,6 @@
 
 static const char* TAG = "TRS-IO wifi";
 
-extern const uint8_t index_html_start[] asm("_binary_index_html_start");
-extern const uint8_t printer_html_start[] asm("_binary_printer_html_start");
-extern const uint8_t font_ttf_start[] asm("_binary_AnotherMansTreasureMIII64C_ttf_start");
-extern const uint8_t font_ttf_end[] asm("_binary_AnotherMansTreasureMIII64C_ttf_end");
 
 static uint8_t status = RS_STATUS_WIFI_CONNECTING;
 
@@ -274,40 +271,30 @@ static void mongoose_event_handler(struct mg_connection *c,
   case MG_EV_HTTP_MSG:
     {
       struct mg_http_message* message = (struct mg_http_message*) eventData;
-      char* response = (char*) index_html_start;
-      int response_len = strlen(response);
+      char* response = NULL;
+      int response_len = 0;
       const char* content_type = "text/html";
 
       if (mg_http_match_uri(message, "/config")) {
         reboot = mongoose_handle_config(message, &response, &content_type);
         response_len = strlen(response);
-      }
-
-      if (mg_http_match_uri(message, "/status")) {
+      } else if (mg_http_match_uri(message, "/status")) {
         mongoose_handle_status(message, &response, &content_type);
         response_len = strlen(response);
-      }
-
-      if (mg_http_match_uri(message, "/printer")) {
-        response = (char*) printer_html_start;
-        response_len = strlen(response);
-      }
-
-      if (mg_http_match_uri(message, "/font.ttf")) {
-        response = (char*) font_ttf_start;
-        response_len = font_ttf_end - font_ttf_start;
-        content_type = "font/ttf";
-      }
-
-      if (mg_http_match_uri(message, "/log")) {
+      } else if (mg_http_match_uri(message, "/log")) {
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
         c->label[0] = 'S';  // Label this connection as a web socket
         return;
       }
 
-      mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
-      mg_send(c, response, response_len);
+      if (response != NULL) {
+        mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
+        mg_send(c, response, response_len);
+      } else {
+        static struct mg_http_serve_opts opts = {.root_dir = "/html"};
+        mg_http_serve_dir(c, (struct mg_http_message*) eventData, &opts);
+      }
     }
     break;
   case MG_EV_CLOSE:
@@ -434,8 +421,63 @@ static void wifi_init_sta()
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
 }
 
+/*
+ * The SPIFFS filesystem does not support directories. Mongoose uses
+ * stat() to find out if a path is a directory (to send index.html).
+ * We use a custom version of stat() that has the directory paths
+ * hardcoded in order to recognize them properly.
+ */
+static int stat_spiffs(const char *path, size_t *size, time_t *mtime) {
+  struct stat st;
+
+  if (size) *size = 0;
+  if (mtime) *mtime = 0;
+  int len = strlen(path);
+  if (len == 0) return 0;
+  if (path[len - 1] == '/') {
+    return MG_FS_READ | MG_FS_DIR;
+  }
+  if (strcmp(path, "/html/printer") == 0) {
+    return MG_FS_READ | MG_FS_DIR;
+  }
+  if (stat(path, &st) != 0) return 0;
+  if (size) *size = (size_t) st.st_size;
+  if (mtime) *mtime = st.st_mtime;
+  return MG_FS_READ | MG_FS_WRITE | (S_ISDIR(st.st_mode) ? MG_FS_DIR : 0);
+}
+
+static esp_err_t init_spiffs()
+{
+  ESP_LOGI(TAG, "Initializing SPIFFS");
+
+  esp_vfs_spiffs_conf_t conf = {
+    .base_path = "/html",
+    .partition_label = "html",
+    .max_files = 5,
+    .format_if_mount_failed = false
+  };
+
+  esp_err_t ret = esp_vfs_spiffs_register(&conf);
+
+  if (ret != ESP_OK) {
+    if (ret == ESP_FAIL) {
+      ESP_LOGE(TAG, "Failed to mount or format filesystem");
+    } else if (ret == ESP_ERR_NOT_FOUND) {
+      ESP_LOGE(TAG, "Failed to find SPIFFS partition");
+    } else {
+      ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+    }
+  }
+
+  // Use custom version of stat() to work around SPIFFS limitations
+  mg_fs_posix.st = stat_spiffs;
+
+  return ret;
+}
+
 void init_wifi()
 {
+  ESP_ERROR_CHECK(init_spiffs());
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
   ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
