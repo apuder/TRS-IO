@@ -12,3 +12,8 @@ idf_component_register(SRC_DIRS "."
 set_property(TARGET ${COMPONENT_LIB} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-u theTrsIOCoreModule")
 
 spiffs_create_partition_image(html ../../html FLASH_IN_PROJECT)
+
+if (CONFIG_TRS_IO_PP)
+spiffs_create_partition_image(elFinder ../../elFinder FLASH_IN_PROJECT)
+spiffs_create_partition_image(roms ../../roms FLASH_IN_PROJECT)
+endif()
