@@ -291,8 +291,13 @@ static void mongoose_event_handler(struct mg_connection *c,
       if (response != NULL) {
         mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
         mg_send(c, response, response_len);
+#ifdef CONFIG_TRS_IO_PP
+      } else if (strncmp(message->uri.ptr, "/roms", 5) == 0) {
+        static const struct mg_http_serve_opts opts = {.root_dir = "/elFinder"};
+        mg_http_serve_dir(c, (struct mg_http_message*) eventData, &opts);
+#endif
       } else {
-        static struct mg_http_serve_opts opts = {.root_dir = "/html"};
+        static const struct mg_http_serve_opts opts = {.root_dir = "/html"};
         mg_http_serve_dir(c, (struct mg_http_message*) eventData, &opts);
       }
     }
@@ -437,7 +442,7 @@ static int stat_spiffs(const char *path, size_t *size, time_t *mtime) {
   if (path[len - 1] == '/') {
     return MG_FS_READ | MG_FS_DIR;
   }
-  if (strcmp(path, "/html/printer") == 0) {
+  if (strcmp(path, "/html/printer") == 0 || strcmp(path, "/elFinder/roms") == 0) {
     return MG_FS_READ | MG_FS_DIR;
   }
   if (stat(path, &st) != 0) return 0;
@@ -448,26 +453,50 @@ static int stat_spiffs(const char *path, size_t *size, time_t *mtime) {
 
 static esp_err_t init_spiffs()
 {
+  esp_err_t ret;
+
   ESP_LOGI(TAG, "Initializing SPIFFS");
 
-  esp_vfs_spiffs_conf_t conf = {
+  static const esp_vfs_spiffs_conf_t conf_html = {
     .base_path = "/html",
     .partition_label = "html",
+    .max_files = 2,
+    .format_if_mount_failed = false
+  };
+
+  ret = esp_vfs_spiffs_register(&conf_html);
+
+  if (ret != ESP_OK) {
+    ESP_LOGE(TAG, "Failed to initialize 'html' SPIFFS (%s)", esp_err_to_name(ret));
+  }
+
+#ifdef CONFIG_TRS_IO_PP
+  static const esp_vfs_spiffs_conf_t conf_elfinder = {
+    .base_path = "/elFinder",
+    .partition_label = "elFinder",
     .max_files = 5,
     .format_if_mount_failed = false
   };
 
-  esp_err_t ret = esp_vfs_spiffs_register(&conf);
+  ret = esp_vfs_spiffs_register(&conf_elfinder);
 
   if (ret != ESP_OK) {
-    if (ret == ESP_FAIL) {
-      ESP_LOGE(TAG, "Failed to mount or format filesystem");
-    } else if (ret == ESP_ERR_NOT_FOUND) {
-      ESP_LOGE(TAG, "Failed to find SPIFFS partition");
-    } else {
-      ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
-    }
+    ESP_LOGE(TAG, "Failed to initialize 'elFinder' SPIFFS (%s)", esp_err_to_name(ret));
   }
+
+  static esp_vfs_spiffs_conf_t conf_roms = {
+    .base_path = "/roms",
+    .partition_label = "roms",
+    .max_files = 5,
+    .format_if_mount_failed = false
+  };
+
+  ret = esp_vfs_spiffs_register(&conf_roms);
+
+  if (ret != ESP_OK) {
+    ESP_LOGE(TAG, "Failed to initialize 'roms' SPIFFS (%s)", esp_err_to_name(ret));
+  }
+#endif
 
   // Use custom version of stat() to work around SPIFFS limitations
   mg_fs_posix.st = stat_spiffs;
