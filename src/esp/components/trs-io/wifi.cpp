@@ -4,6 +4,10 @@
 #include "printer.h"
 #include "ntp_sync.h"
 #include "trs-fs.h"
+#ifdef CONFIG_TRS_IO_PP
+#include "fs-roms.h"
+#include "fs-spiffs.h"
+#endif
 #include "smb.h"
 #include "ota.h"
 #include "led.h"
@@ -290,6 +294,8 @@ static void mongoose_event_handler(struct mg_connection *c,
         mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
         mg_send(c, response, response_len);
 #ifdef CONFIG_TRS_IO_PP
+      } else if (mg_http_match_uri(message, "/roms/php/connector.minimal.php")) {
+        process_file_browser_req(c, message);
       } else if (strncmp(message->uri.ptr, "/roms", 5) == 0) {
         static const struct mg_http_serve_opts opts = {.root_dir = "/elFinder"};
         mg_http_serve_dir(c, (struct mg_http_message*) eventData, &opts);
@@ -494,6 +500,8 @@ static esp_err_t init_spiffs()
   if (ret != ESP_OK) {
     ESP_LOGE(TAG, "Failed to initialize 'roms' SPIFFS (%s)", esp_err_to_name(ret));
   }
+
+  init_fs_roms();
 #endif
 
   // Use custom version of stat() to work around SPIFFS limitations
