@@ -106,8 +106,7 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
 #define PRINTER_QUEUE_SIZE 100
 
 static trs_io_wifi_config_t config EXT_RAM_ATTR = {};
-static struct mg_connection* ws_pipe;
-static QueueHandle_t prn_queue = NULL;
+static mg_queue prn_queue;
 static int num_printer_sockets = 0;
 
 
@@ -284,7 +283,6 @@ static void mongoose_event_handler(struct mg_connection *c,
       } else if (mg_http_match_uri(message, "/log")) {
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
-        c->label[0] = 'S';  // Label this connection as a web socket
         return;
       }
 
@@ -304,7 +302,7 @@ static void mongoose_event_handler(struct mg_connection *c,
     break;
   case MG_EV_CLOSE:
     {
-      if (c->label[0] == 'S') {
+      if (c->is_websocket) {
         num_printer_sockets--;
       }
     }
@@ -314,38 +312,39 @@ static void mongoose_event_handler(struct mg_connection *c,
       if (reboot) {
         esp_restart();
       }
-    }
-    break;
-  }
-}
 
-// Pipe event handler
-static void pcb(struct mg_connection* c, int ev, void* ev_data, void *fn_data) {
-  if (ev == MG_EV_READ) {
-    char ch;
-    while (xQueueReceive(prn_queue, &ch, 0)) {
-      const char* p = charToUTF8(ch);
-      struct mg_connection* t;
-
-      for (t = c->mgr->conns; t != NULL; t = t->next) {
-        if (t->label[0] != 'S') continue;  // Ignore non-websocket connections
-        mg_ws_send(t, p, strlen(p), WEBSOCKET_OP_TEXT);
+      char *ptr;
+      size_t len;
+      while ((len = mg_queue_next(&prn_queue, &ptr)) > 0) {
+        assert(len == 1);
+        const char* p = charToUTF8(*ptr);
+        for (struct mg_connection* t = c->mgr->conns; t != NULL; t = t->next) {
+          if (!t->is_websocket) continue;  // Ignore non-websocket connections
+          mg_ws_send(t, p, strlen(p), WEBSOCKET_OP_TEXT);
+        }
+        mg_queue_del(&prn_queue, 1);
       }
     }
+    break;
   }
 }
 
 void trs_printer_write(const char ch)
 {
   if (num_printer_sockets != 0) {
-    xQueueSend(prn_queue, &ch, portMAX_DELAY);
-    mg_mgr_wakeup(ws_pipe, NULL, 0);
+    char *ptr;
+    if (mg_queue_book(&prn_queue, &ptr, 1) < 1) {
+      // Not enough space
+    } else {
+      *ptr = ch;
+      mg_queue_add(&prn_queue, 1);
+    }
   }
 }
 
 uint8_t trs_printer_read()
 {
-  return (num_printer_sockets == 0) ? 0xff : 0x30; /* printer selected, ready, with paper, not busy */;
+  return (num_printer_sockets == 0 || prn_queue.head != prn_queue.tail) ? 0xff : 0x30; /* printer selected, ready, with paper, not busy */;
 }
 
 static void init_mdns()
@@ -361,6 +360,7 @@ static void init_mdns()
 static void mg_task(void* p)
 {
   static struct mg_mgr mgr;
+  static char printer_buf[100];
 
   evt_wait_wifi_up();
   ESP_LOGI(TAG, "Starting Mongoose");
@@ -368,11 +368,9 @@ static void mg_task(void* p)
   init_mdns();
   copy_config_from_nvs();
 
-  prn_queue = xQueueCreate(PRINTER_QUEUE_SIZE, sizeof(char));
-
   // Start Mongoose
   mg_mgr_init(&mgr);
-  ws_pipe = mg_mkpipe(&mgr, pcb, NULL);
+  mg_queue_init(&prn_queue, printer_buf, sizeof(printer_buf));
   mg_http_listen(&mgr, "http://0.0.0.0:80", mongoose_event_handler, &mgr);
 
   while(true) {

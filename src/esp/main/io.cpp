@@ -277,8 +277,13 @@ static inline void frehd_write(uint8_t port) {
   dbus_write(d);
 }
 
+static inline void printer_read() {
+  uint8_t d = trs_printer_read();
+  dbus_write(d);
+}
+
 static inline void printer_write() {
-  uint8_t data = spi_get_printer_byte();
+  uint8_t data = dbus_read();
   trs_printer_write(data);
 }
 
@@ -333,10 +338,13 @@ static void IRAM_ATTR io_task(void* p)
 #endif
       break;
     case 0x40:
+      printer_read();
+      break;
+    case 0x50:
       printer_write();
       break;
 #ifndef CONFIG_TRS_IO_MODEL_3
-    case 0x50:
+    case 0x60:
       xray_status = XRAY_STATUS_BREAKPOINT;
       break;
 #endif
@@ -356,6 +364,7 @@ static void action_task(void* p)
   is_button_long_press();
 
   while (true) {
+#ifdef CONFIG_TRS_IO_PP
     if (sd_card_eject_countdown != 0) {
       sd_card_eject_countdown--;
       if (sd_card_eject_countdown == 1) {
@@ -367,10 +376,10 @@ static void action_task(void* p)
       }
     }
 
-    frehd_check_action();
-#ifdef CONFIG_TRS_IO_PP
     check_keyb();
 #endif
+
+    frehd_check_action();
 
     if (trigger_trs_io_action) {
       TrsIO::processInBackground();
