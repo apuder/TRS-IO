@@ -14,11 +14,13 @@ module main(
   input Z80_OUT,
   input Z80_IOREQ,
   output EXTIOSEL,
-  output reg TRS_INT,
+  output TRS_INT,
   output reg ESP_REQ,
   output [2:0] ESP_S,
   output reg WAIT,
   input ESP_DONE,
+  output CASS_OUT_RIGHT,
+  output CASS_OUT_LEFT,
   input [1:0] sw,
   output reg [5:0] led
 );
@@ -104,6 +106,17 @@ always @(posedge clk) begin
 end
 
 
+wire [7:0] TRS_D;
+
+assign TRS_D[0] = TRS_AD[7];
+assign TRS_D[1] = TRS_AD[6];
+assign TRS_D[2] = TRS_AD[5];
+assign TRS_D[3] = TRS_AD[4];
+assign TRS_D[4] = TRS_AD[3];
+assign TRS_D[5] = TRS_AD[2];
+assign TRS_D[6] = TRS_AD[1];
+assign TRS_D[7] = TRS_AD[0];
+
 
 //----TRS-IO---------------------------------------------------------------------
 
@@ -118,8 +131,9 @@ reg[7:0] printer_byte;
 
 
 
-wire printer_sel_rd = 0;//XXX (TRS_A == 17'h37e8) && !TRS_RD;
-wire printer_sel_wr = 0;//XXX (TRS_A == 17'h37e8) && !TRS_WR;
+// Ports 0xF8-0xFB
+wire printer_sel_rd = (TRS_A[8:2] == 7'h3e) && !TRS_IN;
+wire printer_sel_wr = (TRS_A[8:2] == 7'h3e) && !TRS_OUT;
 wire printer_sel = printer_sel_wr;
 reg printer_sel_reg = 0;
 
@@ -131,13 +145,17 @@ wire frehd_sel_in = (TRS_A[8:4] == 5'hc) && !TRS_IN;
 wire frehd_sel_out = (TRS_A[8:4] == 5'hc) && !TRS_OUT;
 wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
+// orchestra-85
+wire z80_orch85l_sel    = ~TRS_A[8] && (TRS_A[7:0] == 8'hb5) && !TRS_OUT;
+wire z80_orch85r_sel    = ~TRS_A[8] && (TRS_A[7:0] == 8'hb9) && !TRS_OUT;
+
 
 wire esp_sel = trs_io_sel || frehd_sel || printer_sel;
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
 
-assign EXTIOSEL = esp_sel;
+assign EXTIOSEL = esp_sel || printer_sel_rd;
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
@@ -152,11 +170,11 @@ always @(posedge clk) begin
     if (printer_sel) begin
       // The next byte for the printer is ready
       printer_sel_reg <= 1;
-      printer_byte <= TRS_AD;
+      printer_byte <= TRS_D;
       printer_status <= PRINTER_STATUS_BUSY;
     end
     else begin
-      // This is not a write to 0x37e8 (the printer). Need to assert WAIT
+      // This is not a write to the printer ports. Need to assert WAIT
       WAIT <= 1;
     end
   end
@@ -402,7 +420,9 @@ assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
 
 //--------BRAM-------------------------------------------------------------------------
 
-assign DBUS_SEL_N = !((esp_sel || printer_sel_rd || printer_sel_wr) && ABUS_SEL_N);
+wire cass_sel_out;
+
+assign DBUS_SEL_N = !((esp_sel || printer_sel_rd || printer_sel_wr || cass_sel_out) && ABUS_SEL_N);
 
 assign TRS_DIR = TRS_RD && TRS_IN;
 
@@ -437,22 +457,51 @@ end
 //---BRAM-------------------------------------------------------------------------
 
 always @(posedge clk) begin
-  if (trigger_action && cmd == dbus_read) begin
-    byte_out[0] <= TRS_AD[7];
-    byte_out[1] <= TRS_AD[6];
-    byte_out[2] <= TRS_AD[5];
-    byte_out[3] <= TRS_AD[4];
-    byte_out[4] <= TRS_AD[3];
-    byte_out[5] <= TRS_AD[2];
-    byte_out[6] <= TRS_AD[1];
-    byte_out[7] <= TRS_AD[0];
-  end
+  if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
   if (trigger_action && cmd == abus_read) byte_out <= TRS_A[7:0];
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
 end
 
+
+//-----ORCH85----------------------------------------------------------------------
+
+// orchestra-85 output registers
+reg signed [7:0] orch85l_reg;
+reg signed [7:0] orch85r_reg;
+
+always @ (posedge clk)
+begin
+   if(z80_orch85l_sel & ~TRS_OUT)
+      orch85l_reg <= TRS_D;
+
+   if(z80_orch85r_sel & ~TRS_OUT)
+      orch85r_reg <= TRS_D;
+end
+
+
+//---Sound------------------------------------------------------------------------
+
+reg[1:0] z80_cass_reg = 2'b00;
+wire[1:0] cass_out;
+
+assign cass_sel_out = (TRS_A[8:0] == 9'hff) && !TRS_OUT;
+
+always @(posedge clk) begin
+  if (io_access && cass_sel_out) z80_cass_reg <= TRS_D[1:0];
+end
+
+assign cass_out = {~z80_cass_reg[1], z80_cass_reg[0]};
+
+reg cass_out_reg;
+
+always @ (posedge clk) begin
+   cass_out_reg <= (cass_out == 2'b00) ? 1'b0 : ((cass_out == 2'b11) ? 1'b1 : ~cass_out_reg);
+end
+
+assign CASS_OUT_LEFT = cass_out_reg;
+assign CASS_OUT_RIGHT = cass_out_reg;
 
 
 endmodule
