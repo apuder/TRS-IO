@@ -2,13 +2,13 @@
 #include <trs-io.h>
 #include "esp_mock.h"
 #include "version.h"
+#include "spi.h"
 #include "led.h"
 
 #ifndef CONFIG_TRS_IO_MODEL_3
 #include "retrostore-defs.h"
 #include "xray.h"
 //#include "io.h"
-#include "spi.h"
 #include "fileio.h"
 
 retrostore::RsSystemState trs_state;
