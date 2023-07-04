@@ -4,8 +4,10 @@
 #include "trs-lib.h"
 #include "spi.h"
 #include "wifi.h"
+#include "fs-spiffs.h"
 
 #define KEY_SCREEN_RGB "screen_rgb"
+#define MAX_NUM_ROMS 10
 
 static const char* screen_color_items[] = {
   "WHITE",
@@ -15,10 +17,7 @@ static const char* screen_color_items[] = {
 
 static uint8_t screen_color = 0;
 
-static const char* rom_items[] = {
-  "FreHD",
-  "XROM",
-  NULL};
+static const char* rom_items[MAX_NUM_ROMS + 1];
 
 static uint8_t rom_type = 0;
 
@@ -70,6 +69,14 @@ void configure_ptrs_settings()
   init_form_header("");
   init_form_end(configuration_form);
 #endif
+  vector<FSFile>& rom_files = the_fs->getFileList();
+  int i;
+
+  for (i = 0; i < 10 && i < rom_files.size(); i++) {
+    rom_items[i] = rom_files.at(i).name.c_str();
+  }
+  rom_items[i] = NULL;
+
   if (storage_has_key(KEY_SCREEN_RGB)) {
     screen_color = (uint8_t) storage_get_i32(KEY_SCREEN_RGB);
   }
@@ -83,6 +90,24 @@ void configure_ptrs_settings()
 
   form(&ptrs_form, false);
 
+  // Download ROM
+  string new_rom = "/roms/";
+  new_rom += rom_items[rom_type];
+  printf("Downloading ROM: %s\n", new_rom.c_str());
+  FILE* f = fopen(new_rom.c_str(), "rb");
+  if (f != NULL) {
+    static uint8_t buf[100];
+    int br;
+    uint16_t addr = 0;
+    do {
+      br = fread(buf, 1, sizeof(buf), f);
+      for (int x = 0; x < br; x++) {
+        spi_bram_poke(addr++, buf[x]);
+      }
+    } while (br != 0);
+  }
+
+  // Set screen color
   spi_set_screen_color(screen_color);
 
 #if 0
