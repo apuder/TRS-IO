@@ -4,7 +4,21 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-		<title>elFinder 2.1.x source version with PHP connector</title>
+		<title>TRS-IO++ ROM Management</title>
+
+    <style>
+      @font-face {
+        font-family: 'TreasureMIII64C';
+        src: url('font.ttf');
+      }
+      .trs-io-header {
+        background: #dde4eb;
+        font-size: xx-large;
+        font-weight: bold;
+        font-family:'TreasureMIII64C';
+        padding: 0.5em;
+    }
+    </style>
 
 		<!-- Require JS (REQUIRED) -->
 		<!-- Rename "main.default.js" to "main.js" and edit it if you need configure elFInder options or any things -->
@@ -36,7 +50,17 @@
 							// these MIME types override "googleDocsMimes"
 							officeOnlineMimes : ['application/vnd.ms-office', 'application/msword', 'application/vnd.ms-word', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.text', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.presentation']
 						}
-					},
+          },
+          ui: ['toolbar', 'tree', 'path', 'stat'],
+          uiOptions : {
+	          // toolbar configuration
+	            toolbar : [
+		          ['upload'],
+		          ['download', 'rm'],
+		          ['info'],
+		          ['view']
+              ]
+          },
 					// bootCalback calls at before elFinder boot up 
 					bootCallback : function(fm, extraObj) {
 						/* any bind functions etc. */
@@ -65,7 +89,7 @@
 		</script>
 	</head>
 	<body>
-
+    <div class="trs-io-header">TRS-IO++ ROM Management</div>
 		<!-- Element where elFinder will be created (REQUIRED) -->
 		<div id="elfinder"></div>
 
