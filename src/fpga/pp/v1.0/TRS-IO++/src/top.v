@@ -32,9 +32,9 @@ module top(
   output REQ,
   input DONE,
   output [3:0] LED,
-  output LED_GREEN,
-  output LED_RED,
-  output LED_BLUE,
+  output reg LED_GREEN,
+  output reg LED_RED,
+  output reg LED_BLUE,
   output INT,
   output WAIT,
   output EXTIOSEL,
@@ -369,7 +369,8 @@ localparam [7:0]
   z80_resume          = 8'd22,
   z80_dsp_set_addr    = 8'd23,
   z80_dsp_poke        = 8'd24,
-  z80_dsp_peek        = 8'd25;
+  z80_dsp_peek        = 8'd25,
+  set_led             = 8'd26;
 
 
 
@@ -490,6 +491,9 @@ always @(posedge clk) begin
             bits_to_send <= 9;
             state <= idle;
           end
+          set_led: begin
+            bytes_to_read <= 1;
+          end
           default:
             begin
               state <= idle;
@@ -593,6 +597,17 @@ end
 
 wire keyb_matrix_pressed = |(keyb_matrix[7] | keyb_matrix[6] | keyb_matrix[5] | keyb_matrix[4] |
                              keyb_matrix[3] | keyb_matrix[2] | keyb_matrix[1] | keyb_matrix[0]);
+
+
+//---LED-----------------------------------------------------------------------------------
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_led) begin
+    LED_RED <= params[0][0];
+    LED_GREEN <= params[0][1];
+    LED_BLUE <= params[0][2];
+  end
+end
 
 
 //---Breakpoint Management-----------------------------------------------------------------

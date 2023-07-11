@@ -485,6 +485,28 @@ uint8_t spi_z80_dsp_peek()
   return trans.base.rx_data[0];
 }
 
+void spi_set_led(bool r, bool g, bool b)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_SET_LED;
+  trans.address_bits = 1 * 8;
+  uint32_t b0 = 0;
+  if (r) b0 |= (1 << 0);
+  if (g) b0 |= (1 << 1);
+  if (b) b0 |= (1 << 2);
+  trans.base.addr = b0;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+}
+
 void init_spi()
 {
   mutex = xSemaphoreCreateMutex();

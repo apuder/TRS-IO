@@ -424,7 +424,7 @@ static void action_task(void* p)
     }
 
     if (is_button_short_press()) {
-#ifdef CONFIG_TRS_IO_PP
+#if 0
       spi_ptrs_rst();
 #endif
       // Check Wifi status

@@ -4,6 +4,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#ifdef CONFIG_TRS_IO_PP
+#include "spi.h"
+#endif
 
 #define LED_RED CONFIG_TRS_IO_GPIO_LED_RED
 #define LED_GREEN CONFIG_TRS_IO_GPIO_LED_GREEN
@@ -81,13 +84,21 @@ static void led_task(void* p)
     }
 
     if (on) {
+#ifdef CONFIG_TRS_IO_PP
+      spi_set_led(r, g, b);
+#else
       gpio_set_level((gpio_num_t) LED_RED, r);
       gpio_set_level((gpio_num_t) LED_GREEN, g);
       gpio_set_level((gpio_num_t) LED_BLUE, b);
+#endif
     } else {
+#ifdef CONFIG_TRS_IO_PP
+      spi_set_led(0, 0, 0);
+#else
       gpio_set_level((gpio_num_t) LED_RED, 0);
       gpio_set_level((gpio_num_t) LED_GREEN, 0);
       gpio_set_level((gpio_num_t) LED_BLUE, 0);
+#endif
       if (auto_off) {
         delay = portMAX_DELAY;
       }
@@ -106,6 +117,7 @@ void init_led()
   gpioConfig.mode = GPIO_MODE_OUTPUT;
   gpioConfig.intr_type = GPIO_INTR_DISABLE;
   gpio_config(&gpioConfig);
+#endif
 
   event_group = xEventGroupCreate();
   xEventGroupClearBits(event_group, 0xff);
@@ -116,13 +128,11 @@ void init_led()
 #ifdef CONFIG_TRS_IO_TEST_LED
   test_led();
 #endif
-#endif
 }
     
 
 void set_led(bool r, bool g, bool b, bool blink, bool auto_off)
 {
-#ifndef CONFIG_TRS_IO_PP
   EventBits_t mask = BIT_TRIGGER;
 
   if (r) {
@@ -141,5 +151,4 @@ void set_led(bool r, bool g, bool b, bool blink, bool auto_off)
     mask |= BIT_AUTO_OFF;
   }
   xEventGroupSetBits(event_group, mask);
-#endif
 }

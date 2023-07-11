@@ -28,7 +28,6 @@ void app_main(void)
 
   init_events();
   init_trs_io();
-  init_led();
   init_button();
   init_storage();
 #ifdef CONFIG_TRS_IO_PP
@@ -46,6 +45,7 @@ void app_main(void)
   
   init_ota();
   init_spi();
+  init_led();
   init_trs_fs_posix();
   init_wifi();
   init_io();

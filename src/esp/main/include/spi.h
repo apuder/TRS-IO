@@ -58,6 +58,7 @@
 #define FPGA_CMD_Z80_DSP_SET_ADDR 23
 #define FPGA_CMD_Z80_DSP_POKE 24
 #define FPGA_CMD_Z80_DSP_PEEK 25
+#define FPGA_CMD_SET_LED 26
 
 
 uint8_t spi_get_cookie();
@@ -84,6 +85,7 @@ void spi_z80_resume();
 void spi_z80_dsp_set_addr(uint16_t addr);
 void spi_z80_dsp_poke(uint8_t v);
 uint8_t spi_z80_dsp_peek();
+void spi_set_led(bool r, bool g, bool b);
 
 void init_spi();
 
