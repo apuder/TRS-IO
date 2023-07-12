@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "TRS-IO")(type "KiCad")(uri "${KIPRJMOD}/TRSIO.pretty")(options "")(descr ""))
+  (lib (name "TRS-IO-M3")(type "KiCad")(uri "${KIPRJMOD}/trs-io-m3.pretty")(options "")(descr ""))
+)
