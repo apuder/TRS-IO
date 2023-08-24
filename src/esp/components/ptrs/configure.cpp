@@ -105,6 +105,7 @@ void configure_ptrs_settings()
         spi_bram_poke(addr++, buf[x]);
       }
     } while (br != 0);
+    fclose(f);
   }
 
   // Set screen color
