@@ -1289,6 +1289,13 @@ always @(posedge clk) begin
   if (trigger_action && cmd == z80_resume) z80_is_paused <= 1'b0;
 end
 
+wire ttrs80_poke_rom = trigger_action && cmd == bram_poke;
+
+wire [15:0] ttrs80_addr = ({16{ttrs80_poke_rom}} & {params[1], params[0]}) |
+                          ({16{~ttrs80_poke_rom}} & {5'b00000, dsp_addr});
+
+wire [7:0] ttrs80_din = ({8{ttrs80_poke_rom}} & params[2]) |
+                        ({8{~ttrs80_poke_rom}} & dsp_din);
 
 TTRS80 TTRS80 (
    // Inputs
@@ -1301,11 +1308,11 @@ TTRS80 TTRS80 (
    // Display RAM and ROM/RAM interface
    .clk(clk),
    .dsp_ce(dsp_ce),
-   .rom_ce(1'b0),
+   .rom_ce(ttrs80_poke_rom),
    .ram_ce(1'b0),
-   .dsp_rom_ram_addr({5'b00000, dsp_addr}),
-   .dsp_rom_ram_wre(dsp_wre),
-   .dsp_rom_ram_din(dsp_din),
+   .dsp_rom_ram_addr(ttrs80_addr),
+   .dsp_rom_ram_wre(dsp_wre | ttrs80_poke_rom),
+   .dsp_rom_ram_din(ttrs80_din),
    .dsp_dout(_dsp_dout),
    .rom_dout(),
    .ram_dout(),
