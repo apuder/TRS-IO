@@ -54,7 +54,6 @@ static volatile bool DRAM_ATTR trigger_trs_io_action = false;
 
 static volatile bool io_task_started = false;
 static volatile uint8_t DRAM_ATTR intr_event = 0;
-static volatile bool DRAM_ATTR intr_enabled = true;
 
 
 #ifndef CONFIG_TRS_IO_MODEL_3
@@ -198,59 +197,19 @@ static void init_xray()
 
 //-----------------------------------------------------------------
 
-void io_core1_enable_intr() {
-#if 0
-  if (!io_task_started) {
-    return;
-  }
-  intr_event |= IO_CORE1_ENABLE_INTR;
-  while (intr_event & IO_CORE1_ENABLE_INTR) ;
-#endif
-}
-
-void io_core1_disable_intr() {
-#if 0
-  if (!io_task_started) {
-    return;
-  }
-  intr_event |= IO_CORE1_DISABLE_INTR;
-  while (intr_event & IO_CORE1_DISABLE_INTR) ;
-#endif
-}
-
 static inline uint8_t dbus_read()
 {
-  if (!intr_enabled) {
-    //portENABLE_INTERRUPTS();
-  }
-  uint8_t d = spi_dbus_read();
-  if (!intr_enabled) {
-    //portDISABLE_INTERRUPTS();
-  }
-  return d;
+  return spi_dbus_read();
 }
 
 static inline void dbus_write(uint8_t d)
 {
-  if (!intr_enabled) {
-    //portENABLE_INTERRUPTS();
-  }
   spi_dbus_write(d);
-  if (!intr_enabled) {
-    //portDISABLE_INTERRUPTS();
-  }
 }
 
 static inline uint8_t abus_read()
 {
-  if (!intr_enabled) {
-    //portENABLE_INTERRUPTS();
-  }
-  uint8_t a = spi_abus_read();
-  if (!intr_enabled) {
-    //portDISABLE_INTERRUPTS();
-  }
-  return a;
+  return spi_abus_read();
 }
 
 static inline void trs_io_read() {

@@ -18,6 +18,4 @@ typedef struct {
   uint16_t sp;
 } XRAY_Z80_REGS;
 
-void io_core1_enable_intr();
-void io_core1_disable_intr();
 void init_io();
