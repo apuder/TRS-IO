@@ -1,6 +1,6 @@
 
 #include "ptrs.h"
-#include "storage.h"
+#include "settings.h"
 #include "trs-lib.h"
 #include "spi.h"
 #include "wifi.h"
@@ -25,13 +25,13 @@ static bool show_splash_screen = true;
 
 static bool enable_trs_io = true;
 
-static trs_io_wifi_config_t config;
 
 static form_item_t ptrs_form_items[] = {
   FORM_ITEM_HEADER("GENERAL:"),
   FORM_ITEM_CHECKBOX("Enable TRS-IO", &enable_trs_io, NULL),
   FORM_ITEM_SELECT("ROM", &rom_type, rom_items, NULL),
   FORM_ITEM_SELECT("Screen color", &screen_color, screen_color_items, NULL),
+#if 0
   FORM_ITEM_INPUT("Timezone", config.tz, MAX_LEN_TZ, 0, NULL),
   FORM_ITEM_HEADER("WIFI:"),
   FORM_ITEM_INPUT("SSID", config.ssid, MAX_LEN_SSID, 0, NULL),
@@ -40,6 +40,7 @@ static form_item_t ptrs_form_items[] = {
   FORM_ITEM_INPUT("URL", config.smb_url, MAX_LEN_SMB_URL, 40, NULL),
   FORM_ITEM_INPUT("User", config.smb_user, MAX_LEN_SMB_USER, 0, NULL),
   FORM_ITEM_INPUT("Password", config.smb_passwd, MAX_LEN_SMB_PASSWD, 0, NULL),
+#endif
 	FORM_ITEM_END
 };
 
@@ -77,9 +78,7 @@ void configure_ptrs_settings()
   }
   rom_items[i] = NULL;
 
-  if (storage_has_key(KEY_SCREEN_RGB)) {
-    screen_color = (uint8_t) storage_get_i32(KEY_SCREEN_RGB);
-  }
+  screen_color = settings_get_screen_color();
 
 #if 0
   screen_color = (uint8_t) settingsScreen.getScreenColor();
@@ -109,6 +108,7 @@ void configure_ptrs_settings()
   }
 
   // Set screen color
+  settings_set_screen_color(screen_color);
   spi_set_screen_color(screen_color);
 
 #if 0

@@ -12,7 +12,7 @@
 #include "ota.h"
 #include "led.h"
 #include "io.h"
-#include "storage.h"
+#include "settings.h"
 #include "event.h"
 #include "ntp_sync.h"
 #include "esp_wifi.h"
@@ -27,8 +27,6 @@
 #include <string.h>
 #include "cJSON.h"
 
-#define WIFI_KEY_SSID "ssid"
-#define WIFI_KEY_PASSWD "passwd"
 
 #define SSID "TRS-IO"
 #define MDNS_NAME "trs-io"
@@ -43,19 +41,6 @@ uint8_t* get_wifi_status()
   return &status;
 }
 
-const char* get_wifi_ssid()
-{
-  static char ssid[33];
-
-  if (!storage_has_key(WIFI_KEY_SSID)) {
-    ssid[0] = '-';
-    ssid[1] = '\0';
-  } else {
-    size_t len = sizeof(ssid);
-    storage_get_str(WIFI_KEY_SSID, ssid, &len);
-  }
-  return ssid;
-}
 
 static char ip[16] = {'-', '\0'};
 
@@ -98,8 +83,9 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 void set_wifi_credentials(const char* ssid, const char* passwd)
 {
   // Store credentials and reboot
-  storage_set_str(WIFI_KEY_SSID, ssid);
-  storage_set_str(WIFI_KEY_PASSWD, passwd);
+  settings_set_wifi_ssid(ssid);
+  settings_set_wifi_passwd(passwd);
+  settings_commit();
   esp_restart();
 }
 
@@ -109,62 +95,38 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
 
 #define PRINTER_QUEUE_SIZE 100
 
-static trs_io_wifi_config_t config EXT_RAM_ATTR = {};
 static mg_queue prn_queue;
 static int num_printer_sockets = 0;
 
+#define MAX_LEN_SSID 32
+#define MAX_LEN_PASSWD 32
+#define MAX_LEN_TZ 32
+#define MAX_LEN_SMB_URL 100
+#define MAX_LEN_SMB_USER 32
+#define MAX_LEN_SMB_PASSWD 32
 
-static void copy_config_from_nvs(const char* key, char* value, size_t max_len)
-{
-  size_t len;
-
-  *value = '\0';
-  if (storage_has_key(key, &len)) {
-    assert (len <= max_len + 1);
-    storage_get_str(key, value, &len);
-  }
-}
-
-static void copy_config_from_nvs()
-{
-  copy_config_from_nvs(WIFI_KEY_SSID, config.ssid, MAX_LEN_SSID);
-  copy_config_from_nvs(WIFI_KEY_PASSWD, config.passwd, MAX_LEN_PASSWD);
-  copy_config_from_nvs(NTP_KEY_TZ, config.tz, MAX_LEN_TZ);
-  copy_config_from_nvs(SMB_KEY_URL, config.smb_url, MAX_LEN_SMB_URL);
-  copy_config_from_nvs(SMB_KEY_USER, config.smb_user, MAX_LEN_SMB_USER);
-  copy_config_from_nvs(SMB_KEY_PASSWD, config.smb_passwd, MAX_LEN_SMB_PASSWD);
-}
-
-trs_io_wifi_config_t* get_wifi_config()
-{
-  copy_config_from_nvs();
-  return &config;
-}
+typedef void (*settings_set_t)(const string&);
+typedef string& (*settings_get_t)();
 
 static bool extract_post_param(struct mg_http_message* message,
                                const char* param,
-                               const char* nvs_key,
+                               settings_set_t set,
+                               settings_get_t get,
                                size_t max_len)
 {
   // SMB URL is the longest parameter
   static char buf[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
-  static char buf2[sizeof(buf)] EXT_RAM_ATTR;
 
   mg_http_get_var(&message->body, param, buf, sizeof(buf));
   // In case someone tries to force a buffer overflow
   buf[max_len + 1] = '\0';
-  if (!storage_has_key(nvs_key)) {
-    // Param hasn't been set before
-    storage_set_str(nvs_key, buf);
-    return true;
-  }
-  size_t len2 = max_len;
-  storage_get_str(nvs_key, buf2, &len2);
-  if (strcmp(buf, buf2) == 0) {
-    // Param hasn't changed
+
+  string& orig = get();
+  if (strcmp(orig.c_str(), buf) == 0) {
+    // Setting has not changed
     return false;
   }
-  storage_set_str(nvs_key, buf);
+  set(string(buf));
   return true;
 }
 
@@ -178,20 +140,20 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   *response = "";
   *content_type = "text/plain";
 
-  reboot |= extract_post_param(message, "ssid", WIFI_KEY_SSID, MAX_LEN_SSID);
-  reboot |= extract_post_param(message, "passwd", WIFI_KEY_PASSWD, MAX_LEN_PASSWD);
-  extract_post_param(message, "tz", NTP_KEY_TZ, MAX_LEN_TZ);
+  reboot |= extract_post_param(message, "ssid", settings_set_wifi_ssid, settings_get_wifi_ssid, MAX_LEN_SSID);
+  reboot |= extract_post_param(message, "passwd", settings_set_wifi_passwd, settings_get_wifi_passwd, MAX_LEN_PASSWD);
+  extract_post_param(message, "tz", settings_set_tz, settings_get_tz, MAX_LEN_TZ);
   set_timezone();
 
-  smb_connect |= extract_post_param(message, "smb_url", SMB_KEY_URL, MAX_LEN_SMB_URL);
-  smb_connect |= extract_post_param(message, "smb_user", SMB_KEY_USER, MAX_LEN_SMB_USER);
-  smb_connect |= extract_post_param(message, "smb_passwd", SMB_KEY_PASSWD, MAX_LEN_SMB_PASSWD);
+  smb_connect |= extract_post_param(message, "smb_url", settings_set_smb_url, settings_get_smb_url, MAX_LEN_SMB_URL);
+  smb_connect |= extract_post_param(message, "smb_user", settings_set_smb_user, settings_get_smb_user, MAX_LEN_SMB_USER);
+  smb_connect |= extract_post_param(message, "smb_passwd", settings_set_smb_passwd, settings_get_smb_passwd, MAX_LEN_SMB_PASSWD);
+
+  settings_commit();
 
   if (smb_connect) {
     init_trs_fs_smb();
   }
-
-  copy_config_from_nvs();
 
   return reboot;
 }
@@ -213,23 +175,31 @@ static void mongoose_handle_status(struct mg_http_message* message,
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
   cJSON_AddNumberToObject(s, "wifi_status", status);
   cJSON_AddStringToObject(s, "ip", get_wifi_ip());
-  if (config.ssid[0] != '\0') {
-    cJSON_AddStringToObject(s, "ssid", config.ssid);
+
+  string& ssid = settings_get_wifi_ssid();
+  string& passwd = settings_get_wifi_passwd();
+  string& tz = settings_get_tz();
+  string& smb_url = settings_get_smb_url();
+  string& smb_user = settings_get_smb_user();
+  string& smb_passwd = settings_get_smb_passwd();
+
+  if (!ssid.empty()) {
+    cJSON_AddStringToObject(s, "ssid", ssid.c_str());
   }
-  if (config.passwd[0] != '\0') {
-    cJSON_AddStringToObject(s, "passwd", config.passwd);
+  if (!passwd.empty()) {
+    cJSON_AddStringToObject(s, "passwd", passwd.c_str());
   }
-  if (config.tz[0] != '\0') {
-    cJSON_AddStringToObject(s, "tz", config.tz);
+  if (!tz.empty()) {
+    cJSON_AddStringToObject(s, "tz", tz.c_str());
   }
-  if (config.smb_url[0] != '\0') {
-    cJSON_AddStringToObject(s, "smb_url", config.smb_url);
+  if (!smb_url.empty()) {
+    cJSON_AddStringToObject(s, "smb_url", smb_url.c_str());
   }
-  if (config.smb_user[0] != '\0') {
-    cJSON_AddStringToObject(s, "smb_user", config.smb_user);
+  if (!smb_user.empty()) {
+    cJSON_AddStringToObject(s, "smb_user", smb_user.c_str());
   }
-  if (config.smb_passwd[0] != '\0') {
-    cJSON_AddStringToObject(s, "smb_passwd", config.smb_passwd);
+  if (!smb_passwd.empty()) {
+    cJSON_AddStringToObject(s, "smb_passwd", smb_passwd.c_str());
   }
 
   time_t now;
@@ -372,7 +342,6 @@ static void mg_task(void* p)
   ESP_LOGI(TAG, "Starting Mongoose");
   init_time();
   init_mdns();
-  copy_config_from_nvs();
 
   // Start Mongoose
   mg_mgr_init(&mgr);
@@ -415,10 +384,10 @@ static void wifi_init_sta()
 
   status = RS_STATUS_WIFI_CONNECTING;
 
-  size_t len = sizeof(wifi_config.sta.ssid);
-  storage_get_str(WIFI_KEY_SSID, (char*) wifi_config.sta.ssid, &len);
-  len = sizeof(wifi_config.sta.password);
-  storage_get_str(WIFI_KEY_PASSWD, (char*) wifi_config.sta.password, &len);
+  string& ssid = settings_get_wifi_ssid();
+  string& passwd = settings_get_wifi_passwd();
+  strcpy((char*) wifi_config.sta.ssid, ssid.c_str());
+  strcpy((char*) wifi_config.sta.password, passwd.c_str());
 
   ESP_LOGI(TAG, "wifi_init_sta: SSID=%s", (char*) wifi_config.sta.ssid);
   ESP_LOGI(TAG, "wifi_init_sta: Passwd=%s", (char*) wifi_config.sta.password);
@@ -530,7 +499,7 @@ void init_wifi()
   storage_set_str(WIFI_KEY_SSID, CONFIG_TRS_IO_SSID);
   storage_set_str(WIFI_KEY_PASSWD, CONFIG_TRS_IO_PASSWD);
 #endif
-  if (storage_has_key(WIFI_KEY_SSID) && storage_has_key(WIFI_KEY_PASSWD)) {
+  if (settings_has_wifi_credentials()) {
     wifi_init_sta();
   } else {
     status = RS_STATUS_WIFI_NOT_CONFIGURED;

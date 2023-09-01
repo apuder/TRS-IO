@@ -7,7 +7,7 @@
 #include "serial.h"
 #include "posix.h"
 #include "smb.h"
-#include "storage.h"
+#include "settings.h"
 
 extern "C" {
 #include "trs_hard.h"
@@ -55,13 +55,6 @@ const char* init_trs_fs_smb() {
   trs_fs_smb = new TRS_FS_SMB();
   set_fs();
   return trs_fs_smb->get_err_msg();
-}
-
-const char* init_trs_fs_smb(const char* url, const char* user, const char* passwd) {
-  storage_set_str(SMB_KEY_URL, url);
-  storage_set_str(SMB_KEY_USER, user);
-  storage_set_str(SMB_KEY_PASSWD, passwd);
-  return init_trs_fs_smb();
 }
 
 const char* get_smb_err_msg() {

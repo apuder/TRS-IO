@@ -1,7 +1,7 @@
 
 #include "trs-fs.h"
 #include "smb.h"
-#include "storage.h"
+#include "settings.h"
 #include "io.h"
 
 #include <string.h>
@@ -32,11 +32,6 @@ TRS_FS_SMB::~TRS_FS_SMB()
     //smb2_destroy_url(url);
     smb2_destroy_context(smb2);
   }
-
-  if (smb_url != NULL) {
-    free(smb_url);
-    smb_url = NULL;
-  }
 }
 
 FS_TYPE TRS_FS_SMB::type()
@@ -46,11 +41,9 @@ FS_TYPE TRS_FS_SMB::type()
 
 const char* TRS_FS_SMB::init()
 {
-  char* smb_user = NULL;
-  char* smb_passwd = NULL;
   struct smb2_url* url = NULL;
 
-  if (!storage_has_key(SMB_KEY_URL) || !storage_has_key(SMB_KEY_USER) || !storage_has_key(SMB_KEY_PASSWD)) {
+  if (!settings_has_smb_credentials()) {
     return "Missing SMB share configuration";
   }
   
@@ -59,30 +52,18 @@ const char* TRS_FS_SMB::init()
     return "Failed to initialize SMB";
   }
 
-  size_t len;
-  storage_get_str(SMB_KEY_URL, NULL, &len);
-  smb_url = (char*) malloc(len);
-  storage_get_str(SMB_KEY_URL, smb_url, &len);
+  string& smb_url = settings_get_smb_url();
+  string& smb_user = settings_get_smb_user();
+  string& smb_passwd = settings_get_smb_passwd();
 
-  url = smb2_parse_url(smb2, smb_url);
+  url = smb2_parse_url(smb2, smb_url.c_str());
   if (url == NULL) {
     return smb2_get_error(smb2);
   }
 
-  storage_get_str(SMB_KEY_USER, NULL, &len);
-  smb_user = (char*) malloc(len);
-  storage_get_str(SMB_KEY_USER, smb_user, &len);
-
-  storage_get_str(SMB_KEY_PASSWD, NULL, &len);
-  smb_passwd = (char*) malloc(len);
-  storage_get_str(SMB_KEY_PASSWD, smb_passwd, &len);
-
   smb2_set_security_mode(smb2, SMB2_NEGOTIATE_SIGNING_ENABLED);
-  smb2_set_user(smb2, smb_user);
-  smb2_set_password(smb2, smb_passwd);
-
-  free(smb_user);
-  free(smb_passwd);
+  smb2_set_user(smb2, smb_user.c_str());
+  smb2_set_password(smb2, smb_passwd.c_str());
 
   int rc = smb2_connect_share(smb2, url->server, url->share, url->user);
   smb2_destroy_url(url);
@@ -132,7 +113,8 @@ FRESULT TRS_FS_SMB::f_open (
     assert(0);
   }
 
-  asprintf(&smb_path, "%s/%s", smb_url, path);
+  string& smb_url = settings_get_smb_url();
+  asprintf(&smb_path, "%s/%s", smb_url.c_str(), path);
   url = smb2_parse_url(smb2, smb_path);
   free(smb_path);
   if (url == NULL) {

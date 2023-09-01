@@ -1,35 +1,27 @@
 
 #include <time.h>
 #include <sys/time.h>
-#include "storage.h"
+#include "settings.h"
 #include "wifi.h"
 #include "ntp_sync.h"
 #include "lwip/apps/sntp.h"
 
 
 void set_timezone() {
-  if (!storage_has_key(NTP_KEY_TZ)) {
+  string& tz = settings_get_tz();
+  if (tz.empty()) {
     return;
   }
-  static char tz[MAX_LEN_TZ + 1];
-  size_t len = sizeof(tz);
-  storage_get_str(NTP_KEY_TZ, tz, &len);
-  char* p = tz;
-  while(*p != '\0') {
-    if (*p == '-') {
-      *p = '+';
-    } else if (*p == '+') {
-      *p = '-';
+  string patched = tz;
+  for (int i = 0; i < patched.size(); i++) {
+    if (patched[i] == '-') {
+      patched[i] = '+';
+    } else if (patched[i] == '+') {
+      patched[i] = '-';
     }
-    p++;
   }
-  setenv("TZ", tz, 1);
+  setenv("TZ", patched.c_str(), 1);
   tzset();
-}
-
-void set_timezone(const char* tz) {
-  storage_set_str(NTP_KEY_TZ, tz);
-  set_timezone();
 }
 
 void init_time() {

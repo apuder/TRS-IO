@@ -4,6 +4,7 @@
 #include "version.h"
 #include "spi.h"
 #include "led.h"
+#include "settings.h"
 
 #ifndef CONFIG_TRS_IO_MODEL_3
 #include "retrostore-defs.h"
@@ -56,8 +57,8 @@ public:
   }
 
   void sendWifiSSID() {
-    const char* ssid = get_wifi_ssid();
-    addStr(ssid);
+    string& ssid = settings_get_wifi_ssid();
+    addStr(ssid.empty() ? "-" : ssid.c_str());
   }
 
   void sendWifiIP() {

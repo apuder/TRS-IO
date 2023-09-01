@@ -2,17 +2,13 @@
 #define TRS_FS_SMB_H
 
 #include "smb2.h"
-
 #include "trs-fs.h"
+#include <string>
 
-#define SMB_KEY_URL "smb_url"
-#define SMB_KEY_USER "smb_user"
-#define SMB_KEY_PASSWD "smb_passwd"
-
+using namespace std;
 
 class TRS_FS_SMB : virtual public TRS_FS {
 private:
-  char* smb_url = NULL;
   struct smb2_context *smb2 = NULL;
 
   const char* init();

@@ -4,7 +4,7 @@
 #include "button.h"
 #include "wifi.h"
 #include "ota.h"
-#include "storage.h"
+#include "settings.h"
 #include "event.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -29,7 +29,7 @@ void app_main(void)
   init_events();
   init_trs_io();
   init_button();
-  init_storage();
+  init_settings();
 #ifdef CONFIG_TRS_IO_PP
   init_keyb();
   init_ptrs();
@@ -37,7 +37,7 @@ void app_main(void)
 
   if (is_button_pressed()) {
 #ifdef TRS_IO_BUTTON_ONLY_AT_STARTUP
-    storage_erase();
+    settings_reset_all();
 #else
     switch_to_factory();
 #endif

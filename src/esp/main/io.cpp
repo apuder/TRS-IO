@@ -4,7 +4,7 @@
 #include "io.h"
 #include "button.h"
 #include "led.h"
-#include "storage.h"
+#include "settings.h"
 #include "spi.h"
 #include "wifi.h"
 #include "trs-fs.h"
@@ -378,7 +378,7 @@ static void action_task(void* p)
 #endif
 
     if (is_button_long_press()) {
-      storage_erase();
+      settings_reset_all();
       esp_restart();
     }
 

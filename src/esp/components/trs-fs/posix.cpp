@@ -9,7 +9,6 @@ namespace VFS {
 
 #include "trs-fs.h"
 #include "posix.h"
-#include "storage.h"
 #include "io.h"
 
 #include <string.h>

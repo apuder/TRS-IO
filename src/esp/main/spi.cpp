@@ -7,15 +7,12 @@
 #include "esp_task.h"
 #include "esp_event_loop.h"
 #include "spi.h"
-#include "storage.h"
-
+#include "settings.h"
 
 static spi_device_interface_config_t spi_cmod;
 spi_device_handle_t spi_cmod_h;
 
 static SemaphoreHandle_t mutex = NULL;
-
-#define KEY_SCREEN_RGB "screen_rgb"
 
 static const uint8_t screen_rgb_colors[][3] = {
   {225, 225, 255}, // White
@@ -330,13 +327,11 @@ void spi_set_full_addr(bool flag)
   ESP_ERROR_CHECK(ret);
 }
 
-// The Nano 9K generates a HDMI signal and we have to tell it the RGB value
+// The FPGA generates a HDMI signal and we have to tell it the RGB value
 void spi_set_screen_color(uint8_t color)
 {
   spi_transaction_ext_t trans;
   if (color > 2) return;
-
-  storage_set_i32(KEY_SCREEN_RGB, color);
 
   memset(&trans, 0, sizeof(spi_transaction_ext_t));
   trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
@@ -546,9 +541,6 @@ void init_spi()
   }
   ESP_LOGI("SPI", "Found FPGA");
 
-  uint8_t color = 0;
-  if (storage_has_key(KEY_SCREEN_RGB)) {
-    color = storage_get_i32(KEY_SCREEN_RGB);
-  }
+  uint8_t color = settings_get_screen_color();
   spi_set_screen_color(color);
 }
