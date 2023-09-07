@@ -17,10 +17,19 @@
         font-weight: bold;
         font-family:'TreasureMIII64C';
         padding: 0.5em;
-    }
+      }
+      .elfinder .elfinder-navbar.ui-resizable {
+        display: none !important;
+      }
+      html, body {
+        height: calc(100% - 2.5em);
+      }
+      #elfinder {
+        height: 100% !important;
+      }
     </style>
 
-		<!-- Require JS (REQUIRED) -->
+<!-- Require JS (REQUIRED) -->
 		<!-- Rename "main.default.js" to "main.js" and edit it if you need configure elFInder options or any things -->
 		<script data-main="./main.default.js" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
 		<script>
@@ -56,7 +65,7 @@
 	          // toolbar configuration
 	            toolbar : [
 		          ['upload'],
-		          ['download', 'rm'],
+		          [/*'download',*/ 'rm'],
 		          ['info'],
 		          ['view']
               ]
