@@ -34,6 +34,9 @@ typedef int16_t WORD;
 #define f_stat _f_stat
 
 
+#ifndef FRESULT_DEFINED
+#define FRESULT_DEFINED
+
 typedef enum {
     FR_OK = 0,				/* (0) Succeeded */
     FR_DISK_ERR,			/* (1) A hard error occurred in the low level disk I/O layer */
@@ -66,6 +69,7 @@ typedef enum {
 #define	FA_OPEN_ALWAYS		0x10
 #define	FA_OPEN_APPEND		0x30
 
+#endif
 
 #define FF_MAX_SS 256
 

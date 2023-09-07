@@ -1,0 +1,5 @@
+
+#pragma once
+
+#define POCKET_TRS_VERSION_MAJOR 0
+#define POCKET_TRS_VERSION_MINOR 9

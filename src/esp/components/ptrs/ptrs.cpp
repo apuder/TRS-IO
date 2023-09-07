@@ -44,6 +44,9 @@ void configure_pocket_trs()
     case MENU_CONFIGURE:
       configure_ptrs_settings();
       break;
+    case MENU_STATUS:
+      ptrs_status();
+      break;
     }
     show_from_left = true;
   }

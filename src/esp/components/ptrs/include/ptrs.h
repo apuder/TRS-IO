@@ -4,6 +4,7 @@
 
 void configure_pocket_trs();
 void configure_ptrs_settings();
+void ptrs_status();
 void init_ptrs();
 
 

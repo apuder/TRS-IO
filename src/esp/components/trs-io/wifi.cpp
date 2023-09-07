@@ -98,13 +98,6 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
 static mg_queue prn_queue;
 static int num_printer_sockets = 0;
 
-#define MAX_LEN_SSID 32
-#define MAX_LEN_PASSWD 32
-#define MAX_LEN_TZ 32
-#define MAX_LEN_SMB_URL 100
-#define MAX_LEN_SMB_USER 32
-#define MAX_LEN_SMB_PASSWD 32
-
 typedef void (*settings_set_t)(const string&);
 typedef string& (*settings_get_t)();
 
@@ -140,8 +133,8 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   *response = "";
   *content_type = "text/plain";
 
-  reboot |= extract_post_param(message, "ssid", settings_set_wifi_ssid, settings_get_wifi_ssid, MAX_LEN_SSID);
-  reboot |= extract_post_param(message, "passwd", settings_set_wifi_passwd, settings_get_wifi_passwd, MAX_LEN_PASSWD);
+  reboot |= extract_post_param(message, "ssid", settings_set_wifi_ssid, settings_get_wifi_ssid, MAX_LEN_WIFI_SSID);
+  reboot |= extract_post_param(message, "passwd", settings_set_wifi_passwd, settings_get_wifi_passwd, MAX_LEN_WIFI_PASSWD);
   extract_post_param(message, "tz", settings_set_tz, settings_get_tz, MAX_LEN_TZ);
   set_timezone();
 

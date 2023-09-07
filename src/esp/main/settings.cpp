@@ -157,6 +157,38 @@ static void init_smb_credentials()
 }
 
 
+//-----ROM--------------------------------------------------------
+
+#define KEY_ROM "rom"
+
+static string rom;
+
+string& settings_get_rom()
+{
+  return rom;
+}
+
+void settings_set_rom(const string& rom_file)
+{
+  nvs_set_str(storage, KEY_ROM, rom_file.c_str());
+  rom = rom_file;
+}
+
+static void init_rom()
+{
+  size_t len;
+
+  if (nvs_get_str(storage, KEY_ROM, NULL, &len) == ESP_OK) {
+    rom.resize(len);
+    nvs_get_str(storage, KEY_ROM, (char*) rom.data(), &len);
+  }
+
+  if (rom.empty()) {
+    rom = SETTING_DEFAULT_ROM;
+  }
+}
+
+
 //-----Screen Color--------------------------------------------------------
 
 #define KEY_SCREEN_RGB "screen_rgb"
@@ -212,5 +244,6 @@ void init_settings()
   init_tz();
   init_wifi_credentials();
   init_smb_credentials();
+  init_rom();
   init_screen_color();
 }
