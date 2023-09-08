@@ -34,6 +34,12 @@ static void set_fs() {
     trs_fs = trs_fs_smb;
   }
   if (trs_fs != current_trs_fs && trs_fs->get_err_msg() == NULL) {
+    if (current_trs_fs != NULL) {
+      TRS_FS* new_trs_fs = trs_fs;
+      trs_fs = current_trs_fs;
+      close_drives();
+      trs_fs = new_trs_fs;
+    }
     open_drives();
   }
   current_trs_fs = trs_fs;
@@ -41,6 +47,10 @@ static void set_fs() {
 
 const char* init_trs_fs_posix() {
   if (trs_fs_posix != NULL) {
+    if (current_trs_fs == trs_fs_posix) {
+      close_drives();
+      current_trs_fs = NULL;
+    }
     delete trs_fs_posix;
   }
   trs_fs_posix = new TRS_FS_POSIX();
@@ -50,6 +60,10 @@ const char* init_trs_fs_posix() {
 
 const char* init_trs_fs_smb() {
   if (trs_fs_smb != NULL) {
+    if (current_trs_fs == trs_fs_smb) {
+      close_drives();
+      current_trs_fs = NULL;
+    }
     delete trs_fs_smb;
   }
   trs_fs_smb = new TRS_FS_SMB();

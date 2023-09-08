@@ -327,11 +327,8 @@ static void action_task(void* p)
     if (sd_card_eject_countdown != 0) {
       sd_card_eject_countdown--;
       if (sd_card_eject_countdown == 1) {
-        if (gpio_get_level(SD_CARD)) {
-          printf("SD card ejected\n");
-        } else {
-          printf("SD card inserted\n");
-        }
+        // gpio_get_level(SD_CARD) == true -> SD card ejected
+        init_trs_fs_posix();
       }
     }
 
