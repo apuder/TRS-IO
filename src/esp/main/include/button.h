@@ -9,4 +9,6 @@ void init_button();
 bool is_button_long_press();
 bool is_button_short_press();
 bool is_button_pressed();
-
+#ifdef CONFIG_TRS_IO_PP
+bool is_reset_button_pressed();
+#endif

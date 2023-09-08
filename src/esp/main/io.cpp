@@ -379,10 +379,13 @@ static void action_task(void* p)
       esp_restart();
     }
 
-    if (is_button_short_press()) {
-#if 0
+#ifdef CONFIG_TRS_IO_PP
+    if (is_reset_button_pressed()) {
       spi_ptrs_rst();
+    }
 #endif
+
+    if (is_button_short_press()) {
       // Check Wifi status
       if (*get_wifi_status() == RS_STATUS_WIFI_CONNECTED) {
         set_led(false, true, false, false, false);

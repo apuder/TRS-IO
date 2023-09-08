@@ -7,6 +7,7 @@
 #define GPIO_BUTTON GPIO_NUM_39
 #elif defined(CONFIG_TRS_IO_PP)
 #define GPIO_BUTTON GPIO_NUM_35
+#define GPIO_RESET_BUTTON GPIO_NUM_0
 #else
 #define GPIO_BUTTON GPIO_NUM_22
 #endif
@@ -75,6 +76,13 @@ void init_button()
   gpioConfig.intr_type = GPIO_INTR_ANYEDGE;
 #endif
   gpio_config(&gpioConfig);
+
+#ifdef CONFIG_TRS_IO_PP
+  gpioConfig.pin_bit_mask = (1ULL << GPIO_RESET_BUTTON);
+  gpioConfig.intr_type = GPIO_INTR_DISABLE;
+  gpio_config(&gpioConfig);
+#endif
+
 #ifndef TRS_IO_BUTTON_ONLY_AT_STARTUP
   gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
   gpio_isr_handler_add(GPIO_BUTTON, isr_button, NULL);
@@ -89,3 +97,10 @@ bool is_button_pressed()
   return (GPIO.in & (1 << GPIO_BUTTON)) == 0;
 #endif
 }
+
+#ifdef CONFIG_TRS_IO_PP
+bool is_reset_button_pressed()
+{
+  return (GPIO.in & (1 << GPIO_RESET_BUTTON)) == 0;
+}
+#endif
