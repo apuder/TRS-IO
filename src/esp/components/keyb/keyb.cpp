@@ -313,8 +313,13 @@ static void process_key(int vk, bool down)
   }
 }
 
+#define KEY_ALT  1
+#define KEY_CTRL 2
+#define KEY_DEL  4
+
 void check_keyb()
 {
+  static uint8_t reset_trigger = 0;
   static fabgl::VirtualKey lastvk = fabgl::VK_NONE;
   auto keyboard = PS2Controller.keyboard();
 
@@ -324,9 +329,38 @@ void check_keyb()
   if (keyboard->virtualKeyAvailable()) {
     bool down;
     auto vk = keyboard->getNextVirtualKey(&down);
+
+    // Check for PocketTRS configure
     if (down && vk == fabgl::VK_F5) {
       configure_pocket_trs();
     }
+
+    // Check for CTRL-ALT-DEL
+    if (vk == fabgl::VK_LALT || vk == fabgl::VK_RALT) {
+      if (down) {
+        reset_trigger |= KEY_ALT;
+      } else {
+        reset_trigger &= ~KEY_ALT;
+      }
+    }
+    if (vk == fabgl::VK_LCTRL || vk == fabgl::VK_RCTRL) {
+      if (down) {
+        reset_trigger |= KEY_CTRL;
+      } else {
+        reset_trigger &= ~KEY_CTRL;
+      }
+    }
+    if (vk == fabgl::VK_DELETE || vk == fabgl::VK_KP_DELETE) {
+      if (down) {
+        reset_trigger |= KEY_DEL;
+      } else {
+        reset_trigger &= ~KEY_DEL;
+      }
+    }
+    if (reset_trigger == (KEY_CTRL | KEY_ALT | KEY_DEL)) {
+      spi_ptrs_rst();
+    }
+
     //printf("VirtualKey = %s\n", keyboard->virtualKeyToString(vk));
 #if 0
     if (down && vk == fabgl::VK_F5 && trs_screen.isTextMode()) {
