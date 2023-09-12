@@ -74,6 +74,10 @@ wire xio_ioreq_n;
 wire xio_iord_n;
 wire xio_iowr_n;
 
+wire is_80cols;
+wire is_doublwide;
+wire is_hires;
+
 reg ESP_REQ;
 assign REQ = ESP_REQ;
 wire ESP_DONE = DONE;
@@ -370,7 +374,8 @@ localparam [7:0]
   z80_dsp_set_addr    = 8'd23,
   z80_dsp_poke        = 8'd24,
   z80_dsp_peek        = 8'd25,
-  set_led             = 8'd26;
+  set_led             = 8'd26,
+  get_config          = 8'd27;
 
 
 
@@ -493,6 +498,11 @@ always @(posedge clk) begin
           end
           set_led: begin
             bytes_to_read <= 1;
+          end
+          get_config: begin
+            trigger_action <= 1'b1;
+            bits_to_send <= 9;
+            state <= idle;
           end
           default:
             begin
@@ -955,6 +965,7 @@ always @(posedge clk) begin
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
   else if (trigger_action && cmd == abus_read) byte_out <= TRS_A[7:0];
+  else if (trigger_action && cmd == get_config) byte_out <= {1'b0, is_80cols, is_doublwide, is_hires, CONF};
 end
 
 
@@ -1265,14 +1276,8 @@ Gowin_DCS0 z80_clkdcs(
 );
 
 
-reg [3:0] z80_rst_trigger;
-
-always @(posedge clk) z80_rst_trigger <= {z80_rst_trigger[2:0], trigger_action && (cmd == ptrs_rst)};
-
-// Assert RST for 4 cycles in case of WAIT
-//wire z80_rst = z80_rst_trigger != 0;
 reg [7:0] z80_rst_shr = 8'b0;
-always @ (posedge z80_clk) z80_rst_shr <= {z80_rst_shr[6:0], ~keyb_matrix[7][1]};
+always @ (posedge z80_clk) z80_rst_shr <= {z80_rst_shr[6:0], !(trigger_action && (cmd == ptrs_rst))};
 wire z80_rst = ~z80_rst_shr[7];
 
 
@@ -1326,9 +1331,9 @@ TTRS80 TTRS80 (
    .orch90l_out(),
    .orch90r_out(),
    .lb80(pmod_a),
-   .is_80col(),
-   .is_doublwide(),
-   .is_hires(),
+   .is_80col(is_80cols),
+   .is_doublwide(is_doublwide),
+   .is_hires(is_hires),
 
    // Expansion connector
    // Inputs
