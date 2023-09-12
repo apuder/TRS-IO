@@ -326,6 +326,11 @@ void check_keyb()
   if (keyboard == nullptr || !keyboard->isKeyboardAvailable()) {
     return;
   }
+
+  if (reset_trigger == (KEY_CTRL | KEY_ALT | KEY_DEL)) {
+    spi_ptrs_rst();
+  }
+
   if (keyboard->virtualKeyAvailable()) {
     bool down;
     auto vk = keyboard->getNextVirtualKey(&down);
@@ -356,9 +361,6 @@ void check_keyb()
       } else {
         reset_trigger &= ~KEY_DEL;
       }
-    }
-    if (reset_trigger == (KEY_CTRL | KEY_ALT | KEY_DEL)) {
-      spi_ptrs_rst();
     }
 
     //printf("VirtualKey = %s\n", keyboard->virtualKeyToString(vk));
