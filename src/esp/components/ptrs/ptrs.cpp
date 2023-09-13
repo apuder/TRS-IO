@@ -28,12 +28,12 @@ static menu_t main_menu = {
 
 
 
-void configure_pocket_trs()
+void configure_pocket_trs(bool is_80_cols)
 {
   bool show_from_left = false;
   uint8_t status;
 
-  init_trs_lib();
+  init_trs_lib(is_80_cols);
 
   while(true) {
     status = menu(&main_menu, show_from_left, true);

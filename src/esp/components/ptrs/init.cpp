@@ -68,25 +68,32 @@ void fpga_screen_update_range(uint8_t* from, uint8_t* to)
 }
 
 
-static uint8_t screen_original_content[SCREEN_WIDTH * SCREEN_HEIGHT];
+static uint8_t* screen_original_content;
+static uint8_t* foreground_buffer;
+static uint8_t* background_buffer;
 
+static uint8_t screen_width;
+static uint8_t screen_height;
 
-void init_trs_lib()
+void init_trs_lib(bool is_80_cols)
 {
   uint8_t ch;
 
-  // Hardcoded for M1/MIII
-  static uint8_t foreground_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-  static uint8_t background_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
+  screen_width = is_80_cols ? 80 : 64;
+  screen_height = is_80_cols ? 24 : 16;
+
+  screen_original_content = (uint8_t*) malloc(screen_width * screen_height);
+  foreground_buffer = (uint8_t*) malloc(screen_width * screen_height);
+  background_buffer = (uint8_t*) malloc(screen_width * screen_height);
 
   spi_z80_pause();
   spi_z80_dsp_set_addr(0);
-  for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
+  for (int i = 0; i < screen_width * screen_height; i++) {
     screen_original_content[i] = foreground_buffer[i] = spi_z80_dsp_peek();
   }
 
   set_screen(foreground_buffer, background_buffer,
-             SCREEN_WIDTH, SCREEN_HEIGHT,
+             screen_width, screen_height,
              fpga_screen_update_range);
   set_keyboard_callback(get_next_key);
 }
@@ -94,7 +101,10 @@ void init_trs_lib()
 void exit_trs_lib()
 {
   set_screen_to_background();
-  memmove(screen.current, screen_original_content, SCREEN_WIDTH * SCREEN_HEIGHT);
+  memmove(screen.current, screen_original_content, screen_width * screen_height);
   screen_show(true);
   spi_z80_resume();
+  free(screen_original_content);
+  free(foreground_buffer);
+  free(background_buffer);
 }

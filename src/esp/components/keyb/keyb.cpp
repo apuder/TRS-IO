@@ -337,7 +337,12 @@ void check_keyb()
 
     // Check for PocketTRS configure
     if (down && vk == fabgl::VK_F5) {
-      configure_pocket_trs();
+      uint8_t mode = spi_get_config();
+      // Only enter ptrs config if not in double wide or hires mode
+      if (!(mode & (PTRS_CONFIG_HIRES | PTRS_CONFIG_WIDE))) {
+        bool is_80_cols = mode & PTRS_CONFIG_80_COLS;
+        configure_pocket_trs(is_80_cols);
+      }
     }
 
     // Check for CTRL-ALT-DEL
