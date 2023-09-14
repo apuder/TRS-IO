@@ -21,6 +21,7 @@
 #include "freertos/timers.h"
 #include "web_debugger.h"
 #include "keyb.h"
+#include "jtag.h"
 #include "spi.h"
 
 #define ESP_REQ GPIO_NUM_34
@@ -375,8 +376,12 @@ static void action_task(void* p)
 #endif
 
     if (is_button_long_press()) {
+#ifdef CONFIG_TRS_IO_PP
+      uploadFPGAFirmware();
+#else
       settings_reset_all();
       esp_restart();
+#endif
     }
 
 #ifdef CONFIG_TRS_IO_PP

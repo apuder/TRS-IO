@@ -72,6 +72,7 @@
 
 class BitstreamSource {
 public:
+  virtual ~BitstreamSource() {}
   virtual bool open() = 0;
   virtual bool read(void* buf, int n, int* br) = 0;
   virtual bool close() = 0;
@@ -240,7 +241,8 @@ class JTAGAdapterTrsIO : public JTAGAdapter {
 public:
   void setup();
   void testBoundaryScan();
-  void testProgramToSRAM();
+  void doProgramToSRAM(const char* path);
   void testProgramToFLASH();
 };
 
+void uploadFPGAFirmware();

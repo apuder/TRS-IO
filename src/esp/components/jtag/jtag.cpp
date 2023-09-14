@@ -10,6 +10,7 @@
 
 
 #include "trs-fs.h"
+#include "spi.h"
 #include "jtag.h"
 
 
@@ -295,7 +296,7 @@ void JTAGAdapterTrsIO::testBoundaryScan()
   // Never reached
 }
 
-void JTAGAdapterTrsIO::testProgramToSRAM()
+void JTAGAdapterTrsIO::doProgramToSRAM(const char* path)
 {
   setup();
   reset();
@@ -306,7 +307,8 @@ void JTAGAdapterTrsIO::testProgramToSRAM()
     return;
   }
 
-  BitstreamSourceFile* bs = new BitstreamSourceFile("firmware.bin");
+  ESP_LOGI("JTAG", "Opening bitstream '%s'", path);
+  BitstreamSourceFile* bs = new BitstreamSourceFile(path);
   if (!bs->open()) {
     ESP_LOGE("JTAG", "Open failed");
   } else {
@@ -320,6 +322,7 @@ void JTAGAdapterTrsIO::testProgramToSRAM()
       return;
     }
     ESP_LOGI("JTAG", "Programming SRAM succeeded");
+    delete bs;
   }
 }
 
@@ -349,3 +352,13 @@ void JTAGAdapterTrsIO::testProgramToFLASH()
   }
 }
 
+static JTAGAdapterTrsIO jtag;
+
+void uploadFPGAFirmware()
+{
+  char* path;
+  uint8_t mode = spi_get_config();
+  asprintf(&path, "firmware-%d.bin", mode & 0x0f);
+  jtag.doProgramToSRAM(path);
+  free(path);
+}

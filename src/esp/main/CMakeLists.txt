@@ -32,4 +32,5 @@ idf_component_register(SRCS ${src}
                                 trs-fs
                                 trs-io
                                 keyb
-                                ptrs)
+                                ptrs
+                                jtag)
