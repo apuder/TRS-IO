@@ -35,7 +35,7 @@ void app_main(void)
   init_ptrs();
 #endif
 
-  if (is_button_pressed()) {
+  if (is_status_button_pressed()) {
 #ifdef TRS_IO_BUTTON_ONLY_AT_STARTUP
     settings_reset_all();
 #else

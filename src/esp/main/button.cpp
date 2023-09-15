@@ -17,28 +17,73 @@
 #define BUTTON_LONG_PRESS BIT0
 #define BUTTON_SHORT_PRESS BIT1
 
-static volatile uint8_t button_status = 0;
-
-bool is_button_long_press()
+bool is_status_button_pressed()
 {
-  bool yes = (button_status & BUTTON_LONG_PRESS) != 0;
-  button_status &= ~ BUTTON_LONG_PRESS;
+#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_TRS_IO_PP)
+  return (GPIO.in1.data & (1 << (GPIO_BUTTON - 32))) == 0;
+#else
+  return (GPIO.in & (1 << GPIO_BUTTON)) == 0;
+#endif
+}
+
+#ifdef CONFIG_TRS_IO_PP
+bool is_reset_button_pressed()
+{
+  return (GPIO.in & (1 << GPIO_RESET_BUTTON)) == 0;
+}
+#endif
+
+typedef bool (*button_pressed_t)(void);
+
+typedef struct {
+  volatile uint8_t button_status;
+  button_pressed_t is_button_pressed;
+} button_t;
+
+
+static button_t status_button = {0, is_status_button_pressed};
+#ifdef CONFIG_TRS_IO_PP
+static button_t reset_button = {0, is_reset_button_pressed};
+#endif
+
+bool is_status_button_long_press()
+{
+  bool yes = (status_button.button_status & BUTTON_LONG_PRESS) != 0;
+  status_button.button_status &= ~ BUTTON_LONG_PRESS;
   return yes;
 }
 
-bool is_button_short_press()
+bool is_status_button_short_press()
 {
-  bool yes = (button_status & BUTTON_SHORT_PRESS) != 0;
-  button_status &= ~ BUTTON_SHORT_PRESS;
+  bool yes = (status_button.button_status & BUTTON_SHORT_PRESS) != 0;
+  status_button.button_status &= ~ BUTTON_SHORT_PRESS;
   return yes;
 }
+
+#ifdef CONFIG_TRS_IO_PP
+bool is_reset_button_long_press()
+{
+  bool yes = (reset_button.button_status & BUTTON_LONG_PRESS) != 0;
+  reset_button.button_status &= ~ BUTTON_LONG_PRESS;
+  return yes;
+}
+
+bool is_reset_button_short_press()
+{
+  bool yes = (reset_button.button_status & BUTTON_SHORT_PRESS) != 0;
+  reset_button.button_status &= ~ BUTTON_SHORT_PRESS;
+  return yes;
+}
+#endif
 
 #ifndef TRS_IO_BUTTON_ONLY_AT_STARTUP
 static void IRAM_ATTR isr_button(void* arg)
 {
   static int64_t then;
   
-  if (is_button_pressed()) {
+  button_t* button = (button_t*) arg;
+
+  if (button->is_button_pressed()) {
     then = esp_timer_get_time();
   } else {
     int64_t now = esp_timer_get_time();
@@ -48,10 +93,10 @@ static void IRAM_ATTR isr_button(void* arg)
       return;
     }
     if (delta_ms < 1000) {
-      button_status |= BUTTON_SHORT_PRESS;
+      button->button_status |= BUTTON_SHORT_PRESS;
     }
     if (delta_ms > 3000) {
-      button_status |= BUTTON_LONG_PRESS;
+      button->button_status |= BUTTON_LONG_PRESS;
     }
   }
 }
@@ -77,30 +122,14 @@ void init_button()
 #endif
   gpio_config(&gpioConfig);
 
-#ifdef CONFIG_TRS_IO_PP
-  gpioConfig.pin_bit_mask = (1ULL << GPIO_RESET_BUTTON);
-  gpioConfig.intr_type = GPIO_INTR_DISABLE;
-  gpio_config(&gpioConfig);
-#endif
-
 #ifndef TRS_IO_BUTTON_ONLY_AT_STARTUP
   gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
-  gpio_isr_handler_add(GPIO_BUTTON, isr_button, NULL);
+  gpio_isr_handler_add(GPIO_BUTTON, isr_button, &status_button);
 #endif
-}
-
-bool is_button_pressed()
-{
-#if defined(CONFIG_TRS_IO_MODEL_1) || defined(CONFIG_TRS_IO_PP)
-  return (GPIO.in1.data & (1 << (GPIO_BUTTON - 32))) == 0;
-#else
-  return (GPIO.in & (1 << GPIO_BUTTON)) == 0;
-#endif
-}
 
 #ifdef CONFIG_TRS_IO_PP
-bool is_reset_button_pressed()
-{
-  return (GPIO.in & (1 << GPIO_RESET_BUTTON)) == 0;
-}
+  gpioConfig.pin_bit_mask = (1ULL << GPIO_RESET_BUTTON);
+  gpio_config(&gpioConfig);
+  gpio_isr_handler_add(GPIO_RESET_BUTTON, isr_button, &reset_button);
 #endif
+}

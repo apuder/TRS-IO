@@ -320,8 +320,10 @@ static void IRAM_ATTR io_task(void* p)
 static void action_task(void* p)
 {
   // Clear any spurious interrupts
-  is_button_short_press();
-  is_button_long_press();
+  is_status_button_short_press();
+  is_status_button_long_press();
+  is_reset_button_short_press();
+  is_reset_button_long_press();
 
   while (true) {
 #ifdef CONFIG_TRS_IO_PP
@@ -375,22 +377,21 @@ static void action_task(void* p)
     }
 #endif
 
-    if (is_button_long_press()) {
-#ifdef CONFIG_TRS_IO_PP
-      uploadFPGAFirmware();
-#else
+    if (is_status_button_long_press()) {
       settings_reset_all();
       esp_restart();
-#endif
     }
 
 #ifdef CONFIG_TRS_IO_PP
     if (is_reset_button_pressed()) {
       spi_ptrs_rst();
     }
+    if (is_reset_button_long_press()) {
+      uploadFPGAFirmware();
+    }
 #endif
 
-    if (is_button_short_press()) {
+    if (is_status_button_short_press()) {
       // Check Wifi status
       if (*get_wifi_status() == RS_STATUS_WIFI_CONNECTED) {
         set_led(false, true, false, false, false);
