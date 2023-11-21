@@ -1,0 +1,9 @@
+
+- Export as SVG in OpenOffice
+- Import in Inkscape
+- Export as PNG. Increase DPI to 430
+- Import in KiCad Image Converter
+- Change width to 120mm
+- Export to clipboard
+- Paste in PCBnew
+
