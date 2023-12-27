@@ -255,10 +255,12 @@ static void IRAM_ATTR esp_req_isr_handler(void* arg)
   esp_req_triggered = true;
 }
 
+#ifdef CONFIG_TRS_IO_PP
 static void IRAM_ATTR sd_card_eject_isr_handler(void* arg)
 {
   sd_card_eject_countdown = 0xff;
 }
+#endif
 
 static void IRAM_ATTR io_task(void* p)
 {
@@ -322,8 +324,10 @@ static void action_task(void* p)
   // Clear any spurious interrupts
   is_status_button_short_press();
   is_status_button_long_press();
+#ifdef CONFIG_TRS_IO_PP
   is_reset_button_short_press();
   is_reset_button_long_press();
+#endif
 
   while (true) {
 #ifdef CONFIG_TRS_IO_PP
