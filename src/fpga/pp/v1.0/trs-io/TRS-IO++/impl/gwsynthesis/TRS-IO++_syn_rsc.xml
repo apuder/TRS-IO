@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module name="top" Register="395" Alu="211" Lut="377">
+    <SubModule name="clk_wiz_0"/>
+    <SubModule name="io" Register="12" Lut="4"/>
+    <SubModule name="pre_ram_access_check_trigger" Register="1"/>
+    <SubModule name="bram" Register="2" Lut="18" Bsram="16"/>
+    <SubModule name="brama_read_trigger" Register="1"/>
+    <SubModule name="brama_write_trigger" Register="2"/>
+    <SubModule name="bram_peek_trigger" Register="1" Lut="1"/>
+    <SubModule name="xram" Bsram="1"/>
+    <SubModule name="xrama_read_trigger" Register="1" Lut="1"/>
+    <SubModule name="xram_peek_trigger" Register="1"/>
+    <SubModule name="pll0"/>
+    <SubModule name="clkdiv0"/>
+    <SubModule name="clkdiv1"/>
+    <SubModule name="hdmi" Register="83" Alu="19" Lut="56" Bsram="1">
+        <SubModule name="true_hdmi_output.packet_picker" Register="406" Lut="295">
+            <SubModule name="audio_clock_regeneration_packet" Register="42" Alu="20" Lut="8"/>
+        </SubModule>
+        <SubModule name="true_hdmi_output.packet_assembler" Register="42" Alu="4" Lut="329"/>
+        <SubModule name="tmds_gen[0].tmds_channel" Register="14" Alu="16" Lut="112"/>
+        <SubModule name="tmds_gen[1].tmds_channel" Register="14" Alu="16" Lut="95"/>
+        <SubModule name="tmds_gen[2].tmds_channel" Register="14" Alu="16" Lut="86"/>
+        <SubModule name="serializer" Lut="30"/>
+    </SubModule>
+    <SubModule name="vga" Register="82" Alu="11" Lut="128">
+        <SubModule name="z80_dsp" Bsram="1"/>
+        <SubModule name="le18_rd_trigger" Register="2"/>
+        <SubModule name="z80_le18" Bsram="6"/>
+        <SubModule name="char_rom" Bsram="1"/>
+    </SubModule>
+    <SubModule name="mem" Register="12" Lut="4"/>
+</Module>
