@@ -27,6 +27,9 @@ TRS_FS_SMB::TRS_FS_SMB() {
 
 TRS_FS_SMB::~TRS_FS_SMB()
 {
+  if (base_dir != NULL) {
+    free(base_dir);
+  }
   if (smb2 != NULL) {
     smb2_disconnect_share(smb2);
     //smb2_destroy_url(url);
@@ -61,6 +64,12 @@ const char* TRS_FS_SMB::init()
     return smb2_get_error(smb2);
   }
 
+  if (url->path == NULL || url->path[0] == '\0') {
+    base_dir = strdup("");
+  } else {
+    asprintf(&base_dir, "%s/", url->path);
+  }
+
   smb2_set_security_mode(smb2, SMB2_NEGOTIATE_SIGNING_ENABLED);
   smb2_set_user(smb2, smb_user.c_str());
   smb2_set_password(smb2, smb_passwd.c_str());
@@ -80,7 +89,6 @@ FRESULT TRS_FS_SMB::f_open (
                             const TCHAR* path, /* [IN] File name */
                             BYTE mode          /* [IN] Mode flags */
                             ) {
-  struct smb2_url *url;
   char* smb_path;
   int m = 0;
   
@@ -113,16 +121,9 @@ FRESULT TRS_FS_SMB::f_open (
     assert(0);
   }
 
-  string& smb_url = settings_get_smb_url();
-  asprintf(&smb_path, "%s/%s", smb_url.c_str(), path);
-  url = smb2_parse_url(smb2, smb_path);
+  asprintf(&smb_path, "%s%s", base_dir, path);
+  fp->f = (struct smb2fh*) smb2_open(smb2, smb_path, m);
   free(smb_path);
-  if (url == NULL) {
-    return FR_NO_FILE;
-  }
-
-  fp->f = (struct smb2fh*) smb2_open(smb2, url->path, m);
-  smb2_destroy_url(url);
   return (fp->f == NULL) ? FR_NO_FILE : FR_OK;
 }
 
@@ -130,10 +131,14 @@ FRESULT TRS_FS_SMB::f_opendir (
                                DIR_* dp,           /* [OUT] Pointer to the directory object structure */
                                const TCHAR* path  /* [IN] Directory name */
                                ) {
+  char* smb_path;
+
   if ((strcmp(path, ".") == 0) || (strcmp(path, "/") == 0)) {
     path = "";
   }
-  dp->dir = (struct smb2dir*) smb2_opendir(smb2, path);
+  asprintf(&smb_path, "%s%s", base_dir, path);
+  dp->dir = (struct smb2dir*) smb2_opendir(smb2, smb_path);
+  free(smb_path);
   return (dp->dir != NULL) ? FR_OK : FR_DISK_ERR;
 }
 
@@ -223,7 +228,11 @@ FRESULT TRS_FS_SMB::f_stat (
                             const TCHAR* path,  /* [IN] Object name */
                             FILINFO* fno        /* [OUT] FILINFO structure */
                             ) {
-  struct smb2fh* fh = smb2_open(smb2, path, O_RDONLY);
+  char* smb_path;
+
+  asprintf(&smb_path, "%s%s", base_dir, path);
+  struct smb2fh* fh = smb2_open(smb2, smb_path, O_RDONLY);
+  free(smb_path);
   if (fh == NULL) {
     return FR_NO_FILE;
   }

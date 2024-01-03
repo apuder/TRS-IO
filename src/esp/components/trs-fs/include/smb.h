@@ -10,6 +10,7 @@ using namespace std;
 class TRS_FS_SMB : virtual public TRS_FS {
 private:
   struct smb2_context *smb2 = NULL;
+  char* base_dir = NULL;
 
   const char* init();
 public:
