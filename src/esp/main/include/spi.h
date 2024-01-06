@@ -61,14 +61,6 @@
 #define FPGA_CMD_SET_LED 26
 #define FPGA_CMD_GET_CONFIG 27
 
-#define PTRS_CONFIG_DIP_1   (1 << 0)
-#define PTRS_CONFIG_DIP_2   (1 << 1)
-#define PTRS_CONFIG_DIP_3   (1 << 2)
-#define PTRS_CONFIG_DIP_4   (1 << 3)
-#define PTRS_CONFIG_HIRES   (1 << 4)
-#define PTRS_CONFIG_WIDE    (1 << 5)
-#define PTRS_CONFIG_80_COLS (1 << 6)
-
 uint8_t spi_get_cookie();
 uint8_t spi_get_fpga_version();
 uint8_t spi_get_printer_byte();

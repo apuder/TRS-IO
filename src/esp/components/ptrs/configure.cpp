@@ -19,12 +19,6 @@ static const char* screen_color_items[] = {
 static uint8_t screen_color = 0;
 static bool screen_color_dirty;
 
-#define MAX_NUM_ROMS 10
-
-static const char* rom_items[MAX_NUM_ROMS + 1];
-static uint8_t rom_selected = 0;
-static bool rom_type_dirty;
-
 static bool show_splash_screen = true;
 
 static bool enable_trs_io = true;
@@ -45,7 +39,6 @@ static char smb_passwd[MAX_LEN_SMB_PASSWD + 1] EXT_RAM_ATTR;
 static form_item_t ptrs_form_items[] = {
   FORM_ITEM_HEADER("GENERAL:"),
   FORM_ITEM_CHECKBOX("Enable TRS-IO", &enable_trs_io, NULL),
-  FORM_ITEM_SELECT("ROM", &rom_selected, rom_items, &rom_type_dirty),
   FORM_ITEM_SELECT("Screen color", &screen_color, screen_color_items, &screen_color_dirty),
   FORM_ITEM_INPUT("Timezone", tz, MAX_LEN_TZ, 0, &tz_dirty),
   FORM_ITEM_HEADER("WIFI:"),
@@ -79,42 +72,9 @@ void configure_ptrs_settings()
   strncpy(smb_user, _smb_user.c_str(), MAX_LEN_SMB_USER);
   strncpy(smb_passwd, _smb_passwd.c_str(), MAX_LEN_SMB_PASSWD);
 
-  vector<FSFile>& rom_files = the_fs->getFileList();
-  int i;
-
-  const string& current_rom = settings_get_rom();
-  for (i = 0; i < MAX_NUM_ROMS && i < rom_files.size(); i++) {
-    rom_items[i] = rom_files.at(i).name.c_str();
-    if (strcmp(current_rom.c_str(), rom_items[i]) == 0) {
-      rom_selected = i;
-    }
-  }
-  rom_items[i] = NULL;
-
   screen_color = settings_get_screen_color();
 
   form(&ptrs_form, false);
-
-  if (rom_type_dirty) {
-    // Download ROM
-    settings_set_rom(string(rom_items[rom_selected]));
-    string new_rom = "/roms/";
-    new_rom += rom_items[rom_selected];
-    printf("Downloading ROM: %s\n", new_rom.c_str());
-    FILE* f = fopen(new_rom.c_str(), "rb");
-    if (f != NULL) {
-      static uint8_t buf[100];
-      int br;
-      uint16_t addr = 0;
-      do {
-        br = fread(buf, 1, sizeof(buf), f);
-        for (int x = 0; x < br; x++) {
-          spi_bram_poke(addr++, buf[x]);
-        }
-      } while (br != 0);
-      fclose(f);
-    }
-  }
 
   if (screen_color_dirty) {
     // Set screen color
@@ -135,7 +95,7 @@ void configure_ptrs_settings()
   }
 
   if (wifi_dirty) {
-    wnd_popup("Rebooting PocketTRS...");
+    wnd_popup("Rebooting TRS-IO++...");
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     set_wifi_credentials(wifi_ssid, wifi_passwd);
   }

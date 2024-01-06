@@ -30,10 +30,6 @@ void app_main(void)
   init_trs_io();
   init_button();
   init_settings();
-#ifdef CONFIG_TRS_IO_PP
-  init_keyb();
-  init_ptrs();
-#endif
 
   if (is_status_button_pressed()) {
 #ifdef TRS_IO_BUTTON_ONLY_AT_STARTUP
@@ -45,6 +41,10 @@ void app_main(void)
   
   init_ota();
   init_spi();
+#ifdef CONFIG_TRS_IO_PP
+  init_keyb();
+  init_ptrs();
+#endif
   init_led();
   init_trs_fs_posix();
   init_wifi();

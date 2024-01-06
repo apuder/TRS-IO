@@ -3,6 +3,7 @@
 
 #include <string>
 #include <inttypes.h>
+#include <vector>
 
 using namespace std;
 
@@ -41,10 +42,10 @@ void settings_set_smb_passwd(const string& passwd);
 
 //-----ROM--------------------------------------------------------
 
-#define SETTING_DEFAULT_ROM "model3-frehd.rom"
+#define SETTINGS_MAX_ROMS 5
 
-string& settings_get_rom();
-void settings_set_rom(const string& rom_file);
+vector<string>& settings_get_roms();
+void settings_set_roms();
 
 
 //-----Screen Color-----------------------------------------------

@@ -1,6 +1,7 @@
 
 #include "settings.h"
 #include "nvs_flash.h"
+#include <string.h>
 
 
 
@@ -159,32 +160,49 @@ static void init_smb_credentials()
 
 //-----ROM--------------------------------------------------------
 
-#define KEY_ROM "rom"
+#define KEY_ROM_PREFIX "rom_"
 
-static string rom;
+static vector<string> roms;
 
-string& settings_get_rom()
+static const char* default_roms[] = {
+  "level2.bin",
+  "",
+  "model3-frehd.bin",
+  "model3-frehd.bin",
+  "model3-frehd.bin"
+};
+
+vector<string>& settings_get_roms()
 {
-  return rom;
+  return roms;
 }
 
-void settings_set_rom(const string& rom_file)
+void settings_set_roms()
 {
-  nvs_set_str(storage, KEY_ROM, rom_file.c_str());
-  rom = rom_file;
+  char key[] = KEY_ROM_PREFIX "0\0";
+  for(int i = 0; i < SETTINGS_MAX_ROMS; i++) {
+    key[strlen(KEY_ROM_PREFIX)] = '0' + i;
+    nvs_set_str(storage, key, roms.at(i).c_str());
+  }
 }
 
 static void init_rom()
 {
+  char key[] = KEY_ROM_PREFIX "0\0";
   size_t len;
 
-  if (nvs_get_str(storage, KEY_ROM, NULL, &len) == ESP_OK) {
-    rom.resize(len);
-    nvs_get_str(storage, KEY_ROM, (char*) rom.data(), &len);
-  }
+  for(int i = 0; i < SETTINGS_MAX_ROMS; i++) {
+    string rom;
+    key[strlen(KEY_ROM_PREFIX)] = '0' + i;
+    if (nvs_get_str(storage, key, NULL, &len) == ESP_OK) {
+      rom.resize(len);
+      nvs_get_str(storage, key, (char*) rom.data(), &len);
+    }
 
-  if (rom.empty()) {
-    rom = SETTING_DEFAULT_ROM;
+    if (rom.empty()) {
+      rom = default_roms[i];
+    }
+    roms.push_back(rom);
   }
 }
 

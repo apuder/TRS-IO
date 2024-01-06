@@ -1,11 +1,12 @@
 
 
 #include "ptrs.h"
+#include "roms.h"
 #include <trs-lib.h>
 #include <fabgl.h>
 
 #define MENU_CONFIGURE 0
-#define MENU_CALIBRATE 1
+#define MENU_ROMS 1
 #define MENU_STATUS 2
 #define MENU_RESET 3
 #define MENU_HELP 4
@@ -14,6 +15,7 @@
 
 static menu_item_t main_menu_items[] = {
   MENU_ITEM(MENU_CONFIGURE, "Configure"),
+  MENU_ITEM(MENU_ROMS, "ROMs"),
   MENU_ITEM(MENU_STATUS, "Status"),
   MENU_ITEM(MENU_RESET, "Reset Settings"),
   MENU_ITEM(MENU_HELP, "Help"),
@@ -22,7 +24,7 @@ static menu_item_t main_menu_items[] = {
 };
 
 static menu_t main_menu = {
-  .title = "PocketTRS",
+  .title = "TRS-IO++",
   .items = main_menu_items
 };
 
@@ -43,6 +45,9 @@ void configure_pocket_trs(bool is_80_cols)
     switch (status) {
     case MENU_CONFIGURE:
       configure_ptrs_settings();
+      break;
+    case MENU_ROMS:
+      configure_roms();
       break;
     case MENU_STATUS:
       ptrs_status();
