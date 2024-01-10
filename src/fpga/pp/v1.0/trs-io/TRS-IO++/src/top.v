@@ -60,10 +60,6 @@ assign DBUS_DIR = TRS_DIR;
 
 wire CS = CS_FPGA;
 wire[1:0] sw = 2'b11;
-wire TRS_RD = _RD_N;
-wire TRS_WR = _WR_N;
-wire TRS_IN = _IN_N;
-wire TRS_OUT = _OUT_N;
 
 assign _A = 16'hZZZZ;
 
@@ -105,12 +101,28 @@ Gowin_rPLL clk_wiz_0(
    .clkin(clk_in) //input clkin
 );
 
+//-------Configuration-----------------------------------------------------------
+
+reg is_m1 = 1'b0;
+reg is_m3 = 1'b0;
+
+always @(posedge clk) begin
+  is_m1 <= CONF == 4'b0000;
+  is_m3 <= CONF == 4'b1000;
+end
+
+
 reg[7:0] byte_in, byte_out;
 reg byte_received = 1'b0;
 
 //----Address Decoder------------------------------------------------------------
 
-wire io_access_raw = !TRS_RD || !TRS_WR || !TRS_IN || !TRS_OUT;
+wire io_in =  (is_m1 & ~_IN_N) |
+              (is_m3 & (~_IN_N & ~_IOREQ_N));
+wire io_out = (is_m1 & ~_OUT_N) |
+              (is_m3 & (~_OUT_N & ~_IOREQ_N));
+
+wire io_access_raw = (is_m1 & (~_RD_N | ~_WR_N)) | io_in | io_out;
 
 wire io_access_filtered;
 
@@ -127,34 +139,6 @@ filter io(
 );
 
 
-/*
-always @(posedge clk) begin
-  TRS_RD <= TRS_RD_raw;
-  TRS_WR <= TRS_WR_raw;
-  TRS_IN <= TRS_IN_raw;
-  TRS_OUT <= TRS_OUT_raw;
-  TRS_AH <= TRS_AH_raw;
-
-  if (read_a0_a7 == 1) begin
-    TRS_A[7:0] <= TRS_AH;
-    TRS_A[16] <= 0; // TRS_A holds a valid address
-  end
-  else if (read_a8_a15 == 1) begin
-    TRS_A[8] <= TRS_AH[1];
-    TRS_A[9] <= TRS_AH[0];
-    TRS_A[10] <= TRS_AH[2];
-    TRS_A[11] <= TRS_AH[3];
-    TRS_A[12] <= TRS_AH[6];
-    TRS_A[13] <= TRS_AH[7];
-    TRS_A[14] <= TRS_AH[4];
-    TRS_A[15] <= TRS_AH[5];
-    TRS_A[16] <= 1; // TRS_A does not hold a valid address
-  end
-  else TRS_A[16] <= io_access_filtered ? TRS_A[16] : 1; // TRS_A does not hold a valid address when io_sccess_filtered becomes 1
-end
-*/
-
-
 //----TRS-IO---------------------------------------------------------------------
 
 localparam[7:0]
@@ -165,51 +149,6 @@ reg[7:0] printer_status = PRINTER_STATUS_READY;
 
 // One byte buffer for printer output
 reg[7:0] printer_byte;
-
-
-/*
-wire trs_wr;
-wire WR_falling_edge;
-wire WR_rising_edge;
-filter WR_filter(
-  .clk(clk),
-  .in(TRS_WR),
-  .out(trs_wr),
-  .rising_edge(WR_rising_edge),
-  .falling_edge(WR_falling_edge)
-);
-wire trs_rd;
-wire RD_falling_edge;
-wire RD_rising_edge;
-filter RD_filter(
-  .clk(clk),
-  .in(TRS_RD),
-  .out(trs_rd),
-  .rising_edge(RD_rising_edge),
-  .falling_edge(RD_falling_edge)
-);
-wire trs_out;
-wire OUT_falling_edge;
-wire OUT_rising_edge;
-filter OUT_filter(
-  .clk(clk),
-  .in(TRS_OUT),
-  .out(trs_out),
-  .rising_edge(OUT_rising_edge),
-  .falling_edge(OUT_falling_edge)
-);
-wire trs_in;
-wire IN_falling_edge;
-wire IN_rising_edge;
-filter IN_filter(
-  .clk(clk),
-  .in(TRS_IN),
-  .out(trs_in),
-  .rising_edge(IN_rising_edge),
-  .falling_edge(IN_falling_edge)
-);
-*/
-
 
 reg full_addr = 1'b0;
 
@@ -228,38 +167,32 @@ wire trs_ram_sel = (full_addr
 // map rom and ram
 wire trs_mem_sel = trs_rom_sel | trs_ram_sel;
 
-wire fdc_37e0_sel_rd = (TRS_A == 16'h37e0) && !TRS_RD;
-wire fdc_37ec_sel_rd = (TRS_A == 16'h37ec) && !TRS_RD;
-wire fdc_37ef_sel_rd = (TRS_A == 16'h37ef) && !TRS_RD;
-wire fdc_sel_rd = fdc_37e0_sel_rd || fdc_37ec_sel_rd || fdc_37ef_sel_rd;
+wire fdc_37e0_sel_rd = is_m1 & (TRS_A == 16'h37e0) & ~_RD_N;
+wire fdc_37ec_sel_rd = is_m1 & (TRS_A == 16'h37ec) & ~_RD_N;
+wire fdc_37ef_sel_rd = is_m1 & (TRS_A == 16'h37ef) & ~_RD_N;
+wire fdc_sel_rd = fdc_37e0_sel_rd | fdc_37ec_sel_rd | fdc_37ef_sel_rd;
 wire fdc_sel = fdc_sel_rd;
 
-wire printer_sel_rd = (TRS_A == 16'h37e8) && !TRS_RD;
-wire printer_sel_wr = (TRS_A == 16'h37e8) && !TRS_WR;
+wire printer_sel_rd = is_m1 & (TRS_A == 16'h37e8) & ~_RD_N;
+wire printer_sel_wr = is_m1 & (TRS_A == 16'h37e8) & ~_WR_N;
 wire printer_sel = printer_sel_wr;
 reg printer_sel_reg = 0;
 
-wire trs_io_sel_in = (TRS_A[7:0] == 31) && !TRS_IN;
-wire trs_io_sel_out = (TRS_A[7:0] == 31) && !TRS_OUT;
-wire trs_io_sel = trs_io_sel_in || trs_io_sel_out;
+wire trs_io_sel_in = (TRS_A[7:0] == 31) & io_in;
+wire trs_io_sel_out = (TRS_A[7:0] == 31) & io_out;
+wire trs_io_sel = trs_io_sel_in | trs_io_sel_out;
 
-wire frehd_sel_in = (TRS_A[7:4] == 4'hc) && !TRS_IN;
-wire frehd_sel_out = (TRS_A[7:4] == 4'hc) && !TRS_OUT;
-wire frehd_sel = frehd_sel_in || frehd_sel_out;
+wire frehd_sel_in = (TRS_A[7:4] == 4'hc) & io_in;
+wire frehd_sel_out = (TRS_A[7:4] == 4'hc) & io_out;
+wire frehd_sel = frehd_sel_in | frehd_sel_out;
 
-wire z80_dsp_sel_wr = (TRS_A[15:10] == 6'b001111) && !TRS_WR;
+wire z80_dsp_sel_wr = is_m1 & (TRS_A[15:10] == 6'b001111) & ~_WR_N;
 
-wire z80_le18_data_sel_in = (TRS_A[7:0] == 8'hec) & ~TRS_IN;
+wire z80_le18_data_sel_in = (TRS_A[7:0] == 8'hec) & io_in;
 
 // orchestra-85
-wire z80_orch85l_sel    = (TRS_A[7:0] == 8'hb5) && !TRS_OUT;
-wire z80_orch85r_sel    = (TRS_A[7:0] == 8'hb9) && !TRS_OUT;
-
-/*
-wire z80_spi_ctrl_sel_out = (TRS_A[7:0] == 8'hfc) & OUT_falling_edge;
-wire z80_spi_data_sel_in  = (TRS_A[7:0] == 8'hfd) & ~TRS_IN;
-wire z80_spi_data_sel_out = (TRS_A[7:0] == 8'hfd) & OUT_falling_edge;
-*/
+wire z80_orch85l_sel    = (TRS_A[7:0] == 8'hb5) & io_out;
+wire z80_orch85r_sel    = (TRS_A[7:0] == 8'hb9) & io_out;
 
 wire xray_sel;
 
@@ -742,17 +675,14 @@ Gowin_DPB0 bram(
 
 
 assign addra = TRS_A[14:0];
-assign dina = !TRS_WR ? TRS_D : 8'bz;
-
-//XXX
-//assign TRS_OE = !(trs_mem_sel && (!TRS_WR || !TRS_RD));
-//assign TRS_OE = !((TRS_A[16:8] == 9'h0ff) && (!TRS_WR || !TRS_RD));
+assign dina = ~_WR_N ? TRS_D : 8'bz;
 
 
-assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || !TRS_WR || !TRS_OUT || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
+
+assign TRS_OE = !((trs_mem_sel && (~_WR_N || ~_RD_N)) || esp_sel || ~_WR_N || io_out || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
 //                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
 
-assign TRS_DIR = TRS_RD && TRS_IN;
+assign TRS_DIR = _RD_N & ~io_in;
 
 wire ena_read;
 wire ena_write;
@@ -778,10 +708,10 @@ trigger brama_write_trigger(
 
 
 
-assign wea = !TRS_WR;
+assign wea = ~_WR_N;
 
 reg[7:0] trs_data;
-assign _D = (!TRS_RD || !TRS_IN) ? trs_data : 8'bz;
+assign _D = (~_RD_N | io_in) ? trs_data : 8'bz;
 
 /*
   ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
@@ -1029,49 +959,6 @@ trigger xram_peek_trigger(
 
 
 
-/*
-//----XFLASH---------------------------------------------------------------------
-// SPI Flash control register
-// bit7 is CS  (active high)
-// bit6 is WPN (active low)
-reg [7:0] z80_spi_ctrl_reg = 8'h00;
-always @(posedge clk)
-begin
-   if(z80_spi_ctrl_sel_out)
-      z80_spi_ctrl_reg <= TRS_D;
-end
-// The SPI shift register is by design faster than the z80 can read and write.
-// Therefore a status bit isn't necessary.  The z80 can read or write and then
-// immediately read or write again on the next instruction.
-reg [7:0] spi_shift_reg;
-reg spi_sdo;
-reg [7:0] spi_counter = 8'b0;
-always @(posedge clk)
-begin
-   if(spi_counter[7])
-   begin
-      spi_counter <= spi_counter + 8'b1;
-      if(spi_counter[2:0] == 3'b000)
-      begin
-         if(spi_counter[3] == 1'b0)
-            spi_sdo <= spi_shift_reg[7];
-         else
-            spi_shift_reg <= {spi_shift_reg[6:0], SPI_SDI};
-      end
-   end
-   else if(z80_spi_data_sel_out)
-   begin
-      spi_shift_reg <= TRS_D;
-      spi_counter <= 8'b10000000;
-   end
-end
-assign spi_data_in = spi_shift_reg;
-assign SPI_CS_N  = ~z80_spi_ctrl_reg[7];
-assign SPI_SCK   = spi_counter[3];
-assign SPI_SDO   =  spi_sdo;
-assign SPI_WP_N  =  z80_spi_ctrl_reg[6];
-assign SPI_HLD_N =  1'bz;
-*/
 
 //-----ORCH85----------------------------------------------------------------------
 
@@ -1081,10 +968,10 @@ reg signed [7:0] orch85r_reg;
 
 always @ (posedge clk)
 begin
-   if(z80_orch85l_sel & ~TRS_OUT)
+   if(z80_orch85l_sel & io_out)
       orch85l_reg <= TRS_D;
 
-   if(z80_orch85r_sel & ~TRS_OUT)
+   if(z80_orch85r_sel & io_out)
       orch85r_reg <= TRS_D;
 end
 
@@ -1193,8 +1080,7 @@ end
 
 //-----Cassette out--------------------------------------------------------------------------
 
-/*
-wire cass_sel_out = ~TRS_A[16] && (TRS_A[7:0] == 255) && !TRS_OUT;
+wire cass_sel_out = (TRS_A[7:0] == 255) & io_out;
 
 reg[1:0] sound_idx = 2'b00;
 
@@ -1210,24 +1096,23 @@ always @(posedge clk_audio) begin
     2'b11: audio_sample_word <= '{(   0<<4) + (orch85r_reg<<5), (   0<<4) + (orch85l_reg<<5)};
   endcase
 end
-*/
 
-reg [25:0] heartbeat;
+reg [27:0] heartbeat;
 
 always @ (posedge clk)
-   heartbeat <= heartbeat + 26'b1;
+   heartbeat <= heartbeat + 28'b1;
 
 //assign LED[3:1] = {heartbeat[25:24] == 2'b10, heartbeat[25:24] == 2'b11 || heartbeat[25:24] == 2'b01, heartbeat[25:24] == 2'b00};
 
 assign LED[0] = ~EXTIOSEL_IN_N;
 assign LED[1] = ~WAIT_IN_N;
 assign LED[2] = ~INT_IN_N;
-assign LED[3] = heartbeat[21];
+assign LED[3] = heartbeat[25];
 
 
 //------------LightBright-80-------------------------------------------------------------
 
-wire mem_access_raw = !TRS_RD || !TRS_WR;
+wire mem_access_raw = ~_RD_N | ~_WR_N;
 
 wire mem_access;
 
