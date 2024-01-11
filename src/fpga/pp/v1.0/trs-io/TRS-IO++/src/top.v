@@ -46,7 +46,6 @@ module top(
 
 
 reg TRS_INT;
-assign INT = 1'b0;//TRS_INT;
 reg ESP_REQ;
 assign REQ = ESP_REQ;
 wire ESP_DONE = DONE;
@@ -62,6 +61,15 @@ wire CS = CS_FPGA;
 wire[1:0] sw = 2'b11;
 
 assign _A = 16'hZZZZ;
+assign _IN_N = 1'bZ;
+assign _RD_N = 1'bZ;
+assign _WR_N = 1'bZ;
+assign _OUT_N = 1'bZ;
+assign _RAS_N = 1'bZ;
+assign _IOREQ_N = 1'bZ;
+assign EXTIOSEL_IN_N = 1'bZ;
+assign WAIT_IN_N = 1'bZ;
+assign INT_IN_N = 1'bZ;
 
 assign ABUS_DIR = 1;
 assign ABUS_DIR_N = ~ABUS_DIR;
@@ -69,7 +77,7 @@ assign ABUS_EN = 0;
 
 assign CTRL_DIR = 1;
 assign CTRL_EN = 0;
-assign CTRL1_EN = 0;
+assign CTRL1_EN = 1;
 
 
 localparam [2:0] VERSION_MAJOR = 0;
@@ -107,8 +115,8 @@ reg is_m1 = 1'b0;
 reg is_m3 = 1'b0;
 
 always @(posedge clk) begin
-  is_m1 <= CONF == 4'b0000;
-  is_m3 <= CONF == 4'b1000;
+  is_m1 <= ~CONF == 4'b0000;
+  is_m3 <= ~CONF == 4'b1000;
 end
 
 
@@ -200,6 +208,7 @@ wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel;
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
+assign EXTIOSEL = esp_sel;
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
@@ -297,6 +306,7 @@ reg [2:0] idx;
 reg [7:0] cmd;
 reg trs_io_data_ready = 1'b0;
 
+assign INT = (is_m1 & TRS_INT) | (is_m3 & trs_io_data_ready);
 
 reg trigger_action = 1'b0;
 
@@ -536,8 +546,8 @@ always @(posedge clk) begin
   end
 end
 
-wire ram_read_access = io_access && !TRS_RD && trs_mem_sel;
-wire ram_write_access = io_access && !TRS_WR && trs_ram_sel;
+wire ram_read_access = io_access & ~_RD_N & trs_mem_sel;
+wire ram_write_access = io_access & ~_WR_N & trs_ram_sel;
 
 wire pre_ram_access_check;
 wire do_ram_access;
@@ -558,7 +568,7 @@ assign breakpoint_idx = (({8{(breakpoint_active[0] && ({1'b0, breakpoints[0]} ==
                         ({8{(breakpoint_active[5] && ({1'b0, breakpoints[5]} == TRS_A))}} & 8'd6) |
                         ({8{(breakpoint_active[6] && ({1'b0, breakpoints[6]} == TRS_A))}} & 8'd7) |
                         ({8{(breakpoint_active[7] && ({1'b0, breakpoints[7]} == TRS_A))}} & 8'd8)) &
-                        {8{~TRS_RD}};
+                        {8{is_m1 & ~_RD_N}};
 
 
 reg [16:0] xray_base_addr;
@@ -692,7 +702,7 @@ wire brama_data_ready;
 
 trigger brama_read_trigger(
   .clk(clk),
-  .cond(do_ram_access && !TRS_RD && !xray_run_stub),
+  .cond(do_ram_access && ~_RD_N && !xray_run_stub),
   .one(ena_read),
   .two(brama_data_ready),
   .three()
@@ -700,7 +710,7 @@ trigger brama_read_trigger(
 
 trigger brama_write_trigger(
   .clk(clk),
-  .cond(do_ram_access && !TRS_WR && !xray_run_stub),
+  .cond(do_ram_access && ~_WR_N && !xray_run_stub),
   .one(),
   .two(),
   .three(ena_write)
@@ -836,7 +846,7 @@ trigger bram_peek_trigger(
 always @(posedge clk) begin
   if (bram_peek_done) byte_out <= doutb;
   else if (xram_peek_done) byte_out <= xdoutb;
-  else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
+  else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;//{TRS_OE, TRS_DIR, esp_sel, _RD_N, _WR_N, _IOREQ_N, io_out, io_in};
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
@@ -911,9 +921,9 @@ Gowin_DPB1 xram(
 
 
 // Port A
-assign xdina = !TRS_WR ? TRS_D : 8'bz;
+assign xdina = ~_WR_N ? TRS_D : 8'bz;
 
-assign xwea = !TRS_WR;
+assign xwea = ~_WR_N;
 
 wire xena_read;
 wire xena_write;
@@ -921,7 +931,7 @@ assign xena = xena_read || xena_write;
 
 trigger xrama_read_trigger(
   .clk(clk),
-  .cond(do_ram_access && !TRS_RD && xray_run_stub),
+  .cond(do_ram_access && ~_RD_N && xray_run_stub),
   .one(xena_read),
   .two(xrama_data_ready),
   .three()
@@ -929,7 +939,7 @@ trigger xrama_read_trigger(
 
 trigger xrama_write_trigger(
   .clk(clk),
-  .cond(do_ram_access && !TRS_WR && xray_run_stub),
+  .cond(do_ram_access && ~_WR_N && xray_run_stub),
   .one(xena_write),
   .two(),
   .three()
@@ -1104,15 +1114,15 @@ always @ (posedge clk)
 
 //assign LED[3:1] = {heartbeat[25:24] == 2'b10, heartbeat[25:24] == 2'b11 || heartbeat[25:24] == 2'b01, heartbeat[25:24] == 2'b00};
 
-assign LED[0] = ~EXTIOSEL_IN_N;
-assign LED[1] = ~WAIT_IN_N;
-assign LED[2] = ~INT_IN_N;
+assign LED[0] = esp_sel;
+assign LED[1] = 1'b0;
+assign LED[2] = 1'b0;
 assign LED[3] = heartbeat[25];
 
 
 //------------LightBright-80-------------------------------------------------------------
 
-wire mem_access_raw = ~_RD_N | ~_WR_N;
+wire mem_access_raw = is_m1 & (~_RD_N | ~_WR_N);
 
 wire mem_access;
 
