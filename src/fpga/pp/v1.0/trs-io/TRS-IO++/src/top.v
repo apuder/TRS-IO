@@ -3,18 +3,18 @@ module top(
   input clk_in,
   output CTRL_DIR,
   output CTRL_EN,
-  inout _IN_N,
-  inout _RD_N,
-  inout _WR_N,
-  inout _OUT_N,
-  inout _RAS_N,
-  inout _IOREQ_N,
-  inout _M1_N,
-  inout _RESET_N,
+  input _IN_N,
+  input _RD_N,
+  input _WR_N,
+  input _OUT_N,
+  input _RAS_N,
+  input _IOREQ_N,
+  input _M1_N,
+  input _RESET_N,
   output ABUS_DIR,
   output ABUS_EN,
   output ABUS_DIR_N,
-  inout [15:0] _A,
+  input [15:0] _A,
   output [2:0] HDMI_TX_P,
   output [2:0] HDMI_TX_N,
   output HDMI_TXC_P,
@@ -60,17 +60,6 @@ assign DBUS_DIR = TRS_DIR;
 wire CS = CS_FPGA;
 wire[1:0] sw = 2'b11;
 
-assign _A = 16'hZZZZ;
-assign _IN_N = 1'bZ;
-assign _RD_N = 1'bZ;
-assign _WR_N = 1'bZ;
-assign _OUT_N = 1'bZ;
-assign _RAS_N = 1'bZ;
-assign _IOREQ_N = 1'bZ;
-assign EXTIOSEL_IN_N = 1'bZ;
-assign WAIT_IN_N = 1'bZ;
-assign INT_IN_N = 1'bZ;
-
 assign ABUS_DIR = 1;
 assign ABUS_DIR_N = ~ABUS_DIR;
 assign ABUS_EN = 0;
@@ -111,13 +100,13 @@ Gowin_rPLL clk_wiz_0(
 
 //-------Configuration-----------------------------------------------------------
 
-reg is_m1 = 1'b0;
 reg is_m3 = 1'b0;
 
 always @(posedge clk) begin
-  is_m1 <= ~CONF == 4'b0000;
-  is_m3 <= ~CONF == 4'b1000;
+  is_m3 <= ~CONF[3];
 end
+
+wire is_m1 = ~is_m3;
 
 
 reg[7:0] byte_in, byte_out;
@@ -125,12 +114,13 @@ reg byte_received = 1'b0;
 
 //----Address Decoder------------------------------------------------------------
 
-wire io_in =  (is_m1 & ~_IN_N) |
-              (is_m3 & (~_IN_N & ~_IOREQ_N));
-wire io_out = (is_m1 & ~_OUT_N) |
-              (is_m3 & (~_OUT_N & ~_IOREQ_N));
+wire TRS_RD = (is_m1 & _RD_N) | (is_m3 & 1'b1);
+wire TRS_WR = (is_m1 & _WR_N) | (is_m3 & 1'b1);
 
-wire io_access_raw = (is_m1 & (~_RD_N | ~_WR_N)) | io_in | io_out;
+wire TRS_IN  = (is_m1 & _IN_N ) | (is_m3 & (_IN_N  | _IOREQ_N));
+wire TRS_OUT = (is_m1 & _OUT_N) | (is_m3 & (_OUT_N | _IOREQ_N));
+
+wire io_access_raw = ~TRS_RD | ~TRS_WR | ~TRS_IN | ~TRS_OUT;
 
 wire io_access_filtered;
 
@@ -175,32 +165,32 @@ wire trs_ram_sel = (full_addr
 // map rom and ram
 wire trs_mem_sel = trs_rom_sel | trs_ram_sel;
 
-wire fdc_37e0_sel_rd = is_m1 & (TRS_A == 16'h37e0) & ~_RD_N;
-wire fdc_37ec_sel_rd = is_m1 & (TRS_A == 16'h37ec) & ~_RD_N;
-wire fdc_37ef_sel_rd = is_m1 & (TRS_A == 16'h37ef) & ~_RD_N;
+wire fdc_37e0_sel_rd = is_m1 & (TRS_A == 16'h37e0) & ~TRS_RD;
+wire fdc_37ec_sel_rd = is_m1 & (TRS_A == 16'h37ec) & ~TRS_RD;
+wire fdc_37ef_sel_rd = is_m1 & (TRS_A == 16'h37ef) & ~TRS_RD;
 wire fdc_sel_rd = fdc_37e0_sel_rd | fdc_37ec_sel_rd | fdc_37ef_sel_rd;
 wire fdc_sel = fdc_sel_rd;
 
-wire printer_sel_rd = is_m1 & (TRS_A == 16'h37e8) & ~_RD_N;
-wire printer_sel_wr = is_m1 & (TRS_A == 16'h37e8) & ~_WR_N;
+wire printer_sel_rd = is_m1 & (TRS_A == 16'h37e8) & ~TRS_RD;
+wire printer_sel_wr = is_m1 & (TRS_A == 16'h37e8) & ~TRS_WR;
 wire printer_sel = printer_sel_wr;
 reg printer_sel_reg = 0;
 
-wire trs_io_sel_in = (TRS_A[7:0] == 31) & io_in;
-wire trs_io_sel_out = (TRS_A[7:0] == 31) & io_out;
+wire trs_io_sel_in = (TRS_A[7:0] == 31) & ~TRS_IN;
+wire trs_io_sel_out = (TRS_A[7:0] == 31) & ~TRS_OUT;
 wire trs_io_sel = trs_io_sel_in | trs_io_sel_out;
 
-wire frehd_sel_in = (TRS_A[7:4] == 4'hc) & io_in;
-wire frehd_sel_out = (TRS_A[7:4] == 4'hc) & io_out;
+wire frehd_sel_in = (TRS_A[7:4] == 4'hc) & ~TRS_IN;
+wire frehd_sel_out = (TRS_A[7:4] == 4'hc) & ~TRS_OUT;
 wire frehd_sel = frehd_sel_in | frehd_sel_out;
 
-wire z80_dsp_sel_wr = is_m1 & (TRS_A[15:10] == 6'b001111) & ~_WR_N;
+wire z80_dsp_sel_wr = is_m1 & (TRS_A[15:10] == 6'b001111) & ~TRS_WR;
 
-wire z80_le18_data_sel_in = (TRS_A[7:0] == 8'hec) & io_in;
+wire z80_le18_data_sel_in = (TRS_A[7:0] == 8'hec) & ~TRS_IN;
 
 // orchestra-85
-wire z80_orch85l_sel    = (TRS_A[7:0] == 8'hb5) & io_out;
-wire z80_orch85r_sel    = (TRS_A[7:0] == 8'hb9) & io_out;
+wire z80_orch85l_sel    = (TRS_A[7:0] == 8'hb5) & ~TRS_OUT;
+wire z80_orch85r_sel    = (TRS_A[7:0] == 8'hb9) & ~TRS_OUT;
 
 wire xray_sel;
 
@@ -208,7 +198,7 @@ wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel;
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
-assign EXTIOSEL = esp_sel;
+assign EXTIOSEL = esp_sel & ~_IN_N;
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
@@ -546,8 +536,8 @@ always @(posedge clk) begin
   end
 end
 
-wire ram_read_access = io_access & ~_RD_N & trs_mem_sel;
-wire ram_write_access = io_access & ~_WR_N & trs_ram_sel;
+wire ram_read_access = io_access & ~TRS_RD & trs_mem_sel;
+wire ram_write_access = io_access & ~TRS_WR & trs_ram_sel;
 
 wire pre_ram_access_check;
 wire do_ram_access;
@@ -568,7 +558,7 @@ assign breakpoint_idx = (({8{(breakpoint_active[0] && ({1'b0, breakpoints[0]} ==
                         ({8{(breakpoint_active[5] && ({1'b0, breakpoints[5]} == TRS_A))}} & 8'd6) |
                         ({8{(breakpoint_active[6] && ({1'b0, breakpoints[6]} == TRS_A))}} & 8'd7) |
                         ({8{(breakpoint_active[7] && ({1'b0, breakpoints[7]} == TRS_A))}} & 8'd8)) &
-                        {8{is_m1 & ~_RD_N}};
+                        {8{is_m1 & ~TRS_RD}};
 
 
 reg [16:0] xray_base_addr;
@@ -685,14 +675,14 @@ Gowin_DPB0 bram(
 
 
 assign addra = TRS_A[14:0];
-assign dina = ~_WR_N ? TRS_D : 8'bz;
+assign dina = ~TRS_WR ? TRS_D : 8'bz;
 
 
 
-assign TRS_OE = !((trs_mem_sel && (~_WR_N || ~_RD_N)) || esp_sel || ~_WR_N || io_out || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
+assign TRS_OE = !((trs_mem_sel && (~TRS_WR || ~TRS_RD)) || esp_sel || ~TRS_WR || ~TRS_OUT || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
 //                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
 
-assign TRS_DIR = _RD_N & ~io_in;
+assign TRS_DIR = TRS_RD & TRS_IN;
 
 wire ena_read;
 wire ena_write;
@@ -702,7 +692,7 @@ wire brama_data_ready;
 
 trigger brama_read_trigger(
   .clk(clk),
-  .cond(do_ram_access && ~_RD_N && !xray_run_stub),
+  .cond(do_ram_access && ~TRS_RD && !xray_run_stub),
   .one(ena_read),
   .two(brama_data_ready),
   .three()
@@ -710,7 +700,7 @@ trigger brama_read_trigger(
 
 trigger brama_write_trigger(
   .clk(clk),
-  .cond(do_ram_access && ~_WR_N && !xray_run_stub),
+  .cond(do_ram_access && ~TRS_WR && !xray_run_stub),
   .one(),
   .two(),
   .three(ena_write)
@@ -718,10 +708,10 @@ trigger brama_write_trigger(
 
 
 
-assign wea = ~_WR_N;
+assign wea = ~TRS_WR;
 
 reg[7:0] trs_data;
-assign _D = (~_RD_N | io_in) ? trs_data : 8'bz;
+assign _D = (~TRS_RD | ~TRS_IN) ? trs_data : 8'bz;
 
 /*
   ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
@@ -846,7 +836,7 @@ trigger bram_peek_trigger(
 always @(posedge clk) begin
   if (bram_peek_done) byte_out <= doutb;
   else if (xram_peek_done) byte_out <= xdoutb;
-  else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;//{TRS_OE, TRS_DIR, esp_sel, _RD_N, _WR_N, _IOREQ_N, io_out, io_in};
+  else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;//{TRS_OE, TRS_DIR, esp_sel, TRS_RD, TRS_WR, _IOREQ_N, ~TRS_OUT, ~TRS_IN};
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
@@ -921,9 +911,9 @@ Gowin_DPB1 xram(
 
 
 // Port A
-assign xdina = ~_WR_N ? TRS_D : 8'bz;
+assign xdina = ~TRS_WR ? TRS_D : 8'bz;
 
-assign xwea = ~_WR_N;
+assign xwea = ~TRS_WR;
 
 wire xena_read;
 wire xena_write;
@@ -931,7 +921,7 @@ assign xena = xena_read || xena_write;
 
 trigger xrama_read_trigger(
   .clk(clk),
-  .cond(do_ram_access && ~_RD_N && xray_run_stub),
+  .cond(do_ram_access && ~TRS_RD && xray_run_stub),
   .one(xena_read),
   .two(xrama_data_ready),
   .three()
@@ -939,7 +929,7 @@ trigger xrama_read_trigger(
 
 trigger xrama_write_trigger(
   .clk(clk),
-  .cond(do_ram_access && ~_WR_N && xray_run_stub),
+  .cond(do_ram_access && ~TRS_WR && xray_run_stub),
   .one(xena_write),
   .two(),
   .three()
@@ -978,10 +968,10 @@ reg signed [7:0] orch85r_reg;
 
 always @ (posedge clk)
 begin
-   if(z80_orch85l_sel & io_out)
+   if(z80_orch85l_sel & ~TRS_OUT)
       orch85l_reg <= TRS_D;
 
-   if(z80_orch85r_sel & io_out)
+   if(z80_orch85r_sel & ~TRS_OUT)
       orch85r_reg <= TRS_D;
 end
 
@@ -1074,7 +1064,7 @@ vga vga(
   .vga_clk(vga_clk), // 20 MHz
   .TRS_A(_A),
   .TRS_D(_D),
-  .TRS_WR(~_WR_N),
+  .TRS_WR(~TRS_WR),
   .TRS_OUT(~_OUT_N),
   .TRS_IN(~_IN_N),
   .le18_dout(le18_dout),
@@ -1090,7 +1080,7 @@ end
 
 //-----Cassette out--------------------------------------------------------------------------
 
-wire cass_sel_out = (TRS_A[7:0] == 255) & io_out;
+wire cass_sel_out = (TRS_A[7:0] == 255) & ~TRS_OUT;
 
 reg[1:0] sound_idx = 2'b00;
 
@@ -1115,14 +1105,14 @@ always @ (posedge clk)
 //assign LED[3:1] = {heartbeat[25:24] == 2'b10, heartbeat[25:24] == 2'b11 || heartbeat[25:24] == 2'b01, heartbeat[25:24] == 2'b00};
 
 assign LED[0] = esp_sel;
-assign LED[1] = 1'b0;
-assign LED[2] = 1'b0;
+assign LED[1] = is_m1;
+assign LED[2] = is_m3;
 assign LED[3] = heartbeat[25];
 
 
 //------------LightBright-80-------------------------------------------------------------
 
-wire mem_access_raw = is_m1 & (~_RD_N | ~_WR_N);
+wire mem_access_raw = (is_m1 & (~TRS_RD | ~TRS_WR)) | (is_m3 & (~_IN_N | ~_OUT_N));
 
 wire mem_access;
 
@@ -1139,7 +1129,7 @@ reg [7:0] pmod_a;
 always @ (posedge clk)
 begin
    if(mem_access)
-      pmod_a <= TRS_A[15:8];
+      pmod_a <= TRS_A[15:8] & {8{is_m1}} | TRS_A[7:0] & {8{is_m3}};
 end
 
 assign PMOD = pmod_a;
