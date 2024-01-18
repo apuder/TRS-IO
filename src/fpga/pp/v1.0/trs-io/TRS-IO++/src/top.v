@@ -152,6 +152,15 @@ wire trs_ram_sel = (full_addr
                  : TRS_A[15]              // upper 32k (original design)
                   );
 
+wire ras_trigger;
+
+filter ras(
+  .clk(clk),
+  .in(~_RAS_N),
+  .out(),
+  .rising_edge(ras_trigger),
+  .falling_edge()
+);
 
 // map rom and ram
 wire trs_mem_sel = trs_rom_sel | trs_ram_sel;
@@ -162,10 +171,15 @@ wire fdc_37ef_sel_rd = is_m1 & (TRS_A == 16'h37ef) & ~TRS_RD;
 wire fdc_sel_rd = fdc_37e0_sel_rd | fdc_37ec_sel_rd | fdc_37ef_sel_rd;
 wire fdc_sel = fdc_sel_rd;
 
-wire printer_sel_rd = (is_m1 & (TRS_A == 16'h37e8) & ~TRS_RD) |
-                      (is_m3 & ((TRS_A[8:2] == 7'h3e) & ~TRS_IN));
-wire printer_sel_wr = (is_m1 & (TRS_A == 16'h37e8) & ~TRS_WR) |
-                      (is_m3 & ((TRS_A[8:2] == 7'h3e) & ~TRS_OUT));
+wire printer_mem_m1 = TRS_A[15:2] == 16'h37e8 >> 2;
+wire printer_port_m3 = TRS_A[7:2] == 8'hF8 >> 2;
+wire printer_sel_m1_rd = is_m1 & printer_mem_m1 & ~TRS_RD;
+wire printer_sel_m1_wr = is_m1 & printer_mem_m1 & ~TRS_WR;
+wire printer_sel_m3_rd = is_m3 & printer_port_m3 & ~TRS_IN;
+wire printer_sel_m3_wr = is_m3 & printer_port_m3 & ~TRS_OUT;
+wire printer_mem_trigger = is_m1 & printer_mem_m1 & ras_trigger;
+wire printer_sel_rd = printer_sel_m1_rd | printer_sel_m3_rd;
+wire printer_sel_wr = printer_sel_m1_wr | printer_sel_m3_wr;
 wire printer_sel = printer_sel_rd | printer_sel_wr;
 
 wire trs_io_sel_in = (TRS_A[7:0] == 31) & ~TRS_IN;
@@ -186,7 +200,7 @@ wire z80_orch85r_sel    = (TRS_A[7:0] == 8'hb9) & ~TRS_OUT;
 
 wire xray_sel;
 
-wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel;
+wire esp_sel = trs_io_sel | frehd_sel | printer_sel | xray_sel;
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
@@ -201,6 +215,9 @@ always @(posedge clk) begin
   if (esp_sel_risingedge) begin
     // ESP needs to do something
     ESP_REQ <= 1;
+  end
+  if (esp_sel_risingedge | printer_mem_trigger) begin
+    // Assert WAIT
     WAIT <= 1;
     count <= 50;
   end
