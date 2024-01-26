@@ -148,7 +148,7 @@ wire esp_sel = trs_io_sel || frehd_sel || printer_sel;
 wire esp_sel_risingedge = esp_sel && io_access;
 
 
-assign EXTIOSEL = esp_sel;
+assign EXTIOSEL = esp_sel & ~Z80_IN;
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
