@@ -29,25 +29,6 @@ module main(
   output [2:0] tmds_n,
   output tmds_clock_p,
   output tmds_clock_n
-
-/*
-  output VGA_RGB,
-  output VGA_HSYNC,
-  output VGA_VSYNC,
-  output VGA_R,
-  output VGA_G,
-  output VGA_B,
-  output VGA_H,
-  output VGA_V,
-  output [1:0] led,
-  
-  output SPI_CS_N,
-  output SPI_SCK,
-  output SPI_SDO,
-  input SPI_SDI,
-  output SPI_WP_N,
-  output SPI_HLD_N
-*/
 );
 
 localparam [2:0] VERSION_MAJOR = 0;
@@ -58,21 +39,6 @@ localparam [7:0] COOKIE = 8'haf;
 wire clk;
 wire vga_clk;
 
-/*
- * Clocking Wizard
- * Clock primary: 12 MHz
- * clk_out1 frequency: 100 MHz
- * clk_out2: 20 MHz
- */
-/*
-clk_wiz_0 clk_wiz_0(
-   .clk_out1(clk),
-   .clk_out2(vga_clk),
-   .reset(1'b0),
-   .locked(),
-   .clk_in1(clk_in)
-);
-*/
 
 Gowin_rPLL clk_wiz_0(
    .clkout(clk), //output clkout
@@ -91,45 +57,28 @@ reg TRS_WR;
 reg TRS_IN;
 reg TRS_OUT;
 
+wire abus_access_trigger;
+wire abus_access_filtered;
 
-
-wire io_access_raw = !TRS_RD || !TRS_WR || !TRS_IN || !TRS_OUT;
-
-wire io_access_filtered;
-
-wire io_access_rising_edge;
-
-
-filter io(
+filter read_abus_filter(
   .clk(clk),
-  .in(io_access_raw),
-  .out(io_access_filtered),
-  .rising_edge(io_access_rising_edge),
+  .in(~TRS_RAS | ~TRS_IN | ~TRS_OUT),
+  .out(abus_access_filtered),
+  .rising_edge(abus_access_trigger),
   .falling_edge()
 );
 
-reg[8:0] io_trigger;
+reg[8:0] abus_trigger;
 
 always @(posedge clk) begin
-  io_trigger <= {io_trigger[7:0], io_access_rising_edge};
+  abus_trigger <= {abus_trigger[7:0], abus_access_trigger};
 end
 
-wire read_a8_a15 = io_trigger[3];
-wire read_a0_a7 = io_trigger[7];
-wire io_access = io_trigger[8];
+wire read_a8_a15 = abus_trigger[3];
+wire read_a0_a7 = abus_trigger[7];
+wire read_abus_trigger = abus_trigger[8];
 
-/*
-trigger io_trigger(
-  .clk(clk),
-  .cond(io_access_rising_edge),
-  .one(read_a8_a15),
-  .two(read_a0_a7),
-  .three(io_access)
-);
-*/
-
-//assign MUX_A = read_a8_a15 ? 2'b10 : 2'b01;
-assign MUX_A = (io_trigger[3:0] != 0) ? 2'b01 : 2'b10;
+assign MUX_A = (abus_trigger[3:0] != 0) ? 2'b01 : 2'b10;
 
 always @(posedge clk) begin
   TRS_RD <= TRS_RD_raw;
@@ -153,87 +102,24 @@ always @(posedge clk) begin
     TRS_A[15] <= TRS_AH[5];
     TRS_A[16] <= 1; // TRS_A does not hold a valid address
   end
-  else TRS_A[16] <= io_access_filtered ? TRS_A[16] : 1; // TRS_A does not hold a valid address when io_sccess_filtered becomes 1
+  else TRS_A[16] <= abus_access_filtered ? TRS_A[16] : 1; // TRS_A does not hold a valid address when abus_access_filtered becomes 0
 end
 
 
 
 //----TRS-IO---------------------------------------------------------------------
 
-localparam[7:0]
-  PRINTER_STATUS_READY = 8'h30,
-  PRINTER_STATUS_BUSY = 8'hf0;
-
-reg[7:0] printer_status = PRINTER_STATUS_READY;
-
-// One byte buffer for printer output
-reg[7:0] printer_byte;
-
-
-/*
-wire trs_wr;
-wire WR_falling_edge;
-wire WR_rising_edge;
-
-filter WR_filter(
-  .clk(clk),
-  .in(TRS_WR),
-  .out(trs_wr),
-  .rising_edge(WR_rising_edge),
-  .falling_edge(WR_falling_edge)
-);
-
-
-wire trs_rd;
-wire RD_falling_edge;
-wire RD_rising_edge;
-
-filter RD_filter(
-  .clk(clk),
-  .in(TRS_RD),
-  .out(trs_rd),
-  .rising_edge(RD_rising_edge),
-  .falling_edge(RD_falling_edge)
-);
-
-
-wire trs_out;
-wire OUT_falling_edge;
-wire OUT_rising_edge;
-
-filter OUT_filter(
-  .clk(clk),
-  .in(TRS_OUT),
-  .out(trs_out),
-  .rising_edge(OUT_rising_edge),
-  .falling_edge(OUT_falling_edge)
-);
-
-wire trs_in;
-wire IN_falling_edge;
-wire IN_rising_edge;
-
-filter IN_filter(
-  .clk(clk),
-  .in(TRS_IN),
-  .out(trs_in),
-  .rising_edge(IN_rising_edge),
-  .falling_edge(IN_falling_edge)
-);
-*/
-
-
 reg full_addr = 1'b0;
 
 // rom
 wire trs_rom_sel = (full_addr
                  ? (~TRS_A[15] & ~TRS_A[14] & (~TRS_A[13] | ~TRS_A[12])) // 12k
-                 : 1'b0) & ~TRS_A[16];                                                 // none (original design)
+                 : 1'b0) & ~TRS_A[16];                                   // none (original design)
 
 // ram
 wire trs_ram_sel = (full_addr
                  ? (TRS_A[15] | TRS_A[14]) // full 48k
-                 : TRS_A[15]              // upper 32k (original design)
+                 : TRS_A[15]               // upper 32k (original design)
                   ) & ~TRS_A[16];
 
 
@@ -246,10 +132,11 @@ wire fdc_37ef_sel_rd = (TRS_A == 17'h37ef) && !TRS_RD;
 wire fdc_sel_rd = fdc_37e0_sel_rd || fdc_37ec_sel_rd || fdc_37ef_sel_rd;
 wire fdc_sel = fdc_sel_rd;
 
-wire printer_sel_rd = (TRS_A == 17'h37e8) && !TRS_RD;
-wire printer_sel_wr = (TRS_A == 17'h37e8) && !TRS_WR;
-wire printer_sel = printer_sel_wr;
-reg printer_sel_reg = 0;
+wire printer_mem_m1 = ~TRS_A[16] & (TRS_A[15:2] == (16'h37e8 >> 2));
+wire printer_sel_rd = printer_mem_m1 & ~TRS_RD;
+wire printer_sel_wr = printer_mem_m1 & ~TRS_WR;
+wire printer_mem_trigger = printer_mem_m1 & read_abus_trigger;
+wire printer_sel = printer_sel_rd | printer_sel_wr;
 
 wire trs_io_sel_in = ~TRS_A[16] && (TRS_A[7:0] == 31) && !TRS_IN;
 wire trs_io_sel_out = ~TRS_A[16] && (TRS_A[7:0] == 31) && !TRS_OUT;
@@ -263,21 +150,30 @@ wire z80_dsp_sel_wr = ~TRS_A[16] && (TRS_A[15:10] == 6'b001111) && !TRS_WR;
 
 wire z80_le18_data_sel_in = ~TRS_A[16] && (TRS_A[7:0] == 8'hec) & ~TRS_IN;
 
+wire cass_sel = ~TRS_A[16] && (TRS_A[7:0] == 255) && !TRS_OUT;
+
 // orchestra-85
 wire z80_orch85l_sel    = ~TRS_A[16] && (TRS_A[7:0] == 8'hb5) && !TRS_OUT;
 wire z80_orch85r_sel    = ~TRS_A[16] && (TRS_A[7:0] == 8'hb9) && !TRS_OUT;
 
-/*
-wire z80_spi_ctrl_sel_out = (TRS_A[7:0] == 8'hfc) & OUT_falling_edge;
-wire z80_spi_data_sel_in  = (TRS_A[7:0] == 8'hfd) & ~TRS_IN;
-wire z80_spi_data_sel_out = (TRS_A[7:0] == 8'hfd) & OUT_falling_edge;
-*/
 
 wire xray_sel;
 
-wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel;
+wire io_sel;
+wire io_access;
 
-wire esp_sel_risingedge = esp_sel && io_access;
+wire bus_access = ~TRS_RD | ~ TRS_WR | ~TRS_IN | ~TRS_OUT;
+
+filter esp_sel_filter(
+  .clk(clk),
+  .in(bus_access & (trs_io_sel | frehd_sel | fdc_sel | trs_ram_sel | printer_sel | xray_sel | cass_sel)),
+  .out(io_sel),
+  .rising_edge(io_access),
+  .falling_edge()
+);
+
+
+wire esp_sel = trs_io_sel | frehd_sel | printer_sel | xray_sel;
 
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
@@ -286,28 +182,19 @@ wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
 reg [5:0] count;
 
 always @(posedge clk) begin
-  if (esp_sel_risingedge) begin
+  if (esp_sel & io_access) begin
     // ESP needs to do something
     ESP_REQ <= 1;
-    count <= 50;
-    if (printer_sel) begin
-      // The next byte for the printer is ready
-      printer_sel_reg <= 1;
-      printer_byte <= TRS_D;
-      printer_status <= PRINTER_STATUS_BUSY;
-    end
-    else begin
-      // This is not a write to 0x37e8 (the printer). Need to assert WAIT
-      WAIT <= 1;
-    end
   end
-  else if (esp_done_risingedge)
-    begin
-      // When ESP is done, de-assert WAIT
-      WAIT <= 0;
-      printer_sel_reg <= 0;
-      printer_status <= PRINTER_STATUS_READY;
-    end
+  if ((esp_sel & io_access) | printer_mem_trigger) begin
+    // Assert WAIT
+    WAIT <= 1;
+    count <= 50;
+  end
+  else if (esp_done_risingedge) begin
+    // When ESP is done, de-assert WAIT
+    WAIT <= 0;
+  end
   if (count == 1) ESP_REQ <= 0;
   if (count != 0) count <= count - 1;
 end
@@ -318,21 +205,22 @@ localparam [2:0]
   esp_trs_io_out = 3'd1,
   esp_frehd_in = 3'd2,
   esp_frehd_out = 3'd3,
-  esp_printer_wr = 3'd4,
-  esp_xray = 3'd5;
+  esp_printer_rd = 3'd4,
+  esp_printer_wr = 3'd5,
+  esp_xray = 3'd6;
 
 
-assign ESP_S = (esp_trs_io_in & {3{trs_io_sel_in}}) |
-               (esp_trs_io_out & {3{trs_io_sel_out}}) |
-               (esp_frehd_in & {3{frehd_sel_in}}) |
-               (esp_frehd_out & {3{frehd_sel_out}}) |
-               (esp_printer_wr & {3{printer_sel_reg}}) |
-               (esp_xray & {3{xray_sel}});
+assign ESP_S = ~((~esp_trs_io_in & {3{trs_io_sel_in}}) |
+                 (~esp_trs_io_out & {3{trs_io_sel_out}}) |
+                 (~esp_frehd_in & {3{frehd_sel_in}}) |
+                 (~esp_frehd_out & {3{frehd_sel_out}}) |
+                 (~esp_printer_rd & {3{printer_sel_rd}}) |
+                 (~esp_printer_wr & {3{printer_sel_wr}}) |
+                 (~esp_xray & {3{xray_sel}}));
 
 
 
 //---main-------------------------------------------------------------------------
-
 
 localparam [2:0]
   idle       = 3'b000,
@@ -360,7 +248,7 @@ localparam [7:0]
   xray_resume         = 8'd13,
   set_full_addr       = 8'd14,
   get_version         = 8'd15,
-  get_printer_byte    = 8'd16,
+  get_printer_byte    = 8'd16, // Deprecated
   set_screen_color    = 8'd17;
   
 
@@ -380,7 +268,7 @@ always @(posedge clk) begin
   trigger_action <= 1'b0;
   bits_to_send <= 0;
 
-  if (esp_sel_risingedge && ~TRS_A[16] && (TRS_A[7:0] == 31)) trs_io_data_ready <= 1'b0;
+  if (io_access && ~TRS_A[16] && (TRS_A[7:0] == 31)) trs_io_data_ready <= 1'b0;
 
   if (start_msg)
     state <= idle;
@@ -642,7 +530,6 @@ wire xray_run_stub = (state_xray != state_xray_run);
 // The "+ 1" will trigger the ESP at the beginning of the second iteration of the stub
 assign xray_sel = (stub_run_count == 1) && ((xray_base_addr + 1) == TRS_A);
 
-assign led[0] = ~xray_run_stub;
 
 
 //--------BRAM-------------------------------------------------------------------------
@@ -660,35 +547,6 @@ wire [0:0]web;
 wire [14:0]addrb;
 wire [7:0]dinb;
 wire [7:0]doutb;
-
-
-/*
- * BRAM configuration
- * ------------------
- * BRAM is 64K in size and coveres the complete 16-bit address range of the Z80.
- *
- * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
- * Port A: Write/Read width: 8, Write depth: 65536, Operating mode: Write First, Core Output Register, REGCEA pin
- * Port B: Write/Read width: 8, Write depth: 65536, Operating mode: Read First, Core Output Register, REGCEB pin
- */
-/*
-blk_mem_gen_0 bram(
-  .clka(clk),
-  .ena(ena),
-  .regcea(regcea),
-  .wea(wea),
-  .addra(addra),
-  .dina(dina),
-  .douta(douta),
-  .clkb(clk),
-  .enb(enb),
-  .regceb(regceb),
-  .web(web),
-  .addrb(addrb), 
-  .dinb(dinb),
-  .doutb(doutb)
-);
-*/
 
 
 Gowin_DPB0 bram(
@@ -715,12 +573,7 @@ Gowin_DPB0 bram(
 assign addra = TRS_A[14:0];
 assign dina = !TRS_WR ? TRS_D : 8'bz;
 
-//XXX
-//assign TRS_OE = !(trs_mem_sel && (!TRS_WR || !TRS_RD));
-//assign TRS_OE = !((TRS_A[16:8] == 9'h0ff) && (!TRS_WR || !TRS_RD));
-
-
-assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || esp_sel || fdc_sel || z80_dsp_sel_wr ||
+assign TRS_OE = !((trs_mem_sel && (!TRS_WR || !TRS_RD)) || (esp_sel & io_sel) || fdc_sel || z80_dsp_sel_wr ||
                    printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
 
 assign TRS_DIR = TRS_RD && TRS_IN;
@@ -816,32 +669,10 @@ always @(posedge clk) begin
       trs_data <= (fdc_sector_idx < 26) ? frehd_loader[fdc_sector_idx * 8+:8] : 0;
       fdc_sector_idx = fdc_sector_idx + 1;
     end
-  else if (io_access && printer_sel_rd)
-    trs_data <= printer_status;
   else if (le18_dout_rdy)
     trs_data <= le18_dout;
-/*
-  else if (IN_falling_edge && z80_spi_data_sel_in)
-    trs_data <= spi_data_in;
-*/
 end
 
-
-/*
-assign TRS_OE = !(TRS_A[15] && (!TRS_WR || !TRS_RD));
-assign TRS_DIR = TRS_RD;
-*/
-
-/*
-assign RamOEn = !(TRS_A[15] && (!TRS_WR || !TRS_RD));
-assign RamWEn = TRS_WR;
-assign RamCEn = 1'b0;
-
-assign MemAdr = { 3'b000, TRS_A };
-
-assign TRS_D = !TRS_RD ? MemDB : 8'bz;
-assign MemDB = !TRS_WR ? TRS_D : 8'bz;
-*/
 
 //---BRAM-------------------------------------------------------------------------
 
@@ -869,10 +700,6 @@ trigger bram_peek_trigger(
   .clk(clk),
   .cond(trigger_action && (cmd == bram_peek)),
   .one(enb_peek),
-/*
-  .two(regceb),
-  .three(bram_peek_done));
-*/
   .two(bram_peek_done),
   .three());
 
@@ -882,7 +709,6 @@ always @(posedge clk) begin
   else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
-  else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
 end
 
 
@@ -900,36 +726,6 @@ wire [0:0] xweb;
 wire [8:0] xaddrb;
 wire [7:0] xdinb;
 
-
-/*
- * XRAM configuration
- * ------------------
- * XRAM is 512 bytes in size. The first 256 bytes hold the debug stub (xray-stub.asm)
- * that gets injected when execution hits a breapoint. The upper 256 bytes are always
- * mapped to $FF00. This is where the debug stub stores the context (i.e., Z80 registers)
- *
- * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
- * Port A: Write/Read width: 8, Write depth: 512, Operating mode: Write First, Core Output Register, REGCEA pin
- * Port B: Write/Read width: 8, Write depth: 512, Operating mode: Read First, Core Output Register, REGCEB pin
- */
-/*
-blk_mem_gen_1 xram(
-  .clka(clk),
-  .ena(xena),
-  .regcea(xregcea),
-  .wea(xwea),
-  .addra(xaddra),
-  .dina(xdina),
-  .douta(xdouta),
-  .clkb(clk),
-  .enb(xenb),
-  .regceb(xregceb),
-  .web(xweb),
-  .addrb(xaddrb), 
-  .dinb(xdinb),
-  .doutb(xdoutb)
-);
-*/
 
 Gowin_DPB1 xram(
         .douta(xdouta), //output [7:0] douta
@@ -1018,58 +814,6 @@ vga vga(
   .VGA_VSYNC(),
   .reset(sync));
 
-/*
-
-
-//----XFLASH---------------------------------------------------------------------
-
-// SPI Flash control register
-// bit7 is CS  (active high)
-// bit6 is WPN (active low)
-reg [7:0] z80_spi_ctrl_reg = 8'h00;
-
-always @(posedge clk)
-begin
-   if(z80_spi_ctrl_sel_out)
-      z80_spi_ctrl_reg <= TRS_D;
-end
-
-// The SPI shift register is by design faster than the z80 can read and write.
-// Therefore a status bit isn't necessary.  The z80 can read or write and then
-// immediately read or write again on the next instruction.
-reg [7:0] spi_shift_reg;
-reg spi_sdo;
-reg [7:0] spi_counter = 8'b0;
-
-always @(posedge clk)
-begin
-   if(spi_counter[7])
-   begin
-      spi_counter <= spi_counter + 8'b1;
-      if(spi_counter[2:0] == 3'b000)
-      begin
-         if(spi_counter[3] == 1'b0)
-            spi_sdo <= spi_shift_reg[7];
-         else
-            spi_shift_reg <= {spi_shift_reg[6:0], SPI_SDI};
-      end
-   end
-   else if(z80_spi_data_sel_out)
-   begin
-      spi_shift_reg <= TRS_D;
-      spi_counter <= 8'b10000000;
-   end
-end
-
-assign spi_data_in = spi_shift_reg;
-
-
-assign SPI_CS_N  = ~z80_spi_ctrl_reg[7];
-assign SPI_SCK   = spi_counter[3];
-assign SPI_SDO   =  spi_sdo;
-assign SPI_WP_N  =  z80_spi_ctrl_reg[6];
-assign SPI_HLD_N =  1'bz;
-*/
 
 //-----ORCH85----------------------------------------------------------------------
 
@@ -1087,7 +831,6 @@ begin
 end
 
 //-----HDMI------------------------------------------------------------------------
-
 
 logic clk_pixel;
 logic clk_pixel_x5;
@@ -1168,12 +911,10 @@ end
 
 //-----Cassette out--------------------------------------------------------------------------
 
-wire cass_sel_out = ~TRS_A[16] && (TRS_A[7:0] == 255) && !TRS_OUT;
-
 reg[1:0] sound_idx = 2'b00;
 
 always @(posedge clk) begin
-  if (io_access && cass_sel_out) sound_idx <= TRS_D & 3;
+  if (io_access && cass_sel) sound_idx <= TRS_D & 3;
 end
 
 always @(posedge clk_audio) begin
@@ -1184,5 +925,12 @@ always @(posedge clk_audio) begin
     2'b11: audio_sample_word <= '{(   0<<4) + (orch85r_reg<<5), (   0<<4) + (orch85l_reg<<5)};
   endcase
 end
+
+
+//-----LED------------------------------------------------------------------------------------
+
+assign led[0] = ~esp_sel;
+assign led[1] = ~xray_run_stub;
+
 
 endmodule
