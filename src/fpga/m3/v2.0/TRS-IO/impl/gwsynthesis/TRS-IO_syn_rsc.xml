@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Module name="main" Register="109" Lut="145" Ssram="1">
-    <SubModule name="clk_wiz_0"/>
-    <SubModule name="io" Register="12" Lut="5"/>
-</Module>
