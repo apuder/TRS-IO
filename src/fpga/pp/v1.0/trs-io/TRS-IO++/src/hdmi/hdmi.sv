@@ -87,7 +87,9 @@ module hdmi
     output logic [BIT_WIDTH-1:0] frame_width,
     output logic [BIT_HEIGHT-1:0] frame_height,
     output logic [BIT_WIDTH-1:0] screen_width,
-    output logic [BIT_HEIGHT-1:0] screen_height
+    output logic [BIT_HEIGHT-1:0] screen_height,
+
+    output logic [9:0] tmds_internal [3-1:0]
 );
 
 localparam int NUM_CHANNELS = 3;
@@ -370,7 +372,7 @@ generate
 endgenerate
 
 // All logic below relates to the production and output of the 10-bit TMDS code.
-logic [9:0] tmds_internal [NUM_CHANNELS-1:0] /* verilator public_flat */ ;
+//logic [9:0] tmds_internal [NUM_CHANNELS-1:0] /* verilator public_flat */ ;
 genvar i;
 generate
     // TMDS code production.

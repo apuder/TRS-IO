@@ -42,7 +42,10 @@ module top(
   input EXTIOSEL_IN_N,
   input WAIT_IN_N,
   input INT_IN_N,
-  inout [7:0] PMOD);
+  inout [7:0] PMOD,
+
+  input UART_RX,
+  output UART_TX);
 
 
 reg TRS_INT;
@@ -58,7 +61,6 @@ wire TRS_DIR;
 assign DBUS_DIR = TRS_DIR;
 
 wire CS = CS_FPGA;
-wire[1:0] sw = 2'b11;
 
 assign ABUS_DIR = 1;
 assign ABUS_DIR_N = ~ABUS_DIR;
@@ -75,23 +77,12 @@ localparam [4:0] VERSION_MINOR = 3;
 localparam [7:0] COOKIE = 8'haf;
 
 wire clk;
-wire vga_clk;
 
 /*
  * Clocking Wizard
- * Clock primary: 12 MHz
- * clk_out1 frequency: 100 MHz
- * clk_out2: 20 MHz
+ * Clock primary: 27 MHz
+ * clk_out1 frequency: 84 MHz
  */
-/*
-clk_wiz_0 clk_wiz_0(
-   .clk_out1(clk),
-   .clk_out2(vga_clk),
-   .reset(1'b0),
-   .locked(),
-   .clk_in1(clk_in)
-);
-*/
 
 Gowin_rPLL clk_wiz_0(
    .clkout(clk), //output clkout
@@ -114,11 +105,11 @@ reg byte_received = 1'b0;
 
 //----Address Decoder------------------------------------------------------------
 
-wire TRS_RD = (is_m1 & _RD_N) | (is_m3 & 1'b1);
-wire TRS_WR = (is_m1 & _WR_N) | (is_m3 & 1'b1);
+wire TRS_RD = (is_m3 ? 1'b1 : _RD_N);
+wire TRS_WR = (is_m3 ? 1'b1 : _WR_N);
 
-wire TRS_IN  = (is_m1 & _IN_N ) | (is_m3 & (_IN_N  | _IOREQ_N));
-wire TRS_OUT = (is_m1 & _OUT_N) | (is_m3 & (_OUT_N | _IOREQ_N));
+wire TRS_IN  = (is_m3 ? (_IN_N  | _IOREQ_N) : _IN_N );
+wire TRS_OUT = (is_m3 ? (_OUT_N | _IOREQ_N) : _OUT_N);
 
 wire io_access_raw = ~TRS_RD | ~TRS_WR | ~TRS_IN | ~TRS_OUT;
 
@@ -141,16 +132,15 @@ filter io(
 
 reg full_addr = 1'b0;
 
-// rom
-wire trs_rom_sel = (full_addr
-                 ? (~TRS_A[15] & ~TRS_A[14] & (~TRS_A[13] | ~TRS_A[12])) // 12k
-                 : 1'b0);                                                 // none (original design)
+// extension rom (1.96875k @ 3000h-37DFh)
+wire trs_extrom_sel = is_m1 & ((TRS_A[15:11] == 5'b00110) &  // 2k @ 3000h-37FFh
+                               ~(TRS_A[15:5] == 11'b00110111111));  // - 32 @ 37E0h-37FFh
+wire trs_extrom_sel_rd = trs_extrom_sel & ~TRS_RD;
 
 // ram
-wire trs_ram_sel = (full_addr
-                 ? (TRS_A[15] | TRS_A[14]) // full 48k
-                 : TRS_A[15]              // upper 32k (original design)
-                  );
+wire trs_ram_sel = is_m1 & TRS_A[15];  // upper 32k
+wire trs_ram_sel_rd = trs_ram_sel & ~TRS_RD;
+wire trs_ram_sel_wr = trs_ram_sel & ~TRS_WR;
 
 wire ras_trigger;
 
@@ -163,46 +153,48 @@ filter ras(
 );
 
 // map rom and ram
-wire trs_mem_sel = trs_rom_sel | trs_ram_sel;
+wire trs_mem_sel = trs_extrom_sel | trs_ram_sel;
+wire trs_mem_sel_rd = trs_mem_sel & ~TRS_RD;
 
-wire fdc_37e0_sel_rd = is_m1 & (TRS_A == 16'h37e0) & ~TRS_RD;
-wire fdc_37ec_sel_rd = is_m1 & (TRS_A == 16'h37ec) & ~TRS_RD;
-wire fdc_37ef_sel_rd = is_m1 & (TRS_A == 16'h37ef) & ~TRS_RD;
-wire fdc_sel_rd = fdc_37e0_sel_rd | fdc_37ec_sel_rd | fdc_37ef_sel_rd;
-wire fdc_sel = fdc_sel_rd;
+wire fdc_37e0_sel_rd = is_m1 & (TRS_A[15:2] == (16'h37E0 >> 2)) & ~TRS_RD; // 37E0-37E3
+wire fdc_37ex_sel    = is_m1 & (TRS_A[15:2] == (16'h37EC >> 2));       // 37EC-37EF
+wire fdc_37ec_sel_rd = fdc_37ex_sel & (TRS_A[1:0] == 2'b00) & ~TRS_RD; // fdc status
+wire fdc_37ec_sel_wr = fdc_37ex_sel & (TRS_A[1:0] == 2'b00) & ~TRS_WR; // fdc command
+wire fdc_37ef_sel_rd = fdc_37ex_sel & (TRS_A[1:0] == 2'b11) & ~TRS_RD; // fdc data
+wire fdc_sel_rd = fdc_37e0_sel_rd | (fdc_37ex_sel & ~TRS_RD);
 
-wire printer_mem_m1 = TRS_A[15:2] == 16'h37e8 >> 2;
-wire printer_port_m3 = TRS_A[7:2] == 8'hF8 >> 2;
-wire printer_sel_m1_rd = is_m1 & printer_mem_m1 & ~TRS_RD;
-wire printer_sel_m1_wr = is_m1 & printer_mem_m1 & ~TRS_WR;
-wire printer_sel_m3_rd = is_m3 & printer_port_m3 & ~TRS_IN;
-wire printer_sel_m3_wr = is_m3 & printer_port_m3 & ~TRS_OUT;
-wire printer_mem_trigger = is_m1 & printer_mem_m1 & ras_trigger;
-wire printer_sel_rd = printer_sel_m1_rd | printer_sel_m3_rd;
-wire printer_sel_wr = printer_sel_m1_wr | printer_sel_m3_wr;
+wire printer_sel_m1 = (TRS_A[15:2] == (16'h37E8 >> 2));
+wire printer_sel_m3 = (TRS_A[7:2]  == (8'hF8 >> 2));
+wire printer_sel_m1_rd  = printer_sel_m1 & ~TRS_RD;
+wire printer_sel_m1_wr  = printer_sel_m1 & ~TRS_WR;
+wire printer_sel_m3_in  = printer_sel_m3 & ~TRS_IN;
+wire printer_sel_m3_out = printer_sel_m3 & ~TRS_OUT;
+wire printer_mem_trigger = is_m1 & printer_sel_m1 & ras_trigger;
+wire printer_sel_rd = is_m3 ? printer_sel_m3_in  : printer_sel_m1_rd;
+wire printer_sel_wr = is_m3 ? printer_sel_m3_out : printer_sel_m1_wr;
 wire printer_sel = printer_sel_rd | printer_sel_wr;
 
-wire trs_io_sel_in = (TRS_A[7:0] == 31) & ~TRS_IN;
+wire trs_io_sel_in  = (TRS_A[7:0] == 31) & ~TRS_IN;
 wire trs_io_sel_out = (TRS_A[7:0] == 31) & ~TRS_OUT;
-wire trs_io_sel = trs_io_sel_in | trs_io_sel_out;
 
-wire frehd_sel_in = (TRS_A[7:4] == 4'hc) & ~TRS_IN;
-wire frehd_sel_out = (TRS_A[7:4] == 4'hc) & ~TRS_OUT;
-wire frehd_sel = frehd_sel_in | frehd_sel_out;
+wire frehd_sel_in  = (TRS_A[7:4] == 4'hC) & ~TRS_IN;
+wire frehd_sel_out = (TRS_A[7:4] == 4'hC) & ~TRS_OUT;
 
-wire z80_dsp_sel_wr = is_m1 & (TRS_A[15:10] == 6'b001111) & ~TRS_WR;
+wire le18_data_sel_in = (TRS_A[7:0] == 8'hEC) & ~TRS_IN;
+wire hires_dout_sel_in = (TRS_A[7:0] == 8'h82) & ~TRS_IN;
 
-wire z80_le18_data_sel_in = (TRS_A[7:0] == 8'hec) & ~TRS_IN;
+// m1: orchestra-85 @ B9,B5
+// m3: orchestra-90 @ 79/75
+wire orch85l_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h75) : (TRS_A[7:0] == 8'hB5)) & ~TRS_OUT;
+wire orch85r_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h79) : (TRS_A[7:0] == 8'hB9)) & ~TRS_OUT;
 
-// orchestra-85
-wire z80_orch85l_sel    = (TRS_A[7:0] == 8'hb5) & ~TRS_OUT;
-wire z80_orch85r_sel    = (TRS_A[7:0] == 8'hb9) & ~TRS_OUT;
+wire xray_sel = 1'b0;
 
-wire xray_sel;
+wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
+wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
+wire esp_sel = esp_sel_in | esp_sel_out | xray_sel;
 
-wire esp_sel = trs_io_sel | frehd_sel | printer_sel | xray_sel;
-
-wire esp_sel_risingedge = esp_sel && io_access;
+wire esp_sel_risingedge = io_access & esp_sel;
 
 assign EXTIOSEL = esp_sel & ~_IN_N;
 
@@ -231,22 +223,22 @@ end
 
       
 localparam [3:0]
-  esp_trs_io_in = 4'd0,
+  esp_trs_io_in  = 4'd0,
   esp_trs_io_out = 4'd1,
-  esp_frehd_in = 4'd2,
-  esp_frehd_out = 4'd3,
+  esp_frehd_in   = 4'd2,
+  esp_frehd_out  = 4'd3,
   esp_printer_rd = 4'd4,
   esp_printer_wr = 4'd5,
-  esp_xray = 4'd6;
+  esp_xray       = 4'd6;
 
 
-assign ESP_S = ~((~esp_trs_io_in & {4{trs_io_sel_in}}) |
-                 (~esp_trs_io_out & {4{trs_io_sel_out}}) |
-                 (~esp_frehd_in & {4{frehd_sel_in}}) |
-                 (~esp_frehd_out & {4{frehd_sel_out}}) |
-                 (~esp_printer_rd & {4{printer_sel_rd}}) |
-                 (~esp_printer_wr & {4{printer_sel_wr}}) |
-                 (~esp_xray & {4{xray_sel}}));
+assign ESP_S = ~( (~esp_trs_io_in  & {4{trs_io_sel_in }}) |
+                  (~esp_trs_io_out & {4{trs_io_sel_out}}) |
+                  (~esp_frehd_in   & {4{frehd_sel_in  }}) |
+                  (~esp_frehd_out  & {4{frehd_sel_out }}) |
+                  (~esp_printer_rd & {4{printer_sel_rd}}) |
+                  (~esp_printer_wr & {4{printer_sel_wr}}) |
+                  (~esp_xray       & {4{xray_sel      }}) );
 
 
 //---main-------------------------------------------------------------------------
@@ -295,7 +287,7 @@ reg [2:0] idx;
 reg [7:0] cmd;
 reg trs_io_data_ready = 1'b0;
 
-assign INT = (is_m1 & TRS_INT) | (is_m3 & trs_io_data_ready);
+assign INT = (is_m3 ? trs_io_data_ready : TRS_INT);
 
 reg trigger_action = 1'b0;
 
@@ -475,7 +467,6 @@ assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
 
 //---Full Address--------------------------------------------------------------------------
 
-
 always @(posedge clk) begin
   if (trigger_action && cmd == set_full_addr) begin
     full_addr <= (params[0] != 0);
@@ -498,219 +489,133 @@ end
 
 always @(posedge clk) begin
   if (trigger_action && cmd == set_led) begin
-    LED_RED <= params[0][0];
+    LED_RED   <= params[0][0];
     LED_GREEN <= params[0][1];
-    LED_BLUE <= params[0][2];
+    LED_BLUE  <= params[0][2];
   end
 end
-
-
-//---Breakpoint Management-----------------------------------------------------------------
-
-reg [15:0] breakpoints[0:7];
-reg breakpoint_active[0:7];
-reg breakpoints_enabled;
-wire [7:0] breakpoint_idx;
-reg [7:0] current_breakpoint_idx;
-
-
-always @(posedge clk) begin
-  if (trigger_action) begin
-    case(cmd)
-      set_breakpoint: begin
-        breakpoints[params[0]] <= {params[2], params[1]};
-        breakpoint_active[params[0]] <= 1;
-      end
-      clear_breakpoint: begin
-        breakpoint_active[params[0]] <= 0;
-      end
-      enable_breakpoints: begin
-        breakpoints_enabled <= 1;
-      end
-      disable_breakpoints: begin
-        breakpoints_enabled <= 0;
-      end
-      default: ;
-    endcase
-  end
-end
-
-wire ram_read_access = io_access & ~TRS_RD & trs_mem_sel;
-wire ram_write_access = io_access & ~TRS_WR & trs_ram_sel;
-
-wire pre_ram_access_check;
-wire do_ram_access;
-
-trigger pre_ram_access_check_trigger(
-  .clk(clk),
-  .cond(ram_read_access || ram_write_access),
-  .one(pre_ram_access_check),
-  .two(do_ram_access),
-  .three()
-);
-
-assign breakpoint_idx = (({8{(breakpoint_active[0] && ({1'b0, breakpoints[0]} == TRS_A))}} & 8'd1) |
-                        ({8{(breakpoint_active[1] && ({1'b0, breakpoints[1]} == TRS_A))}} & 8'd2) |
-                        ({8{(breakpoint_active[2] && ({1'b0, breakpoints[2]} == TRS_A))}} & 8'd3) |
-                        ({8{(breakpoint_active[3] && ({1'b0, breakpoints[3]} == TRS_A))}} & 8'd4) |
-                        ({8{(breakpoint_active[4] && ({1'b0, breakpoints[4]} == TRS_A))}} & 8'd5) |
-                        ({8{(breakpoint_active[5] && ({1'b0, breakpoints[5]} == TRS_A))}} & 8'd6) |
-                        ({8{(breakpoint_active[6] && ({1'b0, breakpoints[6]} == TRS_A))}} & 8'd7) |
-                        ({8{(breakpoint_active[7] && ({1'b0, breakpoints[7]} == TRS_A))}} & 8'd8)) &
-                        {8{is_m1 & ~TRS_RD}};
-
-
-reg [16:0] xray_base_addr;
-
-wire [16:0] diff = TRS_A - xray_base_addr;
-wire himem = ((TRS_A & 17'h1ff00) == 17'hff00);
-
-wire [8:0] xaddra = {9{~himem}} & {1'b0, diff[7:0]} |
-                    {9{himem}} & {1'b1, TRS_A[7:0]};
-
-
-localparam [1:0]
-  state_xray_run = 2'b00,
-  state_xray_stop = 2'b01,
-  state_xray_resume = 2'b11;
-
-reg [1:0] stub_run_count = 0;
-
-reg [1:0] state_xray = state_xray_run;
-
-
-always @(posedge clk) begin
-  if (trigger_action && (cmd == xray_resume) && (state_xray == state_xray_stop)) begin
-    state_xray <= state_xray_resume;
-  end
-  if (pre_ram_access_check && (state_xray == state_xray_run) && (breakpoint_idx != 0)) begin
-    state_xray <= state_xray_stop;
-    xray_base_addr <= TRS_A;
-    current_breakpoint_idx <= breakpoint_idx - 1;
-    stub_run_count <= 0;
-  end
-  if (pre_ram_access_check && (state_xray == state_xray_resume) && (xray_base_addr == TRS_A)) begin
-    state_xray <= state_xray_run;
-    stub_run_count <= 0;
-  end
-  if (pre_ram_access_check && (state_xray == state_xray_stop) && (xray_base_addr == TRS_A) && (stub_run_count != 2)) begin
-    stub_run_count <= stub_run_count + 1;
-  end
-end
-
-wire xray_run_stub = (state_xray != state_xray_run);
-
-// The "+ 1" will trigger the ESP at the beginning of the second iteration of the stub
-assign xray_sel = (stub_run_count == 1) && ((xray_base_addr + 1) == TRS_A);
-
-//assign LED[0] = ~xray_run_stub;
 
 
 //--------BRAM-------------------------------------------------------------------------
 
-wire ena;
-//wire regcea;
-wire [0:0]wea;
-wire [14:0]addra;
-wire [7:0]dina;
-wire [7:0]douta;
-wire clkb;
+wire ram_rd_en, ram_rd_regce;
+wire [7:0] ram_dout;
+
+trigger rama_read_trigger(
+  .clk(clk),
+  .cond(io_access & trs_ram_sel_rd),
+  .one(ram_rd_en),
+  .two(ram_rd_regce),
+  .three()
+);
+
+wire ram_wr_en;
+
+trigger rama_write_trigger(
+  .clk(clk),
+  .cond(io_access & trs_ram_sel_wr),
+  .one(),
+  .two(ram_wr_en),
+  .three()
+);
+
 wire enb;
-//wire regceb;
+wire regceb;
 wire [0:0]web;
 wire [14:0]addrb;
 wire [7:0]dinb;
 wire [7:0]doutb;
 
-
 /*
  * BRAM configuration
  * ------------------
- * BRAM is 64K in size and coveres the complete 16-bit address range of the Z80.
+ * BRAM is 32K in size and covers the upper half of the M1 address space.
  *
  * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
  * Port A: Write/Read width: 8, Write depth: 65536, Operating mode: Write First, Core Output Register, REGCEA pin
  * Port B: Write/Read width: 8, Write depth: 65536, Operating mode: Read First, Core Output Register, REGCEB pin
  */
-/*
-blk_mem_gen_0 bram(
-  .clka(clk),
-  .ena(ena),
-  .regcea(regcea),
-  .wea(wea),
-  .addra(addra),
-  .dina(dina),
-  .douta(douta),
-  .clkb(clk),
-  .enb(enb),
-  .regceb(regceb),
-  .web(web),
-  .addrb(addrb), 
-  .dinb(dinb),
-  .doutb(doutb)
-);
-*/
-
 
 Gowin_DPB0 bram(
-        .douta(douta), //output [7:0] douta
-        .doutb(doutb), //output [7:0] doutb
-        .clka(clk), //input clka
-        .ocea(1'b0), //input ocea
-        .cea(ena), //input cea
-        .reseta(1'b0), //input reseta
-        .wrea(wea), //input wrea
-        .clkb(clk), //input clkb
-        .oceb(1'b0), //input oceb
-        .ceb(enb), //input ceb
-        .resetb(1'b0), //input resetb
-        .wreb(web), //input wreb
-        .ada(addra), //input [14:0] ada
-        .dina(dina), //input [7:0] dina
-        .adb(addrb), //input [14:0] adb
-        .dinb(dinb) //input [7:0] dinb
+  .clka(clk), //input clka
+  .cea(ram_rd_en | ram_wr_en), //input cea
+  .ada(TRS_A[14:0]), //input [14:0] ada
+  .wrea(~TRS_WR), //input wrea
+  .dina(TRS_D), //input [7:0] dina
+  .douta(ram_dout), //output [7:0] douta
+  .ocea(ram_rd_regce), //input ocea
+  .reseta(1'b0), //input reseta
+
+  .clkb(clk), //input clkb
+  .ceb(enb), //input ceb
+  .adb(addrb), //input [14:0] adb
+  .wreb(web), //input wreb
+  .dinb(dinb), //input [7:0] dinb
+  .doutb(doutb), //output [7:0] doutb
+  .oceb(regceb), //input oceb
+  .resetb(1'b0) //input resetb
 );
 
 
-
-assign addra = TRS_A[14:0];
-assign dina = ~TRS_WR ? TRS_D : 8'bz;
-
-
-
-assign TRS_OE = !((trs_mem_sel && (~TRS_WR || ~TRS_RD)) || esp_sel || ~TRS_WR || ~TRS_OUT || fdc_sel);// || fdc_sel || z80_dsp_sel_wr ||
-//                   printer_sel_rd || printer_sel_wr || z80_le18_data_sel_in || /*z80_spi_data_sel_in ||*/ !TRS_OUT);
+assign TRS_OE = ~(~TRS_WR | ~TRS_OUT |
+                   trs_mem_sel_rd  |
+                   hires_dout_sel_in |
+                   le18_data_sel_in |
+                   esp_sel_in |
+                   fdc_sel_rd);
+//                   printer_sel_rd || printer_sel_wr || /*spi_data_sel_in ||*/ !TRS_OUT);
 
 assign TRS_DIR = TRS_RD & TRS_IN;
 
-wire ena_read;
-wire ena_write;
-assign ena = ena_read || ena_write;
 
-wire brama_data_ready;
+//---EXTENSION ROM----------------------------------------------------------------
 
-trigger brama_read_trigger(
+wire extrom_rd_en, extrom_rd_regce;
+
+trigger extrom_rd_trigger (
   .clk(clk),
-  .cond(do_ram_access && ~TRS_RD && !xray_run_stub),
-  .one(ena_read),
-  .two(brama_data_ready),
+  .cond(io_access & trs_extrom_sel_rd),
+  .one(extrom_rd_en),
+  .two(extrom_rd_regce),
   .three()
 );
 
-trigger brama_write_trigger(
-  .clk(clk),
-  .cond(do_ram_access && ~TRS_WR && !xray_run_stub),
-  .one(),
-  .two(),
-  .three(ena_write)
-);
+wire [7:0] extrom_dout;
+
+Gowin_DPB2 extrom (
+   .clka(clk), // input
+   .cea(extrom_rd_en), // input
+   .ada(TRS_A[10:0]), // input [10:0]
+   .wrea(1'b0), // input
+   .dina(8'h00), // input [7:0]
+   .douta(extrom_dout), // output [7:0]
+   .ocea(extrom_rd_regce),
+   .reseta(1'b0),
+ 
+   .clkb(clk), // input
+   .ceb(1'b0), // input
+   .adb(11'h000), // input [10:0]
+   .wreb(1'b0), // input
+   .dinb(8'h00), // input [7:0]
+   .doutb(), // output [7:0]
+   .oceb(1'b0), // input
+   .resetb(1'b0)
+ );
 
 
-
-assign wea = ~TRS_WR;
 
 reg[7:0] trs_data;
-assign _D = (~TRS_RD | ~TRS_IN) ? trs_data : 8'bz;
+wire [7:0] hires_dout;
+
+assign _D = (~TRS_RD | ~TRS_IN) ?
+               ( (trs_ram_sel_rd | trs_extrom_sel_rd | hires_dout_sel_in | le18_data_sel_in) ?
+                  ( ({8{trs_ram_sel_rd   }} & ram_dout   ) |
+                    ({8{trs_extrom_sel_rd}} & extrom_dout) |
+                    ({8{hires_dout_sel_in}} & hires_dout ) |
+                    ({8{le18_data_sel_in }} & le18_dout  )
+                  ) :
+                  trs_data
+               ) : 8'bz;
 
 /*
   ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
@@ -737,11 +642,7 @@ localparam [0:(25 * 8) - 1] frehd_loader = {
 reg [7:0] fdc_sector_idx = 8'd0;
 reg [23:0] counter_25ms;
 
-wire [7:0] xdouta;
-wire xrama_data_ready;
-
 wire [7:0] le18_dout;
-wire le18_dout_rdy;
 
 wire [7:0] spi_data_in;
 
@@ -756,11 +657,7 @@ always @(posedge clk) begin
       counter_25ms <= counter_25ms + 1;
     end
 
-  if (brama_data_ready == 1)
-    trs_data <= douta;
-  else if (xrama_data_ready == 1)
-    trs_data <= xdouta;
-  else if (trigger_action && cmd == dbus_write)
+  if (trigger_action && cmd == dbus_write)
     trs_data <= params[0];
   else if (io_access && fdc_37ec_sel_rd)
     trs_data <= 2;
@@ -772,30 +669,19 @@ always @(posedge clk) begin
   else if (io_access && fdc_37ef_sel_rd)
     begin
       trs_data <= (fdc_sector_idx < 26) ? frehd_loader[fdc_sector_idx * 8+:8] : 0;
-      fdc_sector_idx = fdc_sector_idx + 1;
+      fdc_sector_idx <= fdc_sector_idx + 1;
     end
-  else if (le18_dout_rdy)
-    trs_data <= le18_dout;
+  else if (io_access && fdc_37ec_sel_wr)
+    begin
+      fdc_sector_idx <= 0;
+    end
+
 /*
-  else if (IN_falling_edge && z80_spi_data_sel_in)
+  else if (IN_falling_edge && spi_data_sel_in)
     trs_data <= spi_data_in;
 */
 end
 
-
-/*
-assign TRS_OE = !(TRS_A[15] && (!TRS_WR || !TRS_RD));
-assign TRS_DIR = TRS_RD;
-*/
-
-/*
-assign RamOEn = !(TRS_A[15] && (!TRS_WR || !TRS_RD));
-assign RamWEn = TRS_WR;
-assign RamCEn = 1'b0;
-assign MemAdr = { 3'b000, TRS_A };
-assign TRS_D = !TRS_RD ? MemDB : 8'bz;
-assign MemDB = !TRS_WR ? TRS_D : 8'bz;
-*/
 
 //---BRAM-------------------------------------------------------------------------
 
@@ -804,35 +690,28 @@ assign dinb = params[2];
 
 
 
-wire xram_peek_done;
-wire [7:0] xdoutb;
-
 wire enb_peek, enb_poke;
-assign enb = enb_peek || enb_poke;
+assign enb = enb_peek | enb_poke;
 assign web = (cmd == bram_poke);
 wire bram_peek_done;
 
 trigger bram_poke_trigger(
   .clk(clk),
-  .cond(trigger_action && (cmd == bram_poke)),
+  .cond(trigger_action & (cmd == bram_poke)),
   .one(enb_poke),
   .two(),
   .three());
 
 trigger bram_peek_trigger(
   .clk(clk),
-  .cond(trigger_action && (cmd == bram_peek)),
+  .cond(trigger_action & (cmd == bram_peek)),
   .one(enb_peek),
-/*
   .two(regceb),
   .three(bram_peek_done));
-*/
-  .two(bram_peek_done),
-  .three());
+
 
 always @(posedge clk) begin
   if (bram_peek_done) byte_out <= doutb;
-  else if (xram_peek_done) byte_out <= xdoutb;
   else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
@@ -841,122 +720,7 @@ always @(posedge clk) begin
 end
 
 
-
-//---XRAY-------------------------------------------------------------------------
-
-wire xena;
-//wire xregcea;
-wire [0:0] xwea;
-wire [7:0] xdina;
-wire xclkb;
-wire xenb;
-//wire xregceb;
-wire [0:0] xweb;
-wire [8:0] xaddrb;
-wire [7:0] xdinb;
-
-
-/*
- * XRAM configuration
- * ------------------
- * XRAM is 512 bytes in size. The first 256 bytes hold the debug stub (xray-stub.asm)
- * that gets injected when execution hits a breapoint. The upper 256 bytes are always
- * mapped to $FF00. This is where the debug stub stores the context (i.e., Z80 registers)
- *
- * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
- * Port A: Write/Read width: 8, Write depth: 512, Operating mode: Write First, Core Output Register, REGCEA pin
- * Port B: Write/Read width: 8, Write depth: 512, Operating mode: Read First, Core Output Register, REGCEB pin
- */
-/*
-blk_mem_gen_1 xram(
-  .clka(clk),
-  .ena(xena),
-  .regcea(xregcea),
-  .wea(xwea),
-  .addra(xaddra),
-  .dina(xdina),
-  .douta(xdouta),
-  .clkb(clk),
-  .enb(xenb),
-  .regceb(xregceb),
-  .web(xweb),
-  .addrb(xaddrb), 
-  .dinb(xdinb),
-  .doutb(xdoutb)
-);
-*/
-
-Gowin_DPB1 xram(
-        .douta(xdouta), //output [7:0] douta
-        .doutb(xdoutb), //output [7:0] doutb
-        .clka(clk), //input clka
-        .ocea(1'b0), //input ocea
-        .cea(xena), //input cea
-        .reseta(1'b0), //input reseta
-        .wrea(xwea), //input wrea
-        .clkb(clk), //input clkb
-        .oceb(1'b0), //input oceb
-        .ceb(xenb), //input ceb
-        .resetb(1'b0), //input resetb
-        .wreb(xweb), //input wreb
-        .ada(xaddra), //input [8:0] ada
-        .dina(xdina), //input [7:0] dina
-        .adb(xaddrb), //input [8:0] adb
-        .dinb(xdinb) //input [7:0] dinb
-    );
-
-
-// Port A
-assign xdina = ~TRS_WR ? TRS_D : 8'bz;
-
-assign xwea = ~TRS_WR;
-
-wire xena_read;
-wire xena_write;
-assign xena = xena_read || xena_write;
-
-trigger xrama_read_trigger(
-  .clk(clk),
-  .cond(do_ram_access && ~TRS_RD && xray_run_stub),
-  .one(xena_read),
-  .two(xrama_data_ready),
-  .three()
-);
-
-trigger xrama_write_trigger(
-  .clk(clk),
-  .cond(do_ram_access && ~TRS_WR && xray_run_stub),
-  .one(xena_write),
-  .two(),
-  .three()
-);
-
-
-// Port B
-wire xenb_peek, xenb_poke;
-assign xenb = xenb_peek || xenb_poke;
-assign xaddrb = {(cmd != xray_code_poke), params[0]};
-assign xdinb = params[1];
-assign xweb = (cmd == xray_code_poke) || (cmd == xray_data_poke);
-
-trigger xram_poke_trigger(
-  .clk(clk),
-  .cond(trigger_action && ((cmd == xray_code_poke) || (cmd == xray_data_poke))),
-  .one(xenb_poke),
-  .two(),
-  .three());
-
-trigger xram_peek_trigger(
-  .clk(clk),
-  .cond(trigger_action && (cmd == xray_data_peek)),
-  .one(xenb_peek),
-  .two(xram_peek_done),
-  .three());
-
-
-
-
-//-----ORCH85----------------------------------------------------------------------
+//-----ORCH85/90-------------------------------------------------------------------
 
 // orchestra-85 output registers
 reg signed [7:0] orch85l_reg;
@@ -964,80 +728,159 @@ reg signed [7:0] orch85r_reg;
 
 always @ (posedge clk)
 begin
-   if(z80_orch85l_sel & ~TRS_OUT)
+   if(io_access & orch85l_sel_out)
       orch85l_reg <= TRS_D;
 
-   if(z80_orch85r_sel & ~TRS_OUT)
+   if(io_access & orch85r_sel_out)
       orch85r_reg <= TRS_D;
 end
 
+
 //-----HDMI------------------------------------------------------------------------
 
+logic [23:0] rgb_screen_color = 24'hffffff;
 
-logic clk_pixel;
-logic clk_pixel_x5;
-logic clk_audio;
+always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
 
-Gowin_rPLL0 pll0(
-  .clkout(clk_pixel_x5), //output clkout
-  .clkin(clk_in) //input clkin
-);
-
-Gowin_CLKDIV0 clkdiv0(
-  .clkout(clk_pixel), //output clkout
-  .hclkin(clk_pixel_x5), //input hclkin
-  .resetn(1'b1) //input resetn
-);
-
-Gowin_CLKDIV1 clkdiv1(
-  .clkout(vga_clk), //output clkout
-  .hclkin(clk_pixel), //input hclkin
-  .resetn(1'b1) //input resetn
-);
-
-//pll pll(.c0(clk_pixel_x5), .c1(clk_pixel), .c2(clk_audio));
 
 logic [8:0] audio_cnt;
+logic clk_audio;
 
 always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 0 : audio_cnt + 1'b1;
 always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
 
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 
-logic [23:0] rgb = 24'd0;
-logic [23:0] rgb_screen_color = 24'hffffff;
-logic [10:0] cx, frame_width, screen_width;
-logic [9:0] cy, frame_height, screen_height;
 
-always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
+//-----HDMI1-----------------------------------------------------------------------
 
-logic vga_rgb;
+wire clk1_pixel;
+wire clk1_pixel_x5;
 
-always @(posedge clk_pixel)
+Gowin_rPLL0 pll1(
+  .clkout(clk1_pixel_x5), //output clkout
+  .clkin(clk_in) //input clkin
+);
+
+Gowin_CLKDIV0 clk1div0(
+  .clkout(clk1_pixel), //output clkout
+  .hclkin(clk1_pixel_x5), //input hclkin
+  .resetn(1'b1) //input resetn
+);
+
+logic [23:0] rgb1 = 24'd0;
+
+logic vga1_vid;
+
+always @(posedge clk1_pixel)
 begin
-  rgb <= vga_rgb ? rgb_screen_color : 24'b0;
+  rgb1 <= vga1_vid ? rgb_screen_color : 24'h0;
 end
+
+logic [10:0] cx1, frame_width1, screen_width1;
+logic [9:0] cy1, frame_height1, screen_height1;
+logic [9:0] tmds_1 [3-1:0];
+
+// 800x600 @ 60Hz
+hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi1(
+  .clk_pixel_x5(clk1_pixel_x5),
+  .clk_pixel(clk1_pixel),
+  .clk_audio(clk_audio),
+  .reset(1'b0),
+  .rgb(rgb1),
+  .audio_sample_word(audio_sample_word),
+  .tmds(),
+  .tmds_clock(),
+  .cx(cx1),
+  .cy(cy),
+  .frame_width(frame_width1),
+  .frame_height(frame_height1),
+  .screen_width(screen_width1),
+  .screen_height(screen_height1),
+  .tmds_internal(tmds_1)
+);
+
+
+//-----HDMI3-----------------------------------------------------------------------
+
+wire clk3_pixel;
+wire clk3_pixel_x5;
+
+Gowin_rPLL3 pll3(
+  .clkout(clk3_pixel_x5), //output clkout
+  .clkin(clk_in) //input clkin
+);
+
+Gowin_CLKDIV0 clk3div0(
+  .clkout(clk3_pixel), //output clkout
+  .hclkin(clk3_pixel_x5), //input hclkin
+  .resetn(1'b1) //input resetn
+);
+
+logic [23:0] rgb3 = 24'd0;
+
+logic vga3_vid;
+
+always @(posedge clk3_pixel)
+begin
+  rgb3 <= vga3_vid ? rgb_screen_color : 24'h0;
+end
+
+logic [9:0] cx3, frame_width3, screen_width3;
+logic [9:0] cy3, frame_height3, screen_height3;
+logic [9:0] tmds_3 [3-1:0];
+
+// 640x480 @ 60Hz
+hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi3(
+  .clk_pixel_x5(clk3_pixel_x5),
+  .clk_pixel(clk3_pixel),
+  .clk_audio(clk_audio),
+  .reset(1'b0),
+  .rgb(rgb3),
+  .audio_sample_word(audio_sample_word),
+  .tmds(),
+  .tmds_clock(),
+  .cx(cx3),
+  .cy(cy3),
+  .frame_width(frame_width3),
+  .frame_height(frame_height3),
+  .screen_width(screen_width3),
+  .screen_height(screen_height3),
+  .tmds_internal(tmds_3)
+);
+
+
+wire hdmi_sel = CONF[0];//is_m3;
+
+wire clk_pixel;
+
+DCS dcs_clk_pixel(
+  .CLK0(clk1_pixel),
+  .CLK1(clk3_pixel),
+  .CLK2(1'b0),
+  .CLK3(1'b0),
+  .CLKSEL({2'b00, hdmi_sel, ~hdmi_sel}),
+  .SELFORCE(1'b0),
+  .CLKOUT(clk_pixel)
+);
+
+wire clk_pixel_x5;
+
+DCS dcs_clk_pixel_x5(
+  .CLK0(clk1_pixel_x5),
+  .CLK1(clk3_pixel_x5),
+  .CLK2(1'b0),
+  .CLK3(1'b0),
+  .CLKSEL({2'b00, hdmi_sel, ~hdmi_sel}),
+  .SELFORCE(1'b0),
+  .CLKOUT(clk_pixel_x5)
+);
 
 wire [2:0] tmds_x;
 wire tmds_clock_x;
 
-// 800x600 @ 60Hz
-hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi(
-  .clk_pixel_x5(clk_pixel_x5),
-  .clk_pixel(clk_pixel),
-  .clk_audio(clk_audio),
-  .reset(1'b0),
-  .rgb(rgb),
-  .audio_sample_word(audio_sample_word),
-  .tmds(tmds_x),
-  .tmds_clock(tmds_clock_x),
-  .cx(cx),
-  .cy(cy),
-  .frame_width(frame_width),
-  .frame_height(frame_height),
-  .screen_width(screen_width),
-  .screen_height(screen_height)
-);
+serializer #(.NUM_CHANNELS(3), .VIDEO_RATE(0)) serializer(.clk_pixel(clk_pixel), .clk_pixel_x5(clk_pixel_x5), .reset(1'b0), .tmds_internal(hdmi_sel ? tmds_3 : tmds_1), .tmds(tmds_x), .tmds_clock(tmds_clock_x));
+
 
 TLVDS_OBUF tmds [2:0] (
   .O(HDMI_TX_P),
@@ -1051,27 +894,66 @@ TLVDS_OBUF tmds_clock(
   .I(tmds_clock_x)
 );
 
-//-----VGA-------------------------------------------------------------------------------
 
-reg sync;
+//-----VGA1------------------------------------------------------------------------------
 
-vga vga(
+wire clk1_vga;
+
+Gowin_CLKDIV1 clk1div1(
+  .clkout(clk1_vga), //output clkout
+  .hclkin(clk1_pixel), //input hclkin
+  .resetn(1'b1) //input resetn
+);
+
+reg sync1;
+
+vga1 vga1(
   .clk(clk),
-  .vga_clk(vga_clk), // 20 MHz
-  .TRS_A(_A),
-  .TRS_D(_D),
-  .TRS_WR(~TRS_WR),
-  .TRS_OUT(~_OUT_N),
-  .TRS_IN(~_IN_N),
+  .srst(1'b0),
+  .vga_clk(clk1_vga), // 40/2 MHz = 20 MHz
+  .TRS_A(TRS_A),
+  .TRS_D(TRS_D),
+  .TRS_WR(TRS_WR),
+  .TRS_RD(TRS_RD),
+  .TRS_OUT(TRS_OUT),
+  .TRS_IN(TRS_IN),
   .le18_dout(le18_dout),
-  .le18_dout_rdy(le18_dout_rdy),
-  .VGA_RGB(vga_rgb),
+  .le18_dout_rdy(),
+  .VGA_VID(vga1_vid),
   .VGA_HSYNC(),
   .VGA_VSYNC(),
-  .reset(sync));
+  .genlock(sync1));
 
-always @(posedge clk_pixel) begin
-  sync <= (cx == frame_width - 14 || cx == frame_width - 13) && cy == frame_height - 1;
+always @(posedge clk1_pixel) begin
+  sync1 <= ((cx1 == frame_width1 - 9) || (cx1 == frame_width1 - 8)) && (cy1 == frame_height1 - 1);
+end
+
+
+//-----VGA3------------------------------------------------------------------------------
+
+wire clk3_vga = clk3_pixel;
+
+reg sync3;
+
+vga3 vga3(
+  .clk(clk),
+  .srst(1'b0),
+  .vga_clk(clk3_vga), // 25 MHz
+  .TRS_A(TRS_A),
+  .TRS_D(TRS_D),
+  .TRS_WR(TRS_WR),
+  .TRS_RD(TRS_RD),
+  .TRS_OUT(TRS_OUT),
+  .TRS_IN(TRS_IN),
+  .hires_dout(hires_dout),
+  .hires_dout_rdy(),
+  .VGA_VID(vga3_vid),
+  .VGA_HSYNC(),
+  .VGA_VSYNC(),
+  .genlock(sync3));
+
+always @(posedge clk3_pixel) begin
+  sync3 <= (cx3 == frame_width3 - 10) && (cy3 == frame_height3 - 1);
 end
 
 //-----Cassette out--------------------------------------------------------------------------
@@ -1081,7 +963,7 @@ wire cass_sel_out = (TRS_A[7:0] == 255) & ~TRS_OUT;
 reg[1:0] sound_idx = 2'b00;
 
 always @(posedge clk) begin
-  if (io_access && cass_sel_out) sound_idx <= TRS_D & 3;
+  if (io_access & cass_sel_out) sound_idx <= TRS_D & 3;
 end
 
 always @(posedge clk_audio) begin
@@ -1093,41 +975,33 @@ always @(posedge clk_audio) begin
   endcase
 end
 
-reg [27:0] heartbeat;
+reg [25:0] heartbeat;
 
 always @ (posedge clk)
-   heartbeat <= heartbeat + 28'b1;
+   heartbeat <= heartbeat + 26'b1;
 
-//assign LED[3:1] = {heartbeat[25:24] == 2'b10, heartbeat[25:24] == 2'b11 || heartbeat[25:24] == 2'b01, heartbeat[25:24] == 2'b00};
 
 assign LED[0] = esp_sel;
-assign LED[1] = is_m1;
+assign LED[1] = WAIT;
 assign LED[2] = is_m3;
 assign LED[3] = heartbeat[25];
 
 
 //------------LightBright-80-------------------------------------------------------------
 
-wire mem_access_raw = (is_m1 & (~TRS_RD | ~TRS_WR)) | (is_m3 & (~_IN_N | ~_OUT_N));
-
-wire mem_access;
-
-filter mem(
-  .clk(clk),
-  .in(mem_access_raw),
-  .out(),
-  .rising_edge(mem_access),
-  .falling_edge()
-);
+wire lb80_update = io_access & (is_m3 ? (~_IN_N | ~_OUT_N) : (~TRS_RD | ~TRS_WR));
 
 reg [7:0] pmod_a;
 
 always @ (posedge clk)
 begin
-   if(mem_access)
-      pmod_a <= TRS_A[15:8] & {8{is_m1}} | TRS_A[7:0] & {8{is_m3}};
+   if(lb80_update)
+      pmod_a <= (is_m3 ? TRS_A[7:0] : TRS_A[15:8]);
 end
 
-assign PMOD = pmod_a;
+assign PMOD = {~pmod_a[7:5], ~pmod_a[1], pmod_a[4:2], pmod_a[0]};
+
+//assign UART_TX = UART_RX;
+assign UART_TX = 1'bz;
 
 endmodule

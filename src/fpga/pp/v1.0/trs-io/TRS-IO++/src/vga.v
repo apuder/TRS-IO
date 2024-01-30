@@ -2,20 +2,33 @@
 
 // This module was contributed by Mathew Boytim <maboytim@yahoo.com>
 
-module vga(
+module vga1(
   input clk,
+  input srst,
   input vga_clk, // 20 MHz
   input [15:0] TRS_A,
   input [7:0] TRS_D,
   input TRS_WR,
+  input TRS_RD,
   input TRS_OUT,
   input TRS_IN,
   output [7:0] le18_dout,
   output le18_dout_rdy,
-  output VGA_RGB,
+  output VGA_VID,
   output VGA_HSYNC,
   output VGA_VSYNC,
-  input reset);
+  input genlock);
+
+
+wire io_access;
+
+filter io(
+  .clk(clk),
+  .in(~TRS_RD | ~TRS_WR | ~TRS_IN | ~TRS_OUT),
+  .out(),
+  .rising_edge(io_access),
+  .falling_edge()
+);
 
 // The VGA display is 800x600.
 // The pixel clock is divided by two and each row of the TRS-80 display is repeated three times
@@ -23,7 +36,7 @@ module vga(
 // resolution of the M1 display resulting in a small border around the M1 display.
 // In 64x16 mode the characters are 6x12 or 6x36 when rows are repeated.
 // For convenience the VGA X and Y counters are partitioned into high and low parts which
-// count the character position and the position within the charater resepctively.
+// count the character position and the position within the character resepctively.
 reg [2:0] vga_xxx;     // 0-5
 reg [6:0] vga_XXXXXXX; // 0-66-2/6 active, -87 total
 reg [5:0] vga_yyyy_yy; // vga_yyyy_yy[5:2] = 0-11, vga_yyyy_yy[0:1]=0-2 in 64x16 mode
@@ -52,7 +65,7 @@ wire dsp_act = ((dsp_XXXXXXX < 7'd64) & (dsp_YYYYY < 5'd16));
 // 64/32 column display mode.
 // If modsel=1 then in 32 column mode.
 // in 32 column mode only the even columns are active.
-wire z80_outsig_sel_out = (TRS_A[7:0] == 8'hff) & TRS_OUT;
+wire z80_outsig_sel_out = (TRS_A[7:0] == 8'hff) & ~TRS_OUT;
 
 reg z80_outsig_modesel = 1'b0;
 
@@ -70,15 +83,15 @@ begin
    reg_modsel <= z80_outsig_modesel;
 end
 
-wire z80_dsp_sel = (TRS_A[15:10] == 6'b001111);
+wire z80_dsp_sel = (TRS_A[15:10] == (16'h3c00 >> 10));
 
 wire z80_dsp_wr_en;
 
 trigger z80_dsp_wr_trigger (
   .clk(clk),
-  .cond(TRS_WR & z80_dsp_sel),
-  .one(z80_dsp_wr_en),
-  .two(),
+  .cond(io_access & z80_dsp_sel & ~TRS_WR),
+  .one(),
+  .two(z80_dsp_wr_en),
   .three()
 );
 
@@ -94,7 +107,7 @@ display_ram z80_dsp (
    .clka(clk), // input
    .cea(z80_dsp_wr_en), // input
    .ada(TRS_A[9:0]), // input [9:0]
-   .wrea(z80_dsp_wr_en), // input
+   .wrea(~TRS_WR), // input
    .dina(TRS_D), // input [7:0]
    .douta(), // output [7:0]
    .ocea(1'b0),
@@ -115,7 +128,7 @@ reg splash_en = 1'b1;
 
 always @ (posedge clk)
 begin
-   if(z80_dsp_sel & TRS_WR)
+   if(z80_dsp_sel & ~TRS_WR)
       splash_en <= 1'b0;
 end
 
@@ -124,9 +137,9 @@ wire [6:0] le18_XXXXXXX = dsp_XXXXXXX;
 wire [7:0] le18_YYYYYYYY = (dsp_YYYYY << 3) + (dsp_YYYYY << 2) + dsp_yyyy_yy[5:2]; // 0-191 active
 
 wire z80_le18_data_sel = (TRS_A[7:0] == 8'hec);
-wire z80_le18_x_sel_out = (TRS_A[7:0] == 8'hed) & TRS_OUT;
-wire z80_le18_y_sel_out = (TRS_A[7:0] == 8'hee) & TRS_OUT;
-wire z80_le18_options_out = (TRS_A[7:0] == 8'hef) & TRS_OUT;
+wire z80_le18_x_sel_out = (TRS_A[7:0] == 8'hed) & ~TRS_OUT;
+wire z80_le18_y_sel_out = (TRS_A[7:0] == 8'hee) & ~TRS_OUT;
+wire z80_le18_options_out = (TRS_A[7:0] == 8'hef) & ~TRS_OUT;
 
 reg [5:0] z80_le18_x_reg;
 reg [7:0] z80_le18_y_reg;
@@ -139,9 +152,17 @@ begin
 
    if(z80_le18_y_sel_out)
       z80_le18_y_reg <= TRS_D;
+end
 
-   if(z80_le18_options_out &~ splash_en)
-      z80_le18_options_reg <= TRS_D[0];
+always @(posedge clk)
+begin
+   if(srst)
+      z80_le18_options_reg <= splash_en;
+   else
+   begin
+      if(z80_le18_options_out & ~splash_en)
+         z80_le18_options_reg <= TRS_D[0];
+   end
 end
 
 wire le18_enable = z80_le18_options_reg[0];
@@ -153,7 +174,7 @@ wire le18_rd_en, le18_rd_regce;
 
 trigger le18_rd_trigger (
   .clk(clk),
-  .cond(TRS_IN & z80_le18_data_sel),
+  .cond(io_access & z80_le18_data_sel & ~TRS_IN),
   .one(le18_rd_en),
   .two(le18_rd_regce),
   .three(le18_dout_rdy)
@@ -163,9 +184,9 @@ wire le18_wr_en;
 
 trigger le18_wr_trigger (
   .clk(clk),
-  .cond(TRS_OUT & z80_le18_data_sel),
-  .one(le18_wr_en),
-  .two(),
+  .cond(io_access & z80_le18_data_sel & ~TRS_OUT),
+  .one(),
+  .two(le18_wr_en),
   .three()
 );
 
@@ -233,7 +254,7 @@ end
 // Bump the VGA counters.
 always @ (posedge vga_clk)
 begin
-   if(reset)
+   if(genlock)
    begin
       vga_xxx <= 3'b000;
       vga_XXXXXXX <= 7'd0;
@@ -278,7 +299,6 @@ end
 // Load the text/le18 pixel data into the pixel shift register, or shift current contents.
 reg [5:0] txt_pixel_shift_reg;
 reg [5:0] le18_pixel_shift_reg;
-reg [5:0] dsp_pixel_act_shift_reg;
 
 always @ (posedge vga_clk)
 begin
@@ -286,77 +306,52 @@ begin
    // always load when dsp_xxx == 3'b100, otherwise they shift. 
    if(dsp_xxx == 3'b100)
    begin
-   // If the msb is 1 then it's block graphic.
-   // Otherwise it's character data from the character rom.
-   if(dsp_act)
-   begin
-      if(char_rom_addr[11] == 1'b0)
+      // If the msb is 1 then it's block graphic.
+      // Otherwise it's character data from the character rom.
+      if(dsp_act)
       begin
-         if(reg_modsel)
-            txt_pixel_shift_reg <= ( char_rom_addr[3] ? 6'h00 :
-               ( ~dsp_XXXXXXX[0] ? { 2'b00,                {2{char_rom_data[4]}}, {2{char_rom_data[3]}}}
-                                 : {{2{char_rom_data[2]}}, {2{char_rom_data[1]}}, {2{char_rom_data[0]}}} ) );
+         if(char_rom_addr[11] == 1'b0)
+         begin
+            if(reg_modsel)
+               txt_pixel_shift_reg <= ( char_rom_addr[3] ? 6'h00 :
+                  ( ~dsp_XXXXXXX[0] ? { 2'b00,                {2{char_rom_data[4]}}, {2{char_rom_data[3]}}}
+                                    : {{2{char_rom_data[2]}}, {2{char_rom_data[1]}}, {2{char_rom_data[0]}}} ) );
+            else
+               txt_pixel_shift_reg <= (char_rom_addr[3] ? 6'h00 : {1'b0, char_rom_data});
+         end
          else
-            txt_pixel_shift_reg <= (char_rom_addr[3] ? 6'h00 : {1'b0, char_rom_data});
+         begin
+            // The character is 12 rows.
+            if(reg_modsel)
+               case(char_rom_addr[3:2])
+                  2'b00: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[4]}} : {6{char_rom_addr[5]}} );
+                  2'b01: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[6]}} : {6{char_rom_addr[7]}} );
+                  2'b10: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[8]}} : {6{char_rom_addr[9]}} );
+                  2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
+               endcase
+            else
+               case(char_rom_addr[3:2])
+                  2'b00: txt_pixel_shift_reg <= {{3{char_rom_addr[4]}}, {3{char_rom_addr[5]}}};
+                  2'b01: txt_pixel_shift_reg <= {{3{char_rom_addr[6]}}, {3{char_rom_addr[7]}}};
+                  2'b10: txt_pixel_shift_reg <= {{3{char_rom_addr[8]}}, {3{char_rom_addr[9]}}};
+                  2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
+               endcase
+         end
+         // For LE18 the leftmost bit is bit 0 so load the shift register in bit reversed order.
+         le18_pixel_shift_reg <= {z80_le18_data_b[0], z80_le18_data_b[1], z80_le18_data_b[2],
+                                  z80_le18_data_b[3], z80_le18_data_b[4], z80_le18_data_b[5]};
       end
       else
       begin
-         // The character is 12 rows.
-         if(reg_modsel)
-            case(char_rom_addr[3:2])
-               2'b00: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[4]}} : {6{char_rom_addr[5]}} );
-               2'b01: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[6]}} : {6{char_rom_addr[7]}} );
-               2'b10: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[8]}} : {6{char_rom_addr[9]}} );
-               2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
-            endcase
-         else
-            case(char_rom_addr[3:2])
-               2'b00: txt_pixel_shift_reg <= {{3{char_rom_addr[4]}}, {3{char_rom_addr[5]}}};
-               2'b01: txt_pixel_shift_reg <= {{3{char_rom_addr[6]}}, {3{char_rom_addr[7]}}};
-               2'b10: txt_pixel_shift_reg <= {{3{char_rom_addr[8]}}, {3{char_rom_addr[9]}}};
-               2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
-            endcase
+         txt_pixel_shift_reg <= 6'h00;
+         le18_pixel_shift_reg <= 6'h00;
       end
-      // For LE18 the leftmost bit is bit 0 so load the shift register in bit reversed order.
-      le18_pixel_shift_reg <= {z80_le18_data_b[0], z80_le18_data_b[1], z80_le18_data_b[2],
-                               z80_le18_data_b[3], z80_le18_data_b[4], z80_le18_data_b[5]};
-      dsp_pixel_act_shift_reg <= 6'h3f;
-   end
-   else
-   begin
-      txt_pixel_shift_reg <= 6'h00;
-      le18_pixel_shift_reg <= 6'h00;
-      dsp_pixel_act_shift_reg <= 6'h00;
-   end
    end
    else
    begin
       txt_pixel_shift_reg <= {txt_pixel_shift_reg[4:0], 1'b0};
       le18_pixel_shift_reg <= {le18_pixel_shift_reg[4:0], 1'b0};
-      dsp_pixel_act_shift_reg <= {dsp_pixel_act_shift_reg[4:0], 1'b0};
    end
-end
-
-// Load the vga pixel data into the pixel shift register, or shift current contents.
-reg [5:0] vga_pixel_shift_reg;
-
-always @ (posedge vga_clk)
-begin
-   // Because of the memory pipelining the text/le18 pixel shift registers
-   // always load when dsp_xxx == 3'b100.  The vga pixel shift register must do
-   // likewise to maintain the proper offset between the vga and display/le18.
-   // Load the vga pixel shift register when vga_xxx == 3'b100, otherwise shift. 
-   if(vga_xxx == 3'b100)
-   begin
-      if(vga_act)
-         //vga_pixel_shift_reg <= (vga_XXXXXXX == 7'd66) ? ((vga_yyyy_yy[2] ^ vga_yyyy_yy[0]) ? 6'h14 : 6'h28)
-         //                                              : ((vga_yyyy_yy[2] ^ vga_yyyy_yy[0]) ? 6'h15 : 6'h2a);
-         vga_pixel_shift_reg <= (vga_XXXXXXX == 7'd66) ? 6'h3c : 6'h3f;
-      else
-         vga_pixel_shift_reg <= 6'h00;
-   end
-   else
-      vga_pixel_shift_reg <= {vga_pixel_shift_reg[4:0], 1'b0};
 end
 
 
@@ -376,17 +371,16 @@ begin
 end
 
 
-reg vga_rgb_out, h_sync_out, v_sync_out;
+reg vga_vid_out, h_sync_out, v_sync_out;
 
 always @ (posedge vga_clk)
 begin
-   vga_rgb_out <= dsp_pixel_act_shift_reg[5] ? (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_enable | splash_en)))
-                                             : (vga_pixel_shift_reg[5] & splash_en);
+   vga_vid_out <= (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_enable | splash_en)));
    h_sync_out <= h_sync;
    v_sync_out <= v_sync;
 end
 
-assign VGA_RGB   = vga_rgb_out;
+assign VGA_VID   = vga_vid_out;
 assign VGA_HSYNC = h_sync_out;
 assign VGA_VSYNC = v_sync_out;
 
