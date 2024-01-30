@@ -63,7 +63,7 @@ wire dsp_act = ((dsp_XXXXXXX < 7'd64) & (dsp_YYYYY < 5'd16));
 // 64/32 column display mode.
 // If modsel=1 then in 32 column mode.
 // in 32 column mode only the even columns are active.
-wire z80_outsig_sel_out = (TRS_A[7:0] == 8'hff) & ~TRS_OUT;
+wire z80_outsig_sel_out = (TRS_A[7:0] == 8'hFF) & ~TRS_OUT;
 
 reg z80_outsig_modesel = 1'b0;
 

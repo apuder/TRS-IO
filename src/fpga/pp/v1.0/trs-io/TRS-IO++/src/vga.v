@@ -65,7 +65,7 @@ wire dsp_act = ((dsp_XXXXXXX < 7'd64) & (dsp_YYYYY < 5'd16));
 // 64/32 column display mode.
 // If modsel=1 then in 32 column mode.
 // in 32 column mode only the even columns are active.
-wire z80_outsig_sel_out = (TRS_A[7:0] == 8'hff) & ~TRS_OUT;
+wire z80_outsig_sel_out = (TRS_A[7:0] == 8'hFF) & ~TRS_OUT;
 
 reg z80_outsig_modesel = 1'b0;
 
@@ -136,10 +136,10 @@ end
 wire [6:0] le18_XXXXXXX = dsp_XXXXXXX;
 wire [7:0] le18_YYYYYYYY = (dsp_YYYYY << 3) + (dsp_YYYYY << 2) + dsp_yyyy_yy[5:2]; // 0-191 active
 
-wire z80_le18_data_sel = (TRS_A[7:0] == 8'hec);
-wire z80_le18_x_sel_out = (TRS_A[7:0] == 8'hed) & ~TRS_OUT;
-wire z80_le18_y_sel_out = (TRS_A[7:0] == 8'hee) & ~TRS_OUT;
-wire z80_le18_options_out = (TRS_A[7:0] == 8'hef) & ~TRS_OUT;
+wire z80_le18_data_sel = (TRS_A[7:0] == 8'hEC);
+wire z80_le18_x_sel_out = (TRS_A[7:0] == 8'hED) & ~TRS_OUT;
+wire z80_le18_y_sel_out = (TRS_A[7:0] == 8'hEE) & ~TRS_OUT;
+wire z80_le18_options_out = (TRS_A[7:0] == 8'hEF) & ~TRS_OUT;
 
 reg [5:0] z80_le18_x_reg;
 reg [7:0] z80_le18_y_reg;

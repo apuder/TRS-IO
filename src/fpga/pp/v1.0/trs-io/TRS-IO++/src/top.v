@@ -100,9 +100,6 @@ end
 wire is_m1 = ~is_m3;
 
 
-reg[7:0] byte_in, byte_out;
-reg byte_received = 1'b0;
-
 //----Address Decoder------------------------------------------------------------
 
 wire TRS_RD = (is_m3 ? 1'b1 : _RD_N);
@@ -127,21 +124,6 @@ filter io(
   .falling_edge()
 );
 
-
-//----TRS-IO---------------------------------------------------------------------
-
-reg full_addr = 1'b0;
-
-// extension rom (1.96875k @ 3000h-37DFh)
-wire trs_extrom_sel = is_m1 & ((TRS_A[15:11] == 5'b00110) &  // 2k @ 3000h-37FFh
-                               ~(TRS_A[15:5] == 11'b00110111111));  // - 32 @ 37E0h-37FFh
-wire trs_extrom_sel_rd = trs_extrom_sel & ~TRS_RD;
-
-// ram
-wire trs_ram_sel = is_m1 & TRS_A[15];  // upper 32k
-wire trs_ram_sel_rd = trs_ram_sel & ~TRS_RD;
-wire trs_ram_sel_wr = trs_ram_sel & ~TRS_WR;
-
 wire ras_trigger;
 
 filter ras(
@@ -152,17 +134,28 @@ filter ras(
   .falling_edge()
 );
 
-// map rom and ram
-wire trs_mem_sel = trs_extrom_sel | trs_ram_sel;
-wire trs_mem_sel_rd = trs_mem_sel & ~TRS_RD;
+//----TRS-IO---------------------------------------------------------------------
 
-wire fdc_37e0_sel_rd = is_m1 & (TRS_A[15:2] == (16'h37E0 >> 2)) & ~TRS_RD; // 37E0-37E3
-wire fdc_37ex_sel    = is_m1 & (TRS_A[15:2] == (16'h37EC >> 2));       // 37EC-37EF
-wire fdc_37ec_sel_rd = fdc_37ex_sel & (TRS_A[1:0] == 2'b00) & ~TRS_RD; // fdc status
-wire fdc_37ec_sel_wr = fdc_37ex_sel & (TRS_A[1:0] == 2'b00) & ~TRS_WR; // fdc command
-wire fdc_37ef_sel_rd = fdc_37ex_sel & (TRS_A[1:0] == 2'b11) & ~TRS_RD; // fdc data
-wire fdc_sel_rd = fdc_37e0_sel_rd | (fdc_37ex_sel & ~TRS_RD);
+reg full_addr = 1'b0;
 
+// m1 extension rom (1.96875k @ 3000h-37DFh)
+wire trs_extrom_sel = is_m1 & ((TRS_A[15:11] == 5'b00110) &  // 2k @ 3000h-37FFh
+                               ~(TRS_A[15:5] == 11'b00110111111));  // - 32 @ 37E0h-37FFh
+wire trs_extrom_sel_rd = trs_extrom_sel & ~TRS_RD;
+
+// m1 ram (32k @ 8000h-FFFFh)
+wire trs_ram_sel = is_m1 & TRS_A[15];  // upper 32k
+wire trs_ram_sel_rd = trs_ram_sel & ~TRS_RD;
+wire trs_ram_sel_wr = trs_ram_sel & ~TRS_WR;
+
+// m1 fdc irq status @ 37E0h-37E3h
+wire fdc_37e0_sel_rd = is_m1 & (TRS_A[15:2] == (16'h37E0 >> 2)) & ~TRS_RD; // 37E0h-37E3h
+// m1 fdc @ 37ECh-37EFh
+wire fdc_37ec_sel_rd = is_m1 & (TRS_A[15:2] == (16'h37EC >> 2)) & ~TRS_RD; // 37ECh-37EFh
+wire fdc_37ec_sel_wr = is_m1 & (TRS_A[15:2] == (16'h37EC >> 2)) & ~TRS_WR; // 37ECh-37EFh
+
+// m1: printer @ 37E8h-37EBh (mem)
+// m3: printer @ F8h-F9h (io)
 wire printer_sel_m1 = (TRS_A[15:2] == (16'h37E8 >> 2));
 wire printer_sel_m3 = (TRS_A[7:2]  == (8'hF8 >> 2));
 wire printer_sel_m1_rd  = printer_sel_m1 & ~TRS_RD;
@@ -174,17 +167,21 @@ wire printer_sel_rd = is_m3 ? printer_sel_m3_in  : printer_sel_m1_rd;
 wire printer_sel_wr = is_m3 ? printer_sel_m3_out : printer_sel_m1_wr;
 wire printer_sel = printer_sel_rd | printer_sel_wr;
 
+// trs-io @ 1Fh
 wire trs_io_sel_in  = (TRS_A[7:0] == 31) & ~TRS_IN;
 wire trs_io_sel_out = (TRS_A[7:0] == 31) & ~TRS_OUT;
 
+// frehd @ C0h-CFh
 wire frehd_sel_in  = (TRS_A[7:4] == 4'hC) & ~TRS_IN;
 wire frehd_sel_out = (TRS_A[7:4] == 4'hC) & ~TRS_OUT;
 
+// m1: le18 graphics @ ECh-EFh
+// m3: hires graphics @ 80h-83h
 wire le18_data_sel_in = (TRS_A[7:0] == 8'hEC) & ~TRS_IN;
-wire hires_dout_sel_in = (TRS_A[7:0] == 8'h82) & ~TRS_IN;
+wire hires_data_sel_in = (TRS_A[7:0] == 8'h82) & ~TRS_IN;
 
-// m1: orchestra-85 @ B9,B5
-// m3: orchestra-90 @ 79/75
+// m1: orchestra-85 @ B9h,B5h
+// m3: orchestra-90 @ 79h,75h
 wire orch85l_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h75) : (TRS_A[7:0] == 8'hB5)) & ~TRS_OUT;
 wire orch85r_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h79) : (TRS_A[7:0] == 8'hB9)) & ~TRS_OUT;
 
@@ -278,7 +275,8 @@ localparam [7:0]
   get_config          = 8'd27;
 
 
-
+reg[7:0] byte_in, byte_out;
+reg byte_received = 1'b0;
 
 reg [7:0] params[0:4];
 reg [2:0] bytes_to_read;
@@ -496,6 +494,76 @@ always @(posedge clk) begin
 end
 
 
+//--------IRQ--------------------------------------------------------------------------
+
+reg [7:0] irq_data;
+reg [21:0] counter_25ms = 22'd0;
+
+always @(posedge clk)
+begin
+   // 0.025*84000000 = 2100000
+   if (counter_25ms == 22'd2100000)
+   begin
+      counter_25ms <= 22'd0;
+      TRS_INT <= 1;
+   end
+   else
+   begin
+      counter_25ms <= counter_25ms + 1;
+   end
+
+   if (io_access && fdc_37e0_sel_rd)
+   begin
+      irq_data <= {TRS_INT, 1'b0, ~trs_io_data_ready, 5'b00000};
+      TRS_INT <= 0;
+   end
+end
+
+
+//--------FDC--------------------------------------------------------------------------
+
+/*
+  ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
+  ; boot sector from the FDC.
+    org 4200h
+    ld a,1
+    out (197),a
+    in a,(196)
+    cp 254
+    jp nz,0075h
+    ld bc,196
+    ld hl,20480
+    inir
+    jp 20480
+*/
+localparam [7:0] frehd_loader [0:22-1] =
+  {8'h3E, 8'h01, 8'hD3, 8'hC5, 8'hDB, 8'hC4, 8'hFE, 8'hFE, 8'hC2, 8'h75, 8'h00, 8'h01,
+   8'hC4, 8'h00, 8'h21, 8'h00, 8'h50, 8'hED, 8'hB2, 8'hC3, 8'h00, 8'h50};
+
+reg [7:0] fdc_sector_idx = 8'h00;
+reg [7:0] fdc_data;
+
+always @ (posedge clk)
+begin
+   if(io_access & fdc_37ec_sel_rd)
+      case(TRS_A[1:0])
+      2'b00: // fdc status
+         fdc_data <= 8'h02;
+      2'b11: // fdc data
+         begin
+            fdc_data <= (fdc_sector_idx < 8'd22) ? frehd_loader[fdc_sector_idx] : 8'h00;
+            fdc_sector_idx <= fdc_sector_idx + 8'h1;  
+         end
+      endcase
+
+   if(io_access & fdc_37ec_sel_wr)
+      case(TRS_A[1:0])
+      2'b00: // fdc command
+         fdc_sector_idx <= 8'h00;  
+      endcase
+end
+
+
 //--------BRAM-------------------------------------------------------------------------
 
 wire ram_rd_en, ram_rd_regce;
@@ -532,8 +600,8 @@ wire [7:0]doutb;
  * BRAM is 32K in size and covers the upper half of the M1 address space.
  *
  * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
- * Port A: Write/Read width: 8, Write depth: 65536, Operating mode: Write First, Core Output Register, REGCEA pin
- * Port B: Write/Read width: 8, Write depth: 65536, Operating mode: Read First, Core Output Register, REGCEB pin
+ * Port A: Write/Read width: 8, Write depth: 32768, Operating mode: Write First, Core Output Register, REGCEA pin
+ * Port B: Write/Read width: 8, Write depth: 32768, Operating mode: Read First, Core Output Register, REGCEB pin
  */
 
 Gowin_DPB0 bram(
@@ -558,11 +626,13 @@ Gowin_DPB0 bram(
 
 
 assign TRS_OE = ~(~TRS_WR | ~TRS_OUT |
-                   trs_mem_sel_rd  |
-                   hires_dout_sel_in |
-                   le18_data_sel_in |
-                   esp_sel_in |
-                   fdc_sel_rd);
+                   trs_extrom_sel_rd |
+                   trs_ram_sel_rd    |
+                   hires_data_sel_in |
+                   le18_data_sel_in  |
+                   fdc_37e0_sel_rd   |
+                   fdc_37ec_sel_rd   |
+                   esp_sel_in        );
 //                   printer_sel_rd || printer_sel_wr || /*spi_data_sel_in ||*/ !TRS_OUT);
 
 assign TRS_DIR = TRS_RD & TRS_IN;
@@ -606,76 +676,24 @@ Gowin_DPB2 extrom (
 
 reg[7:0] trs_data;
 wire [7:0] hires_dout;
-
-assign _D = (~TRS_RD | ~TRS_IN) ?
-               ( (trs_ram_sel_rd | trs_extrom_sel_rd | hires_dout_sel_in | le18_data_sel_in) ?
-                  ( ({8{trs_ram_sel_rd   }} & ram_dout   ) |
-                    ({8{trs_extrom_sel_rd}} & extrom_dout) |
-                    ({8{hires_dout_sel_in}} & hires_dout ) |
-                    ({8{le18_data_sel_in }} & le18_dout  )
-                  ) :
-                  trs_data
-               ) : 8'bz;
-
-/*
-  ; Assembly of the autoboot. This will be returned when the M1 ROM reads in the
-  ; boot sector from the FDC.
-    org 4200h
-    ld a,1
-    out (197),a
-    in a,(196)
-    cp 254
-    jp nz,0075h
-    ld b,0
-    ld hl,20480
-LOOP:
-    in a,(196)
-    ld (hl),a
-    inc hl
-    djnz LOOP
-    jp 20480
-*/
-localparam [0:(25 * 8) - 1] frehd_loader = {
-  8'h3e, 8'h01, 8'hd3, 8'hc5, 8'hdb, 8'hc4, 8'hfe, 8'hfe, 8'hc2, 8'h75, 8'h00, 8'h06,
-  8'h00, 8'h21, 8'h00, 8'h50, 8'hdb, 8'hc4, 8'h77, 8'h23, 8'h10, 8'hfa, 8'hc3, 8'h00, 8'h50};
-
-reg [7:0] fdc_sector_idx = 8'd0;
-reg [23:0] counter_25ms;
-
 wire [7:0] le18_dout;
+
+assign _D = (~TRS_RD | ~TRS_IN)
+             ? ( ({8{trs_ram_sel_rd   }} & ram_dout   ) |
+                 ({8{trs_extrom_sel_rd}} & extrom_dout) |
+                 ({8{hires_data_sel_in}} & hires_dout ) |
+                 ({8{le18_data_sel_in }} & le18_dout  ) |
+                 ({8{fdc_37e0_sel_rd  }} & irq_data   ) |
+                 ({8{fdc_37ec_sel_rd  }} & fdc_data   ) |
+                 ({8{esp_sel_in       }} & trs_data   ) )
+             : 8'bz;
+
 
 wire [7:0] spi_data_in;
 
 always @(posedge clk) begin
-  if (counter_25ms == 2100000)
-    begin
-      counter_25ms <= 0;
-      TRS_INT <= 1;
-    end
-  else
-    begin
-      counter_25ms <= counter_25ms + 1;
-    end
-
   if (trigger_action && cmd == dbus_write)
     trs_data <= params[0];
-  else if (io_access && fdc_37ec_sel_rd)
-    trs_data <= 2;
-  else if (io_access && fdc_37e0_sel_rd)
-    begin
-      trs_data <= ({8{~trs_io_data_ready}} & 8'h20) | ({8{TRS_INT}} & 8'h80);
-      TRS_INT <= 0;
-    end
-  else if (io_access && fdc_37ef_sel_rd)
-    begin
-      trs_data <= (fdc_sector_idx < 26) ? frehd_loader[fdc_sector_idx * 8+:8] : 0;
-      fdc_sector_idx <= fdc_sector_idx + 1;
-    end
-  else if (io_access && fdc_37ec_sel_wr)
-    begin
-      fdc_sector_idx <= 0;
-    end
-
 /*
   else if (IN_falling_edge && spi_data_sel_in)
     trs_data <= spi_data_in;
@@ -687,8 +705,6 @@ end
 
 assign addrb = {params[1][6:0], params[0]};
 assign dinb = params[2];
-
-
 
 wire enb_peek, enb_poke;
 assign enb = enb_peek | enb_poke;
