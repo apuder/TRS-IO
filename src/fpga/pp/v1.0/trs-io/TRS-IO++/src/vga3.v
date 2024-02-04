@@ -14,6 +14,7 @@ module vga3(
   input TRS_IN,
   output [7:0] hires_dout,
   output hires_dout_rdy,
+  output hires_enable,
   output VGA_VID,
   output VGA_HSYNC,
   output VGA_VSYNC,
@@ -404,6 +405,8 @@ begin
    h_sync_out <= h_sync;
    v_sync_out <= v_sync;
 end
+
+assign hires_enable = hires_options_graphics_alpha_n;
 
 assign VGA_VID   = vga_vid_out;
 assign VGA_HSYNC = h_sync_out;

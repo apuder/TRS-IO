@@ -1,22 +1,23 @@
 -series GW1NR
--device GW1NR-9C
+-device GW1NR-9
+-device_version C
 -package QFN88P
 -part_number GW1NR-LV9QN88PC6/I5
 
 
 -mod_name Gowin_rPLL0
 -file_name gowin_rpll0
--path C:/Users/matt/Documents/FPGA/TRS-IO/src/gowin_rpll/
+-path ./gowin_rpll/
 -type PLL
 -rPll true
 -file_type vlg
 -dev_type GW1NR-9C
 -dyn_idiv_sel false
--idiv_sel 7
+-idiv_sel 8
 -dyn_fbdiv_sel false
--fbdiv_sel 52
+-fbdiv_sel 37
 -dyn_odiv_sel false
--odiv_sel 2
+-odiv_sel 4
 -dyn_da_en true
 -rst_sig false
 -rst_sig_p false

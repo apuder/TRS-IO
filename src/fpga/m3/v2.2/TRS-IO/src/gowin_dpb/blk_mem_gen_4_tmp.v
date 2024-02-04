@@ -1,17 +1,18 @@
-//Copyright (C)2014-2022 Gowin Semiconductor Corporation.
+//Copyright (C)2014-2023 Gowin Semiconductor Corporation.
 //All rights reserved.
 //File Title: Template file for instantiation
-//GOWIN Version: V1.9.8.05
+//GOWIN Version: V1.9.9 Beta-4 Education
 //Part Number: GW1NR-LV9QN88PC6/I5
-//Device: GW1NR-9C
-//Created Time: Wed Jun 08 05:15:47 2022
+//Device: GW1NR-9
+//Device Version: C
+//Created Time: Sun Feb 04 09:12:09 2024
 
 //Change the instance name and port connections to the signal names
 //--------Copy here to design--------
 
     blk_mem_gen_4 your_instance_name(
-        .douta(douta_o), //output [5:0] douta
-        .doutb(doutb_o), //output [5:0] doutb
+        .douta(douta_o), //output [7:0] douta
+        .doutb(doutb_o), //output [7:0] doutb
         .clka(clka_i), //input clka
         .ocea(ocea_i), //input ocea
         .cea(cea_i), //input cea
@@ -22,10 +23,10 @@
         .ceb(ceb_i), //input ceb
         .resetb(resetb_i), //input resetb
         .wreb(wreb_i), //input wreb
-        .ada(ada_i), //input [13:0] ada
-        .dina(dina_i), //input [5:0] dina
-        .adb(adb_i), //input [13:0] adb
-        .dinb(dinb_i) //input [5:0] dinb
+        .ada(ada_i), //input [14:0] ada
+        .dina(dina_i), //input [7:0] dina
+        .adb(adb_i), //input [14:0] adb
+        .dinb(dinb_i) //input [7:0] dinb
     );
 
 //--------Copy end-------------------

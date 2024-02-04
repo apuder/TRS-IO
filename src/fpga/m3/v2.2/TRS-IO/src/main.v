@@ -22,7 +22,21 @@ module main(
   output CASS_OUT_RIGHT,
   output CASS_OUT_LEFT,
   input [1:0] sw,
-  output reg [5:0] led
+  output reg [5:0] led,
+
+  // Video
+  output HSYNC_O,
+  output VSYNC_O,
+  output VIDEO_O,
+  input HSYNC_I,
+  input VSYNC_I,
+  input VIDEO_I,
+
+  // HDMI
+  output [2:0] tmds_p,
+  output [2:0] tmds_n,
+  output tmds_clock_p,
+  output tmds_clock_n
 );
 
 localparam [2:0] VERSION_MAJOR = 0;
@@ -31,23 +45,12 @@ localparam [4:0] VERSION_MINOR = 3;
 localparam [7:0] COOKIE = 8'haf;
 
 wire clk;
-wire vga_clk;
 
 /*
  * Clocking Wizard
- * Clock primary: 12 MHz
- * clk_out1 frequency: 100 MHz
- * clk_out2: 20 MHz
+ * Clock primary: 27 MHz
+ * clk_out1 frequency: 84 MHz
  */
-/*
-clk_wiz_0 clk_wiz_0(
-   .clk_out1(clk),
-   .clk_out2(vga_clk),
-   .reset(1'b0),
-   .locked(),
-   .clk_in1(clk_in)
-);
-*/
 
 Gowin_rPLL clk_wiz_0(
    .clkout(clk), //output clkout
@@ -120,27 +123,27 @@ assign TRS_D[7] = TRS_AD[0];
 
 //----TRS-IO---------------------------------------------------------------------
 
-// One byte buffer for printer output
-reg[7:0] printer_byte;
-
-
-
 // Ports 0xF8-0xFB
 wire printer_sel_rd = (TRS_A[8:2] == 7'h3e) && !TRS_IN;
 wire printer_sel_wr = (TRS_A[8:2] == 7'h3e) && !TRS_OUT;
 wire printer_sel = printer_sel_rd || printer_sel_wr;
 
-wire trs_io_sel_in = (TRS_A[8:0] == 31) && !TRS_IN;
-wire trs_io_sel_out = (TRS_A[8:0] == 31) && !TRS_OUT;
+wire trs_io_sel_in  = (TRS_A == 31) && !TRS_IN;
+wire trs_io_sel_out = (TRS_A == 31) && !TRS_OUT;
 wire trs_io_sel = trs_io_sel_in || trs_io_sel_out;
 
-wire frehd_sel_in = (TRS_A[8:4] == 5'hc) && !TRS_IN;
-wire frehd_sel_out = (TRS_A[8:4] == 5'hc) && !TRS_OUT;
+wire frehd_sel_in  = (TRS_A[8:4] == 5'hC) && !TRS_IN;
+wire frehd_sel_out = (TRS_A[8:4] == 5'hC) && !TRS_OUT;
 wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
-// orchestra-85
-wire z80_orch85l_sel    = ~TRS_A[8] && (TRS_A[7:0] == 8'hb5) && !TRS_OUT;
-wire z80_orch85r_sel    = ~TRS_A[8] && (TRS_A[7:0] == 8'hb9) && !TRS_OUT;
+// Hires
+wire hires_sel_in  = (TRS_A[8:2] == (9'h80 >> 2)) && !TRS_IN;
+wire hires_sel_out = (TRS_A[8:2] == (9'h80 >> 2)) && !TRS_OUT;
+wire hires_sel = hires_sel_in || hires_sel_out;
+
+// Orchestra-90
+wire orch90l_sel_out = (TRS_A == 9'hB5) && !TRS_OUT;
+wire orch90r_sel_out = (TRS_A == 9'hB9) && !TRS_OUT;
 
 
 wire esp_sel = trs_io_sel || frehd_sel || printer_sel;
@@ -148,7 +151,7 @@ wire esp_sel = trs_io_sel || frehd_sel || printer_sel;
 wire esp_sel_risingedge = esp_sel && io_access;
 
 
-assign EXTIOSEL = esp_sel & ~Z80_IN;
+assign EXTIOSEL = (esp_sel | hires_sel) & ~Z80_IN;
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
@@ -173,19 +176,19 @@ end
 
       
 localparam [2:0]
-  esp_trs_io_in = 3'd0,
+  esp_trs_io_in  = 3'd0,
   esp_trs_io_out = 3'd1,
-  esp_frehd_in = 3'd2,
-  esp_frehd_out = 3'd3,
+  esp_frehd_in   = 3'd2,
+  esp_frehd_out  = 3'd3,
   esp_printer_rd = 3'd4,
   esp_printer_wr = 3'd5,
-  esp_xray = 3'd6;
+  esp_xray       = 3'd6;
 
 
-assign ESP_S = (esp_trs_io_in & {3{trs_io_sel_in}}) |
+assign ESP_S = (esp_trs_io_in  & {3{trs_io_sel_in }}) |
                (esp_trs_io_out & {3{trs_io_sel_out}}) |
-               (esp_frehd_in & {3{frehd_sel_in}}) |
-               (esp_frehd_out & {3{frehd_sel_out}}) |
+               (esp_frehd_in   & {3{frehd_sel_in  }}) |
+               (esp_frehd_out  & {3{frehd_sel_out }}) |
                (esp_printer_rd & {3{printer_sel_rd}}) |
                (esp_printer_wr & {3{printer_sel_wr}});
 
@@ -242,7 +245,7 @@ always @(posedge clk) begin
   trigger_action <= 1'b0;
   bits_to_send <= 0;
 
-  if (esp_sel_risingedge && (TRS_A[8:0] == 31)) trs_io_data_ready <= 1'b0;
+  if (esp_sel_risingedge && (TRS_A == 31)) trs_io_data_ready <= 1'b0;
 
   if (start_msg)
     state <= idle;
@@ -401,39 +404,35 @@ end
 assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
 
 
-
 //--------BRAM-------------------------------------------------------------------------
 
-wire cass_sel_out;
-
-assign DBUS_SEL_N = !((esp_sel || printer_sel || cass_sel_out) && ABUS_SEL_N);
-
+assign DBUS_SEL_N = !ABUS_SEL_N;
 assign TRS_DIR = TRS_RD && TRS_IN;
 
 
+reg [7:0] trs_data;
+wire [7:0] hires_dout;
 
-reg[7:0] trs_data;
+wire [7:0] out_data = hires_sel ? hires_dout : trs_data;
 
 wire trs_ad_in = (!TRS_RD || !TRS_IN) && !DBUS_SEL_N;
 
-assign TRS_AD[0] = trs_ad_in ? trs_data[7] : 1'bz;
-assign TRS_AD[1] = trs_ad_in ? trs_data[6] : 1'bz;
-assign TRS_AD[2] = trs_ad_in ? trs_data[5] : 1'bz;
-assign TRS_AD[3] = trs_ad_in ? trs_data[4] : 1'bz;
-assign TRS_AD[4] = trs_ad_in ? trs_data[3] : 1'bz;
-assign TRS_AD[5] = trs_ad_in ? trs_data[2] : 1'bz;
-assign TRS_AD[6] = trs_ad_in ? trs_data[1] : 1'bz;
-assign TRS_AD[7] = trs_ad_in ? trs_data[0] : 1'bz;
+assign TRS_AD[0] = trs_ad_in ? out_data[7] : 1'bz;
+assign TRS_AD[1] = trs_ad_in ? out_data[6] : 1'bz;
+assign TRS_AD[2] = trs_ad_in ? out_data[5] : 1'bz;
+assign TRS_AD[3] = trs_ad_in ? out_data[4] : 1'bz;
+assign TRS_AD[4] = trs_ad_in ? out_data[3] : 1'bz;
+assign TRS_AD[5] = trs_ad_in ? out_data[2] : 1'bz;
+assign TRS_AD[6] = trs_ad_in ? out_data[1] : 1'bz;
+assign TRS_AD[7] = trs_ad_in ? out_data[0] : 1'bz;
 
 
 wire [7:0] spi_data_in;
-
 
 always @(posedge clk) begin
   if (trigger_action && cmd == dbus_write)
     trs_data <= params[0];
 end
-
 
 
 //---BRAM-------------------------------------------------------------------------
@@ -446,19 +445,130 @@ always @(posedge clk) begin
 end
 
 
-//-----ORCH85----------------------------------------------------------------------
+//-----HDMI------------------------------------------------------------------------
 
-// orchestra-85 output registers
-reg signed [7:0] orch85l_reg;
-reg signed [7:0] orch85r_reg;
+logic [23:0] rgb_screen_color = 24'hffffff;
+
+always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
+
+
+logic [8:0] audio_cnt;
+logic clk_audio;
+
+always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 0 : audio_cnt + 1'b1;
+always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
+
+logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
+
+
+//-----HDMI------------------------------------------------------------------------
+
+wire clk_pixel;
+wire clk_pixel_x5;
+
+Gowin_rPLL0 pll3(
+  .clkout(clk_pixel_x5), //output clkout
+  .clkin(clk_in) //input clkin
+);
+
+Gowin_CLKDIV0 clk3div0(
+  .clkout(clk_pixel), //output clkout
+  .hclkin(clk_pixel_x5), //input hclkin
+  .resetn(1'b1) //input resetn
+);
+
+reg [23:0] rgb = 24'd0;
+wire vga_vid;
+
+always @(posedge clk_pixel)
+begin
+  rgb <= vga_vid ? rgb_screen_color : 24'h0;
+end
+
+logic [9:0] cx, frame_width, screen_width;
+logic [9:0] cy, frame_height, screen_height;
+wire [2:0] tmds_x;
+wire tmds_clock_x;
+
+// 640x480 @ 60Hz
+hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16)) hdmi(
+  .clk_pixel_x5(clk_pixel_x5),
+  .clk_pixel(clk_pixel),
+  .clk_audio(clk_audio),
+  .reset(1'b0),
+  .rgb(rgb),
+  .audio_sample_word(audio_sample_word),
+  .tmds(tmds_x),
+  .tmds_clock(tmds_clock_x),
+  .cx(cx),
+  .cy(cy),
+  .frame_width(frame_width),
+  .frame_height(frame_height),
+  .screen_width(screen_width),
+  .screen_height(screen_height)
+);
+
+ELVDS_OBUF tmds [2:0] (
+  .O(tmds_p),
+  .OB(tmds_n),
+  .I(tmds_x)
+);
+
+ELVDS_OBUF tmds_clock(
+  .O(tmds_clock_p),
+  .OB(tmds_clock_n),
+  .I(tmds_clock_x)
+);
+
+
+//-----VGA-------------------------------------------------------------------------------
+
+wire clk_vga = clk_pixel;
+wire vga_hsync, vga_vsync;
+wire hires_enable;
+
+reg sync;
+
+vga vga(
+  .clk(clk),
+  .srst(1'b0),
+  .vga_clk(clk_vga), // 25 MHz
+  .TRS_A(TRS_A),
+  .TRS_D(TRS_D),
+  .TRS_OUT(TRS_OUT),
+  .TRS_IN(TRS_IN),
+  .io_access(io_access),
+  .hires_dout(hires_dout),
+  .hires_dout_rdy(),
+  .hires_enable(hires_enable),
+  .VGA_VID(vga_vid),
+  .VGA_HSYNC(vga_hsync),
+  .VGA_VSYNC(vga_vsync),
+  .genlock(sync));
+
+always @(posedge clk_pixel) begin
+  sync <= (cx == frame_width - 10) && (cy == frame_height - 1);
+end
+
+
+assign HSYNC_O = hires_enable ? vga_hsync : HSYNC_I;
+assign VSYNC_O = hires_enable ? vga_vsync : VSYNC_I;
+assign VIDEO_O = hires_enable ? vga_vid   : VIDEO_I;
+
+
+//-----ORCH90----------------------------------------------------------------------
+
+// orchestra-90 output registers
+reg signed [7:0] orch90l_reg;
+reg signed [7:0] orch90r_reg;
 
 always @ (posedge clk)
 begin
-   if(z80_orch85l_sel & ~TRS_OUT)
-      orch85l_reg <= TRS_D;
+   if(orch90l_sel_out & ~TRS_OUT)
+      orch90l_reg <= TRS_D;
 
-   if(z80_orch85r_sel & ~TRS_OUT)
-      orch85r_reg <= TRS_D;
+   if(orch90r_sel_out & ~TRS_OUT)
+      orch90r_reg <= TRS_D;
 end
 
 
@@ -467,7 +577,7 @@ end
 reg[1:0] z80_cass_reg = 2'b00;
 wire[1:0] cass_out;
 
-assign cass_sel_out = (TRS_A[8:0] == 9'hff) && !TRS_OUT;
+wire cass_sel_out = (TRS_A == 9'hff) && !TRS_OUT;
 
 always @(posedge clk) begin
   if (io_access && cass_sel_out) z80_cass_reg <= TRS_D[1:0];
@@ -481,8 +591,15 @@ always @ (posedge clk) begin
    cass_out_reg <= (cass_out == 2'b00) ? 1'b0 : ((cass_out == 2'b11) ? 1'b1 : ~cass_out_reg);
 end
 
+always @(posedge clk_audio) begin
+  case (cass_out_reg)
+    2'b00: audio_sample_word <= '{(   0<<4) + (orch90r_reg<<5), (   0<<4) + (orch90l_reg<<5)};
+    2'b01: audio_sample_word <= '{( 127<<4) + (orch90r_reg<<5), ( 127<<4) + (orch90l_reg<<5)};
+    2'b10: audio_sample_word <= '{(-127<<4) + (orch90r_reg<<5), (-127<<4) + (orch90l_reg<<5)};
+    2'b11: audio_sample_word <= '{(   0<<4) + (orch90r_reg<<5), (   0<<4) + (orch90l_reg<<5)};
+  endcase
+end
 assign CASS_OUT_LEFT = cass_out_reg;
 assign CASS_OUT_RIGHT = cass_out_reg;
-
 
 endmodule

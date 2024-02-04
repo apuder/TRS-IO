@@ -14,6 +14,7 @@ module vga1(
   input TRS_IN,
   output [7:0] le18_dout,
   output le18_dout_rdy,
+  output le18_enable,
   output VGA_VID,
   output VGA_HSYNC,
   output VGA_VSYNC,
@@ -165,7 +166,7 @@ begin
    end
 end
 
-wire le18_enable = z80_le18_options_reg[0];
+wire le18_options_enable = z80_le18_options_reg[0];
 
 
 wire [5:0] z80_le18_data_b;
@@ -375,7 +376,7 @@ reg vga_vid_out, h_sync_out, v_sync_out;
 
 always @ (posedge vga_clk)
 begin
-   vga_vid_out <= (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_enable | splash_en)));
+   vga_vid_out <= (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_options_enable | splash_en)));
    h_sync_out <= h_sync;
    v_sync_out <= v_sync;
 end
@@ -384,8 +385,9 @@ assign VGA_VID   = vga_vid_out;
 assign VGA_HSYNC = h_sync_out;
 assign VGA_VSYNC = v_sync_out;
 
+assign le18_enable = le18_options_enable;
 
-assign le18_dout[6] = le18_enable;
+assign le18_dout[6] = le18_options_enable;
 assign le18_dout[7] = ~dsp_act;
 
 endmodule

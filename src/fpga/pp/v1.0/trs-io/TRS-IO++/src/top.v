@@ -248,7 +248,7 @@ localparam [2:0]
 
 reg [2:0] state = idle;
 
-wire start_msg;
+wire start_msg = 1'b0;
 
 localparam [7:0]
   get_cookie          = 8'b0,
@@ -502,17 +502,17 @@ reg [21:0] counter_25ms = 22'd0;
 always @(posedge clk)
 begin
    // 0.025*84000000 = 2100000
-   if (counter_25ms == 22'd2100000)
+   if (counter_25ms == (22'd2100000 -22'd1))
    begin
       counter_25ms <= 22'd0;
       TRS_INT <= 1;
    end
    else
    begin
-      counter_25ms <= counter_25ms + 1;
+      counter_25ms <= counter_25ms + 22'd1;
    end
 
-   if (io_access && fdc_37e0_sel_rd)
+   if (io_access & fdc_37e0_sel_rd)
    begin
       irq_data <= {TRS_INT, 1'b0, ~trs_io_data_ready, 5'b00000};
       TRS_INT <= 0;
@@ -784,9 +784,8 @@ Gowin_CLKDIV0 clk1div0(
   .resetn(1'b1) //input resetn
 );
 
-logic [23:0] rgb1 = 24'd0;
-
-logic vga1_vid;
+reg [23:0] rgb1 = 24'd0;
+wire vga1_vid;
 
 always @(posedge clk1_pixel)
 begin
@@ -833,9 +832,8 @@ Gowin_CLKDIV0 clk3div0(
   .resetn(1'b1) //input resetn
 );
 
-logic [23:0] rgb3 = 24'd0;
-
-logic vga3_vid;
+reg [23:0] rgb3 = 24'd0;
+wire vga3_vid;
 
 always @(posedge clk3_pixel)
 begin
@@ -865,6 +863,8 @@ hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .tmds_internal(tmds_3)
 );
 
+
+//-----HDMI1/HDMI3 Selection-------------------------------------------------------
 
 wire hdmi_sel = CONF[0];//is_m3;
 
@@ -935,6 +935,7 @@ vga1 vga1(
   .TRS_IN(TRS_IN),
   .le18_dout(le18_dout),
   .le18_dout_rdy(),
+  .le18_enable(),
   .VGA_VID(vga1_vid),
   .VGA_HSYNC(),
   .VGA_VSYNC(),
@@ -963,6 +964,7 @@ vga3 vga3(
   .TRS_IN(TRS_IN),
   .hires_dout(hires_dout),
   .hires_dout_rdy(),
+  .hires_enable(),
   .VGA_VID(vga3_vid),
   .VGA_HSYNC(),
   .VGA_VSYNC(),

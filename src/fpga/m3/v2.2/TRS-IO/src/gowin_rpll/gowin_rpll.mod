@@ -1,12 +1,13 @@
 -series GW1NR
--device GW1NR-9C
+-device GW1NR-9
+-device_version C
 -package QFN88P
 -part_number GW1NR-LV9QN88PC6/I5
 
 
 -mod_name Gowin_rPLL
 -file_name gowin_rpll
--path C:/git/TRS-IO-M3/src/fpga/m3/v2.2/TRS-IO/src/gowin_rpll/
+-path ./gowin_rpll/
 -type PLL
 -rPll true
 -file_type vlg

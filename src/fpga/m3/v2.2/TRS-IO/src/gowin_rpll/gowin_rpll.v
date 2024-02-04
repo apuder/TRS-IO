@@ -1,10 +1,11 @@
-//Copyright (C)2014-2022 Gowin Semiconductor Corporation.
+//Copyright (C)2014-2023 Gowin Semiconductor Corporation.
 //All rights reserved.
 //File Title: IP file
-//GOWIN Version: V1.9.8.06
+//GOWIN Version: V1.9.9 Beta-4 Education
 //Part Number: GW1NR-LV9QN88PC6/I5
-//Device: GW1NR-9C
-//Created Time: Sat Sep 24 18:14:47 2022
+//Device: GW1NR-9
+//Device Version: C
+//Created Time: Sun Feb 04 11:38:55 2024
 
 module Gowin_rPLL (clkout, clkin);
 

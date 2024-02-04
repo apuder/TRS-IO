@@ -15,8 +15,19 @@
         <File path="src/gowin_prom/blk_mem_gen_3.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll0.v" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/audio_clock_regeneration_packet.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/audio_info_frame.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/audio_sample_packet.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/auxiliary_video_information_info_frame.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/hdmi.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/packet_assembler.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/packet_picker.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/serializer.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/source_product_description_info_frame.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="src/main.v" type="file.verilog" enable="1"/>
         <File path="src/trigger.v" type="file.verilog" enable="1"/>
+        <File path="src/vga.v" type="file.verilog" enable="1"/>
         <File path="src/trs-io.cst" type="file.cst" enable="1"/>
     </FileList>
 </Project>
