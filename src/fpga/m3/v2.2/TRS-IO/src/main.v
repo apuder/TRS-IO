@@ -466,11 +466,13 @@ logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 wire clk_pixel;
 wire clk_pixel_x5;
 
+// 125.875 MHz (126 MHz actual)
 Gowin_rPLL0 pll3(
   .clkout(clk_pixel_x5), //output clkout
   .clkin(clk_in) //input clkin
 );
 
+// 25.175 MHz (25.2 MHz actual)
 Gowin_CLKDIV0 clk3div0(
   .clkout(clk_pixel), //output clkout
   .hclkin(clk_pixel_x5), //input hclkin
@@ -525,6 +527,7 @@ ELVDS_OBUF tmds_clock(
 
 wire clk_vga = clk_pixel;
 wire vga_hsync, vga_vsync;
+wire crt_vid;
 wire hires_enable;
 
 reg sync;
@@ -532,7 +535,7 @@ reg sync;
 vga vga(
   .clk(clk),
   .srst(1'b0),
-  .vga_clk(clk_vga), // 25 MHz
+  .vga_clk(clk_vga), // 25.2 MHz
   .TRS_A(TRS_A),
   .TRS_D(TRS_D),
   .TRS_OUT(TRS_OUT),
@@ -544,6 +547,7 @@ vga vga(
   .VGA_VID(vga_vid),
   .VGA_HSYNC(vga_hsync),
   .VGA_VSYNC(vga_vsync),
+  .CRT_VID(crt_vid),
   .genlock(sync));
 
 always @(posedge clk_pixel) begin
@@ -551,9 +555,9 @@ always @(posedge clk_pixel) begin
 end
 
 
-assign HSYNC_O = hires_enable ? vga_hsync : HSYNC_I;
-assign VSYNC_O = hires_enable ? vga_vsync : VSYNC_I;
-assign VIDEO_O = hires_enable ? vga_vid   : VIDEO_I;
+assign HSYNC_O = hires_enable ?  vga_hsync : HSYNC_I;
+assign VSYNC_O = hires_enable ? ~vga_vsync : VSYNC_I;
+assign VIDEO_O = hires_enable ?  crt_vid   : VIDEO_I;
 
 
 //-----ORCH90----------------------------------------------------------------------

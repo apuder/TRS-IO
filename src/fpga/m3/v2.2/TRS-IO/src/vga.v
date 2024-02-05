@@ -17,23 +17,37 @@ module vga(
   output VGA_VID,
   output VGA_HSYNC,
   output VGA_VSYNC,
+  output CRT_VID,
+  //output VGA_HSYNC,
+  //output VGA_VSYNC,
   input genlock);
 
 
 // The VGA display is 640x480.
 // Each row of the TRS-80 display is repeated two times for an effective resolution of
-// 640x240 which larger than the 512x192 native resolution of the M3 text display
-// resulting in a small border around the M3 text display.
-// In 64x16 mode the characters are 6x12 or 6x24 when rows are repeated.
-// For convenience the VGA X and Y counters are partitioned into high and low parts which
+// 640x240.
+// For convenience the VGA X is partitioned into a bit counter and a byte counter.
+// The VGA Y counter is partitioned into a repeat count and line counter.
 // count the character position and the position within the character resepctively.
-reg [2:0] vga_xxx;     // 0-7
-reg [6:0] vga_XXXXXXX; // 0-79 active, -99 total
-reg [4:0] vga_yyyy_y;  // 0-23 in 64x16 mode
-reg [4:0] vga_YYYYY;   // 0-19 active, -20-20/24 total in 64x16 mode
+reg [2:0] vga_xxx; // 0-7
+reg [6:0] vga_XXXXXXX; // 0-79 active, -99 total (100)
+reg [9:0] vga_YYYYYYYYY_y; // 0-479 active, -524 total (525)
 // VGA in active area.
 wire vga_act = ( (vga_XXXXXXX < 7'd80)
-               & (vga_YYYYY < 5'd20));
+               & (vga_YYYYYYYYY_y < 10'd480));
+
+// The CRT is true 240 lines - half of the VGA 480.
+// The pixel rate is half that of the VGA so the CRT outputs 640 pixels in one line in
+// the same time that the VGA outputs 1280 pixels in two lines.
+// To synchronize the VGA and CRT accesses to the RAM the same byte counter is used
+// except the CRT makes an actual memory access only every other time.  For the CRT the
+// lsb of vga_xxx is essentially a divide by two of the VGA bitclock.
+// The CRT X is partitioned into the msb of the bit counter and a byte counter.
+reg [7:0] crt_XXXXXXX_x;
+reg [8:0] crt_YYYYYYYYY;
+// CRT in active area.
+wire crt_act = ( (crt_XXXXXXX_x[7:1] < 7'd80)
+               & (crt_YYYYYYYYY < 9'd240));
 
 // Instantiate the display RAM.  The display RAM is dual port.
 // The A port is connected to the z80.
@@ -41,19 +55,10 @@ wire vga_act = ( (vga_XXXXXXX < 7'd80)
 wire [7:0] _z80_dsp_data;
 wire [7:0] z80_dsp_data_b;
 
-// Center the 64x16 text display in the 640x480 VGA display.
-wire [6:0] dsp_XXXXXXX = vga_XXXXXXX - 7'd8;
-wire [2:0] dsp_xxx     = vga_xxx;
-wire [4:0] dsp_YYYYY   = vga_YYYYY   - 5'd2;
-wire [4:0] dsp_yyyy_y  = vga_yyyy_y;
-
-// Display in active area.
-wire dsp_act = ((dsp_XXXXXXX < 7'd64) & (dsp_YYYYY < 5'd16));
-
 
 // hires graphics.
-wire [6:0] hires_XXXXXXX = vga_XXXXXXX;
-wire [7:0] hires_YYYYYYYY = (vga_YYYYY << 3) + (vga_YYYYY << 2) + vga_yyyy_y[4:1]; // 0-239 active
+wire [6:0] hires_XXXXXXX = vga_XXXXXXX; // 0-79 active
+wire [7:0] hires_YYYYYYYY = vga_YYYYYYYYY_y[8:1]; // 0-239 active
 // Hires in active area.
 wire hires_act = vga_act;
 
@@ -156,12 +161,12 @@ blk_mem_gen_4 z80_hires (
    .reseta(1'b0),
  
    .clkb(vga_clk), // input
-   .ceb(vga_act & (vga_xxx == 3'b100)), // input
-   .adb({hires_XXXXXXX, hires_YYYYYYYY}), // input [14:0]
+   .ceb(vga_xxx[2] ? (hires_act & (vga_xxx[1:0] == 2'b00)) : (crt_act & (crt_XXXXXXX_x[0] == 1'b0 && vga_xxx == 2'b00))), // input
+   .adb(vga_xxx[2] ? {hires_XXXXXXX, hires_YYYYYYYY} : {crt_XXXXXXX_x[7:1], crt_YYYYYYYYY[7:0]}), // input [14:0]
    .wreb(1'b0), // input
    .dinb(8'h00), // input [7:0]
    .doutb(z80_hires_data_b), // output [7:0]
-   .oceb(vga_act & (vga_xxx == 3'b101)), // input
+   .oceb(vga_xxx[2] ? (hires_act & (vga_xxx[1:0] == 2'b01)) : (crt_act & (crt_XXXXXXX_x[0] == 1'b0 && vga_xxx == 2'b01))), // input
    .resetb(1'b0)
  );
 
@@ -171,36 +176,46 @@ always @ (posedge vga_clk)
 begin
    if(genlock)
    begin
-      vga_xxx <= 3'b000;
+      vga_xxx <= 3'b0;
       vga_XXXXXXX <= 7'd0;
-      vga_yyyy_y <= 5'd0;
-      vga_YYYYY <= 5'd0;
+      vga_YYYYYYYYY_y <= 10'd0;
    end
    else
    begin
-   if(vga_xxx == 3'b111)
-   begin
-      if(vga_XXXXXXX == 7'd99)
+      if(vga_xxx == 3'b111)
       begin
-         vga_XXXXXXX <= 7'd0;
+         if(vga_XXXXXXX == 7'd99)
+         begin
+            vga_XXXXXXX <= 7'd0;
 
-         if({vga_YYYYY, vga_yyyy_y} == {5'd20, 5'd20})
-         begin
-            vga_yyyy_y <= 5'd0;
-            vga_YYYYY <= 5'd0;
-         end
-         else if(vga_yyyy_y == 5'd23)
-         begin
-            vga_yyyy_y <= 5'd0;
-            vga_YYYYY <= vga_YYYYY + 5'd1;
+            if(vga_YYYYYYYYY_y == 10'd524)
+               vga_YYYYYYYYY_y <= 10'd0;
+            else
+               vga_YYYYYYYYY_y <= vga_YYYYYYYYY_y + 10'd1;
          end
          else
-            vga_yyyy_y <= vga_yyyy_y + 5'd1;
+            vga_XXXXXXX <= vga_XXXXXXX + 7'b1;
+      end
+      vga_xxx <= vga_xxx + 3'b1;
+   end
+end
+
+
+// Bump the CRT counters.
+always @ (posedge vga_clk)
+begin
+   if(vga_xxx == 3'b111)
+   begin
+      if(crt_XXXXXXX_x == {7'd99, 1'b1})
+      begin
+         crt_XXXXXXX_x <= 8'd0;
+         if(crt_YYYYYYYYY == 9'd262)
+           crt_YYYYYYYYY <= 9'd0;
+        else
+           crt_YYYYYYYYY <= crt_YYYYYYYYY + 9'd1;
       end
       else
-         vga_XXXXXXX <= vga_XXXXXXX + 7'd1;
-   end
-   vga_xxx <= vga_xxx + 3'b1;
+         crt_XXXXXXX_x <= crt_XXXXXXX_x + 8'd1;
    end
 end
 
@@ -221,29 +236,69 @@ begin
       hires_pixel_shift_reg <= {hires_pixel_shift_reg[6:0], 1'b0};
 end
 
+
+// Load the crt pixel data into the crt shift register, or shift current contents.
+reg [7:0] crt_pixel_shift_reg;
+
+always @ (posedge vga_clk)
+begin
+   if(crt_XXXXXXX_x[0] == 1'b0 && vga_xxx == 3'b010)
+   begin
+      if(crt_act)
+         crt_pixel_shift_reg <= z80_hires_data_b;
+      else
+         crt_pixel_shift_reg <= 8'h00;
+   end
+   else
+      if(vga_xxx[0] == 1'b0)
+         crt_pixel_shift_reg <= {crt_pixel_shift_reg[6:0], 1'b0};
+end
+
+
+//reg h_sync, v_sync;
+//
+//always @ (posedge vga_clk)
+//begin
+//   if({vga_XXXXXXX, vga_xxx} == 10'd655)
+//      h_sync <= 1'b1;
+//   else if({vga_XXXXXXX, vga_xxx} == 10'd751)
+//      h_sync <= 1'b0;
+//
+//   if({vga_XXXXXXX, vga_xxx} == 10'd799)
+//      if(vga_YYYYYYYYY_y == 10'd489)
+//         v_sync <= 1'b1;
+//      else if(vga_YYYYYYYYY_y == 10'd491)
+//         v_sync <= 1'b0;
+//end
+
+
 reg h_sync, v_sync;
 
 always @ (posedge vga_clk)
 begin
-   if({vga_XXXXXXX, vga_xxx} == {7'd82, 3'b010})
+   if({crt_XXXXXXX_x, vga_xxx} == {10'd655, 1'b1})
       h_sync <= 1'b1;
-   else if({vga_XXXXXXX, vga_xxx} == {7'd94, 3'b010})
+   else if({crt_XXXXXXX_x, vga_xxx} == {10'd751, 1'b1})
       h_sync <= 1'b0;
 
-   if({vga_YYYYY, vga_yyyy_y} == {5'd20, 5'd9})
-      v_sync <= 1'b1;
-   else if({vga_YYYYY, vga_yyyy_y} == {5'd20, 5'd11})
-      v_sync <= 1'b0;
+   if({crt_XXXXXXX_x, vga_xxx} == {10'd799, 1'b1})
+      if(crt_YYYYYYYYY == 9'd244)
+         v_sync <= 1'b1;
+      else if(crt_YYYYYYYYY == 9'd246)
+         v_sync <= 1'b0;
 end
 
 
 reg vga_vid_out, h_sync_out, v_sync_out;
+reg crt_vid_out;
 
 always @ (posedge vga_clk)
 begin
    vga_vid_out <= hires_pixel_shift_reg[7];
    h_sync_out <= h_sync;
    v_sync_out <= v_sync;
+
+   crt_vid_out <= crt_pixel_shift_reg[7];
 end
 
 assign hires_enable = hires_options_graphics_alpha_n;
@@ -251,5 +306,7 @@ assign hires_enable = hires_options_graphics_alpha_n;
 assign VGA_VID   = vga_vid_out;
 assign VGA_HSYNC = h_sync_out;
 assign VGA_VSYNC = v_sync_out;
+
+assign CRT_VID   = crt_vid_out;
 
 endmodule
