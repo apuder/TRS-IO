@@ -2,6 +2,7 @@
 
 module main(
   input clk_in,
+  input RST_N,
   input SCK,
   input MOSI,
   output MISO,
@@ -42,7 +43,7 @@ module main(
 localparam [2:0] VERSION_MAJOR = 0;
 localparam [4:0] VERSION_MINOR = 3;
 
-localparam [7:0] COOKIE = 8'haf;
+localparam [7:0] COOKIE = 8'hAF;
 
 wire clk;
 
@@ -57,6 +58,13 @@ Gowin_rPLL clk_wiz_0(
    .clkin(clk_in) //input clkin
 );
 
+
+reg rst = 1'b0;;
+
+always @ (posedge clk)
+begin
+   rst <= ~RST_N;
+end
 
 reg[7:0] byte_in, byte_out;
 reg byte_received = 1'b0;
@@ -124,8 +132,8 @@ assign TRS_D[7] = TRS_AD[0];
 //----TRS-IO---------------------------------------------------------------------
 
 // Ports 0xF8-0xFB
-wire printer_sel_rd = (TRS_A[8:2] == 7'h3e) && !TRS_IN;
-wire printer_sel_wr = (TRS_A[8:2] == 7'h3e) && !TRS_OUT;
+wire printer_sel_rd = (TRS_A[8:2] == 7'h3E) && !TRS_IN;
+wire printer_sel_wr = (TRS_A[8:2] == 7'h3E) && !TRS_OUT;
 wire printer_sel = printer_sel_rd || printer_sel_wr;
 
 wire trs_io_sel_in  = (TRS_A == 31) && !TRS_IN;
@@ -142,8 +150,8 @@ wire hires_sel_out = (TRS_A[8:2] == (9'h80 >> 2)) && !TRS_OUT;
 wire hires_sel = hires_sel_in || hires_sel_out;
 
 // Orchestra-90
-wire orch90l_sel_out = (TRS_A == 9'hB5) && !TRS_OUT;
-wire orch90r_sel_out = (TRS_A == 9'hB9) && !TRS_OUT;
+wire orch90l_sel_out = (TRS_A == 9'h75) && !TRS_OUT;
+wire orch90r_sel_out = (TRS_A == 9'h79) && !TRS_OUT;
 
 
 wire esp_sel = trs_io_sel || frehd_sel || printer_sel;
@@ -447,7 +455,7 @@ end
 
 //-----HDMI------------------------------------------------------------------------
 
-logic [23:0] rgb_screen_color = 24'hffffff;
+logic [23:0] rgb_screen_color = 24'hFFFFFF;
 
 always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
 
@@ -526,15 +534,14 @@ ELVDS_OBUF tmds_clock(
 //-----VGA-------------------------------------------------------------------------------
 
 wire clk_vga = clk_pixel;
-wire vga_hsync, vga_vsync;
-wire crt_vid;
+wire crt_vid, crt_hsync, crt_vsync;
 wire hires_enable;
 
 reg sync;
 
 vga vga(
   .clk(clk),
-  .srst(1'b0),
+  .srst(rst),
   .vga_clk(clk_vga), // 25.2 MHz
   .TRS_A(TRS_A),
   .TRS_D(TRS_D),
@@ -548,6 +555,8 @@ vga vga(
   .VGA_HSYNC(vga_hsync),
   .VGA_VSYNC(vga_vsync),
   .CRT_VID(crt_vid),
+  .CRT_HSYNC(crt_hsync),
+  .CRT_VSYNC(crt_vsync),
   .genlock(sync));
 
 always @(posedge clk_pixel) begin
@@ -555,55 +564,71 @@ always @(posedge clk_pixel) begin
 end
 
 
-assign HSYNC_O = hires_enable ?  vga_hsync : HSYNC_I;
-assign VSYNC_O = hires_enable ? ~vga_vsync : VSYNC_I;
+assign HSYNC_O = hires_enable ?  crt_hsync : HSYNC_I;
+assign VSYNC_O = hires_enable ? ~crt_vsync : VSYNC_I;
 assign VIDEO_O = hires_enable ?  crt_vid   : VIDEO_I;
 
 
 //-----ORCH90----------------------------------------------------------------------
 
 // orchestra-90 output registers
-reg signed [7:0] orch90l_reg;
-reg signed [7:0] orch90r_reg;
+reg [7:0] orch90l_reg;
+reg [7:0] orch90r_reg;
 
 always @ (posedge clk)
 begin
-   if(orch90l_sel_out & ~TRS_OUT)
+   if(io_access && orch90l_sel_out)
       orch90l_reg <= TRS_D;
 
-   if(orch90r_sel_out & ~TRS_OUT)
+   if(io_access && orch90r_sel_out)
       orch90r_reg <= TRS_D;
 end
 
 
 //---Sound------------------------------------------------------------------------
 
-reg[1:0] z80_cass_reg = 2'b00;
-wire[1:0] cass_out;
+wire cass_sel_out = (TRS_A == 9'hFF) && !TRS_OUT;
 
-wire cass_sel_out = (TRS_A == 9'hff) && !TRS_OUT;
+// raw 2-bit cassette output
+reg[1:0] cass_reg = 2'b00;
 
-always @(posedge clk) begin
-  if (io_access && cass_sel_out) z80_cass_reg <= TRS_D[1:0];
+always @(posedge clk)
+begin
+   if (io_access && cass_sel_out)
+      cass_reg <= TRS_D[1:0];
 end
 
-assign cass_out = {~z80_cass_reg[1], z80_cass_reg[0]};
+// bit1 is inverted and added to bit0 for the analog output
+wire [1:0] cass_outx = {~cass_reg[1], cass_reg[0]};
+// the sum is 0, 1, or 2
+wire [1:0] cass_outy = {1'b0, cass_outx[1]} + {1'b0, cass_outx[0]};
 
-reg cass_out_reg;
+reg [8:0] cass_outl_reg;
+reg [8:0] cass_outr_reg;
 
-always @ (posedge clk) begin
-   cass_out_reg <= (cass_out == 2'b00) ? 1'b0 : ((cass_out == 2'b11) ? 1'b1 : ~cass_out_reg);
+always @ (posedge clk)
+begin
+   cass_outl_reg <= {orch90l_reg[7], orch90l_reg} + {cass_outy - 2'b01, 7'b0000000};
+   cass_outr_reg <= {orch90r_reg[7], orch90r_reg} + {cass_outy - 2'b01, 7'b0000000};
 end
 
-always @(posedge clk_audio) begin
-  case (cass_out_reg)
-    2'b00: audio_sample_word <= '{(   0<<4) + (orch90r_reg<<5), (   0<<4) + (orch90l_reg<<5)};
-    2'b01: audio_sample_word <= '{( 127<<4) + (orch90r_reg<<5), ( 127<<4) + (orch90l_reg<<5)};
-    2'b10: audio_sample_word <= '{(-127<<4) + (orch90r_reg<<5), (-127<<4) + (orch90l_reg<<5)};
-    2'b11: audio_sample_word <= '{(   0<<4) + (orch90r_reg<<5), (   0<<4) + (orch90l_reg<<5)};
-  endcase
+reg [9:0] cass_pdml_reg;
+reg [9:0] cass_pdmr_reg;
+
+always @ (posedge clk)
+begin
+   cass_pdml_reg <= {1'b0, cass_pdml_reg[8:0]} + {1'b0, ~cass_outl_reg[8], cass_outl_reg[7:0]};
+   cass_pdmr_reg <= {1'b0, cass_pdmr_reg[8:0]} + {1'b0, ~cass_outr_reg[8], cass_outr_reg[7:0]};
 end
-assign CASS_OUT_LEFT = cass_out_reg;
-assign CASS_OUT_RIGHT = cass_out_reg;
+
+always @(posedge clk_audio)
+begin
+   audio_sample_word <= '{{cass_outr_reg, 7'b0000000},
+                          {cass_outl_reg, 7'b0000000}};
+end
+
+
+assign CASS_OUT_LEFT  = cass_pdml_reg[9];
+assign CASS_OUT_RIGHT = cass_pdmr_reg[9];
 
 endmodule

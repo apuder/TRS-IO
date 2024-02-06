@@ -18,8 +18,8 @@ module vga(
   output VGA_HSYNC,
   output VGA_VSYNC,
   output CRT_VID,
-  //output VGA_HSYNC,
-  //output VGA_VSYNC,
+  output CRT_HSYNC,
+  output CRT_VSYNC,
   input genlock);
 
 
@@ -209,7 +209,7 @@ begin
       if(crt_XXXXXXX_x == {7'd99, 1'b1})
       begin
          crt_XXXXXXX_x <= 8'd0;
-         if(crt_YYYYYYYYY == 9'd262)
+         if(crt_YYYYYYYYY == 9'd263) // 9'd311 for 50Hz
            crt_YYYYYYYYY <= 9'd0;
         else
            crt_YYYYYYYYY <= crt_YYYYYYYYY + 9'd1;
@@ -255,58 +255,60 @@ begin
 end
 
 
-//reg h_sync, v_sync;
-//
-//always @ (posedge vga_clk)
-//begin
-//   if({vga_XXXXXXX, vga_xxx} == 10'd655)
-//      h_sync <= 1'b1;
-//   else if({vga_XXXXXXX, vga_xxx} == 10'd751)
-//      h_sync <= 1'b0;
-//
-//   if({vga_XXXXXXX, vga_xxx} == 10'd799)
-//      if(vga_YYYYYYYYY_y == 10'd489)
-//         v_sync <= 1'b1;
-//      else if(vga_YYYYYYYYY_y == 10'd491)
-//         v_sync <= 1'b0;
-//end
-
-
-reg h_sync, v_sync;
+reg vga_hsync, vga_vsync;
 
 always @ (posedge vga_clk)
 begin
-   if({crt_XXXXXXX_x, vga_xxx} == {10'd655, 1'b1})
-      h_sync <= 1'b1;
-   else if({crt_XXXXXXX_x, vga_xxx} == {10'd751, 1'b1})
-      h_sync <= 1'b0;
+   if({vga_XXXXXXX, vga_xxx} == 10'd655)
+      vga_hsync <= 1'b1;
+   else if({vga_XXXXXXX, vga_xxx} == 10'd751)
+      vga_hsync <= 1'b0;
 
-   if({crt_XXXXXXX_x, vga_xxx} == {10'd799, 1'b1})
-      if(crt_YYYYYYYYY == 9'd244)
-         v_sync <= 1'b1;
-      else if(crt_YYYYYYYYY == 9'd246)
-         v_sync <= 1'b0;
+   if({vga_XXXXXXX, vga_xxx} == 10'd799)
+      if(vga_YYYYYYYYY_y == 10'd489)
+         vga_vsync <= 1'b1;
+      else if(vga_YYYYYYYYY_y == 10'd491)
+         vga_vsync <= 1'b0;
 end
 
 
-reg vga_vid_out, h_sync_out, v_sync_out;
-reg crt_vid_out;
+reg crt_hsync, crt_vsync;
+
+always @ (posedge vga_clk)
+begin
+   if(crt_XXXXXXX_x[0] == 1'b1 && vga_xxx == 3'b111)
+   begin
+      if(crt_XXXXXXX_x[7:1] == 7'd84)
+         crt_hsync <= 1'b1;
+      else if(crt_XXXXXXX_x[7:1] == 7'd92)
+         crt_hsync <= 1'b0;
+
+      if(crt_XXXXXXX_x[7:1] == 7'd99)
+         if(crt_YYYYYYYYY == 9'd240)
+            crt_vsync <= 1'b1;
+         else if(crt_YYYYYYYYY == 9'd255)
+            crt_vsync <= 1'b0;
+   end
+end
+
+
+reg vga_vid_out, vga_hsync_out, vga_vsync_out;
 
 always @ (posedge vga_clk)
 begin
    vga_vid_out <= hires_pixel_shift_reg[7];
-   h_sync_out <= h_sync;
-   v_sync_out <= v_sync;
-
-   crt_vid_out <= crt_pixel_shift_reg[7];
+   vga_hsync_out <= vga_hsync;
+   vga_vsync_out <= vga_vsync;
 end
 
-assign hires_enable = hires_options_graphics_alpha_n;
-
 assign VGA_VID   = vga_vid_out;
-assign VGA_HSYNC = h_sync_out;
-assign VGA_VSYNC = v_sync_out;
+assign VGA_HSYNC = vga_hsync_out;
+assign VGA_VSYNC = vga_vsync_out;
 
-assign CRT_VID   = crt_vid_out;
+assign CRT_VID   = crt_pixel_shift_reg[7];
+assign CRT_HSYNC = crt_hsync;
+assign CRT_VSYNC = crt_vsync;
+
+assign hires_enable = hires_options_graphics_alpha_n;
 
 endmodule

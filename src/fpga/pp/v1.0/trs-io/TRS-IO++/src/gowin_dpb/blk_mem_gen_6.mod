@@ -22,5 +22,5 @@
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file C:\Users\matt\Documents\FPGA\TRS-IO++M1M3Arno\src\splash_hires.mi
+-init_file ../splash_hires.mi
 -init_match port_A

@@ -670,7 +670,7 @@ Gowin_DPB2 extrom (
    .doutb(), // output [7:0]
    .oceb(1'b0), // input
    .resetb(1'b0)
- );
+);
 
 
 

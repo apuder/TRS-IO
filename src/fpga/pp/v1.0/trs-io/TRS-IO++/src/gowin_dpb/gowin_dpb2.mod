@@ -22,5 +22,5 @@
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file ./trs80m13diag.mi
+-init_file ../trs80m13diag.mi
 -init_match port_A
