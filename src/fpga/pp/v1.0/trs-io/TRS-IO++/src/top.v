@@ -567,7 +567,6 @@ end
 //--------BRAM-------------------------------------------------------------------------
 
 wire ram_rd_en, ram_rd_regce;
-wire [7:0] ram_dout;
 
 trigger rama_read_trigger(
   .clk(clk),
@@ -586,6 +585,8 @@ trigger rama_write_trigger(
   .two(ram_wr_en),
   .three()
 );
+
+wire [7:0] ram_dout;
 
 wire enb;
 wire regceb;
@@ -736,25 +737,9 @@ always @(posedge clk) begin
 end
 
 
-//-----ORCH85/90-------------------------------------------------------------------
-
-// orchestra-85 output registers
-reg signed [7:0] orch85l_reg;
-reg signed [7:0] orch85r_reg;
-
-always @ (posedge clk)
-begin
-   if(io_access & orch85l_sel_out)
-      orch85l_reg <= TRS_D;
-
-   if(io_access & orch85r_sel_out)
-      orch85r_reg <= TRS_D;
-end
-
-
 //-----HDMI------------------------------------------------------------------------
 
-logic [23:0] rgb_screen_color = 24'hffffff;
+logic [23:0] rgb_screen_color = 24'hFFFFFF;
 
 always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
 
@@ -974,24 +959,69 @@ always @(posedge clk3_pixel) begin
   sync3 <= (cx3 == frame_width3 - 10) && (cy3 == frame_height3 - 1);
 end
 
+
+//-----ORCH85/90-------------------------------------------------------------------
+
+// orchestra-85 output registers
+reg [7:0] orch85l_reg;
+reg [7:0] orch85r_reg;
+
+always @ (posedge clk)
+begin
+   if(io_access & orch85l_sel_out)
+      orch85l_reg <= TRS_D;
+
+   if(io_access & orch85r_sel_out)
+      orch85r_reg <= TRS_D;
+end
+
+
 //-----Cassette out--------------------------------------------------------------------------
 
-wire cass_sel_out = (TRS_A[7:0] == 255) & ~TRS_OUT;
+wire cass_sel_out = (TRS_A[7:0] == 8'hFF) & ~TRS_OUT;
 
-reg[1:0] sound_idx = 2'b00;
+// raw 2-bit cassette output
+reg[1:0] cass_reg = 2'b00;
 
-always @(posedge clk) begin
-  if (io_access & cass_sel_out) sound_idx <= TRS_D & 3;
+always @(posedge clk)
+begin
+   if (io_access && cass_sel_out)
+      cass_reg <= TRS_D[1:0];
 end
 
-always @(posedge clk_audio) begin
-  case (sound_idx)
-    2'b00: audio_sample_word <= '{(   0<<4) + (orch85r_reg<<5), (   0<<4) + (orch85l_reg<<5)};
-    2'b01: audio_sample_word <= '{( 127<<4) + (orch85r_reg<<5), ( 127<<4) + (orch85l_reg<<5)};
-    2'b10: audio_sample_word <= '{(-127<<4) + (orch85r_reg<<5), (-127<<4) + (orch85l_reg<<5)};
-    2'b11: audio_sample_word <= '{(   0<<4) + (orch85r_reg<<5), (   0<<4) + (orch85l_reg<<5)};
-  endcase
+// bit1 is inverted and added to bit0 for the analog output
+wire [1:0] cass_outx = {~cass_reg[1], cass_reg[0]};
+// the sum is 0, 1, or 2
+wire [1:0] cass_outy = {1'b0, cass_outx[1]} + {1'b0, cass_outx[0]};
+
+reg [8:0] cass_outl_reg;
+reg [8:0] cass_outr_reg;
+
+always @ (posedge clk)
+begin
+   cass_outl_reg <= {orch85l_reg[7], orch85l_reg} + {cass_outy - 2'b01, 7'b0000000};
+   cass_outr_reg <= {orch85r_reg[7], orch85r_reg} + {cass_outy - 2'b01, 7'b0000000};
 end
+
+reg [9:0] cass_pdml_reg;
+reg [9:0] cass_pdmr_reg;
+
+always @ (posedge clk)
+begin
+   cass_pdml_reg <= {1'b0, cass_pdml_reg[8:0]} + {1'b0, ~cass_outl_reg[8], cass_outl_reg[7:0]};
+   cass_pdmr_reg <= {1'b0, cass_pdmr_reg[8:0]} + {1'b0, ~cass_outr_reg[8], cass_outr_reg[7:0]};
+end
+
+always @(posedge clk_audio)
+begin
+   audio_sample_word <= '{{cass_outr_reg, 7'b0000000},
+                          {cass_outl_reg, 7'b0000000}};
+end
+
+
+//assign CASS_OUT_LEFT  = cass_pdml_reg[9];
+//assign CASS_OUT_RIGHT = cass_pdmr_reg[9];
+
 
 reg [25:0] heartbeat;
 
