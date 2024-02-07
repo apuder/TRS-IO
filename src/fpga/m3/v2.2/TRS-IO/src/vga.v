@@ -20,6 +20,7 @@ module vga(
   output CRT_VID,
   output CRT_HSYNC,
   output CRT_VSYNC,
+  input HZ50,
   input genlock);
 
 
@@ -209,7 +210,7 @@ begin
       if(crt_XXXXXXX_x == {7'd99, 1'b1})
       begin
          crt_XXXXXXX_x <= 8'd0;
-         if(crt_YYYYYYYYY == 9'd263) // 9'd311 for 50Hz
+         if(crt_YYYYYYYYY == (HZ50 ? 9'd311 : 9'd263))
            crt_YYYYYYYYY <= 9'd0;
         else
            crt_YYYYYYYYY <= crt_YYYYYYYYY + 9'd1;
@@ -284,9 +285,9 @@ begin
          crt_hsync <= 1'b0;
 
       if(crt_XXXXXXX_x[7:1] == 7'd99)
-         if(crt_YYYYYYYYY == 9'd240)
+         if(crt_YYYYYYYYY == (HZ50 ? 9'd265 : 9'd240))
             crt_vsync <= 1'b1;
-         else if(crt_YYYYYYYYY == 9'd255)
+         else if(crt_YYYYYYYYY == (HZ50 ? 9'd281 : 9'd256))
             crt_vsync <= 1'b0;
    end
 end

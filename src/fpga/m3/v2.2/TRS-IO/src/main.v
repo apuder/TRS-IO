@@ -557,6 +557,7 @@ vga vga(
   .CRT_VID(crt_vid),
   .CRT_HSYNC(crt_hsync),
   .CRT_VSYNC(crt_vsync),
+  .HZ50(1'b0),  // 1'b0 for 60Hz vertical, 1'b1 for 50Hz vertical
   .genlock(sync));
 
 always @(posedge clk_pixel) begin
