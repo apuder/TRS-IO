@@ -91,12 +91,11 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     #status-box {
       float:right;
       display:grid;
-      grid-template-columns:auto auto auto;
-      grid-gap:12px;
-      padding:4px;
-      margin-right:24px;
+      grid-template-columns:auto auto auto auto;
+      grid-gap:9px;
+      padding:6px;
       background:white;
-      border-radius:0 0 5px 5px;
+      border-radius:0 10px 0 5px;
     }
     #status-hw, #status-sw, #status-time {
       font-weight:bold;
@@ -170,6 +169,13 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
       background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M18 2h-8L4.02 8 4 20c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-6 6h-2V4h2v4zm3 0h-2V4h2v4zm3 0h-2V4h2v4z"/></svg>');
       filter:invert(76%) sepia() saturate(10000%) hue-rotate(109deg)
     }
+    .frehd-loaded {
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>');
+      filter:invert(76%) sepia() saturate(10000%) hue-rotate(109deg)
+    }
+    .frehd-not-loaded {
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>');
+    }
 
     #wave {
       position:relative;
@@ -215,9 +221,10 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     <span>H/W<br><span id="status-hw">-</span></span>
     <span>S/W<br><span id="status-sw">-</span></span>
     <span>Time<br><span id="status-time">-</span></span>
-    <span>Wifi<br><div id="status-wifi" class="status-icon wifi-not-conf"></div></span>
+    <span style="grid-column-start: 1;">Wifi<br><div id="status-wifi" class="status-icon wifi-not-conf"></div></span>
     <span>SMB<br><label id="status-smb-msg" title=""><div id="status-smb" class="status-icon media-not-conf"></div></label></span>
     <span id="status-sdcard-section">Card<br><label id="status-sdcard-msg" title=""><div id="status-sdcard" class="status-icon media-not-conf"></div></label></span>
+    <span>FreHD<br><div id="status-frehd" class="status-icon frehd-not-loaded"></div></span>
   </div>
   <h1><span class="h1-trs">TRS</span><span class="h1-io">IO</span></h1>
   <div id="inner-wrapper">
@@ -325,6 +332,13 @@ updateStatus = function(status, first) {
     } else if (status.wifi_status == 4) {
       el('status-wifi').className = 'status-icon wifi-not-conf';
     }
+
+    if (status.frehd_loaded == 1) {
+      el('status-frehd').className = 'status-icon frehd-loaded';
+    } else {
+      el('status-frehd').className = 'status-icon frehd-not-loaded';
+    }
+
 
     // Don't update form fields after first update.
     if (first) {
