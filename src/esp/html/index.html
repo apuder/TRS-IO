@@ -224,7 +224,7 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     <span style="grid-column-start: 1;">Wifi<br><div id="status-wifi" class="status-icon wifi-not-conf"></div></span>
     <span>SMB<br><label id="status-smb-msg" title=""><div id="status-smb" class="status-icon media-not-conf"></div></label></span>
     <span id="status-sdcard-section">Card<br><label id="status-sdcard-msg" title=""><div id="status-sdcard" class="status-icon media-not-conf"></div></label></span>
-    <span>FreHD<br><div id="status-frehd" class="status-icon frehd-not-loaded"></div></span>
+    <span>FreHD<br><label id="status-frehd-msg" title=""><div id="status-frehd" class="status-icon frehd-not-loaded"></div></label></span>
   </div>
   <h1><span class="h1-trs">TRS</span><span class="h1-io">IO</span></h1>
   <div id="inner-wrapper">
@@ -333,10 +333,12 @@ updateStatus = function(status, first) {
       el('status-wifi').className = 'status-icon wifi-not-conf';
     }
 
-    if (status.frehd_loaded == 1) {
-      el('status-frehd').className = 'status-icon frehd-loaded';
-    } else {
+    if (!!status.frehd_loaded) {
+      el('status-frehd-msg').setAttribute('title', status.frehd_loaded);
       el('status-frehd').className = 'status-icon frehd-not-loaded';
+    } else {
+      el('status-frehd-msg').setAttribute('title', '');
+      el('status-frehd').className = 'status-icon frehd-loaded';
     }
 
 

@@ -8,6 +8,7 @@
 #include "posix.h"
 #include "smb.h"
 #include "settings.h"
+#include "event.h"
 
 extern "C" {
 #include "trs_hard.h"
@@ -26,6 +27,34 @@ static TRS_FS* current_trs_fs = NULL;
 static TRS_FS_POSIX* trs_fs_posix = NULL;
 static TRS_FS_SMB* trs_fs_smb = NULL;
 
+static const char* frehd_msg = NULL;
+
+static void check_frehd() {
+  FIL f;
+  FRESULT ret;
+  
+  frehd_msg = NULL;
+
+  if (trs_fs == NULL) {
+    frehd_msg = "SMB/SD not mounted";
+    return;
+  }
+  
+  ret = f_open(&f, "FREHD.ROM", FA_OPEN_EXISTING | FA_READ);
+  if (ret == FR_OK) {
+    f_close(&f);
+    return;
+  }
+  // FREHD.ROM not found. Check for hard4-0
+  ret = f_open(&f, "hard4-0", FA_OPEN_EXISTING | FA_READ);
+  if (ret == FR_OK) {
+    f_close(&f);
+    return;
+  }
+  // FreHD images not found
+  frehd_msg = "FREHD.ROM not found";
+}
+
 static void set_fs() {
   if (trs_fs_posix != NULL && trs_fs_posix->get_err_msg() == NULL) {
     // We have a mounted SD card. This has higher precedent
@@ -43,6 +72,7 @@ static void set_fs() {
     open_drives();
   }
   current_trs_fs = trs_fs;
+  check_frehd();
 }
 
 const char* init_trs_fs_posix() {
@@ -83,6 +113,10 @@ const char* get_posix_err_msg() {
     return "No SD card";
   }
   return trs_fs_posix->get_err_msg();
+}
+
+const char* get_frehd_msg() {
+  return frehd_msg;
 }
 
 bool trs_fs_has_sd_card_reader() {

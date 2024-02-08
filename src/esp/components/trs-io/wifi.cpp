@@ -218,6 +218,11 @@ static void mongoose_handle_status(struct mg_http_message* message,
 
   cJSON_AddBoolToObject(s, "has_sd_card", trs_fs_has_sd_card_reader());
 
+  const char* frehd_msg = get_frehd_msg();
+  if (frehd_msg != NULL) {
+    cJSON_AddStringToObject(s, "frehd_loaded", frehd_msg);
+  }
+
   resp = cJSON_PrintUnformatted(s);
   *response = resp;
   cJSON_Delete(s);
