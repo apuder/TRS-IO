@@ -7,6 +7,7 @@
 #include "settings.h"
 #include "spi.h"
 #include "wifi.h"
+#include "event.h"
 #include "trs-fs.h"
 #include "esp_task.h"
 #include "esp_event.h"
@@ -343,6 +344,8 @@ static void action_task(void* p)
 #endif
 
     frehd_check_action();
+
+    check_events();
 
     if (trigger_trs_io_action) {
       TrsIO::processInBackground();

@@ -64,17 +64,18 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     snprintf(ip, sizeof(ip), IPSTR, IP2STR(&event->ip_info.ip));
     ESP_LOGI(TAG, "Got IP: %s", ip);
     status = RS_STATUS_WIFI_CONNECTED;
-    evt_signal_wifi_up();
     set_led(false, true, false, false, true);
-    init_trs_fs_smb();
-  } else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+    evt_signal(EVT_WIFI_UP);
+  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
     wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
     ESP_LOGI(TAG, "Station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
-    evt_signal_wifi_up();
-  } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
     wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
     ESP_LOGI(TAG, "Station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
+    evt_signal(EVT_WIFI_DOWN);
     status = RS_STATUS_WIFI_NOT_CONNECTED;
+    ip[0] = '-';
+    ip[1] = '\0';
     set_led(true, false, false, false, false);
     esp_wifi_connect();
   }
@@ -88,6 +89,7 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
   settings_commit();
   esp_restart();
 }
+
 
 
 //-----------------------------------------------------------------
@@ -331,7 +333,7 @@ static void mg_task(void* p)
   static struct mg_mgr mgr;
   static char printer_buf[100];
 
-  evt_wait_wifi_up();
+  evt_wait(EVT_START_MG);
   ESP_LOGI(TAG, "Starting Mongoose");
   init_time();
   init_mdns();
