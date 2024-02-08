@@ -79,7 +79,7 @@ bool is_reset_button_short_press()
 #ifndef TRS_IO_BUTTON_ONLY_AT_STARTUP
 static void IRAM_ATTR isr_button(void* arg)
 {
-  static int64_t then;
+  static int64_t then = INT64_MAX;
   
   button_t* button = (button_t*) arg;
 
@@ -88,6 +88,7 @@ static void IRAM_ATTR isr_button(void* arg)
   } else {
     int64_t now = esp_timer_get_time();
     int64_t delta_ms = (now - then) / 1000;
+    then = INT64_MAX;
     if (delta_ms < 50) {
       // Bounce
       return;
