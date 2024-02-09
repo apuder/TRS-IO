@@ -240,7 +240,6 @@ assign ESP_S = ~( (~esp_trs_io_in  & {4{trs_io_sel_in }}) |
 
 //---main-------------------------------------------------------------------------
 
-
 localparam [2:0]
   idle       = 3'b000,
   read_bytes = 3'b001,
@@ -280,7 +279,6 @@ reg byte_received = 1'b0;
 
 reg [7:0] params[0:4];
 reg [2:0] bytes_to_read;
-reg [7:0] bits_to_send;
 reg [2:0] idx;
 reg [7:0] cmd;
 reg trs_io_data_ready = 1'b0;
@@ -291,9 +289,8 @@ reg trigger_action = 1'b0;
 
 always @(posedge clk) begin
   trigger_action <= 1'b0;
-  bits_to_send <= 0;
 
-  if (esp_sel_risingedge && (TRS_A[7:0] == 31)) trs_io_data_ready <= 1'b0;
+  if (esp_sel_risingedge && (TRS_A[7:0] == 8'd31)) trs_io_data_ready <= 1'b0;
 
   if (start_msg)
     state <= idle;
@@ -308,12 +305,10 @@ always @(posedge clk) begin
         case (byte_in)
           get_cookie: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           get_version: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           bram_poke: begin
@@ -321,11 +316,9 @@ always @(posedge clk) begin
           end
           bram_peek: begin
             bytes_to_read <= 3'b010;
-            bits_to_send <= 9;
           end
           dbus_read: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           dbus_write: begin
@@ -333,7 +326,6 @@ always @(posedge clk) begin
           end
           abus_read: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           data_ready: begin
@@ -354,7 +346,6 @@ always @(posedge clk) begin
           end
           xray_data_peek: begin
             bytes_to_read <= 1;
-            bits_to_send <= 9;
           end
           xray_resume: begin
             trigger_action <= 1'b1;
@@ -365,7 +356,6 @@ always @(posedge clk) begin
           end
           get_printer_byte: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           set_screen_color: begin
@@ -379,7 +369,6 @@ always @(posedge clk) begin
           end
           get_config: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           default:
@@ -425,37 +414,27 @@ wire CS_active = ~CSr[1];
 reg [1:0] MOSIr;  always @(posedge clk) MOSIr <= {MOSIr[0], MOSI};
 wire MOSI_data = MOSIr[1];
 
-reg [7:0] remaining_bits_to_send;
-
-
 reg [2:0] bitcnt = 3'b000;
-
-
-always @(posedge clk) begin
-  if(~CS_active)
-    bitcnt <= 3'b000;
-  else
-    if(SCK_rising_edge) begin
-      bitcnt <= bitcnt + 3'b001;
-      byte_in <= {byte_in[6:0], MOSI_data};
-    end
-end
-
-wire need_to_read_data = ((state == idle) && (remaining_bits_to_send == 0)) || (state == read_bytes);
-
-always @(posedge clk) byte_received <= CS_active && SCK_rising_edge && need_to_read_data && (bitcnt == 3'b111);
-
 reg [7:0] byte_data_sent;
 
 always @(posedge clk) begin
-  if (bits_to_send != 0) remaining_bits_to_send = bits_to_send;
-  if(CS_active) begin
-    if(SCK_falling_edge && state == idle) begin
-      if(remaining_bits_to_send == 8)
+  byte_received <= 1'b0;
+
+  if(~CS_active)
+    bitcnt <= 3'b000;
+  else begin
+    if(SCK_rising_edge) begin
+      bitcnt <= bitcnt + 3'b001;
+      byte_in <= {byte_in[6:0], MOSI_data};
+      if(bitcnt == 3'b111)
+         byte_received <= 1'b1;
+    end
+
+    if(SCK_falling_edge) begin
+      if(bitcnt == 3'b001)
         byte_data_sent <= byte_out;
       else
         byte_data_sent <= {byte_data_sent[6:0], 1'b0};
-      if (remaining_bits_to_send != 0) remaining_bits_to_send <= remaining_bits_to_send - 1;
     end
   end
 end

@@ -285,9 +285,9 @@ begin
          crt_hsync <= 1'b0;
 
       if(crt_XXXXXXX_x[7:1] == 7'd99)
-         if(crt_YYYYYYYYY == (HZ50 ? 9'd265 : 9'd240))
+         if(crt_YYYYYYYYY == (HZ50 ? 9'd271 : 9'd240))
             crt_vsync <= 1'b1;
-         else if(crt_YYYYYYYYY == (HZ50 ? 9'd281 : 9'd256))
+         else if(crt_YYYYYYYYY == (HZ50 ? 9'd287 : 9'd256))
             crt_vsync <= 1'b0;
    end
 end
