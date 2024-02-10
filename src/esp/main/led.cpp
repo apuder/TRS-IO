@@ -8,9 +8,16 @@
 #include "spi.h"
 #endif
 
-#define LED_RED CONFIG_TRS_IO_GPIO_LED_RED
-#define LED_GREEN CONFIG_TRS_IO_GPIO_LED_GREEN
-#define LED_BLUE CONFIG_TRS_IO_GPIO_LED_BLUE
+#ifdef CONFIG_TRS_IO_MODEL_1
+#define LED_RED 5
+#define LED_GREEN 32
+#define LED_BLUE 4
+#else
+#define LED_RED 21
+#define LED_GREEN 32
+#define LED_BLUE 4
+#endif
+
 #define LED_SEL_MASK ((1ULL << LED_RED) | (1ULL << LED_GREEN) | (1ULL << LED_BLUE))
 
 #define BIT_R BIT0
