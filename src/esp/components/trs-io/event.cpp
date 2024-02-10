@@ -13,12 +13,12 @@ void evt_signal(EventBits_t bits)
 
 EventBits_t evt_wait(EventBits_t bits)
 {
-  return xEventGroupWaitBits(eg, bits, pdTRUE, pdFALSE, portMAX_DELAY);
+  return xEventGroupWaitBits(eg, bits, pdTRUE, pdFALSE, portMAX_DELAY) & bits;
 }
 
 EventBits_t evt_check(EventBits_t bits)
 {
-  return xEventGroupWaitBits(eg, bits, pdTRUE, pdFALSE, 0);
+  return xEventGroupWaitBits(eg, bits, pdTRUE, pdFALSE, 0) & bits;
 }
 
 void check_events()
