@@ -1,12 +1,5 @@
 menu "TRS-IO"
 
-config TRS_IO_USE_RETROSTORE_PCB
-    bool "Use RetroStoreCard settings"
-    default n
-    help
-        Enable backward compatibility with the original
-        RetroStoreCard. By default, the TRS-IO settings will be used.
-
 choice
     prompt "Target"
     default TRS_IO_MODEL_3
