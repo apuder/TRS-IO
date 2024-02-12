@@ -6,7 +6,7 @@ module vga(
   input clk,
   input srst,
   input vga_clk, // 25 MHz
-  input [8:0] TRS_A,
+  input [7:0] TRS_A,
   input [7:0] TRS_D,
   input TRS_OUT,
   input TRS_IN,
@@ -64,11 +64,11 @@ wire [7:0] hires_YYYYYYYY = vga_YYYYYYYYY_y[8:1]; // 0-239 active
 wire hires_act = vga_act;
 
 // Hi-res board
-wire z80_hires_x_sel_out = (TRS_A == 9'h80) & ~TRS_OUT; // 80
-wire z80_hires_y_sel_out = (TRS_A == 9'h81) & ~TRS_OUT; // 81
-wire z80_hires_data_sel_out = (TRS_A == 9'h82) & ~TRS_OUT; // 82
-wire z80_hires_data_sel_in = (TRS_A == 9'h82) & ~TRS_IN; // 82
-wire z80_hires_options_sel_out = (TRS_A == 9'h83) & ~TRS_OUT; // 83
+wire z80_hires_x_sel_out = (TRS_A == 8'h80) & ~TRS_OUT; // 80
+wire z80_hires_y_sel_out = (TRS_A == 8'h81) & ~TRS_OUT; // 81
+wire z80_hires_data_sel_out = (TRS_A == 8'h82) & ~TRS_OUT; // 82
+wire z80_hires_data_sel_in = (TRS_A == 8'h82) & ~TRS_IN; // 82
+wire z80_hires_options_sel_out = (TRS_A == 8'h83) & ~TRS_OUT; // 83
 
 reg [6:0] z80_hires_x_reg;
 reg [7:0] z80_hires_y_reg;

@@ -23,7 +23,7 @@ module main(
   output CASS_OUT_RIGHT,
   output CASS_OUT_LEFT,
   input [1:0] sw,
-  output reg [5:0] led,
+  output [5:0] led,
 
   // Video
   output HSYNC_O,
@@ -66,9 +66,6 @@ begin
    rst <= ~RST_N;
 end
 
-reg[7:0] byte_in, byte_out;
-reg byte_received = 1'b0;
-
 
 //----Address Decoder------------------------------------------------------------
 
@@ -78,42 +75,38 @@ wire TRS_IN = !(!Z80_IOREQ && !Z80_IN);
 wire TRS_OUT = !(!Z80_IOREQ && !Z80_OUT);
 
 
-reg[8:0] TRS_A = 9'h100;
+reg [7:0] TRS_A = 8'h00;
 
 wire io_access_raw = !TRS_RD || !TRS_WR || !TRS_IN || !TRS_OUT;
 
-wire io_access_filtered;
-
 wire io_access_rising_edge;
-
 
 filter io(
   .clk(clk),
   .in(io_access_raw),
-  .out(io_access_filtered),
+  .out(),
   .rising_edge(io_access_rising_edge),
   .falling_edge()
 );
 
-reg[16:0] io_trigger;
+reg[8:0] io_trigger;
 
-always @(posedge clk) begin
-  io_trigger <= {io_trigger[15:0], io_access_rising_edge};
+always @(posedge clk)
+begin
+  io_trigger <= {io_trigger[7:0], io_access_rising_edge};
 end
 
-wire read_a = io_trigger[6];
-wire io_access = io_trigger[16];
+wire read_a = io_trigger[4];
+wire io_access = io_trigger[8];
 
 
-assign ABUS_SEL_N = io_trigger[6:0] == 0;
+assign ABUS_SEL_N = io_trigger[4:0] == 5'b0;
 
 
-always @(posedge clk) begin
-  if (read_a == 1) begin
-    TRS_A[7:0] <= TRS_AD;
-    TRS_A[8] <= 0; // TRS_A holds a valid address
-  end
-  else TRS_A[8] <= io_access_filtered ? TRS_A[8] : 1; // TRS_A does not hold a valid address when io_sccess_filtered becomes 1
+always @(posedge clk)
+begin
+  if (read_a == 1)
+    TRS_A <= TRS_AD;
 end
 
 
@@ -132,26 +125,34 @@ assign TRS_D[7] = TRS_AD[0];
 //----TRS-IO---------------------------------------------------------------------
 
 // Ports 0xF8-0xFB
-wire printer_sel_rd = (TRS_A[8:2] == 7'h3E) && !TRS_IN;
-wire printer_sel_wr = (TRS_A[8:2] == 7'h3E) && !TRS_OUT;
+// The M3 has a builtin printer port so the status read conflicts
+// with the internal one but it is reported to work on some M3's.
+// Ports 0xF4-0xF7 just below the printer is write-only so the
+// printer status is also mapped there.  This would require a
+// custom print driver that reads printer status from port 0xF4
+// but at least port 0xF4 can be used to verify if the printer
+// function is working.
+wire printer_sel_rd = (TRS_A[7:2] == (8'hF8 >> 2) ||
+                       TRS_A[7:2] == (8'hF4 >> 2)) && !TRS_IN;
+wire printer_sel_wr = (TRS_A[7:2] == (8'hF8 >> 2)) && !TRS_OUT;
 wire printer_sel = printer_sel_rd || printer_sel_wr;
 
-wire trs_io_sel_in  = (TRS_A == 31) && !TRS_IN;
-wire trs_io_sel_out = (TRS_A == 31) && !TRS_OUT;
+wire trs_io_sel_in  = (TRS_A == 8'd31) && !TRS_IN;
+wire trs_io_sel_out = (TRS_A == 8'd31) && !TRS_OUT;
 wire trs_io_sel = trs_io_sel_in || trs_io_sel_out;
 
-wire frehd_sel_in  = (TRS_A[8:4] == 5'hC) && !TRS_IN;
-wire frehd_sel_out = (TRS_A[8:4] == 5'hC) && !TRS_OUT;
+wire frehd_sel_in  = (TRS_A[7:4] == 4'hC) && !TRS_IN;
+wire frehd_sel_out = (TRS_A[7:4] == 4'hC) && !TRS_OUT;
 wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
 // Hires
-wire hires_sel_in  = (TRS_A[8:2] == (9'h80 >> 2)) && !TRS_IN;
-wire hires_sel_out = (TRS_A[8:2] == (9'h80 >> 2)) && !TRS_OUT;
+wire hires_sel_in  = (TRS_A[7:2] == (8'h80 >> 2)) && !TRS_IN;
+wire hires_sel_out = (TRS_A[7:2] == (8'h80 >> 2)) && !TRS_OUT;
 wire hires_sel = hires_sel_in || hires_sel_out;
 
 // Orchestra-90
-wire orch90l_sel_out = (TRS_A == 9'h75) && !TRS_OUT;
-wire orch90r_sel_out = (TRS_A == 9'h79) && !TRS_OUT;
+wire orch90l_sel_out = (TRS_A == 8'h75) && !TRS_OUT;
+wire orch90r_sel_out = (TRS_A == 8'h79) && !TRS_OUT;
 
 
 wire esp_sel = trs_io_sel || frehd_sel || printer_sel;
@@ -167,22 +168,29 @@ wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
 reg [5:0] count;
 
 always @(posedge clk) begin
-  if (esp_sel_risingedge) begin
-    // ESP needs to do something
-    ESP_REQ <= 1;
-    count <= 50;
-    WAIT <= 1;
+  if (rst) begin
+    ESP_REQ <= 1'b0;
+    count <= 6'd0;
+    WAIT <= 1'b0;
   end
-  else if (esp_done_risingedge)
-    begin
-      // When ESP is done, de-assert WAIT
-      WAIT <= 0;
+  else begin
+    if (esp_sel_risingedge) begin
+      // ESP needs to do something
+      ESP_REQ <= 1'b1;
+      count <= 6'd50;
+      WAIT <= 1'b1;
     end
-  if (count == 1) ESP_REQ <= 0;
-  if (count != 0) count <= count - 1;
+    else if (esp_done_risingedge)
+      begin
+        // When ESP is done, de-assert WAIT
+        WAIT <= 1'b0;
+      end
+    if (count == 1) ESP_REQ <= 1'b0;
+    if (count != 0) count <= count - 6'd1;
+  end
 end
 
-      
+
 localparam [2:0]
   esp_trs_io_in  = 3'd0,
   esp_trs_io_out = 3'd1,
@@ -201,9 +209,7 @@ assign ESP_S = (esp_trs_io_in  & {3{trs_io_sel_in }}) |
                (esp_printer_wr & {3{printer_sel_wr}});
 
 
-
 //---main-------------------------------------------------------------------------
-
 
 localparam [2:0]
   idle       = 3'b000,
@@ -236,11 +242,11 @@ localparam [7:0]
   abus_read           = 8'd18;
   
 
-
+reg[7:0] byte_in, byte_out;
+reg byte_received = 1'b0;
 
 reg [7:0] params[0:4];
 reg [2:0] bytes_to_read;
-reg [7:0] bits_to_send;
 reg [2:0] idx;
 reg [7:0] cmd;
 reg trs_io_data_ready = 1'b0;
@@ -251,9 +257,8 @@ reg trigger_action = 1'b0;
 
 always @(posedge clk) begin
   trigger_action <= 1'b0;
-  bits_to_send <= 0;
 
-  if (esp_sel_risingedge && (TRS_A == 31)) trs_io_data_ready <= 1'b0;
+  if (esp_sel_risingedge && (TRS_A == 8'd31)) trs_io_data_ready <= 1'b0;
 
   if (start_msg)
     state <= idle;
@@ -268,12 +273,10 @@ always @(posedge clk) begin
         case (byte_in)
           get_cookie: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           get_version: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           bram_poke: begin
@@ -281,11 +284,9 @@ always @(posedge clk) begin
           end
           bram_peek: begin
             bytes_to_read <= 3'b010;
-            bits_to_send <= 9;
           end
           dbus_read: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           dbus_write: begin
@@ -293,7 +294,6 @@ always @(posedge clk) begin
           end
           abus_read: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           data_ready: begin
@@ -314,7 +314,6 @@ always @(posedge clk) begin
           end
           xray_data_peek: begin
             bytes_to_read <= 1;
-            bits_to_send <= 9;
           end
           xray_resume: begin
             trigger_action <= 1'b1;
@@ -325,7 +324,6 @@ always @(posedge clk) begin
           end
           get_printer_byte: begin
             trigger_action <= 1'b1;
-            bits_to_send <= 9;
             state <= idle;
           end
           set_screen_color: begin
@@ -365,46 +363,36 @@ wire SCK_falling_edge = (SCKr[2:1] == 2'b10);
 
 reg [2:0] CSr;  always @(posedge clk) CSr <= {CSr[1:0], CS};
 wire CS_active = ~CSr[1];
-wire CS_startmessage = (CSr[2:1]==2'b10);
-wire CS_endmessage = (CSr[2:1]==2'b01);
+//wire CS_startmessage = (CSr[2:1]==2'b10);
+//wire CS_endmessage = (CSr[2:1]==2'b01);
 
-assign start_msg = CS_startmessage;
-wire end_msg = CS_endmessage;
+//assign start_msg = CS_startmessage;
+//wire end_msg = CS_endmessage;
 
 reg [1:0] MOSIr;  always @(posedge clk) MOSIr <= {MOSIr[0], MOSI};
 wire MOSI_data = MOSIr[1];
 
-reg [7:0] remaining_bits_to_send;
-
-
 reg [2:0] bitcnt = 3'b000;
-
-
-always @(posedge clk) begin
-  if(~CS_active)
-    bitcnt <= 3'b000;
-  else
-    if(SCK_rising_edge) begin
-      bitcnt <= bitcnt + 3'b001;
-      byte_in <= {byte_in[6:0], MOSI_data};
-    end
-end
-
-wire need_to_read_data = ((state == idle) && (remaining_bits_to_send == 0)) || (state == read_bytes);
-
-always @(posedge clk) byte_received <= CS_active && SCK_rising_edge && need_to_read_data && (bitcnt == 3'b111);
-
 reg [7:0] byte_data_sent;
 
 always @(posedge clk) begin
-  if (bits_to_send != 0) remaining_bits_to_send = bits_to_send;
-  if(CS_active) begin
-    if(SCK_falling_edge && state == idle) begin
-      if(remaining_bits_to_send == 8)
+  byte_received <= 1'b0;
+
+  if(~CS_active)
+    bitcnt <= 3'b000;
+  else begin
+    if(SCK_rising_edge) begin
+      bitcnt <= bitcnt + 3'b001;
+      byte_in <= {byte_in[6:0], MOSI_data};
+      if(bitcnt == 3'b111)
+         byte_received <= 1'b1;
+    end
+
+    if(SCK_falling_edge) begin
+      if(bitcnt == 3'b001)
         byte_data_sent <= byte_out;
       else
         byte_data_sent <= {byte_data_sent[6:0], 1'b0};
-      if (remaining_bits_to_send != 0) remaining_bits_to_send <= remaining_bits_to_send - 1;
     end
   end
 end
@@ -435,21 +423,26 @@ assign TRS_AD[6] = trs_ad_in ? out_data[1] : 1'bz;
 assign TRS_AD[7] = trs_ad_in ? out_data[0] : 1'bz;
 
 
-wire [7:0] spi_data_in;
-
-always @(posedge clk) begin
-  if (trigger_action && cmd == dbus_write)
-    trs_data <= params[0];
+always @(posedge clk)
+begin
+  if (trigger_action)
+    case (cmd)
+      dbus_write: trs_data <= params[0];
+    endcase
 end
 
 
 //---BRAM-------------------------------------------------------------------------
 
-always @(posedge clk) begin
-  if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
-  if (trigger_action && cmd == abus_read) byte_out <= TRS_A[7:0];
-  else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
-  else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
+always @(posedge clk)
+begin
+  if (trigger_action)
+    case (cmd)
+      dbus_read:   byte_out <= TRS_D;
+      abus_read:   byte_out <= TRS_A;
+      get_cookie:  byte_out <= COOKIE;
+      get_version: byte_out <= {VERSION_MAJOR, VERSION_MINOR};
+   endcase
 end
 
 
@@ -588,7 +581,7 @@ end
 
 //---Sound------------------------------------------------------------------------
 
-wire cass_sel_out = (TRS_A == 9'hFF) && !TRS_OUT;
+wire cass_sel_out = (TRS_A == 8'hFF) && !TRS_OUT;
 
 // raw 2-bit cassette output
 reg[1:0] cass_reg = 2'b00;
@@ -631,5 +624,12 @@ end
 
 assign CASS_OUT_LEFT  = cass_pdml_reg[9];
 assign CASS_OUT_RIGHT = cass_pdmr_reg[9];
+
+assign led[0] = ~WAIT;
+assign led[1] = ~EXTIOSEL;
+assign led[2] = ~TRS_INT;
+assign led[3] = ~1'b0;
+assign led[4] = ~1'b0;
+assign led[5] = ~1'b0;
 
 endmodule
