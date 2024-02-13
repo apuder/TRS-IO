@@ -45,7 +45,13 @@ module top(
   inout [7:0] PMOD,
 
   input UART_RX,
-  output UART_TX);
+  output UART_TX,
+
+  output FLASH_SPI_CS_N,
+  output FLASH_SPI_CLK,
+  output FLASH_SPI_SI,
+  input FLASH_SPI_SO
+);
 
 
 reg TRS_INT;
@@ -185,6 +191,12 @@ wire hires_data_sel_in = (TRS_A[7:0] == 8'h82) & ~TRS_IN;
 wire orch85l_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h75) : (TRS_A[7:0] == 8'hB5)) & ~TRS_OUT;
 wire orch85r_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h79) : (TRS_A[7:0] == 8'hB9)) & ~TRS_OUT;
 
+
+wire spi_ctrl_sel_out = (TRS_A[7:0] == 8'hFC) & ~TRS_OUT;
+wire spi_data_sel_in  = (TRS_A[7:0] == 8'hFD) & ~TRS_IN;
+wire spi_data_sel_out = (TRS_A[7:0] == 8'hFD) & ~TRS_OUT;
+
+
 wire xray_sel = 1'b0;
 
 wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
@@ -193,7 +205,7 @@ wire esp_sel = esp_sel_in | esp_sel_out | xray_sel;
 
 wire esp_sel_risingedge = io_access & esp_sel;
 
-assign EXTIOSEL = esp_sel & ~_IN_N;
+assign EXTIOSEL = esp_sel_in | spi_data_sel_in;
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
@@ -612,7 +624,8 @@ assign TRS_OE = ~(~TRS_WR | ~TRS_OUT |
                    le18_data_sel_in  |
                    fdc_37e0_sel_rd   |
                    fdc_37ec_sel_rd   |
-                   esp_sel_in        );
+                   esp_sel_in        |
+                   spi_data_sel_in   );
 //                   printer_sel_rd || printer_sel_wr || /*spi_data_sel_in ||*/ !TRS_OUT);
 
 assign TRS_DIR = TRS_RD & TRS_IN;
@@ -657,6 +670,7 @@ Gowin_DPB2 extrom (
 reg[7:0] trs_data;
 wire [7:0] hires_dout;
 wire [7:0] le18_dout;
+wire [7:0] spi_data_in;
 
 assign _D = (~TRS_RD | ~TRS_IN)
              ? ( ({8{trs_ram_sel_rd   }} & ram_dout   ) |
@@ -665,19 +679,14 @@ assign _D = (~TRS_RD | ~TRS_IN)
                  ({8{le18_data_sel_in }} & le18_dout  ) |
                  ({8{fdc_37e0_sel_rd  }} & irq_data   ) |
                  ({8{fdc_37ec_sel_rd  }} & fdc_data   ) |
-                 ({8{esp_sel_in       }} & trs_data   ) )
+                 ({8{esp_sel_in       }} & trs_data   ) |
+                 ({8{spi_data_sel_in  }} & spi_data_in) )
              : 8'bz;
 
-
-wire [7:0] spi_data_in;
 
 always @(posedge clk) begin
   if (trigger_action && cmd == dbus_write)
     trs_data <= params[0];
-/*
-  else if (IN_falling_edge && spi_data_sel_in)
-    trs_data <= spi_data_in;
-*/
 end
 
 
@@ -1030,5 +1039,53 @@ assign PMOD = {~pmod_a[7:5], ~pmod_a[1], pmod_a[4:2], pmod_a[0]};
 
 //assign UART_TX = UART_RX;
 assign UART_TX = 1'bz;
+
+
+//----XFLASH---------------------------------------------------------------------
+
+// SPI Flash control register
+// bit7 is CS  (active high)
+// bit6 is WPN (active low)
+reg [7:0] spi_ctrl_reg = 8'h00;
+
+always @(posedge clk)
+begin
+   if(io_access & spi_ctrl_sel_out)
+      spi_ctrl_reg <= TRS_D;
+end
+
+// The SPI shift register is by design faster than the z80 can read and write.
+// Therefore a status bit isn't necessary.  The z80 can read or write and then
+// immediately read or write again on the next instruction.
+reg [7:0] spi_shift_reg;
+reg spi_sdo;
+reg [7:0] spi_counter = 8'b0;
+
+always @(posedge clk)
+begin
+   if(spi_counter[7])
+   begin
+      spi_counter <= spi_counter + 8'b1;
+      if(spi_counter[2:0] == 3'b000)
+      begin
+         if(spi_counter[3] == 1'b0)
+            spi_sdo <= spi_shift_reg[7];
+         else
+            spi_shift_reg <= {spi_shift_reg[6:0], FLASH_SPI_SO};
+      end
+   end
+   else if(io_access & spi_data_sel_out)
+   begin
+      spi_shift_reg <= TRS_D;
+      spi_counter <= 8'b10000000;
+   end
+end
+
+assign spi_data_in = spi_shift_reg;
+
+
+assign FLASH_SPI_CS_N = ~spi_ctrl_reg[7];
+assign FLASH_SPI_CLK  = spi_counter[3];
+assign FLASH_SPI_SI   = spi_sdo;
 
 endmodule
