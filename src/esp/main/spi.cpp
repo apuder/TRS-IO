@@ -8,6 +8,7 @@
 #include "esp_event_loop.h"
 #include "spi.h"
 #include "settings.h"
+#include "flash.h"
 
 static spi_device_interface_config_t spi_cmod;
 spi_device_handle_t spi_cmod_h;
@@ -522,6 +523,64 @@ uint8_t spi_get_config()
   return trans.base.rx_data[0];
 }
 
+void spi_set_spi_ctrl_reg(uint8_t reg)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_SET_SPI_CTRL_REG;
+  trans.address_bits = 1 * 8;
+  const uint32_t b0 = reg;
+  trans.base.addr = b0;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+}
+
+void spi_set_spi_data(uint8_t data)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_SET_SPI_DATA;
+  trans.address_bits = 1 * 8;
+  const uint32_t b0 = data;
+  trans.base.addr = b0;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+}
+
+uint8_t spi_get_spi_data()
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_VARIABLE_DUMMY;
+  trans.base.cmd = FPGA_CMD_GET_SPI_DATA;
+  trans.address_bits = 0 * 8;
+  trans.dummy_bits = 2;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 1 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+
+  return trans.base.rx_data[0];
+}
+
 
 void init_spi()
 {
@@ -564,4 +623,7 @@ void init_spi()
 
   uint8_t color = settings_get_screen_color();
   spi_set_screen_color(color);
+
+  uint32_t id = flashReadMfdDevId();
+  printf("Flash ID: %x\n", id);
 }

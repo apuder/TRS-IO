@@ -60,6 +60,9 @@
 #define FPGA_CMD_Z80_DSP_PEEK 25
 #define FPGA_CMD_SET_LED 26
 #define FPGA_CMD_GET_CONFIG 27
+#define FPGA_CMD_SET_SPI_CTRL_REG 29
+#define FPGA_CMD_SET_SPI_DATA 30
+#define FPGA_CMD_GET_SPI_DATA 31
 
 uint8_t spi_get_cookie();
 uint8_t spi_get_fpga_version();
@@ -87,6 +90,9 @@ void spi_z80_dsp_poke(uint8_t v);
 uint8_t spi_z80_dsp_peek();
 void spi_set_led(bool r, bool g, bool b);
 uint8_t spi_get_config();
+void spi_set_spi_ctrl_reg(uint8_t reg);
+void spi_set_spi_data(uint8_t data);
+uint8_t spi_get_spi_data();
 
 void init_spi();
 

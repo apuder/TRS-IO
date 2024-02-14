@@ -283,7 +283,10 @@ localparam [7:0]
   abus_read           = 8'd18,
   send_keyb           = 8'd19,
   set_led             = 8'd26,
-  get_config          = 8'd27;
+  get_config          = 8'd27,
+  set_spi_ctrl_reg    = 8'd29,
+  set_spi_data        = 8'd30,
+  get_spi_data        = 8'd31;
 
 
 reg[7:0] byte_in, byte_out;
@@ -380,6 +383,16 @@ always @(posedge clk) begin
             bytes_to_read <= 1;
           end
           get_config: begin
+            trigger_action <= 1'b1;
+            state <= idle;
+          end
+          set_spi_ctrl_reg: begin
+            bytes_to_read <= 1;
+          end
+          set_spi_data: begin
+            bytes_to_read <= 1;
+          end
+          get_spi_data: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
@@ -722,6 +735,7 @@ always @(posedge clk) begin
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == abus_read) byte_out <= TRS_A[7:0];
   else if (trigger_action && cmd == get_config) byte_out <= {4'b0, CONF};
+  else if (trigger_action && cmd == get_spi_data) byte_out <= spi_data_in;
 end
 
 
@@ -1052,6 +1066,8 @@ always @(posedge clk)
 begin
    if(io_access & spi_ctrl_sel_out)
       spi_ctrl_reg <= TRS_D;
+   else if (trigger_action && cmd == set_spi_ctrl_reg)
+      spi_ctrl_reg <= params[0];
 end
 
 // The SPI shift register is by design faster than the z80 can read and write.
@@ -1077,6 +1093,11 @@ begin
    else if(io_access & spi_data_sel_out)
    begin
       spi_shift_reg <= TRS_D;
+      spi_counter <= 8'b10000000;
+   end
+   else if (trigger_action && cmd == set_spi_data)
+   begin
+      spi_shift_reg <= params[0];
       spi_counter <= 8'b10000000;
    end
 end
