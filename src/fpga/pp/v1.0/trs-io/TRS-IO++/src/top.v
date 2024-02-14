@@ -286,7 +286,8 @@ localparam [7:0]
   get_config          = 8'd27,
   set_spi_ctrl_reg    = 8'd29,
   set_spi_data        = 8'd30,
-  get_spi_data        = 8'd31;
+  get_spi_data        = 8'd31,
+  set_esp_status      = 8'd32;
 
 
 reg[7:0] byte_in, byte_out;
@@ -396,6 +397,9 @@ always @(posedge clk) begin
             trigger_action <= 1'b1;
             state <= idle;
           end
+          set_esp_status: begin
+            bytes_to_read <= 1;
+          end
           default:
             begin
               state <= idle;
@@ -465,6 +469,20 @@ always @(posedge clk) begin
 end
 
 assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
+
+
+//---ESP Status----------------------------------------------------------------------------
+
+reg[7:0] esp_status = 0;
+
+wire esp_status_esp_ready   = esp_status[0];
+wire esp_status_wifi_up     = esp_status[1];
+wire esp_status_smb_mounted = esp_status[2];
+wire esp_status_sd_mounted  = esp_status[3];
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_esp_status) esp_status <= params[0];
+end
 
 
 //---Full Address--------------------------------------------------------------------------
@@ -1035,7 +1053,6 @@ assign LED[0] = esp_sel;
 assign LED[1] = WAIT;
 assign LED[2] = is_m3;
 assign LED[3] = heartbeat[25];
-
 
 //------------LightBright-80-------------------------------------------------------------
 

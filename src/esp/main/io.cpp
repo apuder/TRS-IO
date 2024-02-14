@@ -269,6 +269,8 @@ static void IRAM_ATTR io_task(void* p)
   init_xray();
 #endif
 
+  evt_signal(EVT_ESP_READY);
+
   while(true) {
     while (!esp_req_triggered) ;
     esp_req_triggered = false;
@@ -337,6 +339,7 @@ static void action_task(void* p)
       if (sd_card_eject_countdown == 1) {
         // gpio_get_level(SD_CARD) == true -> SD card ejected
         init_trs_fs_posix();
+        evt_signal((get_posix_err_msg() == NULL) ? EVT_SD_MOUNTED : EVT_SD_UNMOUNTED);
       }
     }
 

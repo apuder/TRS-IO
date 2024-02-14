@@ -63,6 +63,7 @@
 #define FPGA_CMD_SET_SPI_CTRL_REG 29
 #define FPGA_CMD_SET_SPI_DATA 30
 #define FPGA_CMD_GET_SPI_DATA 31
+#define FPGA_CMD_SET_ESP_STATUS 32
 
 uint8_t spi_get_cookie();
 uint8_t spi_get_fpga_version();
@@ -93,6 +94,7 @@ uint8_t spi_get_config();
 void spi_set_spi_ctrl_reg(uint8_t reg);
 void spi_set_spi_data(uint8_t data);
 uint8_t spi_get_spi_data();
+void spi_set_esp_status(uint8_t status);
 
 void init_spi();
 

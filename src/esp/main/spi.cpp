@@ -581,6 +581,25 @@ uint8_t spi_get_spi_data()
   return trans.base.rx_data[0];
 }
 
+void spi_set_esp_status(uint8_t status)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_SET_ESP_STATUS;
+  trans.address_bits = 1 * 8;
+  const uint32_t b0 = status;
+  trans.base.addr = b0;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+}
+
 
 void init_spi()
 {
@@ -624,6 +643,5 @@ void init_spi()
   uint8_t color = settings_get_screen_color();
   spi_set_screen_color(color);
 
-  uint32_t id = flashReadMfdDevId();
-  printf("Flash ID: %x\n", id);
+  spi_set_esp_status(0);
 }
