@@ -8,7 +8,6 @@
 #include "esp_event_loop.h"
 #include "spi.h"
 #include "settings.h"
-#include "flash.h"
 
 static spi_device_interface_config_t spi_cmod;
 spi_device_handle_t spi_cmod_h;
