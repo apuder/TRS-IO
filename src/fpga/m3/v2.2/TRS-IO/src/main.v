@@ -124,6 +124,9 @@ assign TRS_D[7] = TRS_AD[0];
 
 //----TRS-IO---------------------------------------------------------------------
 
+wire esp_ready = esp_status_esp_ready;
+reg esp_boot_ready = 1'b0;
+
 // Ports 0xF8-0xFB
 // The M3 has a builtin printer port so the status read conflicts
 // with the internal one but it is reported to work on some M3's.
@@ -132,18 +135,21 @@ assign TRS_D[7] = TRS_AD[0];
 // custom print driver that reads printer status from port 0xF4
 // but at least port 0xF4 can be used to verify if the printer
 // function is working.
-wire printer_sel_rd = (TRS_A[7:2] == (8'hF8 >> 2) ||
-                       TRS_A[7:2] == (8'hF4 >> 2)) && !TRS_IN;
-wire printer_sel_wr = (TRS_A[7:2] == (8'hF8 >> 2)) && !TRS_OUT;
+wire printer_sel_rd = esp_ready && (TRS_A[7:2] == (8'hF8 >> 2) ||
+                                    TRS_A[7:2] == (8'hF4 >> 2)) && !TRS_IN;
+wire printer_sel_wr = esp_ready && (TRS_A[7:2] == (8'hF8 >> 2)) && !TRS_OUT;
 wire printer_sel = printer_sel_rd || printer_sel_wr;
 
-wire trs_io_sel_in  = (TRS_A == 8'd31) && !TRS_IN;
-wire trs_io_sel_out = (TRS_A == 8'd31) && !TRS_OUT;
+wire trs_io_sel_in  = esp_ready && (TRS_A == 8'd31) && !TRS_IN;
+wire trs_io_sel_out = esp_ready && (TRS_A == 8'd31) && !TRS_OUT;
 wire trs_io_sel = trs_io_sel_in || trs_io_sel_out;
 
-wire frehd_sel_in  = (TRS_A[7:4] == 4'hC) && !TRS_IN;
-wire frehd_sel_out = (TRS_A[7:4] == 4'hC) && !TRS_OUT;
+wire frehd_sel_in  = esp_ready && ((TRS_A[7:4] == 4'hC) && ((TRS_A[3:0] != 4'h4) || esp_boot_ready)) && !TRS_IN;
+wire frehd_sel_out = esp_ready && ((TRS_A[7:4] == 4'hC) && ((TRS_A[3:0] != 4'h5) || esp_boot_ready)) && !TRS_OUT;
 wire frehd_sel = frehd_sel_in || frehd_sel_out;
+
+wire loader_sel_in  = !esp_boot_ready && (TRS_A == 8'hC4) && !TRS_IN;
+wire loader_sel_out =                    (TRS_A == 8'hC5) && !TRS_OUT;
 
 // Hires
 wire hires_sel_in  = (TRS_A[7:2] == (8'h80 >> 2)) && !TRS_IN;
@@ -155,12 +161,54 @@ wire orch90l_sel_out = (TRS_A == 8'h75) && !TRS_OUT;
 wire orch90r_sel_out = (TRS_A == 8'h79) && !TRS_OUT;
 
 
+wire loader_rom_rd_en, loader_rom_rd_regce;
+
+trigger loader_rom_rd_trigger (
+  .clk(clk),
+  .cond(io_access && loader_sel_in),
+  .one(loader_rom_rd_en),
+  .two(loader_rom_rd_regce),
+  .three()
+);
+
+
+reg [7:0] loader_addr;
+reg [7:0] loader_param;
+
+always @(posedge clk)
+begin
+  if (loader_rom_rd_en)
+    loader_addr <= loader_addr + 8'd1;
+
+  if (io_access && loader_sel_out)
+  begin
+    loader_addr <= 8'd0;
+    loader_param <= TRS_D;
+    esp_boot_ready <= esp_status_esp_ready && ((esp_status_wifi_up && esp_status_smb_mounted) || esp_status_sd_mounted);
+  end
+end
+
+wire [7:0] _loader_dout;
+
+Gowin_pROM loader_rom (
+  .clk(clk), //input clk
+  .ce(loader_rom_rd_en), //input ce
+  .ad(loader_addr), //input [7:0] ad
+  .dout(_loader_dout), //output [7:0] dout
+  .oce(loader_rom_rd_regce), //input oce
+  .reset(1'b0) //input reset
+);
+
+wire [7:0] loader_dout = (loader_addr == 8'd3) ? loader_param : _loader_dout;
+
+
+wire esp_sel_in = trs_io_sel_in || frehd_sel_in || printer_sel_rd;
 wire esp_sel = trs_io_sel || frehd_sel || printer_sel;
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
 
-assign EXTIOSEL = (esp_sel | hires_sel) & ~Z80_IN;
+assign EXTIOSEL = (esp_sel_in | hires_sel_in | loader_sel_in);
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
@@ -239,7 +287,14 @@ localparam [7:0]
   get_version         = 8'd15,
   get_printer_byte    = 8'd16,
   set_screen_color    = 8'd17,
-  abus_read           = 8'd18;
+  abus_read           = 8'd18,
+  send_keyb           = 8'd19,
+  set_led             = 8'd26,
+  get_config          = 8'd27,
+  set_spi_ctrl_reg    = 8'd29,
+  set_spi_data        = 8'd30,
+  get_spi_data        = 8'd31,
+  set_esp_status      = 8'd32;
   
 
 reg[7:0] byte_in, byte_out;
@@ -329,6 +384,9 @@ always @(posedge clk) begin
           set_screen_color: begin
             bytes_to_read <= 3;
           end
+          set_esp_status: begin
+            bytes_to_read <= 1;
+          end
           default:
             begin
               state <= idle;
@@ -400,16 +458,37 @@ end
 assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
 
 
+//---ESP Status----------------------------------------------------------------------------
+
+reg[7:0] esp_status = 0;
+
+wire esp_status_esp_ready   = esp_status[0];
+wire esp_status_wifi_up     = esp_status[1];
+wire esp_status_smb_mounted = esp_status[2];
+wire esp_status_sd_mounted  = esp_status[3];
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_esp_status) esp_status <= params[0];
+end
+
+
 //--------BRAM-------------------------------------------------------------------------
 
-assign DBUS_SEL_N = !ABUS_SEL_N;
+assign DBUS_SEL_N = !(ABUS_SEL_N &&
+                      (!TRS_WR || !TRS_OUT ||
+                       hires_sel_in        ||
+                       loader_sel_in       ||
+                       esp_sel_in          ));
+
 assign TRS_DIR = TRS_RD && TRS_IN;
 
 
 reg [7:0] trs_data;
 wire [7:0] hires_dout;
 
-wire [7:0] out_data = hires_sel ? hires_dout : trs_data;
+wire [7:0] out_data = ({8{hires_sel_in }} & hires_dout ) |
+                      ({8{loader_sel_in}} & loader_dout) |
+                      ({8{esp_sel_in   }} & trs_data   ) ;
 
 wire trs_ad_in = (!TRS_RD || !TRS_IN) && !DBUS_SEL_N;
 
@@ -423,16 +502,10 @@ assign TRS_AD[6] = trs_ad_in ? out_data[1] : 1'bz;
 assign TRS_AD[7] = trs_ad_in ? out_data[0] : 1'bz;
 
 
-always @(posedge clk)
-begin
-  if (trigger_action)
-    case (cmd)
-      dbus_write: trs_data <= params[0];
-    endcase
+always @(posedge clk) begin
+  if (trigger_action && cmd == dbus_write)
+    trs_data <= params[0];
 end
-
-
-//---BRAM-------------------------------------------------------------------------
 
 always @(posedge clk)
 begin
@@ -442,7 +515,7 @@ begin
       abus_read:   byte_out <= TRS_A;
       get_cookie:  byte_out <= COOKIE;
       get_version: byte_out <= {VERSION_MAJOR, VERSION_MINOR};
-   endcase
+    endcase
 end
 
 
@@ -628,8 +701,8 @@ assign CASS_OUT_RIGHT = cass_pdmr_reg[9];
 assign led[0] = ~WAIT;
 assign led[1] = ~EXTIOSEL;
 assign led[2] = ~TRS_INT;
-assign led[3] = ~1'b0;
-assign led[4] = ~1'b0;
-assign led[5] = ~1'b0;
+assign led[3] = ~esp_status_esp_ready;
+assign led[4] = ~esp_status_wifi_up;
+assign led[5] = ~esp_status_smb_mounted;
 
 endmodule
