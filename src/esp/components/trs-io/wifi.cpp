@@ -68,6 +68,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     set_led(false, true, false, false, true);
     evt_signal(EVT_WIFI_UP);
   } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
+    evt_signal(EVT_START_MG);
     wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
     ESP_LOGI(TAG, "Station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
   } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
