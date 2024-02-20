@@ -6,7 +6,7 @@
 
 -mod_name Gowin_DPB
 -file_name gowin_dpb
--path C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/
+-path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true

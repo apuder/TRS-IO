@@ -554,11 +554,13 @@ Gowin_CLKDIV0 clk3div0(
 );
 
 reg [23:0] rgb = 24'd0;
+wire dsp_vid, dsp_present;
 wire vga_vid;
+wire hires_enable;
 
 always @(posedge clk_pixel)
 begin
-  rgb <= vga_vid ? rgb_screen_color : 24'h0;
+  rgb <= ((!dsp_present || hires_enable) ? vga_vid : dsp_vid) ? rgb_screen_color : 24'h0;
 end
 
 logic [9:0] cx, frame_width, screen_width;
@@ -601,7 +603,7 @@ ELVDS_OBUF tmds_clock(
 
 wire clk_vga = clk_pixel;
 wire crt_vid, crt_hsync, crt_vsync;
-wire hires_enable;
+wire hertz50;
 
 reg sync;
 
@@ -609,24 +611,26 @@ vga vga(
   .clk(clk),
   .srst(rst),
   .vga_clk(clk_vga), // 25.2 MHz
-  .TRS_A(TRS_A),
-  .TRS_D(TRS_D),
-  .TRS_OUT(TRS_OUT),
-  .TRS_IN(TRS_IN),
-  .io_access(io_access),
-  .hires_dout(hires_dout),
-  .hires_dout_rdy(),
-  .hires_enable(hires_enable),
-  .VGA_VID(vga_vid),
-  .VGA_HSYNC(vga_hsync),
-  .VGA_VSYNC(vga_vsync),
-  .CRT_VID(crt_vid),
-  .CRT_HSYNC(crt_hsync),
-  .CRT_VSYNC(crt_vsync),
-  .HZ50(1'b0),  // 1'b0 for 60Hz vertical, 1'b1 for 50Hz vertical
-  .genlock(sync));
+  .TRS_A(TRS_A), // input [7:0]
+  .TRS_D(TRS_D), // input [7:0]
+  .TRS_OUT(TRS_OUT), // input
+  .TRS_IN(TRS_IN), // input
+  .io_access(io_access), // input
+  .hires_dout(hires_dout), // output [7:0]
+  .hires_dout_rdy(), // output
+  .hires_enable(hires_enable), // output
+  .VGA_VID(vga_vid), // output
+  .VGA_HSYNC(vga_hsync), // output
+  .VGA_VSYNC(vga_vsync), // output
+  .CRT_VID(crt_vid), // output
+  .CRT_HSYNC(crt_hsync), // output
+  .CRT_VSYNC(crt_vsync), // output
+  .HZ50(hertz50), // input
+  .genlock(sync) // input
+);
 
-always @(posedge clk_pixel) begin
+always @(posedge clk_pixel)
+begin
   sync <= (cx == frame_width - 10) && (cy == frame_height - 1);
 end
 
@@ -634,6 +638,43 @@ end
 assign HSYNC_O = hires_enable ?  crt_hsync : HSYNC_I;
 assign VSYNC_O = hires_enable ? ~crt_vsync : VSYNC_I;
 assign VIDEO_O = hires_enable ?  crt_vid   : VIDEO_I;
+
+
+//---------------------------------------------------------------------------------
+
+// Detect if video input is present and if it's 60 or 60 Hz.
+
+videodetector videodetector(
+  .vgaclk(clk_pixel), // 25.2MHz clock
+  .hsync_in(HSYNC_I), // input
+  .vsync_in(VSYNC_I), // input
+
+  .present(dsp_present), // output
+  .hertz50(hertz50) // output 
+);
+
+
+//-----Framegrabber----------------------------------------------------------------
+
+wire lock;
+
+framegrabber framegrabber(
+  .vgaclk_x5(clk_pixel_x5), // 126MHz clock
+  .vgaclk(clk_pixel), // 25.2MHz clock
+  .hsync_in(HSYNC_I), // input
+  .vsync_in(VSYNC_I), // input
+  .pixel_in(VIDEO_I), // input
+  .HZ50(hertz50), // output
+
+  .cx(cx), // input [9:0]
+  .cy(cy), // input [9:0]
+
+  .vga_rgb(dsp_vid), // output
+
+  .dpll_lock(lock), // output
+  .dpll_hcheck(), // output
+  .dpll_vcheck() // output
+);
 
 
 //-----ORCH90----------------------------------------------------------------------
@@ -701,8 +742,8 @@ assign CASS_OUT_RIGHT = cass_pdmr_reg[9];
 assign led[0] = ~WAIT;
 assign led[1] = ~EXTIOSEL;
 assign led[2] = ~TRS_INT;
-assign led[3] = ~esp_status_esp_ready;
-assign led[4] = ~esp_status_wifi_up;
-assign led[5] = ~esp_status_smb_mounted;
+assign led[3] = ~hertz50;
+assign led[4] = ~lock;
+assign led[5] = ~esp_status_esp_ready;
 
 endmodule
