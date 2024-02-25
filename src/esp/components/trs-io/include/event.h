@@ -17,4 +17,5 @@ void evt_signal(EventBits_t bits);
 EventBits_t evt_wait(EventBits_t bits);
 EventBits_t evt_check(EventBits_t bits);
 void check_events();
+void evt_send_esp_status();
 void init_events();

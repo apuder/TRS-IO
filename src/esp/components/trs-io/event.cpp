@@ -14,6 +14,11 @@ static uint8_t esp_status = 0;
 
 static EventGroupHandle_t eg;
 
+void evt_send_esp_status()
+{
+  spi_set_esp_status(esp_status);
+}
+
 void evt_signal(EventBits_t bits)
 {
   xEventGroupSetBits(eg, bits);

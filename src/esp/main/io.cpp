@@ -313,6 +313,9 @@ static void IRAM_ATTR io_task(void* p)
       xray_status = XRAY_STATUS_BREAKPOINT;
       break;
 #endif
+    case 0x70:
+      evt_send_esp_status();
+      break;
     }
     
     // Pulse a rising edge for ESP_DONE to mark end of operation
@@ -402,6 +405,8 @@ static void action_task(void* p)
 #endif
 
     if (is_status_button_short_press()) {
+      evt_send_esp_status();
+
       // Check Wifi status
       if (*get_wifi_status() == RS_STATUS_WIFI_CONNECTED) {
         set_led(false, true, false, false, false);
