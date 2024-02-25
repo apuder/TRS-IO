@@ -458,9 +458,11 @@ void init_io()
   // Configure ESP_SEL_N
   gpioConfig.pin_bit_mask = MASK64_ESP_REQ;
   gpioConfig.intr_type = GPIO_INTR_POSEDGE;
+  gpioConfig.pull_down_en = GPIO_PULLDOWN_ENABLE; // enable pulldown
   gpio_config(&gpioConfig);
   //gpio_install_isr_service(0);
-  gpio_isr_handler_add(ESP_REQ, esp_req_isr_handler, NULL);    
+  gpio_isr_handler_add(ESP_REQ, esp_req_isr_handler, NULL);
+  gpioConfig.pull_down_en = GPIO_PULLDOWN_DISABLE; // restore disable
 
 #ifdef CONFIG_TRS_IO_PP
   // Configure SD Card eject trigger

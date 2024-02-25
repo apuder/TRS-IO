@@ -322,7 +322,7 @@ void trs_printer_write(const char ch)
 
 uint8_t trs_printer_read()
 {
-  return (num_printer_sockets == 0 || prn_queue.head != prn_queue.tail) ? 0xff : 0x30; /* printer selected, ready, with paper, not busy */;
+  return (num_printer_sockets == 0) ? 0xfe : (mg_queue_book(&prn_queue, NULL, 1) < 1) ? 0xbe : 0x3e; /* printer selected, ready, with paper, not busy */;
 }
 
 static void init_mdns()
