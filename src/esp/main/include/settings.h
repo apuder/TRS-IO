@@ -44,6 +44,13 @@ void settings_set_smb_passwd(const string& passwd);
 
 #define SETTINGS_MAX_ROMS 5
 
+#define SETTINGS_ROM_M1  0
+#define SETTINGS_ROM_M3  2
+#define SETTINGS_ROM_M4  3
+#define SETTINGS_ROM_M4P 4
+
+void settings_set_rom(int model, const string& rom);
+string& settings_get_rom(int model);
 vector<string>& settings_get_roms();
 void settings_set_roms();
 

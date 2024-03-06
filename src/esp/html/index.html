@@ -21,6 +21,7 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     }
     h1 {
       margin:0;
+      margin-right: 10px;
       background:#fff;
       border-radius:10px 0 10px 0;
       padding:10px 0;
@@ -34,7 +35,7 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     h3 {
       margin: 0 0 4px 0;
     }
-    input {
+    input, select {
       display:block;
       background:#fee;
       border:1px #d0bcbc solid;
@@ -44,7 +45,10 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
       font-weight:bold;
       width:100%;
     }
-    form > label {
+    fieldset {
+      margin-top: 20px;
+    }
+    fieldset > label {
       margin-top:10px;
       display:block;
       color:#a55;
@@ -59,7 +63,7 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     }
     #main-wrapper {
       margin:auto;
-      max-width:400px;
+      max-width:520px;
       background-color:rgba(255,255,255,0.7);
       box-shadow:grey 0 0 20px;
       border-radius:10px;
@@ -81,6 +85,10 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     }
     .h1-io {
       color:red;
+    }
+    .h1-pp {
+      color:red;
+      float:right;
     }
     #status-box * {
       font-family:monospace;
@@ -117,6 +125,9 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     }
     body.unavailable #please-wait {
       display:grid !important;
+    }
+    .not-for-regular-trsio {
+      display: none;
     }
     .status-icon {
       width:2em;
@@ -226,17 +237,44 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
     <span id="status-sdcard-section">Card<br><label id="status-sdcard-msg" title=""><div id="status-sdcard" class="status-icon media-not-conf"></div></label></span>
     <span>FreHD<br><label id="status-frehd-msg" title=""><div id="status-frehd" class="status-icon frehd-not-loaded"></div></label></span>
   </div>
-  <h1><span class="h1-trs">TRS</span><span class="h1-io">IO</span></h1>
+  <h1><span class="h1-trs">TRS</span><span class="h1-io">IO</span><span class="h1-io not-for-regular-trsio">++</span></h1>
   <div id="inner-wrapper">
-  Use the fields below to configure the WiFi network that TRS-IO should connect to, the current timezone, as well as an optional SMB share to connect to.<p>
+  <p class="not-for-regular-trsio">Configured as: <span id="config">-</span></p>
   <form action="/config" method="post" target="request-iframe">
-      <label>WIFI SSID</label><input id="form-ssid" type="text" maxlength="32" name="ssid">
-      <label>WIFI Password</label><input id="form-wifi-passwd" type="password" maxlength="32" name="passwd">
-      <label>Timezone</label><input id="form-timezone" type="text" maxlength="32" name="tz">
-      <small>e.g., GMT-8 or PST8PDT,M3.2.0,M11.1.0</small>
-      <label>SMB URL</label><input id="form-smb-url" type="text" maxlength="100" name="smb_url">
-      <label>SMB User</label><input id="form-smb-user" type="text" maxlength="32" name="smb_user">
-      <label>SMB Password</label><input id="form-smb-passwd" type="password" maxlength="32" name="smb_passwd">
+      <fieldset>
+        <legend>General</legend>
+        <label>Screen color</label>
+        <select id="form-color" name="color">
+          <option value="0">White</option>
+          <option value="1">Green</option>
+          <option value="2">Amber</option>
+        </select>
+        <label>Timezone</label><input id="form-timezone" type="text" maxlength="32" name="tz">
+        <small>e.g., GMT-8 or PST8PDT,M3.2.0,M11.1.0</small>
+      </fieldset>
+      <fieldset>
+        <legend>Connection</legend>
+        <label>WIFI SSID</label><input id="form-ssid" type="text" maxlength="32" name="ssid">
+        <label>WIFI Password</label><input id="form-wifi-passwd" type="password" maxlength="32" name="passwd">
+        <label>SMB URL</label><input id="form-smb-url" type="text" maxlength="100" name="smb_url">
+        <label>SMB User</label><input id="form-smb-user" type="text" maxlength="32" name="smb_user">
+        <label>SMB Password</label><input id="form-smb-passwd" type="password" maxlength="32" name="smb_passwd">
+      </fieldset>
+      <fieldset class="not-for-regular-trsio">
+        <legend>ROMs</legend>
+        <label>Model 1</label>
+        <select id="form-rom-m1" name="rom_m1">
+        </select>
+        <label>Model III</label>
+        <select id="form-rom-m3" name="rom_m3">
+        </select>
+        <label>Model 4</label>
+        <select id="form-rom-m4" name="rom_m4">
+        </select>
+        <label>Model 4P</label>
+        <select id="form-rom-m4p" name="rom_m4p">
+        </select>
+      </fieldset>
     <input type="submit" value="Submit">
   </form>
   </div>
@@ -253,11 +291,41 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABNtJREFUWEfFVmtI
 </div>
 </body>
 <script>
+let configurations = [
+  'TRS-IO (Model 1)',
+  'TRS-IO (Model III)',
+  'PocketTRS (Model 1, internal TRS-IO)',
+  'Reserved',
+  'PocketTRS (Model III, internal TRS-IO)',
+  'PocketTRS (Model 4, internal TRS-IO)',
+  'PocketTRS (Model 4P, internal TRS-IO)',
+  'Custom 1',
+  'Custom 2',
+  'PocketTRS (Model 1, external TRS-IO)',
+  'Reserved',
+  'PocketTRS (Model III, external TRS-IO)',
+  'PocketTRS (Model 4, external TRS-IO)',
+  'PocketTRS (Model 4P, external TRS-IO)',
+  'Custom 1',
+  'Custom 2'
+];
+
 el = function(id) {
   return  document.getElementById(id);
 };
 onLoad = function() {
   console.log('Loaded');
+  fetch('/get-roms')
+      .then(response => {
+      return response.json();
+  })
+  .then(function(roms){
+     setRoms(roms);
+  })
+  .catch(function() {
+    // Do nothing
+  });
+
   update(true);
 };
 let networkTimeout;
@@ -344,13 +412,46 @@ updateStatus = function(status, first) {
 
     // Don't update form fields after first update.
     if (first) {
-      el('form-ssid').value = !!status.ssid ? status.ssid : ''; 
-      el('form-wifi-passwd').value = !!status.passwd ? status.passwd : ''; 
-      el('form-timezone').value = !!status.tz ? status.tz : ''; 
-      el('form-smb-url').value = !!status.smb_url ? status.smb_url : ''; 
-      el('form-smb-user').value = !!status.smb_user ? status.smb_user : ''; 
-      el('form-smb-passwd').value = !!status.smb_passwd ? status.smb_passwd : ''; 
+      if ('config' in status) {
+        showPPFeatures();
+        el('config').innerHTML = configurations[status.config];
+      }
+      el('form-color').value = ('color' in status) ? status.color : '0';
+      el('form-timezone').value = !!status.tz ? status.tz : '';
+      el('form-ssid').value = !!status.ssid ? status.ssid : '';
+      el('form-wifi-passwd').value = !!status.passwd ? status.passwd : '';
+      el('form-smb-url').value = !!status.smb_url ? status.smb_url : '';
+      el('form-smb-user').value = !!status.smb_user ? status.smb_user : '';
+      el('form-smb-passwd').value = !!status.smb_passwd ? status.smb_passwd : '';
     }
+};
+
+showPPFeatures = function() {
+  const ppFeatures = document.querySelectorAll(".not-for-regular-trsio");
+  ppFeatures.forEach((item) => {
+    item.classList.remove('not-for-regular-trsio');
+  });
+};
+
+setRoms = function(roms) {
+  let m1 = el('form-rom-m1');
+  let m3 = el('form-rom-m3');
+  let m4 = el('form-rom-m4');
+  let m4p = el('form-rom-m4p');
+
+  let i = 0;
+  for(const rom of roms.roms) {
+    m1.options[m1.options.length] = new Option(rom, i);
+    m3.options[m3.options.length] = new Option(rom, i);
+    m4.options[m4.options.length] = new Option(rom, i);
+    m4p.options[m4p.options.length] = new Option(rom, i);
+    i++;
+  }
+
+  m1.options[roms.selected[0]].selected = true;
+  m3.options[roms.selected[2]].selected = true;
+  m4.options[roms.selected[3]].selected = true;
+  m4p.options[roms.selected[4]].selected = true;
 };
 submitForm = function() {
   console.log('--> ' + el('request-iframe').contentDocument.readyState);

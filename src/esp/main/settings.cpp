@@ -177,6 +177,19 @@ vector<string>& settings_get_roms()
   return roms;
 }
 
+void settings_set_rom(int model, const string& rom)
+{
+  roms.at(model) = rom;  
+  char key[] = KEY_ROM_PREFIX "0\0";
+  key[strlen(KEY_ROM_PREFIX)] = '0' + model;
+  nvs_set_str(storage, key, roms.at(model).c_str());
+}
+
+string& settings_get_rom(int model)
+{
+  return roms.at(model);
+}
+
 void settings_set_roms()
 {
   char key[] = KEY_ROM_PREFIX "0\0";

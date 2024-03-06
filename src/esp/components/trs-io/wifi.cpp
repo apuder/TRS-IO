@@ -1,6 +1,7 @@
 
 #include "retrostore.h"
 #include "wifi.h"
+#include "spi.h"
 #include "printer.h"
 #include "ntp_sync.h"
 #include "trs-fs.h"
@@ -105,6 +106,117 @@ static int num_printer_sockets = 0;
 typedef void (*settings_set_t)(const string&);
 typedef string& (*settings_get_t)();
 
+static void set_screen_color(const string& color)
+{
+  uint8_t new_color = stoi(color);
+  settings_set_screen_color(new_color);
+  spi_set_screen_color(new_color);
+}
+
+static string& get_screen_color()
+{
+  static string color;
+  color = to_string(settings_get_screen_color());
+  return color;
+}
+
+#ifdef CONFIG_TRS_IO_PP
+static uint8_t get_config()
+{
+  static uint8_t config = 0;
+  static bool is_init = false;
+
+  if (!is_init) {
+    // Get DIP switch setting
+    config = ~spi_get_config() & 0x0f;
+    is_init = true;
+  }
+  return config;
+}
+
+static void mongoose_handle_get_roms(char** response,
+                                     const char** content_type)
+
+{
+  int i;
+  uint8_t rom_selected[SETTINGS_MAX_ROMS];
+  vector<FSFile>& rom_files = the_fs->getFileList();
+
+  static char* resp = NULL;
+
+  if (resp != NULL) {
+    free(resp);
+    resp = NULL;
+  }
+  
+  for (i = 0; i < SETTINGS_MAX_ROMS; i++) {
+    rom_selected[i] = 0xff;
+  }
+
+  vector<string>& current_roms = settings_get_roms();
+  cJSON* roms = cJSON_CreateArray();
+
+  for (i = 0; i < rom_files.size(); i++) {
+    const char* rom_file = rom_files.at(i).name.c_str();
+    cJSON* rom = cJSON_CreateString(rom_file);
+    cJSON_AddItemToArray(roms, rom);
+
+    for (int j = 0; j < SETTINGS_MAX_ROMS; j++) {
+      if (j == 1) {
+        // Skip Model 2
+        continue;
+      }
+      if (rom_selected[j] == 0xff && strcmp(current_roms.at(j).c_str(), rom_file) == 0) {
+        rom_selected[j] = i;
+        break;
+      }
+    }
+  }
+
+  cJSON* rom_arr = cJSON_CreateArray();
+  for (i = 0; i < SETTINGS_MAX_ROMS; i++) {
+    cJSON* sel = cJSON_CreateNumber(rom_selected[i] == 0xff ? 0 : rom_selected[i]);
+    cJSON_AddItemToArray(rom_arr, sel);
+  }
+
+  cJSON* rom_def = cJSON_CreateObject();
+  cJSON_AddItemToObject(rom_def, "roms", roms);
+  cJSON_AddItemToObject(rom_def, "selected", rom_arr);
+
+  resp = cJSON_PrintUnformatted(rom_def);
+  *response = resp;
+  cJSON_Delete(rom_def);
+
+  *content_type = "application/json";
+}
+
+static bool extract_rom_param(struct mg_http_message* message,
+                              const char* param,
+                              int model)
+{
+  static char buf[4] EXT_RAM_ATTR;
+
+  if (mg_http_get_var(&message->body, param, buf, sizeof(buf)) < 0) {
+    // Could not decode parameter
+    return false;
+  }
+
+  vector<FSFile>& rom_files = the_fs->getFileList();
+  // In case someone tries to force a buffer overflow
+  buf[sizeof(buf) - 1] = '\0';
+  int new_rom_idx = atoi(buf);
+  string& new_rom = rom_files.at(new_rom_idx).name;
+
+  string& orig = settings_get_rom(model);
+  if (strcmp(orig.c_str(), new_rom.c_str()) == 0) {
+    // Setting has not changed
+    return false;
+  }
+  settings_set_rom(model, new_rom);
+  return true;
+}
+#endif
+
 static bool extract_post_param(struct mg_http_message* message,
                                const char* param,
                                settings_set_t set,
@@ -114,7 +226,10 @@ static bool extract_post_param(struct mg_http_message* message,
   // SMB URL is the longest parameter
   static char buf[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
 
-  mg_http_get_var(&message->body, param, buf, sizeof(buf));
+  if (mg_http_get_var(&message->body, param, buf, sizeof(buf)) < 0) {
+    // Could not decode parameter
+    return false;
+  }
   // In case someone tries to force a buffer overflow
   buf[max_len + 1] = '\0';
 
@@ -146,6 +261,14 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   smb_connect |= extract_post_param(message, "smb_user", settings_set_smb_user, settings_get_smb_user, MAX_LEN_SMB_USER);
   smb_connect |= extract_post_param(message, "smb_passwd", settings_set_smb_passwd, settings_get_smb_passwd, MAX_LEN_SMB_PASSWD);
 
+  extract_post_param(message, "color", set_screen_color, get_screen_color, 16);
+#ifdef CONFIG_TRS_IO_PP
+  extract_rom_param(message, "rom_m1", SETTINGS_ROM_M1);
+  extract_rom_param(message, "rom_m3", SETTINGS_ROM_M3);
+  extract_rom_param(message, "rom_m4", SETTINGS_ROM_M4);
+  extract_rom_param(message, "rom_m4p", SETTINGS_ROM_M4P);
+#endif
+
   settings_commit();
 
   if (smb_connect) {
@@ -172,14 +295,19 @@ static void mongoose_handle_status(struct mg_http_message* message,
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
   cJSON_AddNumberToObject(s, "wifi_status", status);
   cJSON_AddStringToObject(s, "ip", get_wifi_ip());
+#ifdef CONFIG_TRS_IO_PP
+  cJSON_AddNumberToObject(s, "config", get_config());
+#endif
 
+  uint8_t color = settings_get_screen_color();
+  string& tz = settings_get_tz();
   string& ssid = settings_get_wifi_ssid();
   string& passwd = settings_get_wifi_passwd();
-  string& tz = settings_get_tz();
   string& smb_url = settings_get_smb_url();
   string& smb_user = settings_get_smb_user();
   string& smb_passwd = settings_get_smb_passwd();
 
+  cJSON_AddNumberToObject(s, "color", color);
   if (!ssid.empty()) {
     cJSON_AddStringToObject(s, "ssid", ssid.c_str());
   }
@@ -260,6 +388,11 @@ static void mongoose_event_handler(struct mg_connection *c,
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
         return;
+#ifdef CONFIG_TRS_IO_PP
+      } else if (mg_http_match_uri(message, "/get-roms")) {
+        mongoose_handle_get_roms(&response, &content_type);
+        response_len = strlen(response);
+#endif
       }
 
       if (response != NULL) {
