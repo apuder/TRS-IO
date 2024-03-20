@@ -3,25 +3,29 @@
 module main(
   input clk_in,
   input RST_N,
+
+  input Z80_IOREQ,
+  input Z80_IN,
+  input Z80_OUT,
+  output ABUS_SEL_N,
+  output TRS_DIR,
+  output DBUS_SEL_N,
+  inout [7:0] TRS_AD,
+
+  input CS,
   input SCK,
   input MOSI,
   output MISO,
-  input CS,
-  output ABUS_SEL_N,
-  output DBUS_SEL_N,
-  output TRS_DIR,
-  inout [7:0] TRS_AD,
-  input Z80_IN,
-  input Z80_OUT,
-  input Z80_IOREQ,
+  output [2:0] ESP_S,
+  output ESP_REQ,
+  input ESP_DONE,
+
   output EXTIOSEL,
   output TRS_INT,
-  output reg ESP_REQ,
-  output [2:0] ESP_S,
-  output reg WAIT,
-  input ESP_DONE,
+  output reg TRS_WAIT,
   output CASS_OUT_RIGHT,
   output CASS_OUT_LEFT,
+
   input [1:0] sw,
   output [5:0] led,
 
@@ -69,11 +73,10 @@ end
 
 //----Address Decoder------------------------------------------------------------
 
-wire TRS_RD = 1;
-wire TRS_WR = 1;
+wire TRS_RD = 1'b1;
+wire TRS_WR = 1'b1;
 wire TRS_IN = !(!Z80_IOREQ && !Z80_IN);
 wire TRS_OUT = !(!Z80_IOREQ && !Z80_OUT);
-
 
 reg [7:0] TRS_A = 8'h00;
 
@@ -89,23 +92,27 @@ filter io(
   .falling_edge()
 );
 
-reg[8:0] io_trigger;
+// io_access_rising_edge =        ^
+// io_trigger            = ...xxx012345678xxx...
+// AD                    = ...DDDAAAAADDDDDDDDD...
+// read_a                =           ^
+// io_trigger            =               ^
+
+reg [8:0] io_trigger;
 
 always @(posedge clk)
 begin
   io_trigger <= {io_trigger[7:0], io_access_rising_edge};
 end
 
-wire read_a = io_trigger[4];
 wire io_access = io_trigger[8];
 
-
-assign ABUS_SEL_N = io_trigger[4:0] == 5'b0;
-
+assign ABUS_SEL_N = (io_trigger[4:0] == 5'b0);
+wire read_a = io_trigger[4];
 
 always @(posedge clk)
 begin
-  if (read_a == 1)
+  if (read_a)
     TRS_A <= TRS_AD;
 end
 
@@ -135,28 +142,29 @@ reg esp_boot_ready = 1'b0;
 // custom print driver that reads printer status from port 0xF4
 // but at least port 0xF4 can be used to verify if the printer
 // function is working.
+// printer @ F8h-FBh (F4h-F7h)
 wire printer_sel_rd = esp_ready && (TRS_A[7:2] == (8'hF8 >> 2) ||
                                     TRS_A[7:2] == (8'hF4 >> 2)) && !TRS_IN;
 wire printer_sel_wr = esp_ready && (TRS_A[7:2] == (8'hF8 >> 2)) && !TRS_OUT;
 wire printer_sel = printer_sel_rd || printer_sel_wr;
 
+// trs-io @ 1Fh
 wire trs_io_sel_in  = esp_ready && (TRS_A == 8'd31) && !TRS_IN;
 wire trs_io_sel_out = esp_ready && (TRS_A == 8'd31) && !TRS_OUT;
 wire trs_io_sel = trs_io_sel_in || trs_io_sel_out;
 
+// frehd @ C0h-CFh
 wire frehd_sel_in  = esp_ready && ((TRS_A[7:4] == 4'hC) && ((TRS_A[3:0] != 4'h4) || esp_boot_ready)) && !TRS_IN;
 wire frehd_sel_out = esp_ready && ((TRS_A[7:4] == 4'hC) && ((TRS_A[3:0] != 4'h5) || esp_boot_ready)) && !TRS_OUT;
-wire frehd_sel = frehd_sel_in || frehd_sel_out;
 
+// trs-io loader @ C4h,C5h
 wire loader_sel_in  = !esp_boot_ready && (TRS_A == 8'hC4) && !TRS_IN;
 wire loader_sel_out =                    (TRS_A == 8'hC5) && !TRS_OUT;
 
-// Hires
+// hires graphics @ 80h-83h
 wire hires_sel_in  = (TRS_A[7:2] == (8'h80 >> 2)) && !TRS_IN;
-wire hires_sel_out = (TRS_A[7:2] == (8'h80 >> 2)) && !TRS_OUT;
-wire hires_sel = hires_sel_in || hires_sel_out;
 
-// Orchestra-90
+// orchestra-90 @ 79h,75h
 wire orch90l_sel_out = (TRS_A == 8'h75) && !TRS_OUT;
 wire orch90r_sel_out = (TRS_A == 8'h79) && !TRS_OUT;
 
@@ -191,52 +199,54 @@ end
 wire [7:0] _loader_dout;
 
 Gowin_pROM loader_rom (
-  .clk(clk), //input clk
-  .ce(loader_rom_rd_en), //input ce
-  .ad(loader_addr), //input [7:0] ad
-  .dout(_loader_dout), //output [7:0] dout
-  .oce(loader_rom_rd_regce), //input oce
-  .reset(1'b0) //input reset
+  .clk(clk), //input
+  .ce(loader_rom_rd_en), //input
+  .ad(loader_addr), //input [7:0]
+  .dout(_loader_dout), //output [7:0]
+  .oce(loader_rom_rd_regce), //input
+  .reset(1'b0) //input
 );
 
 wire [7:0] loader_dout = (loader_addr == 8'd3) ? loader_param : _loader_dout;
 
 
-wire esp_sel_in = trs_io_sel_in || frehd_sel_in || printer_sel_rd;
-wire esp_sel = trs_io_sel || frehd_sel || printer_sel;
+wire esp_sel_in  = trs_io_sel_in  || frehd_sel_in  || printer_sel_rd;
+wire esp_sel_out = trs_io_sel_out || frehd_sel_out || printer_sel_wr;
+wire esp_sel = esp_sel_in || esp_sel_out;
 
-wire esp_sel_risingedge = esp_sel && io_access;
+wire esp_sel_risingedge = io_access && esp_sel;
 
 
-assign EXTIOSEL = (esp_sel_in | hires_sel_in | loader_sel_in);
+assign EXTIOSEL = (esp_sel_in | loader_sel_in | hires_sel_in);
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
 
-reg [5:0] count;
+reg [6:0] esp_req_count = 6'd1;
 
 always @(posedge clk) begin
   if (rst) begin
-    ESP_REQ <= 1'b0;
-    count <= 6'd0;
-    WAIT <= 1'b0;
+    esp_req_count <= 7'd0;
+    TRS_WAIT <= 1'b0;
   end
   else begin
     if (esp_sel_risingedge) begin
       // ESP needs to do something
-      ESP_REQ <= 1'b1;
-      count <= 6'd50;
-      WAIT <= 1'b1;
+      esp_req_count <= -7'd50;
+      // Assert WAIT
+      TRS_WAIT <= 1'b1;
     end
-    else if (esp_done_risingedge)
-      begin
-        // When ESP is done, de-assert WAIT
-        WAIT <= 1'b0;
-      end
-    if (count == 1) ESP_REQ <= 1'b0;
-    if (count != 0) count <= count - 6'd1;
+    else if (esp_done_risingedge) begin
+      // When ESP is done, de-assert WAIT
+      TRS_WAIT <= 1'b0;
+    end
+    if (esp_req_count != 7'd0) begin
+      esp_req_count <= esp_req_count + 7'd1;
+    end
   end
 end
+
+assign ESP_REQ = esp_req_count[6];
 
 
 localparam [2:0]
@@ -249,12 +259,12 @@ localparam [2:0]
   esp_xray       = 3'd6;
 
 
-assign ESP_S = (esp_trs_io_in  & {3{trs_io_sel_in }}) |
-               (esp_trs_io_out & {3{trs_io_sel_out}}) |
-               (esp_frehd_in   & {3{frehd_sel_in  }}) |
-               (esp_frehd_out  & {3{frehd_sel_out }}) |
-               (esp_printer_rd & {3{printer_sel_rd}}) |
-               (esp_printer_wr & {3{printer_sel_wr}});
+assign ESP_S = ~( (~esp_trs_io_in  & {3{trs_io_sel_in }}) |
+                  (~esp_trs_io_out & {3{trs_io_sel_out}}) |
+                  (~esp_frehd_in   & {3{frehd_sel_in  }}) |
+                  (~esp_frehd_out  & {3{frehd_sel_out }}) |
+                  (~esp_printer_rd & {3{printer_sel_rd}}) |
+                  (~esp_printer_wr & {3{printer_sel_wr}}) );
 
 
 //---main-------------------------------------------------------------------------
@@ -266,7 +276,7 @@ localparam [2:0]
 
 reg [2:0] state = idle;
 
-wire start_msg;
+wire start_msg = 1'b0;
 
 localparam [7:0]
   get_cookie          = 8'b0,
@@ -295,7 +305,7 @@ localparam [7:0]
   set_spi_data        = 8'd30,
   get_spi_data        = 8'd31,
   set_esp_status      = 8'd32;
-  
+
 
 reg[7:0] byte_in, byte_out;
 reg byte_received = 1'b0;
@@ -313,7 +323,7 @@ reg trigger_action = 1'b0;
 always @(posedge clk) begin
   trigger_action <= 1'b0;
 
-  if (esp_sel_risingedge && (TRS_A == 8'd31)) trs_io_data_ready <= 1'b0;
+  if (io_access && trs_io_sel) trs_io_data_ready <= 1'b0;
 
   if (start_msg)
     state <= idle;
@@ -335,17 +345,17 @@ always @(posedge clk) begin
             state <= idle;
           end
           bram_poke: begin
-            bytes_to_read <= 3'b011;
+            bytes_to_read <= 3'd3;
           end
           bram_peek: begin
-            bytes_to_read <= 3'b010;
+            bytes_to_read <= 3'd2;
           end
           dbus_read: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
           dbus_write: begin
-            bytes_to_read <= 3'b001;
+            bytes_to_read <= 3'd1;
           end
           abus_read: begin
             trigger_action <= 1'b1;
@@ -356,36 +366,36 @@ always @(posedge clk) begin
             state <= idle;
           end
           set_breakpoint: begin
-            bytes_to_read <= 3;
+            bytes_to_read <= 3'd3;
           end
           clear_breakpoint: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           xray_code_poke: begin
-            bytes_to_read <= 2;
+            bytes_to_read <= 3'd2;
           end
           xray_data_poke: begin
-            bytes_to_read <= 2;
+            bytes_to_read <= 3'd2;
           end
           xray_data_peek: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           xray_resume: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
           set_full_addr: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           get_printer_byte: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
           set_screen_color: begin
-            bytes_to_read <= 3;
+            bytes_to_read <= 3'd3;
           end
           set_esp_status: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           default:
             begin
@@ -398,13 +408,13 @@ always @(posedge clk) begin
         params[idx] <= byte_in;
         idx <= idx + 3'b001;
         
-        if (bytes_to_read == 3'b001)
+        if (bytes_to_read == 3'd1)
           begin
             trigger_action <= 1'b1;
             state <= idle;
           end
         else
-          bytes_to_read <= bytes_to_read - 3'b001;
+          bytes_to_read <= bytes_to_read - 3'd1;
     end
     default:
       state <= idle;
@@ -468,11 +478,22 @@ wire esp_status_smb_mounted = esp_status[2];
 wire esp_status_sd_mounted  = esp_status[3];
 
 always @(posedge clk) begin
-  if (trigger_action && cmd == set_esp_status) esp_status <= params[0];
+  if (trigger_action && cmd == set_esp_status)
+    esp_status <= params[0];
 end
 
 
-//--------BRAM-------------------------------------------------------------------------
+reg [7:0] trs_data;
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == dbus_write)
+    trs_data <= params[0];
+end
+
+
+//---BUS INTERFACE----------------------------------------------------------------
+
+assign TRS_DIR = TRS_RD && TRS_IN;
 
 assign DBUS_SEL_N = !(ABUS_SEL_N &&
                       (!TRS_WR || !TRS_OUT ||
@@ -480,32 +501,25 @@ assign DBUS_SEL_N = !(ABUS_SEL_N &&
                        loader_sel_in       ||
                        esp_sel_in          ));
 
-assign TRS_DIR = TRS_RD && TRS_IN;
 
-
-reg [7:0] trs_data;
 wire [7:0] hires_dout;
 
-wire [7:0] out_data = ({8{hires_sel_in }} & hires_dout ) |
-                      ({8{loader_sel_in}} & loader_dout) |
-                      ({8{esp_sel_in   }} & trs_data   ) ;
-
-wire trs_ad_in = (!TRS_RD || !TRS_IN) && !DBUS_SEL_N;
-
-assign TRS_AD[0] = trs_ad_in ? out_data[7] : 1'bz;
-assign TRS_AD[1] = trs_ad_in ? out_data[6] : 1'bz;
-assign TRS_AD[2] = trs_ad_in ? out_data[5] : 1'bz;
-assign TRS_AD[3] = trs_ad_in ? out_data[4] : 1'bz;
-assign TRS_AD[4] = trs_ad_in ? out_data[3] : 1'bz;
-assign TRS_AD[5] = trs_ad_in ? out_data[2] : 1'bz;
-assign TRS_AD[6] = trs_ad_in ? out_data[1] : 1'bz;
-assign TRS_AD[7] = trs_ad_in ? out_data[0] : 1'bz;
+wire [7:0] trs_d = ((!TRS_RD || !TRS_IN) && !DBUS_SEL_N)
+                 ? ( ({8{esp_sel_in   }} & trs_data   ) |
+                     ({8{loader_sel_in}} & loader_dout) |
+                     ({8{hires_sel_in }} & hires_dout ) )
+                : 8'bz;
 
 
-always @(posedge clk) begin
-  if (trigger_action && cmd == dbus_write)
-    trs_data <= params[0];
-end
+assign TRS_AD[0] = trs_d[7];
+assign TRS_AD[1] = trs_d[6];
+assign TRS_AD[2] = trs_d[5];
+assign TRS_AD[3] = trs_d[4];
+assign TRS_AD[4] = trs_d[3];
+assign TRS_AD[5] = trs_d[2];
+assign TRS_AD[6] = trs_d[1];
+assign TRS_AD[7] = trs_d[0];
+
 
 always @(posedge clk)
 begin
@@ -523,7 +537,10 @@ end
 
 logic [23:0] rgb_screen_color = 24'hFFFFFF;
 
-always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_screen_color)
+    rgb_screen_color <= {params[0], params[1], params[2]};
+end
 
 
 logic [8:0] audio_cnt;
@@ -553,7 +570,7 @@ Gowin_CLKDIV0 clk3div0(
   .resetn(1'b1) //input resetn
 );
 
-reg [23:0] rgb = 24'd0;
+reg [23:0] rgb = 24'h0;
 wire dsp_vid, dsp_present;
 wire vga_vid;
 wire hires_enable;
@@ -693,7 +710,7 @@ begin
 end
 
 
-//---Sound------------------------------------------------------------------------
+//-----Cassette out----------------------------------------------------------------
 
 wire cass_sel_out = (TRS_A == 8'hFF) && !TRS_OUT;
 
@@ -739,11 +756,11 @@ end
 assign CASS_OUT_LEFT  = cass_pdml_reg[9];
 assign CASS_OUT_RIGHT = cass_pdmr_reg[9];
 
-assign led[0] = ~WAIT;
+
+//-----LED------------------------------------------------------------------------------------
+
+assign led[0] = ~TRS_WAIT;
 assign led[1] = ~EXTIOSEL;
-assign led[2] = ~TRS_INT;
-assign led[3] = ~hertz50;
-assign led[4] = ~lock;
-assign led[5] = ~esp_status_esp_ready;
+assign led[5:2] = ~esp_status[3:0];
 
 endmodule
