@@ -72,7 +72,7 @@ reg z80_outsig_modesel = 1'b0;
 
 always @(posedge clk)
 begin
-   if(z80_outsig_sel_out)
+   if(io_access & z80_outsig_sel_out)
       z80_outsig_modesel <= TRS_D[3];
 end
 
@@ -84,7 +84,7 @@ begin
    reg_modsel <= z80_outsig_modesel;
 end
 
-wire z80_dsp_sel = (TRS_A[15:10] == (16'h3c00 >> 10));
+wire z80_dsp_sel = (TRS_A[15:10] == (16'h3C00 >> 10));
 
 wire z80_dsp_wr_en;
 
@@ -124,12 +124,12 @@ display_ram z80_dsp (
    .resetb(1'b0)
 );
 
-// Disable the splash screen and border on first write to test display.
+// Disable the splash screen and border on first write to text display.
 reg splash_en = 1'b1;
 
-always @ (posedge clk)
+always @(posedge clk)
 begin
-   if(z80_dsp_sel & ~TRS_WR)
+   if(io_access & z80_dsp_sel & ~TRS_WR)
       splash_en <= 1'b0;
 end
 
@@ -161,7 +161,7 @@ begin
       z80_le18_options_reg <= splash_en;
    else
    begin
-      if(z80_le18_options_out & ~splash_en)
+      if(io_access & z80_le18_options_out & ~splash_en)
          z80_le18_options_reg <= TRS_D[0];
    end
 end

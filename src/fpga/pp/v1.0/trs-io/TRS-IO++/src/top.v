@@ -1,52 +1,60 @@
+`timescale 1ns / 1ps
 
 module top(
   input clk_in,
+  input _RESET_N,
+
   output CTRL_DIR,
   output CTRL_EN,
-  input _IN_N,
+  output CTRL1_EN,
   input _RD_N,
   input _WR_N,
+  input _IN_N,
   input _OUT_N,
   input _RAS_N,
   input _IOREQ_N,
   input _M1_N,
-  input _RESET_N,
+  output ABUS_DIR_N,
   output ABUS_DIR,
   output ABUS_EN,
-  output ABUS_DIR_N,
   input [15:0] _A,
-  output [2:0] HDMI_TX_P,
-  output [2:0] HDMI_TX_N,
-  output HDMI_TXC_P,
-  output HDMI_TXC_N,
   output DBUS_DIR,
   output DBUS_EN,
   inout [7:0] _D,
-  input [3:0] CONF,
-  output CASS_OUT,
+
   input CS_FPGA,
   input SCK,
-  output MISO,
   input MOSI,
+  output MISO,
   output [3:0] ESP_S,
-  output REQ,
-  input DONE,
-  output [3:0] LED,
-  output reg LED_GREEN,
-  output reg LED_RED,
-  output reg LED_BLUE,
+  output ESP_REQ,
+  input ESP_DONE,
+
   output INT,
-  output reg WAIT,
-  output EXTIOSEL,
-  output CTRL1_EN,
-  input EXTIOSEL_IN_N,
-  input WAIT_IN_N,
   input INT_IN_N,
-  inout [7:0] PMOD,
+  output reg WAIT,
+  input WAIT_IN_N,
+  output EXTIOSEL,
+  input EXTIOSEL_IN_N,
+  output CASS_OUT,
 
   input UART_RX,
   output UART_TX,
 
+  input [3:0] CONF,
+  output [3:0] LED,
+  output reg LED_GREEN,
+  output reg LED_RED,
+  output reg LED_BLUE,
+  inout [7:0] PMOD,
+
+  // HDMI
+  output [2:0] HDMI_TX_P,
+  output [2:0] HDMI_TX_N,
+  output HDMI_TXC_P,
+  output HDMI_TXC_N,
+
+  // Configuration Flash
   output FLASH_SPI_CS_N,
   output FLASH_SPI_CLK,
   output FLASH_SPI_SI,
@@ -55,9 +63,6 @@ module top(
 
 
 reg TRS_INT;
-reg ESP_REQ;
-assign REQ = ESP_REQ;
-wire ESP_DONE = DONE;
 wire[15:0] TRS_A = _A;
 wire[7:0] TRS_D = _D;
 
@@ -80,7 +85,7 @@ assign CTRL1_EN = 1;
 localparam [2:0] VERSION_MAJOR = 0;
 localparam [4:0] VERSION_MINOR = 3;
 
-localparam [7:0] COOKIE = 8'haf;
+localparam [7:0] COOKIE = 8'hAF;
 
 wire clk;
 
@@ -116,27 +121,23 @@ wire TRS_OUT = (is_m3 ? (_OUT_N | _IOREQ_N) : _OUT_N);
 
 wire io_access_raw = ~TRS_RD | ~TRS_WR | ~TRS_IN | ~TRS_OUT;
 
-wire io_access_filtered;
-
-wire io_access_rising_edge;
-
 wire io_access;
 
 filter io(
   .clk(clk),
   .in(io_access_raw),
-  .out(io_access_filtered),
+  .out(),
   .rising_edge(io_access),
   .falling_edge()
 );
 
-wire ras_trigger;
+wire ras_access;
 
 filter ras(
   .clk(clk),
   .in(~_RAS_N),
   .out(),
-  .rising_edge(ras_trigger),
+  .rising_edge(ras_access),
   .falling_edge()
 );
 
@@ -145,12 +146,13 @@ filter ras(
 reg full_addr = 1'b0;
 
 // m1 extension rom (1.96875k @ 3000h-37DFh)
-wire trs_extrom_sel = is_m1 & ((TRS_A[15:11] == 5'b00110) &  // 2k @ 3000h-37FFh
+wire trs_extrom_sel = is_m1 & ((TRS_A[15:11] == 5'b00110) &         // 2k @ 3000h-37FFh
                                ~(TRS_A[15:5] == 11'b00110111111));  // - 32 @ 37E0h-37FFh
 wire trs_extrom_sel_rd = trs_extrom_sel & ~TRS_RD;
+wire trs_extrom_sel_wr = trs_extrom_sel & ~TRS_WR;
 
 // m1 ram (32k @ 8000h-FFFFh)
-wire trs_ram_sel = is_m1 & TRS_A[15];  // upper 32k
+wire trs_ram_sel = is_m1 & (TRS_A[15] == 1'b1);  // upper 32k
 wire trs_ram_sel_rd = trs_ram_sel & ~TRS_RD;
 wire trs_ram_sel_wr = trs_ram_sel & ~TRS_WR;
 
@@ -168,14 +170,15 @@ wire printer_sel_m1_rd  = printer_sel_m1 & ~TRS_RD;
 wire printer_sel_m1_wr  = printer_sel_m1 & ~TRS_WR;
 wire printer_sel_m3_in  = printer_sel_m3 & ~TRS_IN;
 wire printer_sel_m3_out = printer_sel_m3 & ~TRS_OUT;
-wire printer_mem_trigger = is_m1 & printer_sel_m1 & ras_trigger;
+wire printer_mem_trigger = is_m1 & printer_sel_m1 & ras_access;
 wire printer_sel_rd = is_m3 ? printer_sel_m3_in  : printer_sel_m1_rd;
 wire printer_sel_wr = is_m3 ? printer_sel_m3_out : printer_sel_m1_wr;
 wire printer_sel = printer_sel_rd | printer_sel_wr;
 
 // trs-io @ 1Fh
-wire trs_io_sel_in  = (TRS_A[7:0] == 31) & ~TRS_IN;
-wire trs_io_sel_out = (TRS_A[7:0] == 31) & ~TRS_OUT;
+wire trs_io_sel_in  = (TRS_A[7:0] == 8'd31) & ~TRS_IN;
+wire trs_io_sel_out = (TRS_A[7:0] == 8'd31) & ~TRS_OUT;
+wire trs_io_sel = trs_io_sel_in | trs_io_sel_out;
 
 // frehd @ C0h-CFh
 wire frehd_sel_in  = (TRS_A[7:4] == 4'hC) & ~TRS_IN;
@@ -191,17 +194,15 @@ wire hires_data_sel_in = (TRS_A[7:0] == 8'h82) & ~TRS_IN;
 wire orch85l_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h75) : (TRS_A[7:0] == 8'hB5)) & ~TRS_OUT;
 wire orch85r_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h79) : (TRS_A[7:0] == 8'hB9)) & ~TRS_OUT;
 
-
+// fpga flash spi @ FCh-FDh
 wire spi_ctrl_sel_out = (TRS_A[7:0] == 8'hFC) & ~TRS_OUT;
 wire spi_data_sel_in  = (TRS_A[7:0] == 8'hFD) & ~TRS_IN;
 wire spi_data_sel_out = (TRS_A[7:0] == 8'hFD) & ~TRS_OUT;
 
 
-wire xray_sel = 1'b0;
-
 wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
 wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
-wire esp_sel = esp_sel_in | esp_sel_out | xray_sel;
+wire esp_sel = esp_sel_in | esp_sel_out;
 
 wire esp_sel_risingedge = io_access & esp_sel;
 
@@ -210,27 +211,29 @@ assign EXTIOSEL = esp_sel_in | spi_data_sel_in;
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
 
-reg [5:0] count;
+reg [6:0] esp_req_count = 6'd1;
 
 always @(posedge clk) begin
   if (esp_sel_risingedge) begin
     // ESP needs to do something
-    ESP_REQ <= 1;
+    esp_req_count <= -7'd50;
   end
-  if (esp_sel_risingedge | printer_mem_trigger) begin
+  if (esp_sel_risingedge || printer_mem_trigger) begin
     // Assert WAIT
-    WAIT <= 1;
-    count <= 50;
+    WAIT <= 1'b1;
   end
   else if (esp_done_risingedge) begin
     // When ESP is done, de-assert WAIT
-    WAIT <= 0;
+    WAIT <= 1'b0;
   end
-  if (count == 1) ESP_REQ <= 0;
-  if (count != 0) count <= count - 1;
+  if (esp_req_count != 7'd0) begin
+    esp_req_count <= esp_req_count + 7'd1;
+  end
 end
 
-      
+assign ESP_REQ = esp_req_count[6];
+
+
 localparam [3:0]
   esp_trs_io_in  = 4'd0,
   esp_trs_io_out = 4'd1,
@@ -246,8 +249,7 @@ assign ESP_S = ~( (~esp_trs_io_in  & {4{trs_io_sel_in }}) |
                   (~esp_frehd_in   & {4{frehd_sel_in  }}) |
                   (~esp_frehd_out  & {4{frehd_sel_out }}) |
                   (~esp_printer_rd & {4{printer_sel_rd}}) |
-                  (~esp_printer_wr & {4{printer_sel_wr}}) |
-                  (~esp_xray       & {4{xray_sel      }}) );
+                  (~esp_printer_wr & {4{printer_sel_wr}}) );
 
 
 //---main-------------------------------------------------------------------------
@@ -283,11 +285,7 @@ localparam [7:0]
   abus_read           = 8'd18,
   send_keyb           = 8'd19,
   set_led             = 8'd26,
-  get_config          = 8'd27,
-  set_spi_ctrl_reg    = 8'd29,
-  set_spi_data        = 8'd30,
-  get_spi_data        = 8'd31,
-  set_esp_status      = 8'd32;
+  get_config          = 8'd27;
 
 
 reg[7:0] byte_in, byte_out;
@@ -306,7 +304,7 @@ reg trigger_action = 1'b0;
 always @(posedge clk) begin
   trigger_action <= 1'b0;
 
-  if (esp_sel_risingedge && (TRS_A[7:0] == 8'd31)) trs_io_data_ready <= 1'b0;
+  if (io_access && trs_io_sel) trs_io_data_ready <= 1'b0;
 
   if (start_msg)
     state <= idle;
@@ -328,17 +326,17 @@ always @(posedge clk) begin
             state <= idle;
           end
           bram_poke: begin
-            bytes_to_read <= 3'b011;
+            bytes_to_read <= 3'd3;
           end
           bram_peek: begin
-            bytes_to_read <= 3'b010;
+            bytes_to_read <= 3'd2;
           end
           dbus_read: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
           dbus_write: begin
-            bytes_to_read <= 3'b001;
+            bytes_to_read <= 3'd1;
           end
           abus_read: begin
             trigger_action <= 1'b1;
@@ -349,56 +347,43 @@ always @(posedge clk) begin
             state <= idle;
           end
           set_breakpoint: begin
-            bytes_to_read <= 3;
+            bytes_to_read <= 3'd3;
           end
           clear_breakpoint: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           xray_code_poke: begin
-            bytes_to_read <= 2;
+            bytes_to_read <= 3'd2;
           end
           xray_data_poke: begin
-            bytes_to_read <= 2;
+            bytes_to_read <= 3'd2;
           end
           xray_data_peek: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           xray_resume: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
           set_full_addr: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           get_printer_byte: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
           set_screen_color: begin
-            bytes_to_read <= 3;
+            bytes_to_read <= 3'd3;
           end
           send_keyb: begin
-            bytes_to_read <= 2;
+            bytes_to_read <= 3'd2;
           end
           set_led: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           get_config: begin
             trigger_action <= 1'b1;
             state <= idle;
-          end
-          set_spi_ctrl_reg: begin
-            bytes_to_read <= 1;
-          end
-          set_spi_data: begin
-            bytes_to_read <= 1;
-          end
-          get_spi_data: begin
-            trigger_action <= 1'b1;
-            state <= idle;
-          end
-          set_esp_status: begin
-            bytes_to_read <= 1;
           end
           default:
             begin
@@ -411,13 +396,13 @@ always @(posedge clk) begin
         params[idx] <= byte_in;
         idx <= idx + 3'b001;
         
-        if (bytes_to_read == 3'b001)
+        if (bytes_to_read == 3'd1)
           begin
             trigger_action <= 1'b1;
             state <= idle;
           end
         else
-          bytes_to_read <= bytes_to_read - 3'b001;
+          bytes_to_read <= bytes_to_read - 3'd1;
     end
     default:
       state <= idle;
@@ -469,20 +454,6 @@ always @(posedge clk) begin
 end
 
 assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
-
-
-//---ESP Status----------------------------------------------------------------------------
-
-reg[7:0] esp_status = 0;
-
-wire esp_status_esp_ready   = esp_status[0];
-wire esp_status_wifi_up     = esp_status[1];
-wire esp_status_smb_mounted = esp_status[2];
-wire esp_status_sd_mounted  = esp_status[3];
-
-always @(posedge clk) begin
-  if (trigger_action && cmd == set_esp_status) esp_status <= params[0];
-end
 
 
 //---Full Address--------------------------------------------------------------------------
@@ -562,7 +533,7 @@ localparam [7:0] frehd_loader [0:22-1] =
   {8'h3E, 8'h01, 8'hD3, 8'hC5, 8'hDB, 8'hC4, 8'hFE, 8'hFE, 8'hC2, 8'h75, 8'h00, 8'h01,
    8'hC4, 8'h00, 8'h21, 8'h00, 8'h50, 8'hED, 8'hB2, 8'hC3, 8'h00, 8'h50};
 
-reg [7:0] fdc_sector_idx = 8'h00;
+reg [7:0] fdc_sector_idx = 8'd0;
 reg [7:0] fdc_data;
 
 always @ (posedge clk)
@@ -574,14 +545,14 @@ begin
       2'b11: // fdc data
          begin
             fdc_data <= (fdc_sector_idx < 8'd22) ? frehd_loader[fdc_sector_idx] : 8'h00;
-            fdc_sector_idx <= fdc_sector_idx + 8'h1;  
+            fdc_sector_idx <= fdc_sector_idx + 8'd1;
          end
       endcase
 
    if(io_access & fdc_37ec_sel_wr)
       case(TRS_A[1:0])
       2'b00: // fdc command
-         fdc_sector_idx <= 8'h00;  
+         fdc_sector_idx <= 8'h00;
       endcase
 end
 
@@ -612,54 +583,39 @@ wire [7:0] ram_dout;
 
 wire enb;
 wire regceb;
-wire [0:0]web;
-wire [14:0]addrb;
-wire [7:0]dinb;
-wire [7:0]doutb;
+wire web;
+wire [14:0] addrb;
+wire [7:0] dinb;
+wire [7:0] doutb;
 
-/*
- * BRAM configuration
- * ------------------
- * BRAM is 32K in size and covers the upper half of the M1 address space.
- *
- * Basics: Native interface, True dual port, Common Clock, Write Enable, Byte size: 8
- * Port A: Write/Read width: 8, Write depth: 32768, Operating mode: Write First, Core Output Register, REGCEA pin
- * Port B: Write/Read width: 8, Write depth: 32768, Operating mode: Read First, Core Output Register, REGCEB pin
- */
 
 Gowin_DPB0 bram(
-  .clka(clk), //input clka
-  .cea(ram_rd_en | ram_wr_en), //input cea
-  .ada(TRS_A[14:0]), //input [14:0] ada
-  .wrea(~TRS_WR), //input wrea
-  .dina(TRS_D), //input [7:0] dina
-  .douta(ram_dout), //output [7:0] douta
-  .ocea(ram_rd_regce), //input ocea
-  .reseta(1'b0), //input reseta
+  .clka(clk), //input
+  .cea(ram_rd_en | ram_wr_en), //input
+  .ada(TRS_A[14:0]), //input [14:0]
+  .wrea(~TRS_WR), //input
+  .dina(TRS_D), //input [7:0]
+  .douta(ram_dout), //output [7:0]
+  .ocea(ram_rd_regce), //input
+  .reseta(1'b0), //input
 
-  .clkb(clk), //input clkb
-  .ceb(enb), //input ceb
-  .adb(addrb), //input [14:0] adb
-  .wreb(web), //input wreb
-  .dinb(dinb), //input [7:0] dinb
-  .doutb(doutb), //output [7:0] doutb
-  .oceb(regceb), //input oceb
-  .resetb(1'b0) //input resetb
+  .clkb(clk), //input
+  .ceb(enb), //input
+  .adb(addrb), //input [14:0]
+  .wreb(web), //input
+  .dinb(dinb), //input [7:0]
+  .doutb(doutb), //output [7:0]
+  .oceb(regceb), //input
+  .resetb(1'b0) //input
 );
 
 
-assign TRS_OE = ~(~TRS_WR | ~TRS_OUT |
-                   trs_extrom_sel_rd |
-                   trs_ram_sel_rd    |
-                   hires_data_sel_in |
-                   le18_data_sel_in  |
-                   fdc_37e0_sel_rd   |
-                   fdc_37ec_sel_rd   |
-                   esp_sel_in        |
-                   spi_data_sel_in   );
-//                   printer_sel_rd || printer_sel_wr || /*spi_data_sel_in ||*/ !TRS_OUT);
+reg [7:0] trs_data;
 
-assign TRS_DIR = TRS_RD & TRS_IN;
+always @(posedge clk) begin
+  if (trigger_action && cmd == dbus_write)
+    trs_data <= params[0];
+end
 
 
 //---EXTENSION ROM----------------------------------------------------------------
@@ -674,14 +630,24 @@ trigger extrom_rd_trigger (
   .three()
 );
 
+wire extrom_wr_en;
+
+trigger extrom_write_trigger(
+  .clk(clk),
+  .cond(io_access & trs_extrom_sel_wr),
+  .one(),
+  .two(extrom_wr_en),
+  .three()
+);
+
 wire [7:0] extrom_dout;
 
 Gowin_DPB2 extrom (
    .clka(clk), // input
-   .cea(extrom_rd_en), // input
+   .cea(extrom_rd_en | extrom_wr_en), // input
    .ada(TRS_A[10:0]), // input [10:0]
-   .wrea(1'b0), // input
-   .dina(8'h00), // input [7:0]
+   .wrea(~TRS_WR), // input
+   .dina(TRS_D), // input [7:0]
    .douta(extrom_dout), // output [7:0]
    .ocea(extrom_rd_regce),
    .reseta(1'b0),
@@ -697,31 +663,38 @@ Gowin_DPB2 extrom (
 );
 
 
+//---BUS INTERFACE----------------------------------------------------------------
 
-reg[7:0] trs_data;
+assign TRS_DIR = TRS_RD & TRS_IN;
+
+assign TRS_OE = ~(~TRS_WR | ~TRS_OUT |
+                   trs_extrom_sel_rd |
+                   trs_ram_sel_rd    |
+                   esp_sel_in        |
+                   fdc_37e0_sel_rd   |
+                   fdc_37ec_sel_rd   |
+                   le18_data_sel_in  |
+                   hires_data_sel_in |
+                   spi_data_sel_in   );
+
+
 wire [7:0] hires_dout;
 wire [7:0] le18_dout;
 wire [7:0] spi_data_in;
 
 assign _D = (~TRS_RD | ~TRS_IN)
-             ? ( ({8{trs_ram_sel_rd   }} & ram_dout   ) |
-                 ({8{trs_extrom_sel_rd}} & extrom_dout) |
-                 ({8{hires_data_sel_in}} & hires_dout ) |
-                 ({8{le18_data_sel_in }} & le18_dout  ) |
+             ? ( ({8{trs_extrom_sel_rd}} & extrom_dout) |
+                 ({8{trs_ram_sel_rd   }} & ram_dout   ) |
+                 ({8{esp_sel_in       }} & trs_data   ) |
                  ({8{fdc_37e0_sel_rd  }} & irq_data   ) |
                  ({8{fdc_37ec_sel_rd  }} & fdc_data   ) |
-                 ({8{esp_sel_in       }} & trs_data   ) |
+                 ({8{le18_data_sel_in }} & le18_dout  ) |
+                 ({8{hires_data_sel_in}} & hires_dout ) |
                  ({8{spi_data_sel_in  }} & spi_data_in) )
              : 8'bz;
 
 
-always @(posedge clk) begin
-  if (trigger_action && cmd == dbus_write)
-    trs_data <= params[0];
-end
-
-
-//---BRAM-------------------------------------------------------------------------
+//--------BRAM-------------------------------------------------------------------------
 
 assign addrb = {params[1][6:0], params[0]};
 assign dinb = params[2];
@@ -746,14 +719,17 @@ trigger bram_peek_trigger(
   .three(bram_peek_done));
 
 
-always @(posedge clk) begin
+always @(posedge clk)
+begin
   if (bram_peek_done) byte_out <= doutb;
-  else if (trigger_action && cmd == dbus_read) byte_out <= TRS_D;
-  else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
-  else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
-  else if (trigger_action && cmd == abus_read) byte_out <= TRS_A[7:0];
-  else if (trigger_action && cmd == get_config) byte_out <= {4'b0, CONF};
-  else if (trigger_action && cmd == get_spi_data) byte_out <= spi_data_in;
+  else if (trigger_action)
+    case (cmd)
+      dbus_read:   byte_out <= TRS_D;
+      get_cookie:  byte_out <= COOKIE;
+      get_version: byte_out <= {VERSION_MAJOR, VERSION_MINOR};
+      abus_read:   byte_out <= TRS_A[7:0];
+      get_config:  byte_out <= {4'b0, CONF};
+    endcase
 end
 
 
@@ -761,7 +737,10 @@ end
 
 logic [23:0] rgb_screen_color = 24'hFFFFFF;
 
-always @(posedge clk) if (trigger_action && cmd == set_screen_color) rgb_screen_color <= {params[0], params[1], params[2]};
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_screen_color)
+    rgb_screen_color <= {params[0], params[1], params[2]};
+end
 
 
 logic [8:0] audio_cnt;
@@ -778,18 +757,20 @@ logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 wire clk1_pixel;
 wire clk1_pixel_x5;
 
+// 200 MHz (200.571 MHz actual)
 Gowin_rPLL0 pll1(
   .clkout(clk1_pixel_x5), //output clkout
   .clkin(clk_in) //input clkin
 );
 
+// 40 MHz (40.114 MHz actual)
 Gowin_CLKDIV0 clk1div0(
   .clkout(clk1_pixel), //output clkout
   .hclkin(clk1_pixel_x5), //input hclkin
   .resetn(1'b1) //input resetn
 );
 
-reg [23:0] rgb1 = 24'd0;
+reg [23:0] rgb1 = 24'h0;
 wire vga1_vid;
 
 always @(posedge clk1_pixel)
@@ -826,18 +807,20 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
 wire clk3_pixel;
 wire clk3_pixel_x5;
 
+// 125.875 MHz (126 MHz actual)
 Gowin_rPLL3 pll3(
   .clkout(clk3_pixel_x5), //output clkout
   .clkin(clk_in) //input clkin
 );
 
+// 25.175 MHz (25.2 MHz actual)
 Gowin_CLKDIV0 clk3div0(
   .clkout(clk3_pixel), //output clkout
   .hclkin(clk3_pixel_x5), //input hclkin
   .resetn(1'b1) //input resetn
 );
 
-reg [23:0] rgb3 = 24'd0;
+reg [23:0] rgb3 = 24'h0;
 wire vga3_vid;
 
 always @(posedge clk3_pixel)
@@ -944,9 +927,11 @@ vga1 vga1(
   .VGA_VID(vga1_vid),
   .VGA_HSYNC(),
   .VGA_VSYNC(),
-  .genlock(sync1));
+  .genlock(sync1)
+);
 
-always @(posedge clk1_pixel) begin
+always @(posedge clk1_pixel)
+begin
   sync1 <= ((cx1 == frame_width1 - 9) || (cx1 == frame_width1 - 8)) && (cy1 == frame_height1 - 1);
 end
 
@@ -973,9 +958,11 @@ vga3 vga3(
   .VGA_VID(vga3_vid),
   .VGA_HSYNC(),
   .VGA_VSYNC(),
-  .genlock(sync3));
+  .genlock(sync3)
+);
 
-always @(posedge clk3_pixel) begin
+always @(posedge clk3_pixel)
+begin
   sync3 <= (cx3 == frame_width3 - 10) && (cy3 == frame_height3 - 1);
 end
 
@@ -996,7 +983,7 @@ begin
 end
 
 
-//-----Cassette out--------------------------------------------------------------------------
+//-----Cassette out----------------------------------------------------------------
 
 wire cass_sel_out = (TRS_A[7:0] == 8'hFF) & ~TRS_OUT;
 
@@ -1043,16 +1030,19 @@ end
 //assign CASS_OUT_RIGHT = cass_pdmr_reg[9];
 
 
+//-----LED------------------------------------------------------------------------------------
+
 reg [25:0] heartbeat;
 
 always @ (posedge clk)
    heartbeat <= heartbeat + 26'b1;
 
 
-assign LED[0] = esp_sel;
-assign LED[1] = WAIT;
+assign LED[0] = WAIT;
+assign LED[1] = esp_sel;
 assign LED[2] = is_m3;
 assign LED[3] = heartbeat[25];
+
 
 //------------LightBright-80-------------------------------------------------------------
 
@@ -1083,8 +1073,6 @@ always @(posedge clk)
 begin
    if(io_access & spi_ctrl_sel_out)
       spi_ctrl_reg <= TRS_D;
-   else if (trigger_action && cmd == set_spi_ctrl_reg)
-      spi_ctrl_reg <= params[0];
 end
 
 // The SPI shift register is by design faster than the z80 can read and write.
@@ -1110,11 +1098,6 @@ begin
    else if(io_access & spi_data_sel_out)
    begin
       spi_shift_reg <= TRS_D;
-      spi_counter <= 8'b10000000;
-   end
-   else if (trigger_action && cmd == set_spi_data)
-   begin
-      spi_shift_reg <= params[0];
       spi_counter <= 8'b10000000;
    end
 end
