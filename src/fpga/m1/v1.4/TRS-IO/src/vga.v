@@ -3,19 +3,23 @@
 // This module was contributed by Mathew Boytim <maboytim@yahoo.com>
 
 module vga(
-  input clk,     // 100 MHz
+  input clk,
+  input srst,
   input vga_clk, // 20 MHz
-  input [16:0] TRS_A,
+  input [15:0] TRS_A,
   input [7:0] TRS_D,
   input TRS_WR,
   input TRS_OUT,
   input TRS_IN,
+  input io_access,
   output [7:0] le18_dout,
   output le18_dout_rdy,
-  output VGA_RGB,
+  output le18_enable,
+  output VGA_VID,
   output VGA_HSYNC,
   output VGA_VSYNC,
-  input reset);
+  input genlock);
+
 
 // The VGA display is 800x600.
 // The pixel clock is divided by two and each row of the TRS-80 display is repeated three times
@@ -23,7 +27,7 @@ module vga(
 // resolution of the M1 display resulting in a small border around the M1 display.
 // In 64x16 mode the characters are 6x12 or 6x36 when rows are repeated.
 // For convenience the VGA X and Y counters are partitioned into high and low parts which
-// count the character position and the position within the charater resepctively.
+// count the character position and the position within the character resepctively.
 reg [2:0] vga_xxx;     // 0-5
 reg [6:0] vga_XXXXXXX; // 0-66-2/6 active, -87 total
 reg [5:0] vga_yyyy_yy; // vga_yyyy_yy[5:2] = 0-11, vga_yyyy_yy[0:1]=0-2 in 64x16 mode
@@ -52,13 +56,13 @@ wire dsp_act = ((dsp_XXXXXXX < 7'd64) & (dsp_YYYYY < 5'd16));
 // 64/32 column display mode.
 // If modsel=1 then in 32 column mode.
 // in 32 column mode only the even columns are active.
-wire z80_outsig_sel_out = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hff) & TRS_OUT;
+wire z80_outsig_sel_out = (TRS_A[7:0] == 8'hFF) & ~TRS_OUT;
 
 reg z80_outsig_modesel = 1'b0;
 
 always @(posedge clk)
 begin
-   if(z80_outsig_sel_out)
+   if(io_access & z80_outsig_sel_out)
       z80_outsig_modesel <= TRS_D[3];
 end
 
@@ -70,13 +74,13 @@ begin
    reg_modsel <= z80_outsig_modesel;
 end
 
-wire z80_dsp_sel = (TRS_A[16:10] == 7'b0001111);
+wire z80_dsp_sel_wr = (TRS_A[15:10] == (16'h3C00 >> 10)) & ~TRS_WR;
 
 wire z80_dsp_wr_en;
 
 trigger z80_dsp_wr_trigger (
   .clk(clk),
-  .cond(TRS_WR & z80_dsp_sel),
+  .cond(io_access & z80_dsp_sel_wr),
   .one(z80_dsp_wr_en)
 );
 
@@ -108,12 +112,12 @@ blk_mem_gen_2 z80_dsp (
    .resetb(1'b0)
 );
 
-// Disable the splash screen and border on first write to test display.
+// Disable the splash screen and border on first write to text display.
 reg splash_en = 1'b1;
 
-always @ (posedge clk)
+always @(posedge clk)
 begin
-   if(z80_dsp_sel & TRS_WR)
+   if(io_access & z80_dsp_sel_wr)
       splash_en <= 1'b0;
 end
 
@@ -121,10 +125,11 @@ end
 wire [6:0] le18_XXXXXXX = dsp_XXXXXXX;
 wire [7:0] le18_YYYYYYYY = (dsp_YYYYY << 3) + (dsp_YYYYY << 2) + dsp_yyyy_yy[5:2]; // 0-191 active
 
-wire z80_le18_data_sel = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hec);
-wire z80_le18_x_sel_out = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hed) & TRS_OUT;
-wire z80_le18_y_sel_out = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hee) & TRS_OUT;
-wire z80_le18_options_out = (TRS_A[16] == 1'b0 && TRS_A[7:0] == 8'hef) & TRS_OUT;
+wire z80_le18_data_sel_out = (TRS_A[7:0] == 8'hEC) & ~TRS_OUT;
+wire z80_le18_data_sel_in = (TRS_A[7:0] == 8'hEC) & ~TRS_IN;
+wire z80_le18_x_sel_out = (TRS_A[7:0] == 8'hED) & ~TRS_OUT;
+wire z80_le18_y_sel_out = (TRS_A[7:0] == 8'hEE) & ~TRS_OUT;
+wire z80_le18_options_out = (TRS_A[7:0] == 8'hEF) & ~TRS_OUT;
 
 reg [5:0] z80_le18_x_reg;
 reg [7:0] z80_le18_y_reg;
@@ -137,12 +142,20 @@ begin
 
    if(z80_le18_y_sel_out)
       z80_le18_y_reg <= TRS_D;
-
-   if(z80_le18_options_out &~ splash_en)
-      z80_le18_options_reg <= TRS_D[0];
 end
 
-wire le18_enable = z80_le18_options_reg[0];
+always @(posedge clk)
+begin
+   if(srst)
+      z80_le18_options_reg <= splash_en;
+   else
+   begin
+      if(io_access & z80_le18_options_out & ~splash_en)
+         z80_le18_options_reg <= TRS_D[0];
+   end
+end
+
+wire le18_options_enable = z80_le18_options_reg[0];
 
 
 wire [5:0] z80_le18_data_b;
@@ -151,7 +164,7 @@ wire le18_rd_en, le18_rd_regce;
 
 trigger le18_rd_trigger (
   .clk(clk),
-  .cond(TRS_IN & z80_le18_data_sel),
+  .cond(io_access & z80_le18_data_sel_in),
   .one(le18_rd_en),
   .two(le18_rd_regce),
   .three(le18_dout_rdy)
@@ -161,7 +174,7 @@ wire le18_wr_en;
 
 trigger le18_wr_trigger (
   .clk(clk),
-  .cond(TRS_OUT & z80_le18_data_sel),
+  .cond(io_access & z80_le18_data_sel_out),
   .one(le18_wr_en)
 );
 
@@ -227,7 +240,7 @@ end
 // Bump the VGA counters.
 always @ (posedge vga_clk)
 begin
-   if(reset)
+   if(genlock)
    begin
       vga_xxx <= 3'b000;
       vga_XXXXXXX <= 7'd0;
@@ -370,22 +383,23 @@ begin
 end
 
 
-reg vga_rgb_out, h_sync_out, v_sync_out;
+reg vga_vid_out, h_sync_out, v_sync_out;
 
 always @ (posedge vga_clk)
 begin
-   vga_rgb_out <= dsp_pixel_act_shift_reg[5] ? (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_enable | splash_en)))
+   vga_vid_out <= dsp_pixel_act_shift_reg[5] ? (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_options_enable | splash_en)))
                                              : (vga_pixel_shift_reg[5] & splash_en);
    h_sync_out <= h_sync;
    v_sync_out <= v_sync;
 end
 
-assign VGA_RGB   = vga_rgb_out;
+assign VGA_VID   = vga_vid_out;
 assign VGA_HSYNC = h_sync_out;
 assign VGA_VSYNC = v_sync_out;
 
+assign le18_enable = le18_options_enable;
 
-assign le18_dout[6] = le18_enable;
+assign le18_dout[6] = le18_options_enable;
 assign le18_dout[7] = ~dsp_act;
 
 endmodule

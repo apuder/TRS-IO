@@ -12,6 +12,7 @@
         <File path="src/gowin_dpb/blk_mem_gen_4.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpb0.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpb1.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/gowin_dpb2.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_prom/blk_mem_gen_3.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll0.v" type="file.verilog" enable="1"/>

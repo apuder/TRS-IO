@@ -1,12 +1,13 @@
 -series GW1NR
--device GW1NR-9C
+-device GW1NR-9
+-device_version C
 -package QFN88P
 -part_number GW1NR-LV9QN88PC6/I5
 
 
 -mod_name Gowin_DPB0
 -file_name gowin_dpb0
--path C:/git/TRS-IO/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_dpb/
+-path C:/Users/matt/Documents/FPGA/TRS-IO-M1/src/gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
@@ -15,8 +16,8 @@
 -depth_1 32768
 -width_0 8
 -width_1 8
--read_mode_0 bypass
--read_mode_1 bypass
+-read_mode_0 pipeline
+-read_mode_1 pipeline
 -write_mode_0 normal
 -write_mode_1 normal
 -speed false
