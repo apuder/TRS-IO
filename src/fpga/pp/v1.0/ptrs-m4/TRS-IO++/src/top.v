@@ -388,6 +388,7 @@ reg [7:0] cmd;
 
 
 reg trigger_action = 1'b0;
+reg spi_error = 1'b0;
 
 always @(posedge clk) begin
   trigger_action <= 1'b0;
@@ -512,6 +513,7 @@ always @(posedge clk) begin
           default:
             begin
               state <= idle;
+              spi_error <= 1'b1;
             end
         endcase
       end
@@ -1410,6 +1412,6 @@ assign LED[2] = ~int_in_n;
 //assign LED[1] = keyb_matrix_pressed;
 //assign LED[1] = xio_enab;
 //assign LED[2] = cpu_fast;
-assign LED[3] = heartbeat[21];
+assign LED[3] = heartbeat[21] | spi_error;
 
 endmodule
