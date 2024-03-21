@@ -376,8 +376,8 @@ localparam [7:0]
   z80_dsp_peek        = 8'd25,
   set_led             = 8'd26,
   get_config          = 8'd27,
-  set_cass_in         = 8'd28;
-
+  set_cass_in         = 8'd28,
+  set_esp_status      = 8'd32;
 
 
 reg [7:0] params[0:4];
@@ -510,6 +510,9 @@ always @(posedge clk) begin
             trigger_action <= 1'b1;
             state <= idle;
           end
+          set_esp_status: begin
+            bytes_to_read <= 1;
+          end
           default:
             begin
               state <= idle;
@@ -590,6 +593,20 @@ always @(posedge clk) begin
 end
 
 assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
+
+
+//---ESP Status----------------------------------------------------------------------------
+
+reg[7:0] esp_status = 0;
+
+wire esp_status_esp_ready   = esp_status[0];
+wire esp_status_wifi_up     = esp_status[1];
+wire esp_status_smb_mounted = esp_status[2];
+wire esp_status_sd_mounted  = esp_status[3];
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_esp_status) esp_status <= params[0];
+end
 
 
 //---Full Address--------------------------------------------------------------------------
