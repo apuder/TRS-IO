@@ -266,7 +266,7 @@ uint8_t settings_get_KeyboardLayout() {
 
 void settings_set_KeyboardLayout(uint8_t layout) {
   printf("Set Keyboard Layout %02x\n",layout);
-  nvs_set_u8(storage, KEY_KEYBOARD_LAYOUT, layout)
+  nvs_set_u8(storage, KEY_KEYBOARD_LAYOUT, layout);
 }
 
 //-------------------------------------------------------------------------
