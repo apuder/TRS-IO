@@ -277,11 +277,13 @@ static void IRAM_ATTR io_task(void* p)
 #ifndef CONFIG_TRS_IO_PP
     // Read pins [S2..S0,A3..A0]
     const uint8_t s = GPIO.in >> 12;
+    const uint8_t mask = 0x70;
 #else
     // Read pins [S3..S0] to upper nibble
     const uint8_t s = GPIO.in >> 8;
+    const uint8_t mask = 0xf0;
 #endif
-    switch(s & 0x70) {
+    switch(s & mask) {
     case 0x00:
       trs_io_write();
       break;
@@ -313,7 +315,7 @@ static void IRAM_ATTR io_task(void* p)
       xray_status = XRAY_STATUS_BREAKPOINT;
       break;
 #endif
-    case 0x70:
+    case 0xf0:
       evt_send_esp_status();
       break;
     }
