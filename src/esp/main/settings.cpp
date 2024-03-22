@@ -245,6 +245,30 @@ static void init_screen_color()
   }
 }
 
+//----------------------------------------------------------------
+//static const char* KEYBOARD_LAYOUT  = "layout";
+
+void init_KeyboardLayout() {
+  settings_set_KeyboardLayout(settings_get_KeyboardLayout());
+}
+
+#define DEFAULT_US_LAYOUT 3
+
+uint8_t settings_get_KeyboardLayout() {
+	uint8_t curlayout = DEFAULT_US_LAYOUT;
+  if (nvs_get_u8(storage, KEY_KEYBOARD_LAYOUT, &curlayout) != ESP_OK) {
+  	printf("Get Keyboard Layout not ok seting default %02x\n",DEFAULT_US_LAYOUT);
+    nvs_set_u8(storage, KEY_KEYBOARD_LAYOUT, DEFAULT_US_LAYOUT);//set us kblayout as default
+  }
+  printf("Get Keyboard Layout %02x\n",curlayout);
+  return curlayout;
+}
+
+void settings_set_KeyboardLayout(uint8_t layout) {
+  printf("Set Keyboard Layout %02x\n",layout);
+  nvs_set_u8(storage, KEY_KEYBOARD_LAYOUT, layout)
+}
+
 //-------------------------------------------------------------------------
 
 void settings_reset_all()
@@ -256,6 +280,7 @@ void settings_reset_all()
 void settings_commit()
 {
   nvs_commit(storage);
+  printf("settings_commit\n");
 }
 
 void init_settings()
@@ -271,10 +296,12 @@ void init_settings()
   ESP_ERROR_CHECK(err);
 
   ESP_ERROR_CHECK(nvs_open("retrostore", NVS_READWRITE, &storage));
+  printf("settings open store\n");
 
   init_tz();
   init_wifi_credentials();
   init_smb_credentials();
   init_rom();
+  init_KeyboardLayout();
   init_screen_color();
 }
