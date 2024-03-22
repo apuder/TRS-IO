@@ -422,7 +422,7 @@ wire z80_orch90l_sel    = ~nIORQ & (z80_addr[7:0] == 8'h75); // 75
 wire z80_orch90r_sel    = ~nIORQ & (z80_addr[7:0] == 8'h79); // 79
 
 // External expansion bus
-wire z80_xio_sel = (~nIORQ & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b10) | (z80_addr[7:5] == 3'b110))) & // 00-df
+wire z80_xio_sel = (~nIORQ & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b10) | (z80_addr[7:5] == 3'b110)) | z80_lp_in_sel & z80_lp_out_sel) & // 00-df
                    ~z80_hires_sel & // minus 80-83
                    ~z80_orch90l_sel & ~z80_orch90r_sel; // 00-df minus 75,79
 

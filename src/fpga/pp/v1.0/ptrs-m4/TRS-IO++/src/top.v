@@ -173,15 +173,6 @@ end
 
 //----TRS-IO---------------------------------------------------------------------
 
-localparam[7:0]
-  PRINTER_STATUS_READY = 8'h30,
-  PRINTER_STATUS_BUSY = 8'hf0;
-
-reg[7:0] printer_status = PRINTER_STATUS_READY;
-
-// One byte buffer for printer output
-reg[7:0] printer_byte;
-
 
 /*
 wire trs_wr;
@@ -250,10 +241,17 @@ wire fdc_37ef_sel_rd = (TRS_A == 16'h37ef) && !TRS_RD;
 wire fdc_sel_rd = fdc_37e0_sel_rd || fdc_37ec_sel_rd || fdc_37ef_sel_rd;
 wire fdc_sel = is_m1 & fdc_sel_rd;
 
-wire printer_sel_rd = (TRS_A == 16'h37e8) && !TRS_RD;
-wire printer_sel_wr = (TRS_A == 16'h37e8) && !TRS_WR;
-wire printer_sel = printer_sel_wr;
-reg printer_sel_reg = 0;
+// m3: printer @ F8h-F9h (io)
+wire printer_sel_rd = (TRS_A[7:2] == (8'hF8 >> 2) ||
+                       TRS_A[7:2] == (8'hF4 >> 2)) && !TRS_IN;
+wire printer_sel_wr = (TRS_A[7:2] == (8'hF8 >> 2)) && !TRS_OUT;
+wire printer_sel = printer_sel_rd || printer_sel_wr;
+
+wire printer_sel_m3 = (TRS_A[7:2]  == (8'hF8 >> 2));
+wire printer_sel_rd = printer_sel_m3 & ~TRS_IN;
+wire printer_sel_wr = printer_sel_m3 & ~TRS_OUT;
+wire printer_sel = printer_sel_rd | printer_sel_wr;
+
 
 wire trs_io_sel_in = (TRS_A[7:0] == 31) && !TRS_IN;
 wire trs_io_sel_out = (TRS_A[7:0] == 31) && !TRS_OUT;
@@ -294,24 +292,13 @@ always @(posedge clk) begin
   if (esp_sel_risingedge) begin
     // ESP needs to do something
     ESP_REQ <= 1;
+    WAIT_REG <= 1;
     count <= 50;
-    if (printer_sel) begin
-      // The next byte for the printer is ready
-      printer_sel_reg <= 1;
-      printer_byte <= TRS_D;
-      printer_status <= PRINTER_STATUS_BUSY;
-    end
-    else begin
-      // This is not a write to 0x37e8 (the printer). Need to assert WAIT
-      WAIT_REG <= 1;
-    end
   end
   else if (esp_done_risingedge)
     begin
       // When ESP is done, de-assert WAIT
       WAIT_REG <= 0;
-      printer_sel_reg <= 0;
-      printer_status <= PRINTER_STATUS_READY;
     end
   if (count == 1) ESP_REQ <= 0;
   if (count != 0) count <= count - 1;
@@ -323,16 +310,16 @@ localparam [3:0]
   esp_trs_io_out = 4'd1,
   esp_frehd_in = 4'd2,
   esp_frehd_out = 4'd3,
-  esp_printer_wr = 4'd4,
-  esp_xray = 4'd5;
-
+  esp_printer_rd = 4'd4,
+  esp_printer_wr = 4'd5,
+  esp_xray       = 4'd6;
 
 assign ESP_S = ~((~esp_trs_io_in & {4{trs_io_sel_in}}) |
                  (~esp_trs_io_out & {4{trs_io_sel_out}}) |
                  (~esp_frehd_in & {4{frehd_sel_in}}) |
                  (~esp_frehd_out & {4{frehd_sel_out}}) |
-                 (~esp_printer_wr & {4{printer_sel_reg}}) |
-                 (~esp_xray & {4{xray_sel}}));
+                 (~esp_printer_rd & {4{printer_sel_rd}}) |
+                 (~esp_printer_wr & {4{printer_sel_wr}}) );
 
 
 //---main-------------------------------------------------------------------------
@@ -927,8 +914,6 @@ always @(posedge clk) begin
       trs_data <= (fdc_sector_idx < 26) ? frehd_loader[fdc_sector_idx * 8+:8] : 0;
       fdc_sector_idx = fdc_sector_idx + 1;
     end
-  else if (io_access && printer_sel_rd)
-    trs_data <= printer_status;
   else if (le18_dout_rdy)
     trs_data <= le18_dout;
 /*
@@ -987,7 +972,6 @@ always @(posedge clk) begin
   else if (trigger_action && cmd == dbus_read) byte_out <= use_internal_trs_io ? _DX : TRS_D;
   else if (trigger_action && cmd == get_cookie) byte_out <= COOKIE;
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
-  else if (trigger_action && cmd == get_printer_byte) byte_out <= printer_byte;
   else if (trigger_action && cmd == abus_read) byte_out <= TRS_A[7:0];
   else if (trigger_action && cmd == get_config) byte_out <= {1'b0, is_80cols, is_doublwide, is_hires, CONF};
 end
