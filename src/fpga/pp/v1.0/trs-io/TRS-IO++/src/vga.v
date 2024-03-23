@@ -148,10 +148,10 @@ reg [0:0] z80_le18_options_reg = 1'b0;
 
 always @(posedge clk)
 begin
-   if(z80_le18_x_sel_out)
+   if(io_access & z80_le18_x_sel_out)
       z80_le18_x_reg <= TRS_D[5:0];
 
-   if(z80_le18_y_sel_out)
+   if(io_access & z80_le18_y_sel_out)
       z80_le18_y_reg <= TRS_D;
 end
 
@@ -221,11 +221,11 @@ blk_mem_gen_4 z80_le18 (
  
 // Instantiate the character generator ROM.
 // The character ROM has a latency of 2 clock cycles.
-wire [4:0] char_rom_data;
+wire [5:0] char_rom_data;
 
 /*
  * Single Port ROM
- * Port A: Width: 5, Depth: 1024, Primitives Output Register, REGCEA Pin
+ * Port A: Width: 6, Depth: 1024, Primitives Output Register, REGCEA Pin
  *         Load Init File: trs80m1_chr.coe
  */
 blk_mem_gen_3 char_rom (
@@ -233,8 +233,8 @@ blk_mem_gen_3 char_rom (
    .ce(dsp_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b010)),
    .ad({z80_dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [9:0]
    .wre(1'b0),
-   .din(5'b00000),
-   .dout(char_rom_data), // output [4:0]
+   .din(6'b000000),
+   .dout(char_rom_data), // output [5:0]
    .oce(dsp_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b011)),
    .reset(1'b0)
 );
@@ -315,10 +315,10 @@ begin
          begin
             if(reg_modsel)
                txt_pixel_shift_reg <= ( char_rom_addr[3] ? 6'h00 :
-                  ( ~dsp_XXXXXXX[0] ? { 2'b00,                {2{char_rom_data[4]}}, {2{char_rom_data[3]}}}
+                  ( ~dsp_XXXXXXX[0] ? {{2{char_rom_data[5]}}, {2{char_rom_data[4]}}, {2{char_rom_data[3]}}}
                                     : {{2{char_rom_data[2]}}, {2{char_rom_data[1]}}, {2{char_rom_data[0]}}} ) );
             else
-               txt_pixel_shift_reg <= (char_rom_addr[3] ? 6'h00 : {1'b0, char_rom_data});
+               txt_pixel_shift_reg <= (char_rom_addr[3] ? 6'h00 : char_rom_data);
          end
          else
          begin

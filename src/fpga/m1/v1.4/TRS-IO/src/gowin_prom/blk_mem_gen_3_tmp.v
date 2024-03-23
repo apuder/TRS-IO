@@ -1,16 +1,17 @@
-//Copyright (C)2014-2022 Gowin Semiconductor Corporation.
+//Copyright (C)2014-2023 Gowin Semiconductor Corporation.
 //All rights reserved.
 //File Title: Template file for instantiation
-//GOWIN Version: V1.9.8.05
+//GOWIN Version: V1.9.9 Beta-4 Education
 //Part Number: GW1NR-LV9QN88PC6/I5
-//Device: GW1NR-9C
-//Created Time: Mon Jun 06 17:06:55 2022
+//Device: GW1NR-9
+//Device Version: C
+//Created Time: Wed Mar 20 07:12:00 2024
 
 //Change the instance name and port connections to the signal names
 //--------Copy here to design--------
 
     blk_mem_gen_3 your_instance_name(
-        .dout(dout_o), //output [4:0] dout
+        .dout(dout_o), //output [5:0] dout
         .clk(clk_i), //input clk
         .oce(oce_i), //input oce
         .ce(ce_i), //input ce

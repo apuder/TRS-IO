@@ -269,6 +269,13 @@ localparam [7:0]
   get_version         = 8'd15,
   get_printer_byte    = 8'd16, // Deprecated
   set_screen_color    = 8'd17,
+  abus_read           = 8'd18,
+  send_keyb           = 8'd19,
+  set_led             = 8'd26,
+  get_config          = 8'd27,
+  set_spi_ctrl_reg    = 8'd29,
+  set_spi_data        = 8'd30,
+  get_spi_data        = 8'd31,
   set_esp_status      = 8'd32;
 
 
@@ -704,8 +711,8 @@ end
 logic [8:0] audio_cnt;
 logic clk_audio;
 
-always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 0 : audio_cnt + 1'b1;
-always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
+always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 9'd0 : audio_cnt + 9'd1;
+always @(posedge clk_in) if (audio_cnt == 9'd0) clk_audio <= ~clk_audio;
 
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 
@@ -875,10 +882,7 @@ end
 //-----LED------------------------------------------------------------------------------------
 
 assign led[0] = ~TRS_WAIT;
-//assign led[1] = ~EXTIOSEL;
-assign led[2] = ~TRS_INT;
-//assign led[3] = ~hertz50;
-//assign led[4] = ~lock;
-assign led[5] = ~esp_status_esp_ready;
+assign led[1] = ~ESP_REQ;
+assign led[5:2] = ~esp_status[3:0];
 
 endmodule

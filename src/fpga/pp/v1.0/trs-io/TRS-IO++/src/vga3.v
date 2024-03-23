@@ -35,7 +35,7 @@ filter io(
 // Each row of the TRS-80 display is repeated two times for an effective resolution of
 // 640x240 which larger than the 512x192 native resolution of the M3 text display
 // resulting in a small border around the M3 text display.
-// In 64x16 mode the characters are 6x12 or 6x24 when rows are repeated.
+// In 64x16 mode the characters are 8x12 or 8x24 when rows are repeated.
 // For convenience the VGA X and Y counters are partitioned into high and low parts which
 // count the character position and the position within the character resepctively.
 reg [2:0] vga_xxx;     // 0-7
@@ -70,7 +70,7 @@ reg z80_outsig_modesel = 1'b0;
 
 always @(posedge clk)
 begin
-   if(z80_outsig_sel_out)
+   if(io_access & z80_outsig_sel_out)
       z80_outsig_modesel <= TRS_D[3];
 end
 
@@ -82,7 +82,7 @@ begin
    reg_modsel <= z80_outsig_modesel;
 end
 
-wire z80_dsp_sel = (TRS_A[15:10] == (16'h3c00 >> 10));
+wire z80_dsp_sel = (TRS_A[15:10] == (16'h3C00 >> 10));
 
 wire z80_dsp_wr_en;
 
@@ -125,14 +125,14 @@ display_ram z80_dsp (
 // Disable the splash screen and border on first write to test display.
 reg splash_en = 1'b1;
 
-always @ (posedge clk)
+always @(posedge clk)
 begin
-   if(z80_dsp_sel & ~TRS_WR)
+   if(io_access & z80_dsp_sel & ~TRS_WR)
       splash_en <= 1'b0;
 end
 
 // hires graphics.
-wire [6:0] hires_XXXXXXX = vga_XXXXXXX;
+wire [6:0] hires_XXXXXXX = vga_XXXXXXX; // 0-79 active
 wire [7:0] hires_YYYYYYYY = (vga_YYYYY << 3) + (vga_YYYYY << 2) + vga_yyyy_y[4:1]; // 0-239 active
 // Hires in active area.
 wire hires_act = vga_act;
@@ -257,7 +257,7 @@ wire [7:0] char_rom_data;
 blk_mem_gen_5 char_rom (
    .clk(vga_clk), // input
    .ce(dsp_act & (dsp_yyyy_y[4] == 1'b0) & (dsp_xxx == 3'b100)),
-   .ad({z80_dsp_data_b[6:0], dsp_yyyy_y[3:1]}), // input [9:0]
+   .ad({1'b0, z80_dsp_data_b[6:0], dsp_yyyy_y[3:1]}), // input [10:0]
    .dout(char_rom_data), // output [7:0]
    .oce(dsp_act & (dsp_yyyy_y[4] == 1'b0) & (dsp_xxx == 3'b101)),
    .reset(1'b0)
@@ -380,6 +380,7 @@ begin
    else
       hires_pixel_shift_reg <= {hires_pixel_shift_reg[6:0], 1'b0};
 end
+
 
 reg h_sync, v_sync;
 

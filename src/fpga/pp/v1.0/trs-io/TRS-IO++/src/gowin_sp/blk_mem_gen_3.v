@@ -1,29 +1,30 @@
-//Copyright (C)2014-2022 Gowin Semiconductor Corporation.
+//Copyright (C)2014-2023 Gowin Semiconductor Corporation.
 //All rights reserved.
 //File Title: IP file
-//GOWIN Version: V1.9.8.09 Education
+//GOWIN Version: V1.9.9 Beta-4 Education
 //Part Number: GW2A-LV18PG256C8/I7
-//Device: GW2A-18C
-//Created Time: Sun Mar 12 07:57:57 2023
+//Device: GW2A-18
+//Device Version: C
+//Created Time: Wed Mar 20 07:04:51 2024
 
 module blk_mem_gen_3 (dout, clk, oce, ce, reset, wre, ad, din);
 
-output [4:0] dout;
+output [5:0] dout;
 input clk;
 input oce;
 input ce;
 input reset;
 input wre;
 input [9:0] ad;
-input [4:0] din;
+input [5:0] din;
 
-wire [26:0] sp_inst_0_dout_w;
+wire [25:0] sp_inst_0_dout_w;
 wire gw_gnd;
 
 assign gw_gnd = 1'b0;
 
 SP sp_inst_0 (
-    .DO({sp_inst_0_dout_w[26:0],dout[4:0]}),
+    .DO({sp_inst_0_dout_w[25:0],dout[5:0]}),
     .CLK(clk),
     .OCE(oce),
     .CE(ce),
@@ -31,7 +32,7 @@ SP sp_inst_0 (
     .WRE(wre),
     .BLKSEL({gw_gnd,gw_gnd,gw_gnd}),
     .AD({gw_gnd,ad[9:0],gw_gnd,gw_gnd,gw_gnd}),
-    .DI({gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,din[4:0]})
+    .DI({gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,gw_gnd,din[5:0]})
 );
 
 defparam sp_inst_0.READ_MODE = 1'b1;

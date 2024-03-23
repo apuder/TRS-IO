@@ -12,4 +12,4 @@ LANG=0
 MEM_FILE=../trs80m1_chr.mi
 READ=1
 RESET_MODE=true
-WIDTH=5
+WIDTH=6

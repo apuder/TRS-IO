@@ -285,10 +285,14 @@ localparam [7:0]
   abus_read           = 8'd18,
   send_keyb           = 8'd19,
   set_led             = 8'd26,
-  get_config          = 8'd27;
+  get_config          = 8'd27,
+  set_spi_ctrl_reg    = 8'd29,
+  set_spi_data        = 8'd30,
+  get_spi_data        = 8'd31,
+  set_esp_status      = 8'd32;
 
 
-reg[7:0] byte_in, byte_out;
+reg [7:0] byte_in, byte_out;
 reg byte_received = 1'b0;
 
 reg [7:0] params[0:4];
@@ -385,6 +389,19 @@ always @(posedge clk) begin
             trigger_action <= 1'b1;
             state <= idle;
           end
+          set_spi_ctrl_reg: begin
+            bytes_to_read <= 1;
+          end
+          set_spi_data: begin
+            bytes_to_read <= 1;
+          end
+          get_spi_data: begin
+            trigger_action <= 1'b1;
+            state <= idle;
+          end
+          set_esp_status: begin
+            bytes_to_read <= 1;
+          end
           default:
             begin
               state <= idle;
@@ -403,7 +420,7 @@ always @(posedge clk) begin
           end
         else
           bytes_to_read <= bytes_to_read - 3'd1;
-    end
+      end
     default:
       state <= idle;
       endcase
@@ -454,6 +471,20 @@ always @(posedge clk) begin
 end
 
 assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
+
+
+//---ESP Status----------------------------------------------------------------------------
+
+reg[7:0] esp_status = 0;
+
+wire esp_status_esp_ready   = esp_status[0];
+wire esp_status_wifi_up     = esp_status[1];
+wire esp_status_smb_mounted = esp_status[2];
+wire esp_status_sd_mounted  = esp_status[3];
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_esp_status) esp_status <= params[0];
+end
 
 
 //---Full Address--------------------------------------------------------------------------
@@ -729,6 +760,7 @@ begin
       get_version: byte_out <= {VERSION_MAJOR, VERSION_MINOR};
       abus_read:   byte_out <= TRS_A[7:0];
       get_config:  byte_out <= {4'b0, CONF};
+      get_spi_data:byte_out <= spi_data_in;
     endcase
 end
 
@@ -746,8 +778,8 @@ end
 logic [8:0] audio_cnt;
 logic clk_audio;
 
-always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 0 : audio_cnt + 1'b1;
-always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
+always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 9'd0 : audio_cnt + 9'd1;
+always @(posedge clk_in) if (audio_cnt == 9'd0) clk_audio <= ~clk_audio;
 
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 
@@ -793,7 +825,7 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .tmds(),
   .tmds_clock(),
   .cx(cx1),
-  .cy(cy),
+  .cy(cy1),
   .frame_width(frame_width1),
   .frame_height(frame_height1),
   .screen_width(screen_width1),
@@ -1073,6 +1105,8 @@ always @(posedge clk)
 begin
    if(io_access & spi_ctrl_sel_out)
       spi_ctrl_reg <= TRS_D;
+   else if(trigger_action && cmd == set_spi_ctrl_reg)
+      spi_ctrl_reg <= params[0];
 end
 
 // The SPI shift register is by design faster than the z80 can read and write.
@@ -1098,6 +1132,11 @@ begin
    else if(io_access & spi_data_sel_out)
    begin
       spi_shift_reg <= TRS_D;
+      spi_counter <= 8'b10000000;
+   end
+   else if(trigger_action && cmd == set_spi_data)
+   begin
+      spi_shift_reg <= params[0];
       spi_counter <= 8'b10000000;
    end
 end

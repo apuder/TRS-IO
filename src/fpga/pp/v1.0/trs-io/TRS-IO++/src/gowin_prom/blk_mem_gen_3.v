@@ -1,27 +1,28 @@
-//Copyright (C)2014-2022 Gowin Semiconductor Corporation.
+//Copyright (C)2014-2023 Gowin Semiconductor Corporation.
 //All rights reserved.
 //File Title: IP file
-//GOWIN Version: V1.9.8.05
+//GOWIN Version: V1.9.9 Beta-4 Education
 //Part Number: GW1NR-LV9QN88PC6/I5
-//Device: GW1NR-9C
-//Created Time: Mon Jun 06 17:06:55 2022
+//Device: GW1NR-9
+//Device Version: C
+//Created Time: Wed Mar 20 06:56:59 2024
 
 module blk_mem_gen_3 (dout, clk, oce, ce, reset, ad);
 
-output [4:0] dout;
+output [5:0] dout;
 input clk;
 input oce;
 input ce;
 input reset;
 input [9:0] ad;
 
-wire [26:0] prom_inst_0_dout_w;
+wire [25:0] prom_inst_0_dout_w;
 wire gw_gnd;
 
 assign gw_gnd = 1'b0;
 
 pROM prom_inst_0 (
-    .DO({prom_inst_0_dout_w[26:0],dout[4:0]}),
+    .DO({prom_inst_0_dout_w[25:0],dout[5:0]}),
     .CLK(clk),
     .OCE(oce),
     .CE(ce),

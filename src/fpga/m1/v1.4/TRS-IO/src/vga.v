@@ -96,7 +96,7 @@ blk_mem_gen_2 z80_dsp (
    .clka(clk), // input
    .cea(z80_dsp_wr_en), // input
    .ada(TRS_A[9:0]), // input [9:0]
-   .wrea(z80_dsp_wr_en), // input
+   .wrea(1'b1), // input
    .dina(TRS_D), // input [7:0]
    .douta(), // output [7:0]
    .ocea(1'b0),
@@ -126,7 +126,7 @@ wire [6:0] le18_XXXXXXX = dsp_XXXXXXX;
 wire [7:0] le18_YYYYYYYY = (dsp_YYYYY << 3) + (dsp_YYYYY << 2) + dsp_yyyy_yy[5:2]; // 0-191 active
 
 wire z80_le18_data_sel_out = (TRS_A[7:0] == 8'hEC) & ~TRS_OUT;
-wire z80_le18_data_sel_in = (TRS_A[7:0] == 8'hEC) & ~TRS_IN;
+wire z80_le18_data_sel_in  = (TRS_A[7:0] == 8'hEC) & ~TRS_IN;
 wire z80_le18_x_sel_out = (TRS_A[7:0] == 8'hED) & ~TRS_OUT;
 wire z80_le18_y_sel_out = (TRS_A[7:0] == 8'hEE) & ~TRS_OUT;
 wire z80_le18_options_out = (TRS_A[7:0] == 8'hEF) & ~TRS_OUT;
@@ -137,10 +137,10 @@ reg [0:0] z80_le18_options_reg = 1'b0;
 
 always @(posedge clk)
 begin
-   if(z80_le18_x_sel_out)
+   if(io_access & z80_le18_x_sel_out)
       z80_le18_x_reg <= TRS_D[5:0];
 
-   if(z80_le18_y_sel_out)
+   if(io_access & z80_le18_y_sel_out)
       z80_le18_y_reg <= TRS_D;
 end
 
@@ -208,18 +208,18 @@ blk_mem_gen_4 z80_le18 (
  
 // Instantiate the character generator ROM.
 // The character ROM has a latency of 2 clock cycles.
-wire [4:0] char_rom_data;
+wire [5:0] char_rom_data;
 
 /*
  * Single Port ROM
- * Port A: Width: 5, Depth: 1024, Primitives Output Register, REGCEA Pin
+ * Port A: Width: 6, Depth: 1024, Primitives Output Register, REGCEA Pin
  *         Load Init File: trs80m1_chr.coe
  */
 blk_mem_gen_3 char_rom (
    .clk(vga_clk), // input
-   .ad({z80_dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [9:0]
-   .dout(char_rom_data), // output [4:0]
    .ce(dsp_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b010)),
+   .ad({z80_dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [9:0]
+   .dout(char_rom_data), // output [5:0]
    .oce(dsp_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b011)),
    .reset(1'b0)
 );
@@ -285,7 +285,6 @@ end
 // Load the text/le18 pixel data into the pixel shift register, or shift current contents.
 reg [5:0] txt_pixel_shift_reg;
 reg [5:0] le18_pixel_shift_reg;
-reg [5:0] dsp_pixel_act_shift_reg;
 
 always @ (posedge vga_clk)
 begin
@@ -293,77 +292,52 @@ begin
    // always load when dsp_xxx == 3'b100, otherwise they shift. 
    if(dsp_xxx == 3'b100)
    begin
-   // If the msb is 1 then it's block graphic.
-   // Otherwise it's character data from the character rom.
-   if(dsp_act)
-   begin
-      if(char_rom_addr[11] == 1'b0)
+      // If the msb is 1 then it's block graphic.
+      // Otherwise it's character data from the character rom.
+      if(dsp_act)
       begin
-         if(reg_modsel)
-            txt_pixel_shift_reg <= ( char_rom_addr[3] ? 6'h00 :
-               ( ~dsp_XXXXXXX[0] ? { 2'b00,                {2{char_rom_data[4]}}, {2{char_rom_data[3]}}}
-                                 : {{2{char_rom_data[2]}}, {2{char_rom_data[1]}}, {2{char_rom_data[0]}}} ) );
+         if(char_rom_addr[11] == 1'b0)
+         begin
+            if(reg_modsel)
+               txt_pixel_shift_reg <= ( char_rom_addr[3] ? 6'h00 :
+                  ( ~dsp_XXXXXXX[0] ? {{2{char_rom_data[5]}}, {2{char_rom_data[4]}}, {2{char_rom_data[3]}}}
+                                    : {{2{char_rom_data[2]}}, {2{char_rom_data[1]}}, {2{char_rom_data[0]}}} ) );
+            else
+               txt_pixel_shift_reg <= (char_rom_addr[3] ? 6'h00 : char_rom_data);
+         end
          else
-            txt_pixel_shift_reg <= (char_rom_addr[3] ? 6'h00 : {1'b0, char_rom_data});
+         begin
+            // The character is 12 rows.
+            if(reg_modsel)
+               case(char_rom_addr[3:2])
+                  2'b00: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[4]}} : {6{char_rom_addr[5]}} );
+                  2'b01: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[6]}} : {6{char_rom_addr[7]}} );
+                  2'b10: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[8]}} : {6{char_rom_addr[9]}} );
+                  2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
+               endcase
+            else
+               case(char_rom_addr[3:2])
+                  2'b00: txt_pixel_shift_reg <= {{3{char_rom_addr[4]}}, {3{char_rom_addr[5]}}};
+                  2'b01: txt_pixel_shift_reg <= {{3{char_rom_addr[6]}}, {3{char_rom_addr[7]}}};
+                  2'b10: txt_pixel_shift_reg <= {{3{char_rom_addr[8]}}, {3{char_rom_addr[9]}}};
+                  2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
+               endcase
+         end
+         // For LE18 the leftmost bit is bit 0 so load the shift register in bit reversed order.
+         le18_pixel_shift_reg <= {z80_le18_data_b[0], z80_le18_data_b[1], z80_le18_data_b[2],
+                                  z80_le18_data_b[3], z80_le18_data_b[4], z80_le18_data_b[5]};
       end
       else
       begin
-         // The character is 12 rows.
-         if(reg_modsel)
-            case(char_rom_addr[3:2])
-               2'b00: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[4]}} : {6{char_rom_addr[5]}} );
-               2'b01: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[6]}} : {6{char_rom_addr[7]}} );
-               2'b10: txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {6{char_rom_addr[8]}} : {6{char_rom_addr[9]}} );
-               2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
-            endcase
-         else
-            case(char_rom_addr[3:2])
-               2'b00: txt_pixel_shift_reg <= {{3{char_rom_addr[4]}}, {3{char_rom_addr[5]}}};
-               2'b01: txt_pixel_shift_reg <= {{3{char_rom_addr[6]}}, {3{char_rom_addr[7]}}};
-               2'b10: txt_pixel_shift_reg <= {{3{char_rom_addr[8]}}, {3{char_rom_addr[9]}}};
-               2'b11: txt_pixel_shift_reg <= 6'h00; // should never happen
-            endcase
+         txt_pixel_shift_reg <= 6'h00;
+         le18_pixel_shift_reg <= 6'h00;
       end
-      // For LE18 the leftmost bit is bit 0 so load the shift register in bit reversed order.
-      le18_pixel_shift_reg <= {z80_le18_data_b[0], z80_le18_data_b[1], z80_le18_data_b[2],
-                               z80_le18_data_b[3], z80_le18_data_b[4], z80_le18_data_b[5]};
-      dsp_pixel_act_shift_reg <= 6'h3f;
-   end
-   else
-   begin
-      txt_pixel_shift_reg <= 6'h00;
-      le18_pixel_shift_reg <= 6'h00;
-      dsp_pixel_act_shift_reg <= 6'h00;
-   end
    end
    else
    begin
       txt_pixel_shift_reg <= {txt_pixel_shift_reg[4:0], 1'b0};
       le18_pixel_shift_reg <= {le18_pixel_shift_reg[4:0], 1'b0};
-      dsp_pixel_act_shift_reg <= {dsp_pixel_act_shift_reg[4:0], 1'b0};
    end
-end
-
-// Load the vga pixel data into the pixel shift register, or shift current contents.
-reg [5:0] vga_pixel_shift_reg;
-
-always @ (posedge vga_clk)
-begin
-   // Because of the memory pipelining the text/le18 pixel shift registers
-   // always load when dsp_xxx == 3'b100.  The vga pixel shift register must do
-   // likewise to maintain the proper offset between the vga and display/le18.
-   // Load the vga pixel shift register when vga_xxx == 3'b100, otherwise shift. 
-   if(vga_xxx == 3'b100)
-   begin
-      if(vga_act)
-         //vga_pixel_shift_reg <= (vga_XXXXXXX == 7'd66) ? ((vga_yyyy_yy[2] ^ vga_yyyy_yy[0]) ? 6'h14 : 6'h28)
-         //                                              : ((vga_yyyy_yy[2] ^ vga_yyyy_yy[0]) ? 6'h15 : 6'h2a);
-         vga_pixel_shift_reg <= (vga_XXXXXXX == 7'd66) ? 6'h3c : 6'h3f;
-      else
-         vga_pixel_shift_reg <= 6'h00;
-   end
-   else
-      vga_pixel_shift_reg <= {vga_pixel_shift_reg[4:0], 1'b0};
 end
 
 
@@ -387,8 +361,7 @@ reg vga_vid_out, h_sync_out, v_sync_out;
 
 always @ (posedge vga_clk)
 begin
-   vga_vid_out <= dsp_pixel_act_shift_reg[5] ? (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_options_enable | splash_en)))
-                                             : (vga_pixel_shift_reg[5] & splash_en);
+   vga_vid_out <= (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_options_enable | splash_en)));
    h_sync_out <= h_sync;
    v_sync_out <= v_sync;
 end
