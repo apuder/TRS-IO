@@ -210,11 +210,11 @@ Gowin_pROM loader_rom (
 wire [7:0] loader_dout = (loader_addr == 8'd3) ? loader_param : _loader_dout;
 
 
-wire esp_sel_in  = trs_io_sel_in  || frehd_sel_in  || printer_sel_rd;
-wire esp_sel_out = trs_io_sel_out || frehd_sel_out || printer_sel_wr;
-wire esp_sel = esp_sel_in || esp_sel_out;
+wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
+wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
+wire esp_sel = esp_sel_in | esp_sel_out;
 
-wire esp_sel_risingedge = io_access && esp_sel;
+wire esp_sel_risingedge = io_access & esp_sel;
 
 
 assign EXTIOSEL = (esp_sel_in | loader_sel_in | hires_sel_in);
@@ -295,7 +295,7 @@ localparam [7:0]
   xray_resume         = 8'd13,
   set_full_addr       = 8'd14,
   get_version         = 8'd15,
-  get_printer_byte    = 8'd16,
+  get_printer_byte    = 8'd16, // Deprecated
   set_screen_color    = 8'd17,
   abus_read           = 8'd18,
   send_keyb           = 8'd19,
@@ -415,7 +415,7 @@ always @(posedge clk) begin
           end
         else
           bytes_to_read <= bytes_to_read - 3'd1;
-    end
+      end
     default:
       state <= idle;
       endcase
@@ -546,8 +546,8 @@ end
 logic [8:0] audio_cnt;
 logic clk_audio;
 
-always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 0 : audio_cnt + 1'b1;
-always @(posedge clk_in) if (audio_cnt == 0) clk_audio <= ~clk_audio;
+always @(posedge clk_in) audio_cnt <= (audio_cnt == 9'd280) ? 9'd0 : audio_cnt + 9'd1;
+always @(posedge clk_in) if (audio_cnt == 9'd0) clk_audio <= ~clk_audio;
 
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 
@@ -681,7 +681,7 @@ framegrabber framegrabber(
   .hsync_in(HSYNC_I), // input
   .vsync_in(VSYNC_I), // input
   .pixel_in(VIDEO_I), // input
-  .HZ50(hertz50), // output
+  .HZ50(hertz50), // input
 
   .cx(cx), // input [9:0]
   .cy(cy), // input [9:0]

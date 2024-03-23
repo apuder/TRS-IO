@@ -9,9 +9,9 @@ module vga3(
   input [15:0] TRS_A,
   input [7:0] TRS_D,
   input TRS_WR,
-  input TRS_RD,
   input TRS_OUT,
   input TRS_IN,
+  input io_access,
   output [7:0] hires_dout,
   output hires_dout_rdy,
   output hires_enable,
@@ -20,16 +20,6 @@ module vga3(
   output VGA_VSYNC,
   input genlock);
 
-
-wire io_access;
-
-filter io(
-  .clk(clk),
-  .in(~TRS_RD | ~TRS_WR | ~TRS_IN | ~TRS_OUT),
-  .out(),
-  .rising_edge(io_access),
-  .falling_edge()
-);
 
 // The VGA display is 640x480.
 // Each row of the TRS-80 display is repeated two times for an effective resolution of
@@ -106,7 +96,7 @@ display_ram z80_dsp (
    .clka(clk), // input
    .cea(z80_dsp_wr_en), // input
    .ada(TRS_A[9:0]), // input [9:0]
-   .wrea(~TRS_WR), // input
+   .wrea(1'b1), // input
    .dina(TRS_D), // input [7:0]
    .douta(), // output [7:0]
    .ocea(1'b0),
@@ -122,7 +112,7 @@ display_ram z80_dsp (
    .resetb(1'b0)
 );
 
-// Disable the splash screen and border on first write to test display.
+// Disable the splash screen and border on first write to text display.
 reg splash_en = 1'b1;
 
 always @(posedge clk)
@@ -141,7 +131,7 @@ wire hires_act = vga_act;
 wire z80_hires_x_sel_out = (TRS_A[7:0] == 8'h80) & ~TRS_OUT; // 80
 wire z80_hires_y_sel_out = (TRS_A[7:0] == 8'h81) & ~TRS_OUT; // 81
 wire z80_hires_data_sel_out = (TRS_A[7:0] == 8'h82) & ~TRS_OUT; // 82
-wire z80_hires_data_sel_in = (TRS_A[7:0] == 8'h82) & ~TRS_IN; // 82
+wire z80_hires_data_sel_in  = (TRS_A[7:0] == 8'h82) & ~TRS_IN; // 82
 wire z80_hires_options_sel_out = (TRS_A[7:0] == 8'h83) & ~TRS_OUT; // 83
 
 reg [6:0] z80_hires_x_reg;
@@ -288,29 +278,29 @@ begin
    end
    else
    begin
-   if(vga_xxx == 3'b111)
-   begin
-      if(vga_XXXXXXX == 7'd99)
+      if(vga_xxx == 3'b111)
       begin
-         vga_XXXXXXX <= 7'd0;
+         if(vga_XXXXXXX == 7'd99)
+         begin
+            vga_XXXXXXX <= 7'd0;
 
-         if({vga_YYYYY, vga_yyyy_y} == {5'd20, 5'd20})
-         begin
-            vga_yyyy_y <= 5'd0;
-            vga_YYYYY <= 5'd0;
-         end
-         else if(vga_yyyy_y == 5'd23)
-         begin
-            vga_yyyy_y <= 5'd0;
-            vga_YYYYY <= vga_YYYYY + 5'd1;
+            if({vga_YYYYY, vga_yyyy_y} == {5'd20, 5'd20})
+            begin
+               vga_yyyy_y <= 5'd0;
+               vga_YYYYY <= 5'd0;
+            end
+            else if(vga_yyyy_y == 5'd23)
+            begin
+               vga_yyyy_y <= 5'd0;
+               vga_YYYYY <= vga_YYYYY + 5'd1;
+            end
+            else
+               vga_yyyy_y <= vga_yyyy_y + 5'd1;
          end
          else
-            vga_yyyy_y <= vga_yyyy_y + 5'd1;
+            vga_XXXXXXX <= vga_XXXXXXX + 7'd1;
       end
-      else
-         vga_XXXXXXX <= vga_XXXXXXX + 7'd1;
-   end
-   vga_xxx <= vga_xxx + 3'b1;
+      vga_xxx <= vga_xxx + 3'b1;
    end
 end
 
@@ -365,6 +355,7 @@ begin
       txt_pixel_shift_reg <= {txt_pixel_shift_reg[6:0], 1'b0};
 end
 
+
 // Load the hires pixel data into the pixel shift register, or shift current contents.
 reg [7:0] hires_pixel_shift_reg;
  
@@ -382,35 +373,35 @@ begin
 end
 
 
-reg h_sync, v_sync;
+reg vga_hsync, vga_vsync;
 
 always @ (posedge vga_clk)
 begin
    if({vga_XXXXXXX, vga_xxx} == {7'd82, 3'b010})
-      h_sync <= 1'b1;
+      vga_hsync <= 1'b1;
    else if({vga_XXXXXXX, vga_xxx} == {7'd94, 3'b010})
-      h_sync <= 1'b0;
+      vga_hsync <= 1'b0;
 
    if({vga_YYYYY, vga_yyyy_y} == {5'd20, 5'd9})
-      v_sync <= 1'b1;
+      vga_vsync <= 1'b1;
    else if({vga_YYYYY, vga_yyyy_y} == {5'd20, 5'd11})
-      v_sync <= 1'b0;
+      vga_vsync <= 1'b0;
 end
 
 
-reg vga_vid_out, h_sync_out, v_sync_out;
+reg vga_vid_out, vga_hsync_out, vga_vsync_out;
 
 always @ (posedge vga_clk)
 begin
    vga_vid_out <= (txt_pixel_shift_reg[7] ^ (hires_pixel_shift_reg[7] & (hires_options_graphics_alpha_n | splash_en)));
-   h_sync_out <= h_sync;
-   v_sync_out <= v_sync;
+   vga_hsync_out <= vga_hsync;
+   vga_vsync_out <= vga_vsync;
 end
 
 assign hires_enable = hires_options_graphics_alpha_n;
 
 assign VGA_VID   = vga_vid_out;
-assign VGA_HSYNC = h_sync_out;
-assign VGA_VSYNC = v_sync_out;
+assign VGA_HSYNC = vga_hsync_out;
+assign VGA_VSYNC = vga_vsync_out;
 
 endmodule

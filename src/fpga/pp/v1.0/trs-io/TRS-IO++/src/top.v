@@ -390,17 +390,17 @@ always @(posedge clk) begin
             state <= idle;
           end
           set_spi_ctrl_reg: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           set_spi_data: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           get_spi_data: begin
             trigger_action <= 1'b1;
             state <= idle;
           end
           set_esp_status: begin
-            bytes_to_read <= 1;
+            bytes_to_read <= 3'd1;
           end
           default:
             begin
@@ -950,9 +950,9 @@ vga1 vga1(
   .TRS_A(TRS_A),
   .TRS_D(TRS_D),
   .TRS_WR(TRS_WR),
-  .TRS_RD(TRS_RD),
   .TRS_OUT(TRS_OUT),
   .TRS_IN(TRS_IN),
+  .io_access(io_access),
   .le18_dout(le18_dout),
   .le18_dout_rdy(),
   .le18_enable(),
@@ -981,9 +981,9 @@ vga3 vga3(
   .TRS_A(TRS_A),
   .TRS_D(TRS_D),
   .TRS_WR(TRS_WR),
-  .TRS_RD(TRS_RD),
   .TRS_OUT(TRS_OUT),
   .TRS_IN(TRS_IN),
+  .io_access(io_access),
   .hires_dout(hires_dout),
   .hires_dout_rdy(),
   .hires_enable(),
@@ -1073,7 +1073,7 @@ always @ (posedge clk)
 assign LED[0] = WAIT;
 assign LED[1] = esp_sel;
 assign LED[2] = is_m3;
-assign LED[3] = heartbeat[25];
+assign LED[3] = esp_status_esp_ready;
 
 
 //------------LightBright-80-------------------------------------------------------------

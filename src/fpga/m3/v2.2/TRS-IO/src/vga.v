@@ -67,7 +67,7 @@ wire hires_act = vga_act;
 wire z80_hires_x_sel_out = (TRS_A == 8'h80) & ~TRS_OUT; // 80
 wire z80_hires_y_sel_out = (TRS_A == 8'h81) & ~TRS_OUT; // 81
 wire z80_hires_data_sel_out = (TRS_A == 8'h82) & ~TRS_OUT; // 82
-wire z80_hires_data_sel_in = (TRS_A == 8'h82) & ~TRS_IN; // 82
+wire z80_hires_data_sel_in  = (TRS_A == 8'h82) & ~TRS_IN; // 82
 wire z80_hires_options_sel_out = (TRS_A == 8'h83) & ~TRS_OUT; // 83
 
 reg [6:0] z80_hires_x_reg;
@@ -141,7 +141,7 @@ begin
 end
 
 
-wire [7:0] z80_hires_data_b;
+wire [7:0] hires_data_b;
 
 /*
  * True Dual Port RAM, Byte Write Enable, Byte size: 8
@@ -166,7 +166,7 @@ blk_mem_gen_4 z80_hires (
    .adb(vga_xxx[2] ? {hires_XXXXXXX, hires_YYYYYYYY} : {crt_XXXXXXX_x[7:1], crt_YYYYYYYYY[7:0]}), // input [14:0]
    .wreb(1'b0), // input
    .dinb(8'h00), // input [7:0]
-   .doutb(z80_hires_data_b), // output [7:0]
+   .doutb(hires_data_b), // output [7:0]
    .oceb(vga_xxx[2] ? (hires_act & (vga_xxx[1:0] == 2'b01)) : (crt_act & (crt_XXXXXXX_x[0] == 1'b0 && vga_xxx == 2'b01))), // input
    .resetb(1'b0)
  );
@@ -177,7 +177,7 @@ always @ (posedge vga_clk)
 begin
    if(genlock)
    begin
-      vga_xxx <= 3'b0;
+      vga_xxx <= 3'b000;
       vga_XXXXXXX <= 7'd0;
       vga_YYYYYYYYY_y <= 10'd0;
    end
@@ -195,7 +195,7 @@ begin
                vga_YYYYYYYYY_y <= vga_YYYYYYYYY_y + 10'd1;
          end
          else
-            vga_XXXXXXX <= vga_XXXXXXX + 7'b1;
+            vga_XXXXXXX <= vga_XXXXXXX + 7'd1;
       end
       vga_xxx <= vga_xxx + 3'b1;
    end
@@ -229,7 +229,7 @@ begin
    if(vga_xxx == 3'b110)
    begin
       if(hires_act)
-         hires_pixel_shift_reg <= z80_hires_data_b;
+         hires_pixel_shift_reg <= hires_data_b;
       else
          hires_pixel_shift_reg <= 8'h00;
    end
@@ -246,7 +246,7 @@ begin
    if(crt_XXXXXXX_x[0] == 1'b0 && vga_xxx == 3'b010)
    begin
       if(crt_act)
-         crt_pixel_shift_reg <= z80_hires_data_b;
+         crt_pixel_shift_reg <= hires_data_b;
       else
          crt_pixel_shift_reg <= 8'h00;
    end

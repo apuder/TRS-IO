@@ -158,7 +158,7 @@ end
 wire le18_options_enable = z80_le18_options_reg[0];
 
 
-wire [5:0] z80_le18_data_b;
+wire [5:0] le18_data_b;
 
 wire le18_rd_en, le18_rd_regce;
 
@@ -201,7 +201,7 @@ blk_mem_gen_4 z80_le18 (
    .adb({le18_YYYYYYYY, le18_XXXXXXX[5:0]}), // input [13:0]
    .wreb(1'b0), // input
    .dinb(6'h00), // input [5:0]
-   .doutb(z80_le18_data_b), // output [5:0]
+   .doutb(le18_data_b), // output [5:0]
    .oceb(dsp_act & (dsp_xxx == 3'b011)), // input
    .resetb(1'b0)
  );
@@ -324,8 +324,8 @@ begin
                endcase
          end
          // For LE18 the leftmost bit is bit 0 so load the shift register in bit reversed order.
-         le18_pixel_shift_reg <= {z80_le18_data_b[0], z80_le18_data_b[1], z80_le18_data_b[2],
-                                  z80_le18_data_b[3], z80_le18_data_b[4], z80_le18_data_b[5]};
+         le18_pixel_shift_reg <= {le18_data_b[0], le18_data_b[1], le18_data_b[2],
+                                  le18_data_b[3], le18_data_b[4], le18_data_b[5]};
       end
       else
       begin

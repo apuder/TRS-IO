@@ -9,9 +9,9 @@ module vga1(
   input [15:0] TRS_A,
   input [7:0] TRS_D,
   input TRS_WR,
-  input TRS_RD,
   input TRS_OUT,
   input TRS_IN,
+  input io_access,
   output [7:0] le18_dout,
   output le18_dout_rdy,
   output le18_enable,
@@ -20,16 +20,6 @@ module vga1(
   output VGA_VSYNC,
   input genlock);
 
-
-wire io_access;
-
-filter io(
-  .clk(clk),
-  .in(~TRS_RD | ~TRS_WR | ~TRS_IN | ~TRS_OUT),
-  .out(),
-  .rising_edge(io_access),
-  .falling_edge()
-);
 
 // The VGA display is 800x600.
 // The pixel clock is divided by two and each row of the TRS-80 display is repeated three times
@@ -108,7 +98,7 @@ display_ram z80_dsp (
    .clka(clk), // input
    .cea(z80_dsp_wr_en), // input
    .ada(TRS_A[9:0]), // input [9:0]
-   .wrea(~TRS_WR), // input
+   .wrea(1'b1), // input
    .dina(TRS_D), // input [7:0]
    .douta(), // output [7:0]
    .ocea(1'b0),
@@ -356,34 +346,34 @@ begin
 end
 
 
-reg h_sync, v_sync;
+reg vga_hsync, vga_vsync;
 
 always @ (posedge vga_clk)
 begin
    if({vga_XXXXXXX, vga_xxx} == {7'd69, 3'b101})
-      h_sync <= 1'b1;
+      vga_hsync <= 1'b1;
    else if({vga_XXXXXXX, vga_xxx} == {7'd80, 3'b011})
-      h_sync <= 1'b0;
+      vga_hsync <= 1'b0;
 
    if({vga_YYYYY, vga_yyyy_yy} == {5'd16, {4'd8, 2'b00}})
-      v_sync <= 1'b1;
+      vga_vsync <= 1'b1;
    else if({vga_YYYYY, vga_yyyy_yy} == {5'd16, {4'd9, 2'b01}})
-      v_sync <= 1'b0;
+      vga_vsync <= 1'b0;
 end
 
 
-reg vga_vid_out, h_sync_out, v_sync_out;
+reg vga_vid_out, vga_hsync_out, vga_vsync_out;
 
 always @ (posedge vga_clk)
 begin
    vga_vid_out <= (txt_pixel_shift_reg[5] ^ (le18_pixel_shift_reg[5] & (le18_options_enable | splash_en)));
-   h_sync_out <= h_sync;
-   v_sync_out <= v_sync;
+   vga_hsync_out <= vga_hsync;
+   vga_vsync_out <= vga_vsync;
 end
 
 assign VGA_VID   = vga_vid_out;
-assign VGA_HSYNC = h_sync_out;
-assign VGA_VSYNC = v_sync_out;
+assign VGA_HSYNC = vga_hsync_out;
+assign VGA_VSYNC = vga_vsync_out;
 
 assign le18_enable = le18_options_enable;
 
