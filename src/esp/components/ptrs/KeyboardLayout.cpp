@@ -13,6 +13,7 @@ static const char* kbitems[] = {
   "FR",
   "BE",
   "NO",
+  "JP",
   NULL};
 
 static  uint8_t curLayoutIdx  = DEFAULT_US_LAYOUT;
@@ -21,8 +22,8 @@ extern fabgl::PS2Controller PS2Controller;
 static bool Keyboard_Layout_dirty;
 
 static form_item_t kbLayout_form_items[] = {
-  FORM_ITEM_SELECT("Keyboard Layout", &curLayoutIdx, SupportedLayouts::shortNames(), &Keyboard_Layout_dirty),
-//	FORM_ITEM_SELECT("Keyboard layout", &curLayoutIdx,kbitems, &Keyboard_Layout_dirty),
+//  FORM_ITEM_SELECT("Keyboard Layout", &curLayoutIdx, SupportedLayouts::shortNames(), &Keyboard_Layout_dirty),
+	FORM_ITEM_SELECT("Keyboard layout", &curLayoutIdx,kbitems, &Keyboard_Layout_dirty),
   FORM_ITEM_END
 };
 void stringToCharArray(char* charArray, const char* str) {
@@ -62,7 +63,7 @@ uint8_t updateKbdLayout() {
 uint8_t updateKbdLayoutu8(uint8_t curLayout) {
   curLayoutIdx = curLayout;
   printf("update Keyboard Layoutu8 %02x\n",curLayoutIdx);
-  if (PS2Controller.keyboard() != NULL){
+  if (PS2Controller.keyboard() != nullptr){
    if (!PS2Controller.keyboard()->isKeyboardAvailable() ) {
 	printf("isKeyboardAvailable NO\n");
 	ESP_LOGE("KBLayout", "Failed to isKeyboardAvailable()");
