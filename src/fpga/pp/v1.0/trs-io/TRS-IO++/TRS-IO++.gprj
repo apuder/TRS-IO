@@ -7,7 +7,6 @@
     <FileList>
         <File path="src/filter.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_clkdiv/gowin_clkdiv0.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_clkdiv/gowin_clkdiv1.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/blk_mem_gen_4.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/blk_mem_gen_6.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/display_ram.v" type="file.verilog" enable="1"/>

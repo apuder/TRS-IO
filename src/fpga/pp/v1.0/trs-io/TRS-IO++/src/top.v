@@ -933,20 +933,13 @@ TLVDS_OBUF tmds_clock(
 
 //-----VGA1------------------------------------------------------------------------------
 
-wire clk1_vga;
-
-Gowin_CLKDIV1 clk1div1(
-  .clkout(clk1_vga), //output clkout
-  .hclkin(clk1_pixel), //input hclkin
-  .resetn(1'b1) //input resetn
-);
-
 reg sync1;
 
 vga1 vga1(
   .clk(clk),
   .srst(1'b0),
-  .vga_clk(clk1_vga), // 40/2 MHz = 20 MHz
+  .vga_clk(clk1_pixel), // 40 MHz
+  .vga_clk_en(cx1[0]),
   .TRS_A(TRS_A),
   .TRS_D(TRS_D),
   .TRS_WR(TRS_WR),
@@ -964,7 +957,7 @@ vga1 vga1(
 
 always @(posedge clk1_pixel)
 begin
-  sync1 <= ((cx1 == frame_width1 - 9) || (cx1 == frame_width1 - 8)) && (cy1 == frame_height1 - 1);
+  sync1 <= (cx1 == frame_width1 - 10) && (cy1 == frame_height1 - 1);
 end
 
 
