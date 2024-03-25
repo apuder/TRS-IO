@@ -16,23 +16,26 @@ static const char* kbitems[] = {
   "JP",
   NULL};
 
+static const char** kbShortNames_items;
 static  uint8_t curLayoutIdx  = DEFAULT_US_LAYOUT;
 extern fabgl::PS2Controller PS2Controller;
 
 static bool Keyboard_Layout_dirty;
 
 static form_item_t kbLayout_form_items[] = {
-//  FORM_ITEM_SELECT("Keyboard Layout", &curLayoutIdx, SupportedLayouts::shortNames(), &Keyboard_Layout_dirty),
-	FORM_ITEM_SELECT("Keyboard layout", &curLayoutIdx,kbitems, &Keyboard_Layout_dirty),
+//	FORM_ITEM_SELECT("Keyboard layout", &curLayoutIdx,kbitems, &Keyboard_Layout_dirty),
+	FORM_ITEM_SELECT_PTR("Keyboard layout", &curLayoutIdx,&kbShortNames_items, &Keyboard_Layout_dirty),
   FORM_ITEM_END
 };
-void stringToCharArray(char* charArray, const char* str) {
-    while (*str != '\0') {
-        *charArray = *str;
-        str++;
-        charArray++;
-    }
-    *charArray = '\0';
+
+void init_kbShortNames(){
+  uint8_t noOfCountrys = SupportedLayouts::count();
+  uint8_t i;
+  kbShortNames_items = (const char**) malloc((noOfCountrys + 1) * sizeof(char*));
+  for (i = 0; i < noOfCountrys; i++) {
+     kbShortNames_items[i] = SupportedLayouts::shortNames()[i];
+  }
+  kbShortNames_items[i] = NULL;
 }
 
 static form_t kbLayout_form = {
@@ -42,6 +45,7 @@ static form_t kbLayout_form = {
 
 void configure_Keyboard_Layout()
 {
+  init_kbShortNames();
   form(&kbLayout_form, false);
 
   if (Keyboard_Layout_dirty) {
@@ -51,6 +55,7 @@ void configure_Keyboard_Layout()
     settings_commit();
 
   }
+  free(kbShortNames_items);
 }
 
 
