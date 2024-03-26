@@ -209,7 +209,7 @@ assign dpll_vcheck = vcheck;
 
 wire [9:0] cxx = cx - (10'd64 - 10'd8);
 wire [9:0] cyy = cy - 10'd48;
-wire vgaact = (cxx < 10'd512) & (cyy < 10'd576);
+wire vgaact = (cxx < 10'd512) & (cyy < 10'd384);
 wire [7:0] vgadta;
 
 Gowin_DPB_FG display_ram(
@@ -219,7 +219,7 @@ Gowin_DPB_FG display_ram(
    .douta(),                   //output [7:0] douta
    .dina(pixel_in_shr),        //input [7:0] dina
    .ocea(1'b0),                //input ocea
-   .wrea(pix_wr),              //input wrea
+   .wrea(1'b1),                //input wrea
    .reseta(1'b0),              //input reseta
 
    .clkb(vgaclk),              //input clkb

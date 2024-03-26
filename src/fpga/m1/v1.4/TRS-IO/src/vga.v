@@ -40,8 +40,7 @@ wire vga_act = ( (vga_XXXXXXX < 7'd67)
 // Instantiate the display RAM.  The display RAM is dual port.
 // The A port is connected to the z80.
 // The B port is connected to the video logic.
-wire [7:0] _z80_dsp_data;
-wire [7:0] z80_dsp_data_b;
+wire [7:0] dsp_data_b;
 
 // Center the 64x16 text/le18 display in the 800x600 VGA display.
 //wire [6:0] dsp_XXXXXXX = vga_XXXXXXX - 7'd1;
@@ -111,7 +110,7 @@ blk_mem_gen_2 z80_dsp (
    .adb({dsp_YYYYY[3:0], dsp_XXXXXXX[5:1], (dsp_XXXXXXX[0] & ~reg_modsel)}), // input [9:0]
    .wreb(1'b0), // input
    .dinb(8'h00), // input [7:0]
-   .doutb(z80_dsp_data_b), // output [7:0]
+   .doutb(dsp_data_b), // output [7:0]
    .oceb(dsp_act & (dsp_xxx == 3'b001)), // input
    .resetb(1'b0)
 );
@@ -224,7 +223,7 @@ wire [5:0] char_rom_data;
 blk_mem_gen_3 char_rom (
    .clk(vga_clk), // input
    .ce(dsp_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b010)),
-   .ad({z80_dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [9:0]
+   .ad({dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [9:0]
    .dout(char_rom_data), // output [5:0]
    .oce(dsp_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b011)),
    .reset(1'b0)
@@ -239,7 +238,7 @@ begin
    if(vga_clk_en)
    begin
       if(dsp_act & (dsp_xxx == 3'b010))
-         _char_rom_addr <= {z80_dsp_data_b, dsp_yyyy_yy[5:2]};
+         _char_rom_addr <= {dsp_data_b, dsp_yyyy_yy[5:2]};
       if(dsp_act & (dsp_xxx == 3'b011))
          char_rom_addr <= _char_rom_addr;
    end

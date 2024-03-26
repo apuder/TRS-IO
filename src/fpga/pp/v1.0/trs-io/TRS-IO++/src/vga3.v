@@ -39,8 +39,7 @@ wire vga_act = ( (vga_XXXXXXX < 7'd80)
 // Instantiate the display RAM.  The display RAM is dual port.
 // The A port is connected to the z80.
 // The B port is connected to the video logic.
-wire [7:0] _z80_dsp_data;
-wire [7:0] z80_dsp_data_b;
+wire [7:0] dsp_data_b;
 
 // Center the 64x16 text display in the 640x480 VGA display.
 wire [6:0] dsp_XXXXXXX = vga_XXXXXXX - 7'd8;
@@ -107,7 +106,7 @@ display_ram z80_dsp (
    .adb({dsp_YYYYY[3:0], dsp_XXXXXXX[5:1], (dsp_XXXXXXX[0] & ~reg_modsel)}), // input [9:0]
    .wreb(1'b0), // input
    .dinb(8'h00), // input [7:0]
-   .doutb(z80_dsp_data_b), // output [7:0]
+   .doutb(dsp_data_b), // output [7:0]
    .oceb(dsp_act & (dsp_xxx == 3'b011)), // input
    .resetb(1'b0)
 );
@@ -205,7 +204,7 @@ begin
 end
 
 
-wire [7:0] z80_hires_data_b;
+wire [7:0] hires_data_b;
 
 /*
  * True Dual Port RAM, Byte Write Enable, Byte size: 8
@@ -226,12 +225,12 @@ blk_mem_gen_6 z80_hires (
    .reseta(1'b0),
  
    .clkb(vga_clk), // input
-   .ceb(vga_act & (vga_xxx == 3'b100)), // input
+   .ceb(hires_act & (vga_xxx == 3'b100)), // input
    .adb({hires_XXXXXXX, hires_YYYYYYYY}), // input [14:0]
    .wreb(1'b0), // input
    .dinb(8'h00), // input [7:0]
-   .doutb(z80_hires_data_b), // output [7:0]
-   .oceb(vga_act & (vga_xxx == 3'b101)), // input
+   .doutb(hires_data_b), // output [7:0]
+   .oceb(hires_act & (vga_xxx == 3'b101)), // input
    .resetb(1'b0)
  );
  
@@ -247,7 +246,7 @@ wire [7:0] char_rom_data;
 blk_mem_gen_5 char_rom (
    .clk(vga_clk), // input
    .ce(dsp_act & (dsp_yyyy_y[4] == 1'b0) & (dsp_xxx == 3'b100)),
-   .ad({1'b0, z80_dsp_data_b[6:0], dsp_yyyy_y[3:1]}), // input [10:0]
+   .ad({1'b0, dsp_data_b[6:0], dsp_yyyy_y[3:1]}), // input [10:0]
    .dout(char_rom_data), // output [7:0]
    .oce(dsp_act & (dsp_yyyy_y[4] == 1'b0) & (dsp_xxx == 3'b101)),
    .reset(1'b0)
@@ -260,7 +259,7 @@ reg [11:0] char_rom_addr, _char_rom_addr;
 always @ (posedge vga_clk)
 begin
    if(dsp_act & (dsp_xxx == 3'b100))
-      _char_rom_addr <= {z80_dsp_data_b, dsp_yyyy_y[4:1]};
+      _char_rom_addr <= {dsp_data_b, dsp_yyyy_y[4:1]};
    if(dsp_act & (dsp_xxx == 3'b101))
       char_rom_addr <= _char_rom_addr;
 end
@@ -364,7 +363,7 @@ begin
    if(vga_xxx == 3'b110)
    begin
       if(hires_act)
-         hires_pixel_shift_reg <= z80_hires_data_b;
+         hires_pixel_shift_reg <= hires_data_b;
       else
          hires_pixel_shift_reg <= 8'h00;
    end
