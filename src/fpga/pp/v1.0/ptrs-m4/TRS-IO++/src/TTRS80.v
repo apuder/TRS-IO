@@ -39,6 +39,7 @@ module TTRS80 (
    pixel_data,
    h_sync,
    v_sync,
+   cass_motor_on,
    cass_out,
    cass_out_sel,
    orch90l_out,
@@ -90,6 +91,7 @@ output pixel_data;
 output h_sync;
 output v_sync;
 output [1:0] cass_out;
+output cass_motor_on;
 output cass_out_sel;
 output orch90l_out;
 output orch90r_out;
@@ -436,7 +438,7 @@ assign opreg_page     = z80_opreg_reg[7];
 reg [7:0] z80_int_mask_reg; // e0-e3
 reg [7:0] z80_nmi_mask_reg; // e4-e7
 reg [7:0] z80_mod_reg;      // ec-ef
-wire   mod_casmotoron = z80_mod_reg[1];
+assign cass_motor_on  = z80_mod_reg[1];
 assign mod_modsel     = z80_mod_reg[2];
 wire   mod_enaltset   = z80_mod_reg[3];
 wire   mod_enextio    = z80_mod_reg[4];

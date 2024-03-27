@@ -269,6 +269,10 @@ wire z80_le18_data_sel_in = (TRS_A[7:0] == 8'hec) & ~TRS_IN;
 wire z80_orch85l_sel    = (TRS_A[7:0] == 8'hb5) && !TRS_OUT;
 wire z80_orch85r_sel    = (TRS_A[7:0] == 8'hb9) && !TRS_OUT;
 
+reg cass_motor_on_sel = 1'b0;
+reg cass_motor_off_sel = 1'b0;
+wire cass_motor_sel = cass_motor_on_sel | cass_motor_off_sel;
+
 /*
 wire z80_spi_ctrl_sel_out = (TRS_A[7:0] == 8'hfc) & OUT_falling_edge;
 wire z80_spi_data_sel_in  = (TRS_A[7:0] == 8'hfd) & ~TRS_IN;
@@ -277,7 +281,7 @@ wire z80_spi_data_sel_out = (TRS_A[7:0] == 8'hfd) & OUT_falling_edge;
 
 wire xray_sel;
 
-wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel;
+wire esp_sel = trs_io_sel || frehd_sel || printer_sel || xray_sel || cass_motor_sel;
 
 wire esp_sel_risingedge = esp_sel && io_access;
 
@@ -312,14 +316,18 @@ localparam [3:0]
   esp_frehd_out = 4'd3,
   esp_printer_rd = 4'd4,
   esp_printer_wr = 4'd5,
-  esp_xray       = 4'd6;
+  esp_xray       = 4'd6,
+  esp_cass_motor_on = 4'd13,
+  esp_cass_motor_off = 4'd14;
 
 assign ESP_S = ~((~esp_trs_io_in & {4{trs_io_sel_in}}) |
                  (~esp_trs_io_out & {4{trs_io_sel_out}}) |
                  (~esp_frehd_in & {4{frehd_sel_in}}) |
                  (~esp_frehd_out & {4{frehd_sel_out}}) |
                  (~esp_printer_rd & {4{printer_sel_rd}}) |
-                 (~esp_printer_wr & {4{printer_sel_wr}}) );
+                 (~esp_printer_wr & {4{printer_sel_wr}}) |
+                 (~esp_cass_motor_on & {4{cass_motor_on_sel}}) |
+                 (~esp_cass_motor_off & {4{cass_motor_off_sel}}) );
 
 
 //---main-------------------------------------------------------------------------
@@ -1307,6 +1315,34 @@ always@(posedge clk or negedge cass_out_sel_n) begin
     cass_in <= cass_in;
 end
 
+wire cass_motor_on;
+wire cass_motor_on_trigger;
+wire cass_motor_off_trigger;
+
+filter cass_motor(
+  .clk(clk),
+  .in(cass_motor_on),
+  .out(),
+  .rising_edge(cass_motor_on_trigger),
+  .falling_edge(cass_motor_off_trigger)
+);
+
+always @(posedge clk) begin
+  if (cass_motor_on_trigger) begin
+    cass_motor_on_sel <= 1'b1;
+    cass_motor_off_sel <= 1'b0;
+  end
+  if (cass_motor_off_trigger) begin
+    cass_motor_on_sel <= 1'b0;
+    cass_motor_off_sel <= 1'b1;
+  end
+  if (esp_done_risingedge) begin
+    cass_motor_on_sel <= 1'b0;
+    cass_motor_off_sel <= 1'b0;
+  end
+end
+
+
 reg z80_is_paused = 1'b0;
 
 always @(posedge clk) begin
@@ -1347,6 +1383,7 @@ TTRS80 TTRS80 (
    .pixel_data(vga_rgb),
    .h_sync(),
    .v_sync(),
+   .cass_motor_on(cass_motor_on),
    .cass_out(cass_out),
    .cass_out_sel(cass_out_sel),
    .cass_in(cass_in),
