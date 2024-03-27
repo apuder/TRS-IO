@@ -3,6 +3,7 @@
 #include "fabgl.h"
 #include "ptrs.h"
 #include "spi.h"
+#include "KeyboardLayout.h"
 
 static fabgl::PS2Controller PS2Controller;
 
@@ -15,6 +16,7 @@ typedef struct {
   uint16_t mask;
 } TRSKey;
 
+//#define KEYDEBUG 1
 
 /*
 Address   1     2     4     8     16     32     64     128    Hex Address
@@ -61,16 +63,16 @@ static const TRSKey trsKeys[] = {
   {5, 128}, //  VK_7
   {6, 1}, //  VK_8
   {6, 2}, //  VK_9
-  {5, 1}, //  VK_KP_0
-  {5, 2}, //  VK_KP_1
-  {5, 4}, //  VK_KP_2
-  {5, 8}, //  VK_KP_3
-  {5, 16}, //  VK_KP_4
-  {5, 32}, //  VK_KP_5
-  {5, 64}, //  VK_KP_6
-  {5, 128}, //  VK_KP_7
-  {6, 1}, //  VK_KP_8
-  {6, 2}, //  VK_KP_9
+  {5,  REMOVE_SHIFT_KEY | 1}, //  VK_KP_0
+  {5,  REMOVE_SHIFT_KEY | 2}, //  VK_KP_1
+  {5,  REMOVE_SHIFT_KEY | 4}, //  VK_KP_2
+  {5,  REMOVE_SHIFT_KEY | 8}, //  VK_KP_3
+  {5,  REMOVE_SHIFT_KEY | 16}, //  VK_KP_4
+  {5,  REMOVE_SHIFT_KEY | 32}, //  VK_KP_5
+  {5,  REMOVE_SHIFT_KEY | 64}, //  VK_KP_6
+  {5,  REMOVE_SHIFT_KEY | 128}, //  VK_KP_7
+  {6,  REMOVE_SHIFT_KEY | 1}, //  VK_KP_8
+  {6,  REMOVE_SHIFT_KEY | 2}, //  VK_KP_9
   {1, 2}, //  VK_a
   {1, 4}, //  VK_b
   {1, 8}, //  VK_c
@@ -129,22 +131,22 @@ static const TRSKey trsKeys[] = {
   {5, 4}, //  VK_QUOTEDBL
   {6, ADD_SHIFT_KEY | 32}, //  VK_EQUALS
   {6, 32}, //  VK_MINUS
-  {6, 32}, //  VK_KP_MINUS
+  {6, REMOVE_SHIFT_KEY | 32}, //  VK_KP_MINUS
   {6, 8}, //  VK_PLUS
-  {6, 8}, //  VK_KP_PLUS
-  {6, 4}, //  VK_KP_MULTIPLY
+  {6, ADD_SHIFT_KEY | 8}, //  VK_KP_PLUS
+  {6, ADD_SHIFT_KEY | 4}, //  VK_KP_MULTIPLY
   {6, 4}, //  VK_ASTERISK
   {7, 2}, //  VK_BACKSLASH
-  {6, 128}, //  VK_KP_DIVIDE
+  {6, REMOVE_SHIFT_KEY | 128}, //  VK_KP_DIVIDE
   {6, 128}, //  VK_SLASH
-  {6, 64}, //  VK_KP_PERIOD
+  {6, REMOVE_SHIFT_KEY | 64}, //  VK_KP_PERIOD
   {6, 64}, //  VK_PERIOD
   {6, REMOVE_SHIFT_KEY | 4}, //  VK_COLON
   {6, 16}, //  VK_COMMA
   {6, 8}, //  VK_SEMICOLON
   {5, 64}, //  VK_AMPERSAND
   {0, 0}, //  VK_VERTICALBAR
-  {5, 8}, //  VK_HASH
+  {5, ADD_SHIFT_KEY | 8}, //  VK_HASH
   {1, REMOVE_SHIFT_KEY | 1}, //  VK_AT
   {0, 0}, //  VK_CARET
   {5, 16}, //  VK_DOLLAR
@@ -181,7 +183,7 @@ static const TRSKey trsKeys[] = {
   {0, 0}, //  VK_KP_INSERT
   {0, 0}, //  VK_DELETE
   {0, 0}, //  VK_KP_DELETE
-  {7, 32}, //  VK_BACKSPACE
+  {7, 32},//  VK_BACKSPACE
   {7, 2}, //  VK_HOME
   {0, 0}, //  VK_KP_HOME
   {0, 0}, //  VK_END
@@ -199,14 +201,14 @@ static const TRSKey trsKeys[] = {
   {0, 0}, //  VK_KP_PAGEUP
   {0, 0}, //  VK_PAGEDOWN
   {0, 0}, //  VK_KP_PAGEDOWN
-  {7, 8}, //  VK_UP
-  {7, 8}, //  VK_KP_UP
-  {7, 16}, //  VK_DOWN
-  {7, 16}, //  VK_KP_DOWN
-  {7, 32}, //  VK_LEFT
-  {7, 32}, //  VK_KP_LEFT
-  {7, 64}, //  VK_RIGHT
-  {7, 64}, //  VK_KP_RIGHT
+  {7,  8}, //  VK_UP
+  {7, REMOVE_SHIFT_KEY | 8}, //  VK_KP_UP
+  {7,  16}, //  VK_DOWN
+  {7, REMOVE_SHIFT_KEY | 16}, //  VK_KP_DOWN
+  {7,  32}, //  VK_LEFT
+  {7, REMOVE_SHIFT_KEY | 32}, //  VK_KP_LEFT
+  {7,  64}, //  VK_RIGHT
+  {7, REMOVE_SHIFT_KEY | 64}, //  VK_KP_RIGHT
   {0, 0}, //  VK_KP_CENTER
   {8, 16}, //  VK_F1
   {8, 32}, //  VK_F2
@@ -275,16 +277,62 @@ static const TRSKey trsKeys[] = {
 };
 
 static uint8_t keyb_buffer[8] = {0};
+static bool vertualKey_pressed[0xff] = {false};
+
+void clearVertualKey_pressed (){
+      #ifdef KEYDEBUG
+        printf("\nclearVertualKey_pressed array\n");
+      #endif
+  for (int i = 0; i < 0xff; i++) {
+    vertualKey_pressed[i] = false;
+  }
+}
 
 static void process_key(int vk, bool down)
 {
   static bool shiftPressed = false;
+  static uint8_t allShiftKeysMask = 3;  // defalt all shifts(mask bits) 
+  static uint8_t currentKeyShiftMask = 0; // copy of current shift keys pressed 
+
+    if(down){
+      if(vertualKey_pressed[vk]) return; // stop keyboard repeating pressed keys
+        vertualKey_pressed[vk] = true; 
+      #ifdef KEYDEBUG
+        printf("\nkey in pressed %02x\n",vk);
+      #endif
+    }
+    else{
+       vertualKey_pressed[vk] = false;
+      #ifdef KEYDEBUG
+        printf("\nkey in relesed %02x\n",vk);
+      #endif
+    }
+
   if (vk == fabgl::VK_LSHIFT || vk == fabgl::VK_RSHIFT) {
     shiftPressed = down;
+    if(down){
+       currentKeyShiftMask |= trsKeys[vk].mask & 0xff;
+      #ifdef KEYDEBUG
+         printf("shift key down %02x currentKeyShiftMask %02x\n",vk,currentKeyShiftMask);
+      #endif
+    }
+    else{
+       currentKeyShiftMask &= ~trsKeys[vk].mask & 0xff;
+      #ifdef KEYDEBUG
+        printf("shift key up %02x currentKeyShiftMask %02x\n",vk,currentKeyShiftMask);
+      #endif
+    }
   }
+
   
   int offset = trsKeys[vk].offset;
-
+#ifdef KEYDEBUG
+    if (down) {
+      printf("key down %02x ShiftPressed = %d\n",vk,shiftPressed);
+    } else {
+      printf("key UP %02x ShiftPressed = %d\n",vk,shiftPressed);
+    }
+#endif
   if (offset != 0) {
     bool addShiftKey = trsKeys[vk].mask & ADD_SHIFT_KEY;
     bool removeShiftKey = trsKeys[vk].mask & REMOVE_SHIFT_KEY;
@@ -292,24 +340,43 @@ static void process_key(int vk, bool down)
     if (down) {
       keyb_buffer[offset - 1] |= mask;
       if (addShiftKey) {
-        keyb_buffer[7] |= 1;
+        if(shiftPressed){
+           keyb_buffer[7] |= currentKeyShiftMask; //shift aready on so use that shift
+        }
+        else{
+           keyb_buffer[7] |= allShiftKeysMask;  // no shift pressed so add default both shifts while key pressed
+        }
       }
       if (removeShiftKey) {
-        keyb_buffer[7] &= ~1;
+        keyb_buffer[7] &= ~allShiftKeysMask;  // remove all shifts eaven if shift pressed
       }
     } else {
       keyb_buffer[offset - 1] &= ~mask;
       if (addShiftKey && !shiftPressed) {
-        keyb_buffer[7] &= ~1;
+        keyb_buffer[7] &= ~allShiftKeysMask;  // when key relesed that needed a shift, remove all shifts if no shift key pressed
+      }
+      if (addShiftKey && shiftPressed) {
+        keyb_buffer[7] &= ~allShiftKeysMask;  // when key relesed that needed a shift, remove all shifts then
+        keyb_buffer[7] |= currentKeyShiftMask;  // put the correct shift back on
       }
       if (removeShiftKey && shiftPressed) {
-        keyb_buffer[7] |= 1;
+        keyb_buffer[7] |= currentKeyShiftMask;  // if a shift key pressed when key relesed reinstate shift
+      }
+        if (removeShiftKey && !shiftPressed) {
+        keyb_buffer[7] &= ~allShiftKeysMask;  // if no shift key pressed clear all shifts
       }
     }
-    spi_send_keyb(offset - 1, keyb_buffer[offset - 1]);
+#ifdef KEYDEBUG
+   printf (" row %d bits %d\n",offset - 1, keyb_buffer[offset - 1]);
+#endif
+    
     if (addShiftKey || removeShiftKey) {
+#ifdef KEYDEBUG
+       printf ("shift key  row %d bits %d\n",7, keyb_buffer[7]);
+#endif
       spi_send_keyb(7, keyb_buffer[7]);
     }
+    spi_send_keyb(offset - 1, keyb_buffer[offset - 1]);
   }
 }
 
@@ -368,7 +435,6 @@ void check_keyb()
       }
     }
 
-    //printf("VirtualKey = %s\n", keyboard->virtualKeyToString(vk));
 #if 0
     if (down && vk == fabgl::VK_F5 && trs_screen.isTextMode()) {
       configure_pocket_trs();
@@ -386,5 +452,8 @@ void check_keyb()
 }
 void init_keyb()
 {
+  vTaskDelay(500 / portTICK_PERIOD_MS);
   PS2Controller.begin(PS2Preset::KeyboardPort0, KbdMode::CreateVirtualKeysQueue);
+  updateKbdLayout();
+  clearVertualKey_pressed();
 }

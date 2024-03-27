@@ -2,20 +2,23 @@
 
 #include "ptrs.h"
 #include "roms.h"
+#include "KeyboardLayout.h"
 #include <trs-lib.h>
 #include <fabgl.h>
 
 #define MENU_CONFIGURE 0
 #define MENU_ROMS 1
-#define MENU_STATUS 2
-#define MENU_RESET 3
-#define MENU_HELP 4
-#define MENU_EXIT 5
+#define MENU_KBLAYOUT 2
+#define MENU_STATUS 3
+#define MENU_RESET 4
+#define MENU_HELP 5
+#define MENU_EXIT 6
 
 
 static menu_item_t main_menu_items[] = {
   MENU_ITEM(MENU_CONFIGURE, "Configure"),
   MENU_ITEM(MENU_ROMS, "ROMs"),
+  MENU_ITEM(MENU_KBLAYOUT, "Keybord Layout"),
   MENU_ITEM(MENU_STATUS, "Status"),
   MENU_ITEM(MENU_RESET, "Reset Settings"),
   MENU_ITEM(MENU_HELP, "Help"),
@@ -51,6 +54,9 @@ void configure_pocket_trs(bool is_80_cols)
       break;
     case MENU_STATUS:
       ptrs_status();
+      break;
+    case MENU_KBLAYOUT:
+      configure_Keyboard_Layout();
       break;
     }
     show_from_left = true;

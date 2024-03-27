@@ -63,3 +63,14 @@ uint8_t settings_get_screen_color();
 void settings_reset_all();
 void settings_commit();
 void init_settings();
+
+//---------------Keyboard Layout -------------------------
+
+#define KEY_KEYBOARD_LAYOUT "kblayout"
+
+void init_KeyboardLayout() ;
+uint8_t settings_get_KeyboardLayout();
+void settings_set_KeyboardLayout(uint8_t layout);
+
+
+
