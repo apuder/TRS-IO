@@ -3,17 +3,26 @@
 #define __KEYBOARDLAYOUT_H__
 
 #include <stdint.h>
+#include "fabgl.h"
 /****************************************************************
  * KeyboardLayout
  ****************************************************************/
 
-#define DEFAULT_US_LAYOUT 3
-//void init_KeyboardLayout();
-//uint8_t getKeyboardLayout();
-//void setKeyboardLayout(uint8_t layout);
+static const char* kbitems[] = {
+  "DE",
+  "IT",
+  "UK",
+  "US",
+  "ES",
+  "FR",
+  "BE",
+  "NO",
+  "JP",
+  NULL};
+
+
+
 uint8_t updateKbdLayout();
 uint8_t updateKbdLayoutu8(uint8_t curLayoutIdx);
-void configure_Keyboard_Layout();
-
 #endif
 

@@ -247,6 +247,7 @@ static void init_screen_color()
 
 //----------------------------------------------------------------
 //static const char* KEYBOARD_LAYOUT  = "layout";
+static uint8_t keyboard_layout;
 
 void init_KeyboardLayout() {
   settings_set_KeyboardLayout(settings_get_KeyboardLayout());
@@ -255,13 +256,13 @@ void init_KeyboardLayout() {
 #define DEFAULT_US_LAYOUT 3
 
 uint8_t settings_get_KeyboardLayout() {
-	uint8_t curlayout = DEFAULT_US_LAYOUT;
-  if (nvs_get_u8(storage, KEY_KEYBOARD_LAYOUT, &curlayout) != ESP_OK) {
-  	printf("Get Keyboard Layout not ok seting default %02x\n",DEFAULT_US_LAYOUT);
+  keyboard_layout = DEFAULT_US_LAYOUT;
+  if (nvs_get_u8(storage, KEY_KEYBOARD_LAYOUT, &keyboard_layout) != ESP_OK) {
+    printf("Get Keyboard Layout not ok seting default %02x\n",DEFAULT_US_LAYOUT);
     nvs_set_u8(storage, KEY_KEYBOARD_LAYOUT, DEFAULT_US_LAYOUT);//set us kblayout as default
   }
-  printf("Get Keyboard Layout %02x\n",curlayout);
-  return curlayout;
+  printf("Get Keyboard Layout %02x\n",keyboard_layout);
+  return keyboard_layout;
 }
 
 void settings_set_KeyboardLayout(uint8_t layout) {

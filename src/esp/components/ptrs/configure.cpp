@@ -1,6 +1,7 @@
 
 #include "ptrs.h"
 #include "settings.h"
+#include "KeyboardLayout.h"
 #include "trs-lib.h"
 #include "trs-fs.h"
 #include "spi.h"
@@ -19,6 +20,10 @@ static const char* screen_color_items[] = {
 static uint8_t screen_color = 0;
 static bool screen_color_dirty;
 
+static bool Keyboard_Layout_dirty;
+static uint8_t curLayoutIdx;
+static const char** kbShortNames_items;
+
 static bool show_splash_screen = true;
 
 static bool enable_trs_io = true;
@@ -35,11 +40,22 @@ static char smb_url[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
 static char smb_user[MAX_LEN_SMB_USER + 1] EXT_RAM_ATTR;
 static char smb_passwd[MAX_LEN_SMB_PASSWD + 1] EXT_RAM_ATTR;
 
+void init_kbShortNames(){
+  uint8_t noOfCountrys = SupportedLayouts::count();
+  uint8_t i;
+  kbShortNames_items = (const char**) malloc((noOfCountrys + 1) * sizeof(char*));
+  for (i = 0; i < noOfCountrys; i++) {
+    kbShortNames_items[i] = SupportedLayouts::shortNames()[i];
+  }
+  kbShortNames_items[i] = NULL;
+}
 
 static form_item_t ptrs_form_items[] = {
   FORM_ITEM_HEADER("GENERAL:"),
   FORM_ITEM_CHECKBOX("Enable TRS-IO", &enable_trs_io, NULL),
   FORM_ITEM_SELECT("Screen color", &screen_color, screen_color_items, &screen_color_dirty),
+//  FORM_ITEM_SELECT("Keyboard layout", &curLayoutIdx,kbitems, &Keyboard_Layout_dirty),
+  FORM_ITEM_SELECT_PTR("Keyboard layout", &curLayoutIdx,&kbShortNames_items, &Keyboard_Layout_dirty),
   FORM_ITEM_INPUT("Timezone", tz, MAX_LEN_TZ, 0, &tz_dirty),
   FORM_ITEM_HEADER("WIFI:"),
   FORM_ITEM_INPUT("SSID", wifi_ssid, MAX_LEN_WIFI_SSID, 0, &wifi_dirty),
@@ -73,6 +89,9 @@ void configure_ptrs_settings()
   strncpy(smb_passwd, _smb_passwd.c_str(), MAX_LEN_SMB_PASSWD);
 
   screen_color = settings_get_screen_color();
+  
+  curLayoutIdx = settings_get_KeyboardLayout();
+  init_kbShortNames();
 
   form(&ptrs_form, false);
 
@@ -81,6 +100,13 @@ void configure_ptrs_settings()
     settings_set_screen_color(screen_color);
     spi_set_screen_color(screen_color);
   }
+
+  if (Keyboard_Layout_dirty) {
+    // Set Keyboard Layout
+    settings_set_KeyboardLayout(curLayoutIdx);
+    updateKbdLayoutu8(curLayoutIdx);
+  }
+  free(kbShortNames_items);
 
   if (smb_dirty) {
     settings_set_smb_url(string(smb_url));
@@ -99,6 +125,7 @@ void configure_ptrs_settings()
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     set_wifi_credentials(wifi_ssid, wifi_passwd);
   }
+  
 
   settings_commit();
 }
