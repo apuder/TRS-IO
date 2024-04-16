@@ -315,9 +315,17 @@ static void IRAM_ATTR io_task(void* p)
       xray_status = XRAY_STATUS_BREAKPOINT;
       break;
 #endif
+#ifdef CONFIG_TRS_IO_PP
+    case 0xd0:
+      evt_signal(EVT_CASS_MOTOR_ON);
+      break;
+    case 0xe0:
+      evt_signal(EVT_CASS_MOTOR_OFF);
+      break;
     case 0xf0:
       evt_send_esp_status();
       break;
+#endif
     }
     
     // Pulse a rising edge for ESP_DONE to mark end of operation

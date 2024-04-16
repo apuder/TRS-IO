@@ -1,6 +1,7 @@
 
 
 #include "ptrs.h"
+#include "cass.h"
 #include "roms.h"
 #include <trs-lib.h>
 #include <fabgl.h>
@@ -118,5 +119,5 @@ void configure_pocket_trsx()
 
 void init_ptrs()
 {
-  // Do nothing
+  init_cass();
 }
