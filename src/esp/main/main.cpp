@@ -16,6 +16,18 @@
 #include "ptrs.h"
 
 
+#define TAG "TRS-IO"
+
+#ifdef CONFIG_TRS_IO_MODEL_1
+#define CONFIG "TRS-IO (Model 1)"
+#endif
+#ifdef CONFIG_TRS_IO_MODEL_3
+#define CONFIG "TRS-IO (Model III)"
+#endif
+#ifdef CONFIG_TRS_IO_PP
+#define CONFIG "TRS-IO++"
+#endif
+
 extern const char* GIT_REV;
 extern const char* GIT_BRANCH;
 
@@ -24,7 +36,8 @@ extern "C" {
 
 void app_main(void)
 {
-  ESP_LOGI("main", "TRS-IO branch=%s, rev=%s", GIT_BRANCH, GIT_REV);
+  ESP_LOGI(TAG, "TRS-IO branch=%s, rev=%s", GIT_BRANCH, GIT_REV);
+  ESP_LOGI(TAG, "Configured for %s", CONFIG);
 
   init_events();
   init_trs_io();
