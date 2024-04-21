@@ -1,13 +1,14 @@
+# Simulates the TRS-IO++, for easier development.
+
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import os.path, json
 
 class TrsIoRequestHandler(BaseHTTPRequestHandler):
+    # Handler for GET requests.
     def do_GET(self):
         # Procedural paths.
         if self.path == "/get-roms":
             return self.handle_get_roms()
-        if self.path == "/config":
-            return self.handle_config()
         if self.path == "/status":
             return self.handle_status()
 
@@ -25,6 +26,13 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
             return self.serve_static_files(self.path[6:], "../esp/elFinder/roms")
         return self.serve_static_files(self.path[1:], "../esp/html")
 
+    # Handler for POST requests.
+    def do_POST(self):
+        if self.path == "/config":
+            return self.handle_config()
+        self.send_error(404)
+
+    # Serve static files from a local directory.
     def serve_static_files(self, path, directory):
         while path.startswith("/"):
             path = path[1:]
@@ -42,6 +50,7 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
 
         self.send_response(200)
         self.send_header("Content-type", "text/html")
+        self.send_header("Content-Length", str(len(contents)))
         self.end_headers()
         self.wfile.write(contents)
 
@@ -69,7 +78,7 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
         self.send_json(data)
 
     def handle_config(self):
-        pass
+        self.send_json({})
 
     def handle_status(self):
         data = {
