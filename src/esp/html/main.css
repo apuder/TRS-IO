@@ -1,0 +1,122 @@
+
+@font-face {
+    font-family: "eurostile-bold-extended";
+    src:
+        url("eurostile-bold-extended.otf") format("opentype");
+}
+
+:root {
+    --yellow: #F0C93C; /* TODO blur and get more typical color */
+    --brown: #675254;
+    --brown-highlight: color-mix(in srgb, var(--brown) 95%, white);
+    --brown-select: color-mix(in srgb, var(--brown) 90%, white);
+
+    --page-small-margin: 20px;
+    --page-large-margin: 120px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    color: var(--yellow);
+    background: var(--brown);
+    height: 100vh;
+    font-family: sans-serif;
+}
+
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+header {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    font-family: "eurostile-bold-extended", sans-serif;
+    font-size: 60px;
+    padding-right: 20px;
+    height: var(--page-large-margin);
+}
+
+main {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+nav {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+nav ul {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li label {
+    width: var(--page-large-margin);
+    height: var(--page-large-margin);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.25s;
+}
+
+nav ul li label:hover {
+    background: var(--brown-highlight);
+}
+
+.article-container {
+    flex-grow: 1;
+    color: var(--brown);
+    background: var(--yellow);
+    border-radius: 30px;
+    width: 100%;
+    height: 100%;
+    padding: 3px;
+}
+
+article {
+    border-radius: 27px;
+    border: 2px solid var(--brown);
+    padding: 40px;
+    height: 100%;
+}
+
+/*article:not(.active-article) {*/
+/*    display: none;*/
+/*}*/
+
+article input[name=active-article] {
+    display: none;
+}
+
+article:has(input[name=active-article]:not(:checked)) {
+    display: none;
+}
+
+.page:has(#dashboard_article:checked) label[for=dashboard_article],
+.page:has(#roms_article:checked) label[for=roms_article],
+.page:has(#printer_article:checked) label[for=printer_article],
+.page:has(#settings_article:checked) label[for=settings_article] {
+
+    background: var(--brown-select);
+}
+
+.right-area {
+    width: var(--page-small-margin);
+}
+
+footer {
+    height: var(--page-small-margin);
+}

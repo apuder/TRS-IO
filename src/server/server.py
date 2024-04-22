@@ -3,6 +3,12 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import os.path, json
 
+EXT_TO_MINE_TYPE = {
+        ".html": "text/html",
+        ".css": "text/css",
+        ".ttf": "font/ttf",
+}
+
 class TrsIoRequestHandler(BaseHTTPRequestHandler):
     # Handler for GET requests.
     def do_GET(self):
@@ -48,8 +54,11 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
             self.send_error(404)
             return
 
+        file_extension = os.path.splitext(path)[1].lower()
+        mime_type = EXT_TO_MINE_TYPE.get(file_extension, "application/octet-stream")
+
         self.send_response(200)
-        self.send_header("Content-type", "text/html")
+        self.send_header("Content-type", mime_type)
         self.send_header("Content-Length", str(len(contents)))
         self.end_headers()
         self.wfile.write(contents)
