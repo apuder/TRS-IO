@@ -38,7 +38,7 @@ header {
     align-items: center;
     font-family: "eurostile-bold-extended", sans-serif;
     font-size: 60px;
-    padding-right: 20px;
+    padding-right: var(--page-small-margin);
     height: var(--page-large-margin);
 }
 
@@ -111,6 +111,35 @@ article:has(input[name=active-article]:not(:checked)) {
 .page:has(#settings_article:checked) label[for=settings_article] {
 
     background: var(--brown-select);
+}
+
+.printer-output {
+    background: white;
+    color: black;
+    font-family: monospace;
+    white-space: pre;
+    height: 100%;
+}
+
+.settings {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.settings section h2 {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 20px;
+    margin-top: 0;
+}
+
+.settings section label {
+    display: flex;
+}
+
+.settings section label span {
+    min-width: 10em;
 }
 
 .right-area {

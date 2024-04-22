@@ -24,19 +24,81 @@
                 <div class="article-container">
                     <article class="dashboard active-article">
                         <input type="radio" name="active-article" id="dashboard_article" checked>
-                        Dashboard
+                        <ul>
+                            <li>Hardware version: 1</li>
+                            <li>Software version: 2.0</li>
+                            <li>Current time: 1:42</li>
+                            <li>IP address: 192.168.1.188</li>
+                            <li>Wi-Fi status: Connected</li>
+                            <li>SMB status: Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE</li>
+                            <li>SDCard status: Failed to initialize the SD card</li>
+                            <li>FreHD status: FREHD.ROM not found</li>
+                        </ul>
                     </article>
                     <article class="roms">
                         <input type="radio" name="active-article" id="roms_article">
-                        ROMs
+                        <table>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Size</th>
+                                <th>Date uploaded</th>
+                                <th>Actions</th>
+                                <th>1</th>
+                                <th>3</th>
+                                <th>4</th>
+                                <th>4P</th>
+                            </tr>
+                            <tr>
+                                <td>level1.bin</td>
+                                <td>12000</td>
+                                <td>April 21, 2024</td>
+                                <td>Rename / Delete</td>
+                                <td><input type="radio" name="model1rom" checked></td>
+                                <td><input type="radio" name="model3rom"></td>
+                                <td><input type="radio" name="model4rom"></td>
+                                <td><input type="radio" name="model4Prom"></td>
+                            </tr>
+                            <tr>
+                                <td>model3.bin</td>
+                                <td>14000</td>
+                                <td>April 21, 2024</td>
+                                <td>Rename / Delete</td>
+                                <td><input type="radio" name="model1rom"></td>
+                                <td><input type="radio" name="model3rom" checked></td>
+                                <td><input type="radio" name="model4rom"></td>
+                                <td><input type="radio" name="model4Prom"></td>
+                            </tr>
+                        </table>
+                        <button>Upload ROM</button>
                     </article>
                     <article class="printer">
                         <input type="radio" name="active-article" id="printer_article">
-                        Printer
+                        <div class="printer-output">
+This is some printer
+output...
+                        </div>
                     </article>
                     <article class="settings">
                         <input type="radio" name="active-article" id="settings_article">
-                        Settings
+                        <section>
+                            <h2>Wi-Fi</h2>
+
+                            <label><span>SSID:</span><input type="text"></label>
+                            <label><span>Password:</span><input type="text"></label>
+                        </section>
+
+                        <section>
+                            <h2>SMB</h2>
+
+                            <label><span>URL:</span><input type="text"></label>
+                            <label><span>Username:</span><input type="text"></label>
+                            <label><span>Password:</span><input type="password"></label>
+                        </section>
+
+                        <div class="button-set">
+                            <button>Save Settings</button>
+                            <button>Revert Settings</button>
+                        </div>
                     </article>
                 </div>
                 <div class="right-area"></div>
