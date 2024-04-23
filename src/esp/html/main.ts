@@ -79,7 +79,43 @@ function scheduleFetchStatus() {
     setInterval(async () => await fetchStatus(false), 2000);
 }
 
+function resizeDots(): void {
+    const canvas = document.getElementById("dots_canvas") as HTMLCanvasElement;
+    const parent = canvas.parentNode as HTMLElement;
+
+    canvas.width = parent.offsetWidth;
+    canvas.height = parent.offsetHeight;
+}
+
+function redrawDots(): void {
+    const canvas = document.getElementById("dots_canvas") as HTMLCanvasElement;
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+
+    ctx.fillStyle = "rgb(0 0 0 / 0%)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const emptyY = height*3/6;
+    const fullY = height*5/6;
+
+    ctx.fillStyle = "#67525440"; // var(--brown)
+    for (let y = 0; y < height; y++) {
+        const t = Math.min(Math.max((y - emptyY) / (fullY - emptyY), 0), 1);
+        const dotCount = t*30;
+
+        for (let c = 0; c < dotCount; c++) {
+            ctx.beginPath();
+            ctx.arc(Math.random()*width, y, 1.2, 0, 2*Math.PI);
+            ctx.fill();
+        }
+    }
+
+}
+
 export function main() {
     fetchStatus(true);
+    resizeDots();
+    redrawDots();
     scheduleFetchStatus();
 }
