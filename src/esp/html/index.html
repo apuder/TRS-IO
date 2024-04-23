@@ -23,16 +23,16 @@
                 </nav>
                 <div class="article-container">
                     <article class="dashboard active-article">
-                        <input type="radio" name="active-article" id="dashboard_article" checked>
+                        <input type="radio" name="active-article" id="dashboard_article">
                         <ul>
-                            <li>Hardware version: 1</li>
-                            <li>Software version: 2.0</li>
-                            <li>Current time: 1:42</li>
-                            <li>IP address: 192.168.1.188</li>
-                            <li>Wi-Fi status: Connected</li>
-                            <li>SMB status: Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE</li>
-                            <li>SDCard status: Failed to initialize the SD card</li>
-                            <li>FreHD status: FREHD.ROM not found</li>
+                            <li><span class="dashboard-label">Hardware version</span>: <span id="hardware_rev"></span></li>
+                            <li><span class="dashboard-label">Software version</span>: <span id="vers_major"></span>.<span id="vers_minor"></span></li>
+                            <li><span class="dashboard-label">Current time</span>: <span id="time"></span></li>
+                            <li><span class="dashboard-label">IP address</span>: <span id="ip"></span></li>
+                            <li><span class="dashboard-label">Wi-Fi status</span>: <span id="wifi_status"></span></li>
+                            <li><span class="dashboard-label">SMB status</span>: <span id="smb_err"></span></li>
+                            <li><span class="dashboard-label">SDCard status</span>: <span id="posix_err"></span></li>
+                            <li><span class="dashboard-label">FreHD status</span>: <span id="frehd_loaded"></span></li>
                         </ul>
                     </article>
                     <article class="roms">
@@ -79,25 +79,25 @@ output...
                         </div>
                     </article>
                     <article class="settings">
-                        <input type="radio" name="active-article" id="settings_article">
+                        <input type="radio" name="active-article" id="settings_article" checked>
                         <section>
                             <h2>Wi-Fi</h2>
 
-                            <label><span>SSID:</span><input type="text"></label>
-                            <label><span>Password:</span><input type="text"></label>
+                            <label><span>SSID:</span><input type="text" id="ssid"></label>
+                            <label><span>Password:</span><input type="text" id="passwd"></label>
                         </section>
 
                         <section>
                             <h2>SMB</h2>
 
-                            <label><span>URL:</span><input type="text"></label>
-                            <label><span>Username:</span><input type="text"></label>
-                            <label><span>Password:</span><input type="password"></label>
+                            <label><span>URL:</span><input type="text" id="smb_url"></label>
+                            <label><span>Username:</span><input type="text" id="smb_user"></label>
+                            <label><span>Password:</span><input type="password" id="smb_passwd"></label>
                         </section>
 
                         <div class="button-set">
-                            <button>Save Settings</button>
-                            <button>Revert Settings</button>
+                            <button>Save</button>
+                            <button>Cancel</button>
                         </div>
                     </article>
                 </div>
@@ -105,5 +105,9 @@ output...
             </main>
             <footer></footer>
         </div>
+        <script type="module">
+            import { main } from "./main.js";
+            main();
+        </script>
     </body>
 </html>

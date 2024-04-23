@@ -6,7 +6,9 @@
 }
 
 :root {
-    --yellow: #F0C93C; /* TODO blur and get more typical color */
+    --yellow-top: #F0C93C;
+    --yellow-bottom: #DEA939;
+    --yellow: var(--yellow-top);
     --brown: #675254;
     --brown-highlight: color-mix(in srgb, var(--brown) 95%, white);
     --brown-select: color-mix(in srgb, var(--brown) 90%, white);
@@ -23,7 +25,42 @@ body {
     color: var(--yellow);
     background: var(--brown);
     height: 100vh;
-    font-family: sans-serif;
+    font-family: "Helvetica", sans-serif;
+    font-size: 20px;
+}
+
+button {
+    background: var(--brown);
+    color: var(--yellow);
+    border: 0;
+    border-radius: 999px;
+    padding: 5px 25px;
+    text-transform: uppercase;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--brown-highlight);
+}
+
+.button-set {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: fit-content;
+}
+
+input {
+    font-family: monospace;
+    font-size: 18px;
+    background: rgb(255 255 255 / 20%);
+    border: 0;
+    color: var(--brown);
+    padding: 3px 6px;
+    outline-color: var(--brown);
+    border-radius: 3px;
 }
 
 .page {
@@ -79,7 +116,7 @@ nav ul li label:hover {
 .article-container {
     flex-grow: 1;
     color: var(--brown);
-    background: var(--yellow);
+    background: linear-gradient(var(--yellow-top), var(--yellow-bottom));
     border-radius: 30px;
     width: 100%;
     height: 100%;
@@ -92,10 +129,6 @@ article {
     padding: 40px;
     height: 100%;
 }
-
-/*article:not(.active-article) {*/
-/*    display: none;*/
-/*}*/
 
 article input[name=active-article] {
     display: none;
@@ -113,6 +146,10 @@ article:has(input[name=active-article]:not(:checked)) {
     background: var(--brown-select);
 }
 
+.dashboard-label {
+    font-weight: bold;
+}
+
 .printer-output {
     background: white;
     color: black;
@@ -124,22 +161,33 @@ article:has(input[name=active-article]:not(:checked)) {
 .settings {
     display: flex;
     flex-direction: column;
-    gap: 30px;
-}
+    gap: 40px;
 
-.settings section h2 {
-    text-transform: uppercase;
-    font-weight: bold;
-    font-size: 20px;
-    margin-top: 0;
-}
+    section {
+        h2 {
+            font-weight: bold;
+            font-size: 20px;
+            margin-top: 0;
+        }
 
-.settings section label {
-    display: flex;
-}
+        label {
+            display: flex;
+            align-items: baseline;
+            margin-top: 2px;
 
-.settings section label span {
-    min-width: 10em;
+            span {
+                min-width: 8em;
+            }
+
+            input {
+                width: 13em;
+            }
+
+            #smb_url {
+                width: 20em;
+            }
+        }
+    }
 }
 
 .right-area {

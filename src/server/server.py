@@ -7,6 +7,7 @@ EXT_TO_MINE_TYPE = {
         ".html": "text/html",
         ".css": "text/css",
         ".ttf": "font/ttf",
+        ".js": "text/javascript",
 }
 
 class TrsIoRequestHandler(BaseHTTPRequestHandler):
