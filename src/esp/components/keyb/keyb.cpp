@@ -3,6 +3,8 @@
 #include "fabgl.h"
 #include "ptrs.h"
 #include "spi.h"
+#include "settings.h"
+#include <esp_log.h>
 
 static fabgl::PS2Controller PS2Controller;
 
@@ -340,7 +342,6 @@ static void process_key(int vk, bool down)
 void check_keyb()
 {
   static uint8_t reset_trigger = 0;
-  static fabgl::VirtualKey lastvk = fabgl::VK_NONE;
   auto keyboard = PS2Controller.keyboard();
 
   if (keyboard == nullptr || !keyboard->isKeyboardAvailable()) {
@@ -404,7 +405,22 @@ void check_keyb()
 #endif
   }
 }
+
+void set_keyb_layout()
+{
+  uint8_t layout = settings_get_keyb_layout();
+  if (PS2Controller.keyboard() != nullptr) {
+    if (!PS2Controller.keyboard()->isKeyboardAvailable() ) {
+      ESP_LOGE("KEYB", "No PS/2 keyboard available");
+    } else {
+  	  PS2Controller.keyboard()->setLayout(SupportedLayouts::layouts()[layout]);
+      ESP_LOGI("KEYB", "Keyboard layout %s", SupportedLayouts::names()[layout]);
+    }
+  }
+}
+
 void init_keyb()
 {
   PS2Controller.begin(PS2Preset::KeyboardPort0, KbdMode::CreateVirtualKeysQueue);
+  set_keyb_layout();
 }
