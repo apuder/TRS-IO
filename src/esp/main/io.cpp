@@ -7,6 +7,7 @@
 #include "settings.h"
 #include "spi.h"
 #include "wifi.h"
+#include "http.h"
 #include "event.h"
 #include "trs-fs.h"
 #include "esp_task.h"

@@ -16,6 +16,4 @@ using namespace std;
 
 uint8_t* get_wifi_status();
 const char* get_wifi_ip();
-void trs_printer_write(const char ch);
-uint8_t trs_printer_read();
 void init_wifi();

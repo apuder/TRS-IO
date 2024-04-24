@@ -3,6 +3,7 @@
 #include "led.h"
 #include "button.h"
 #include "wifi.h"
+#include "http.h"
 #include "ota.h"
 #include "settings.h"
 #include "event.h"
@@ -66,6 +67,7 @@ void app_main(void)
   init_led();
   init_trs_fs_posix();
   init_wifi();
+  init_http();
   init_io();
 
   vTaskDelete(NULL);
