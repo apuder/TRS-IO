@@ -15,6 +15,11 @@
 #include "keyb.h"
 #include "ptrs.h"
 
+#include "esp_idf_version.h"
+
+#if ESP_IDF_VERSION != ESP_IDF_VERSION_VAL(4, 4, 7)
+#error Please use ESP-IDF version 4.4.7
+#endif
 
 #define TAG "TRS-IO"
 
