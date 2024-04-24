@@ -41,7 +41,7 @@ static bool keyb_layout_dirty;
 static uint8_t keyb_layout = 0;
 static const char** keyb_name_items = NULL;
 
-void init_keyb_names()
+static void init_keyb_names()
 {
   uint8_t i;
   uint8_t n_countries = SupportedLayouts::count();
@@ -73,8 +73,10 @@ static form_t ptrs_form = {
 	.form_items = ptrs_form_items
 };
 
-void configure_ptrs_settings()
+bool configure_ptrs_settings()
 {
+  bool reboot = false;
+
   if (keyb_name_items == NULL) {
     init_keyb_names();
   }
@@ -123,11 +125,12 @@ void configure_ptrs_settings()
   }
 
   if (wifi_dirty) {
-    wnd_popup("Rebooting TRS-IO++...");
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    //TODO need to resume Z80
-    set_wifi_credentials(wifi_ssid, wifi_passwd);
+    settings_set_wifi_ssid(wifi_ssid);
+    settings_set_wifi_passwd(wifi_passwd);
+    reboot = true;
   }
 
   settings_commit();
+
+  return reboot;
 }

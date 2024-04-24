@@ -33,19 +33,20 @@ static menu_t main_menu = {
 
 void configure_pocket_trs(bool is_80_cols)
 {
+  bool reboot = false;
   bool show_from_left = false;
   uint8_t status;
 
   init_trs_lib(is_80_cols);
 
-  while(true) {
+  while(!reboot) {
     status = menu(&main_menu, show_from_left, true);
     if (status == MENU_ABORT || status == MENU_EXIT) {
       break;
     }
     switch (status) {
     case MENU_CONFIGURE:
-      configure_ptrs_settings();
+      reboot = configure_ptrs_settings();
       break;
     case MENU_ROMS:
       configure_roms();
@@ -57,7 +58,16 @@ void configure_pocket_trs(bool is_80_cols)
     show_from_left = true;
   }
 
+  if (reboot) {
+    wnd_popup("Rebooting TRS-IO++...");
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+  }
+
   exit_trs_lib();
+
+  if (reboot) {
+    esp_restart();
+  }
 }
 
 #if 0

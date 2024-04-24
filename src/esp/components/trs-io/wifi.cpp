@@ -84,15 +84,6 @@ static void event_handler(void* arg, esp_event_base_t event_base,
   }
 }
 
-void set_wifi_credentials(const char* ssid, const char* passwd)
-{
-  // Store credentials and reboot
-  settings_set_wifi_ssid(ssid);
-  settings_set_wifi_passwd(passwd);
-  settings_commit();
-  esp_restart();
-}
-
 
 
 //-----------------------------------------------------------------
