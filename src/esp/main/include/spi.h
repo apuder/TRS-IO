@@ -48,7 +48,7 @@
 #define FPGA_CMD_XRAY_RESUME 13
 #define FPGA_CMD_SET_FULL_ADDR 14
 #define FPGA_CMD_GET_FPGA_VERSION 15
-#define FPGA_CMD_GET_PRINTER_BYTE 16
+#define FPGA_CMD_GET_MODE 16
 #define FPGA_CMD_SET_SCREEN_COLOR 17
 #define FPGA_CMD_ABUS_READ 18
 #define FPGA_CMD_SEND_KEYB 19
@@ -76,7 +76,7 @@
 
 uint8_t spi_get_cookie();
 uint8_t spi_get_fpga_version();
-uint8_t spi_get_printer_byte();
+uint8_t spi_get_mode();
 void spi_bram_poke(uint16_t addr, uint8_t data);
 uint8_t spi_bram_peek(uint16_t addr);
 void spi_xram_poke_code(uint8_t addr, uint8_t data);

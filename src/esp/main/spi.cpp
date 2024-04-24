@@ -60,13 +60,13 @@ uint8_t spi_get_fpga_version()
   return trans.base.rx_data[0];
 }
 
-uint8_t spi_get_printer_byte()
+uint8_t spi_get_mode()
 {
   spi_transaction_ext_t trans;
 
   memset(&trans, 0, sizeof(spi_transaction_ext_t));
   trans.base.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_VARIABLE_DUMMY;
-  trans.base.cmd = FPGA_CMD_GET_PRINTER_BYTE;
+  trans.base.cmd = FPGA_CMD_GET_MODE;
   trans.address_bits = 0 * 8;
   trans.dummy_bits = 2;
   trans.base.length = 0 * 8;

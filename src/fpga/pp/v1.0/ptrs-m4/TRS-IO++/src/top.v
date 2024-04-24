@@ -45,6 +45,18 @@ module top(
   inout [7:0] PMOD);
 
 
+//-------Mode--------------------------------------------------------------------
+
+localparam [7:0]
+  mode_trs_io   = 8'd0,
+  mode_ptrs_m1  = 8'd1,
+  mode_ptrs_m3  = 8'd2,
+  mode_ptrs_m4  = 8'd3,
+  mode_ptrs_m4p = 8'd4;
+
+localparam [7:0] this_mode = mode_ptrs_m3;
+
+
 wire clk;
 
 Gowin_rPLL clk_wiz_0(
@@ -359,7 +371,7 @@ localparam [7:0]
   xray_resume         = 8'd13,
   set_full_addr       = 8'd14,
   get_version         = 8'd15,
-  get_printer_byte    = 8'd16,
+  get_mode            = 8'd16,
   set_screen_color    = 8'd17,
   abus_read           = 8'd18,
   send_keyb           = 8'd19,
@@ -459,7 +471,7 @@ always @(posedge clk) begin
           set_full_addr: begin
             bytes_to_read <= 1;
           end
-          get_printer_byte: begin
+          get_mode: begin
             trigger_action <= 1'b1;
             bits_to_send <= 9;
             state <= idle;
@@ -982,6 +994,7 @@ always @(posedge clk) begin
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == abus_read) byte_out <= TRS_A[7:0];
   else if (trigger_action && cmd == get_config) byte_out <= {1'b0, is_80cols, is_doublwide, is_hires, ~CONF};
+  else if (trigger_action && cmd == get_mode) byte_out <= this_mode;
 end
 
 
