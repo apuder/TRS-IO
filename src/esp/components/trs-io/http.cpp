@@ -60,7 +60,7 @@ static uint8_t get_config()
 
   if (!is_init) {
     // Get DIP switch setting
-    config = ~spi_get_config() & 0x0f;
+    config = spi_get_config() & 0x0f;
     is_init = true;
   }
   return config;
