@@ -224,6 +224,7 @@ static void deinit_timer()
   const timer_idx_t timer = TIMER_0;
 
   timer_pause(group, timer);
+  timer_isr_callback_remove(group, timer);
   timer_deinit(group, timer);
 }
 
@@ -260,6 +261,7 @@ static void cassTask(void* arg)
         last_sample = new_sample;
       }
     }
+    deinit_timer();
     evt_signal(EVT_I2S_STOP);
     ESP_LOGI(TAG, "Cassette motor off");
   }
