@@ -60,14 +60,14 @@ void app_main(void)
   
   init_ota();
   init_spi();
+  init_led();
+  init_http();
 #ifdef CONFIG_TRS_IO_PP
   init_keyb();
   init_ptrs();
 #endif
-  init_led();
   init_trs_fs_posix();
   init_wifi();
-  init_http();
   init_io();
 
   vTaskDelete(NULL);

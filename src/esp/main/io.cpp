@@ -8,6 +8,7 @@
 #include "spi.h"
 #include "wifi.h"
 #include "http.h"
+#include "ptrs.h"
 #include "event.h"
 #include "trs-fs.h"
 #include "esp_task.h"
@@ -411,7 +412,7 @@ static void action_task(void* p)
       spi_ptrs_rst();
     }
     if (is_reset_button_long_press()) {
-      uploadFPGAFirmware();
+      ptrs_load_rom();
     }
 #endif
 

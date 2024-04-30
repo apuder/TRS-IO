@@ -19,6 +19,7 @@ void configure_pocket_trs(bool is_80_cols);
 bool configure_ptrs_settings();
 void ptrs_status();
 void init_trs_lib(bool is_80_cols);
+void ptrs_load_rom();
 void init_ptrs();
 
 

@@ -384,7 +384,8 @@ localparam [7:0]
   set_led             = 8'd26,
   get_config          = 8'd27,
   set_cass_in         = 8'd28,
-  set_esp_status      = 8'd32;
+  set_esp_status      = 8'd32,
+  z80_rst_resume      = 8'd33;
 
 
 reg [7:0] params[0:4];
@@ -503,6 +504,10 @@ always @(posedge clk) begin
           z80_dsp_peek: begin
             trigger_action <= 1'b1;
             bits_to_send <= 9;
+            state <= idle;
+          end
+          z80_rst_resume: begin
+            trigger_action <= 1'b1;
             state <= idle;
           end
           set_led: begin
@@ -1306,7 +1311,7 @@ Gowin_DCS0 z80_clkdcs(
 
 
 reg [7:0] z80_rst_shr = 8'b0;
-always @ (posedge z80_clk) z80_rst_shr <= {z80_rst_shr[6:0], !(trigger_action && (cmd == ptrs_rst))};
+always @ (posedge z80_clk) z80_rst_shr <= {z80_rst_shr[6:0], !(trigger_action && ((cmd == ptrs_rst) || (cmd == z80_rst_resume)))};
 wire z80_rst = ~z80_rst_shr[7];
 
 
@@ -1356,11 +1361,11 @@ always @(posedge clk) begin
 end
 
 
-reg z80_is_paused = 1'b0;
+reg z80_is_paused = 1'b1;
 
 always @(posedge clk) begin
   if (trigger_action && cmd == z80_pause) z80_is_paused <= 1'b1;
-  if (trigger_action && cmd == z80_resume) z80_is_paused <= 1'b0;
+  if (trigger_action && ((cmd == z80_resume) || (cmd == z80_rst_resume))) z80_is_paused <= 1'b0;
 end
 
 wire ttrs80_poke_rom = trigger_action && cmd == bram_poke;
