@@ -408,7 +408,7 @@ static void action_task(void* p)
     }
 
 #ifdef CONFIG_TRS_IO_PP
-    if (is_reset_button_pressed()) {
+    if (is_reset_button_short_press()) {
       spi_ptrs_rst();
     }
     if (is_reset_button_long_press()) {

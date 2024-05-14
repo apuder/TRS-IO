@@ -65,7 +65,6 @@
 #define FPGA_CMD_SET_SPI_DATA 30
 #define FPGA_CMD_GET_SPI_DATA 31
 #define FPGA_CMD_SET_ESP_STATUS 32
-#define FPGA_CMD_Z80_RST_RESUME 33
 
 
 #define PTRS_CONFIG_DIP_1   (1 << 0)
@@ -97,7 +96,6 @@ void spi_send_keyb(uint8_t idx, uint8_t mask);
 void spi_ptrs_rst();
 void spi_z80_pause();
 void spi_z80_resume();
-void spi_z80_rst_resume();
 void spi_z80_dsp_set_addr(uint16_t addr);
 void spi_z80_dsp_poke(uint8_t v);
 uint8_t spi_z80_dsp_peek();

@@ -100,7 +100,7 @@ void ptrs_load_rom()
   }
 
   // Reset and resume Z80
-  spi_z80_rst_resume();
+  spi_ptrs_rst();
 }
 
 void init_ptrs()
