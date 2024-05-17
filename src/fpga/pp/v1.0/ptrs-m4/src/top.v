@@ -47,14 +47,16 @@ module top(
 
 //-------Mode--------------------------------------------------------------------
 
-localparam [7:0]
-  mode_trs_io   = 8'd0,
-  mode_ptrs_m1  = 8'd1,
-  mode_ptrs_m3  = 8'd2,
-  mode_ptrs_m4  = 8'd3,
-  mode_ptrs_m4p = 8'd4;
+localparam [3:0]
+  mode_trs_io_m1   = 4'b0000,
+  mode_trs_io_m3   = 4'b1000,
+  mode_ptrs_m1     = 4'b0001,
+  mode_ptrs_m3     = 4'b0011,
+  mode_ptrs_m4     = 4'b0100,
+  mode_ptrs_m4p    = 4'b0101;
 
-localparam [7:0] this_mode = mode_ptrs_m3;
+localparam add_dip_4 = 1'b1;
+wire [3:0] this_mode = mode_ptrs_m4;
 
 
 wire clk;
@@ -994,8 +996,9 @@ always @(posedge clk) begin
   else if (trigger_action && cmd == get_version) byte_out <= {VERSION_MAJOR, VERSION_MINOR};
   else if (trigger_action && cmd == abus_read) byte_out <= TRS_A[7:0];
   else if (trigger_action && cmd == get_config) byte_out <= {1'b0, is_80cols, is_doublwide, is_hires, ~CONF};
-  else if (trigger_action && cmd == get_mode) byte_out <= this_mode;
+  else if (trigger_action && cmd == get_mode) byte_out <= {4'b0000, this_mode | ((add_dip_4 & ~CONF[3]) << 3)};
 end
+
 
 
 
