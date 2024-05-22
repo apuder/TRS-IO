@@ -113,24 +113,22 @@ Gowin_rPLL clk_wiz_0(
    .clkin(clk_in) //input clkin
 );
 
-//-------Configuration-----------------------------------------------------------
 
-reg is_m3 = 1'b0;
+reg rst = 1'b0;
 
-always @(posedge clk) begin
-  is_m3 <= ~CONF[3];
+always @ (posedge clk)
+begin
+   rst <= ~_RESET_N;
 end
-
-wire is_m1 = ~is_m3;
 
 
 //----Address Decoder------------------------------------------------------------
 
-wire TRS_RD = (is_m3 ? 1'b1 : _RD_N);
-wire TRS_WR = (is_m3 ? 1'b1 : _WR_N);
+wire TRS_RD = _RD_N;
+wire TRS_WR = _WR_N;
 
-wire TRS_IN  = (is_m3 ? (_IN_N  | _IOREQ_N) : _IN_N );
-wire TRS_OUT = (is_m3 ? (_OUT_N | _IOREQ_N) : _OUT_N);
+wire TRS_IN  = _IN_N;
+wire TRS_OUT = _OUT_N;
 
 wire io_access_raw = ~TRS_RD | ~TRS_WR | ~TRS_IN | ~TRS_OUT;
 
@@ -159,33 +157,29 @@ filter ras(
 reg full_addr = 1'b0;
 
 // m1 extension rom (1.96875k @ 3000h-37DFh)
-wire trs_extrom_sel = is_m1 & ((TRS_A[15:11] == 5'b00110) &         // 2k @ 3000h-37FFh
-                               ~(TRS_A[15:5] == 11'b00110111111));  // - 32 @ 37E0h-37FFh
+wire trs_extrom_sel = ((TRS_A[15:11] == 5'b00110) &         // 2k @ 3000h-37FFh
+                       ~(TRS_A[15:5] == 11'b00110111111));  // - 32 @ 37E0h-37FFh
 wire trs_extrom_sel_rd = trs_extrom_sel & ~TRS_RD;
 wire trs_extrom_sel_wr = trs_extrom_sel & ~TRS_WR;
 
 // m1 ram (32k @ 8000h-FFFFh)
-wire trs_ram_sel = is_m1 & (TRS_A[15] == 1'b1);  // upper 32k
+wire trs_ram_sel = (TRS_A[15] == 1'b1);  // upper 32k
 wire trs_ram_sel_rd = trs_ram_sel & ~TRS_RD;
 wire trs_ram_sel_wr = trs_ram_sel & ~TRS_WR;
 
 // m1 fdc irq status @ 37E0h-37E3h
-wire fdc_37e0_sel_rd = is_m1 & (TRS_A[15:2] == (16'h37E0 >> 2)) & ~TRS_RD; // 37E0h-37E3h
+wire fdc_37e0_sel_rd = (TRS_A[15:2] == (16'h37E0 >> 2)) & ~TRS_RD; // 37E0h-37E3h
 // m1 fdc @ 37ECh-37EFh
-wire fdc_37ec_sel_rd = is_m1 & (TRS_A[15:2] == (16'h37EC >> 2)) & ~TRS_RD; // 37ECh-37EFh
-wire fdc_37ec_sel_wr = is_m1 & (TRS_A[15:2] == (16'h37EC >> 2)) & ~TRS_WR; // 37ECh-37EFh
+wire fdc_37ec_sel_rd = (TRS_A[15:2] == (16'h37EC >> 2)) & ~TRS_RD; // 37ECh-37EFh
+wire fdc_37ec_sel_wr = (TRS_A[15:2] == (16'h37EC >> 2)) & ~TRS_WR; // 37ECh-37EFh
 
 // m1: printer @ 37E8h-37EBh (mem)
-// m3: printer @ F8h-F9h (io)
 wire printer_sel_m1 = (TRS_A[15:2] == (16'h37E8 >> 2));
-wire printer_sel_m3 = (TRS_A[7:2]  == (8'hF8 >> 2));
 wire printer_sel_m1_rd  = printer_sel_m1 & ~TRS_RD;
 wire printer_sel_m1_wr  = printer_sel_m1 & ~TRS_WR;
-wire printer_sel_m3_in  = printer_sel_m3 & ~TRS_IN;
-wire printer_sel_m3_out = printer_sel_m3 & ~TRS_OUT;
-wire printer_mem_trigger = is_m1 & printer_sel_m1 & ras_access;
-wire printer_sel_rd = is_m3 ? printer_sel_m3_in  : printer_sel_m1_rd;
-wire printer_sel_wr = is_m3 ? printer_sel_m3_out : printer_sel_m1_wr;
+wire printer_mem_trigger = printer_sel_m1 & ras_access;
+wire printer_sel_rd = printer_sel_m1_rd;
+wire printer_sel_wr = printer_sel_m1_wr;
 wire printer_sel = printer_sel_rd | printer_sel_wr;
 
 // trs-io @ 1Fh
@@ -203,9 +197,8 @@ wire le18_data_sel_in = (TRS_A[7:0] == 8'hEC) & ~TRS_IN;
 wire hires_data_sel_in = (TRS_A[7:0] == 8'h82) & ~TRS_IN;
 
 // m1: orchestra-85 @ B9h,B5h
-// m3: orchestra-90 @ 79h,75h
-wire orch85l_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h75) : (TRS_A[7:0] == 8'hB5)) & ~TRS_OUT;
-wire orch85r_sel_out = (is_m3 ? (TRS_A[7:0] == 8'h79) : (TRS_A[7:0] == 8'hB9)) & ~TRS_OUT;
+wire orch85l_sel_out = (TRS_A[7:0] == 8'hB5) & ~TRS_OUT;
+wire orch85r_sel_out = (TRS_A[7:0] == 8'hB9) & ~TRS_OUT;
 
 // fpga flash spi @ FCh-FDh
 wire spi_ctrl_sel_out = (TRS_A[7:0] == 8'hFC) & ~TRS_OUT;
@@ -218,8 +211,6 @@ wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
 wire esp_sel = esp_sel_in | esp_sel_out;
 
 wire esp_sel_risingedge = io_access & esp_sel;
-
-assign EXTIOSEL = esp_sel_in | spi_data_sel_in;
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
@@ -314,7 +305,7 @@ reg [2:0] idx;
 reg [7:0] cmd;
 reg trs_io_data_ready = 1'b0;
 
-assign INT = (is_m3 ? trs_io_data_ready : TRS_INT);
+assign INT = TRS_INT;
 
 reg trigger_action = 1'b0;
 
@@ -496,7 +487,8 @@ wire esp_status_smb_mounted = esp_status[2];
 wire esp_status_sd_mounted  = esp_status[3];
 
 always @(posedge clk) begin
-  if (trigger_action && cmd == set_esp_status) esp_status <= params[0];
+  if (trigger_action && cmd == set_esp_status)
+    esp_status <= params[0];
 end
 
 
@@ -601,6 +593,14 @@ begin
 end
 
 
+reg [7:0] trs_data;
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == dbus_write)
+    trs_data <= params[0];
+end
+
+
 //--------BRAM-------------------------------------------------------------------------
 
 wire ram_rd_en, ram_rd_regce;
@@ -652,14 +652,6 @@ Gowin_DPB0 bram(
   .oceb(regceb), //input
   .resetb(1'b0) //input
 );
-
-
-reg [7:0] trs_data;
-
-always @(posedge clk) begin
-  if (trigger_action && cmd == dbus_write)
-    trs_data <= params[0];
-end
 
 
 //---EXTENSION ROM----------------------------------------------------------------
@@ -765,13 +757,14 @@ trigger bram_peek_trigger(
 
 always @(posedge clk)
 begin
-  if (bram_peek_done) byte_out <= doutb;
+  if (bram_peek_done)
+    byte_out <= doutb;
   else if (trigger_action)
     case (cmd)
       dbus_read:   byte_out <= TRS_D;
+      abus_read:   byte_out <= TRS_A[7:0];
       get_cookie:  byte_out <= COOKIE;
       get_version: byte_out <= {VERSION_MAJOR, VERSION_MINOR};
-      abus_read:   byte_out <= TRS_A[7:0];
       get_config:  byte_out <= {4'b0, ~CONF};
       get_spi_data:byte_out <= spi_data_in;
       get_mode:    byte_out <= {4'b0000, this_mode | ((add_dip_4 & ~CONF[3]) << 3)};
@@ -798,31 +791,43 @@ always @(posedge clk_in) if (audio_cnt == 9'd0) clk_audio <= ~clk_audio;
 logic [15:0] audio_sample_word [1:0] = '{16'd0, 16'd0};
 
 
-//-----HDMI1-----------------------------------------------------------------------
+//-----HDMI------------------------------------------------------------------------
 
-wire clk1_pixel;
-wire clk1_pixel_x5;
+wire hdmi_sel = ~CONF[1]; // for now for development
+
+wire clk_pixel;
+wire clk_pixel_x5;
 
 // 200 MHz (200.571 MHz actual)
-Gowin_rPLL0 pll1(
-  .clkout(clk1_pixel_x5), //output clkout
-  .clkin(clk_in) //input clkin
+// 125.875 MHz (126 MHz actual)
+Gowin_rPLLx pllx(
+  .clkout(clk_pixel_x5), //output clkout
+  .clkin(clk_in), //input clkin
+  .fbdsel(hdmi_sel ? -6'd14 : -6'd37), //input [5:0]
+  .idsel( hdmi_sel ? -6'd3  : -6'd5 ) //input [5:0]
 );
 
 // 40 MHz (40.114 MHz actual)
-Gowin_CLKDIV0 clk1div0(
-  .clkout(clk1_pixel), //output clkout
-  .hclkin(clk1_pixel_x5), //input hclkin
+// 25.175 MHz (25.2 MHz actual)
+Gowin_CLKDIV0 clkxdiv0(
+  .clkout(clk_pixel), //output clkout
+  .hclkin(clk_pixel_x5), //input hclkin
   .resetn(1'b1) //input resetn
 );
 
-reg [23:0] rgb1 = 24'h0;
+reg [23:0] rgb = 24'h0;
 wire vga1_vid;
+wire vga3_vid;
 
 always @(posedge clk1_pixel)
 begin
-  rgb1 <= vga1_vid ? rgb_screen_color : 24'h0;
+  rgb <= (hdmi_sel ? vga3_vid : vga1_vid) ? rgb_screen_color : 24'h0;
 end
+
+//-----HDMI1-----------------------------------------------------------------------
+
+wire clk1_pixel = clk_pixel;
+wire clk1_pixel_x5 = clk_pixel_x5;
 
 logic [10:0] cx1, frame_width1, screen_width1;
 logic [9:0] cy1, frame_height1, screen_height1;
@@ -834,7 +839,7 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .clk_pixel(clk1_pixel),
   .clk_audio(clk_audio),
   .reset(1'b0),
-  .rgb(rgb1),
+  .rgb(rgb),
   .audio_sample_word(audio_sample_word),
   .tmds(),
   .tmds_clock(),
@@ -850,29 +855,8 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
 
 //-----HDMI3-----------------------------------------------------------------------
 
-wire clk3_pixel;
-wire clk3_pixel_x5;
-
-// 125.875 MHz (126 MHz actual)
-Gowin_rPLL3 pll3(
-  .clkout(clk3_pixel_x5), //output clkout
-  .clkin(clk_in) //input clkin
-);
-
-// 25.175 MHz (25.2 MHz actual)
-Gowin_CLKDIV0 clk3div0(
-  .clkout(clk3_pixel), //output clkout
-  .hclkin(clk3_pixel_x5), //input hclkin
-  .resetn(1'b1) //input resetn
-);
-
-reg [23:0] rgb3 = 24'h0;
-wire vga3_vid;
-
-always @(posedge clk3_pixel)
-begin
-  rgb3 <= vga3_vid ? rgb_screen_color : 24'h0;
-end
+wire clk3_pixel = clk_pixel;
+wire clk3_pixel_x5 = clk_pixel_x5;
 
 logic [9:0] cx3, frame_width3, screen_width3;
 logic [9:0] cy3, frame_height3, screen_height3;
@@ -884,7 +868,7 @@ hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .clk_pixel(clk3_pixel),
   .clk_audio(clk_audio),
   .reset(1'b0),
-  .rgb(rgb3),
+  .rgb(rgb),
   .audio_sample_word(audio_sample_word),
   .tmds(),
   .tmds_clock(),
@@ -899,32 +883,6 @@ hdmi #(.VIDEO_ID_CODE(1), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
 
 
 //-----HDMI1/HDMI3 Selection-------------------------------------------------------
-
-wire hdmi_sel = CONF[0];//is_m3;
-
-wire clk_pixel;
-
-DCS dcs_clk_pixel(
-  .CLK0(clk1_pixel),
-  .CLK1(clk3_pixel),
-  .CLK2(1'b0),
-  .CLK3(1'b0),
-  .CLKSEL({2'b00, hdmi_sel, ~hdmi_sel}),
-  .SELFORCE(1'b0),
-  .CLKOUT(clk_pixel)
-);
-
-wire clk_pixel_x5;
-
-DCS dcs_clk_pixel_x5(
-  .CLK0(clk1_pixel_x5),
-  .CLK1(clk3_pixel_x5),
-  .CLK2(1'b0),
-  .CLK3(1'b0),
-  .CLKSEL({2'b00, hdmi_sel, ~hdmi_sel}),
-  .SELFORCE(1'b0),
-  .CLKOUT(clk_pixel_x5)
-);
 
 wire [2:0] tmds_x;
 wire tmds_clock_x;
@@ -1006,7 +964,7 @@ begin
 end
 
 
-//-----ORCH85/90-------------------------------------------------------------------
+//-----ORCH85----------------------------------------------------------------------
 
 // orchestra-85 output registers
 reg [7:0] orch85l_reg;
@@ -1079,20 +1037,20 @@ always @ (posedge clk)
 
 assign LED[0] = WAIT;
 assign LED[1] = esp_sel;
-assign LED[2] = is_m3;
+assign LED[2] = hdmi_sel;
 assign LED[3] = esp_status_esp_ready;
 
 
 //------------LightBright-80-------------------------------------------------------------
 
-wire lb80_update = io_access & (is_m3 ? (~_IN_N | ~_OUT_N) : (~TRS_RD | ~TRS_WR));
+wire lb80_update = io_access & (~TRS_RD | ~TRS_WR);
 
 reg [7:0] pmod_a;
 
 always @ (posedge clk)
 begin
    if(lb80_update)
-      pmod_a <= (is_m3 ? TRS_A[7:0] : TRS_A[15:8]);
+      pmod_a <= TRS_A[15:8];
 end
 
 assign PMOD = {~pmod_a[7:5], ~pmod_a[1], pmod_a[4:2], pmod_a[0]};

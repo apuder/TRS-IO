@@ -1,18 +1,19 @@
 -series GW2A
--device GW2A-18C
+-device GW2A-18
+-device_version C
 -package PBGA256
 -part_number GW2A-LV18PG256C8/I7
 
 
--mod_name display_ram
--file_name display_ram
+-mod_name Gowin_DPB_FG
+-file_name gowin_dpb_fg
 -path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
 -dev_type GW2A-18C
--depth_0 1024
--depth_1 1024
+-depth_0 12288
+-depth_1 12288
 -width_0 8
 -width_1 8
 -read_mode_0 pipeline
@@ -21,5 +22,3 @@
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file ../cls.mi
--init_match port_A

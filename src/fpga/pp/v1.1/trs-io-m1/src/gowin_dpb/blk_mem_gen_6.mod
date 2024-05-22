@@ -7,7 +7,7 @@
 
 -mod_name blk_mem_gen_6
 -file_name blk_mem_gen_6
--path C:/Users/matt/Documents/FPGA/TRS-IO++M1M3Arno/src/gowin_dpb/
+-path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
