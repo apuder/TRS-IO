@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "bitstream-src.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -69,14 +70,6 @@
 #define IR_BYPASS 0xFF
 
 
-
-class BitstreamSource {
-public:
-  virtual ~BitstreamSource() {}
-  virtual bool open() = 0;
-  virtual bool read(void* buf, int n, int* br) = 0;
-  virtual bool close() = 0;
-};
 
 class JTAGAdapter {
 private:
