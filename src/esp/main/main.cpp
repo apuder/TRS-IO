@@ -15,6 +15,7 @@
 #include "spi.h"
 #include "keyb.h"
 #include "ptrs.h"
+#include "xflash.h"
 
 #include "esp_idf_version.h"
 
@@ -69,6 +70,10 @@ void app_main(void)
   init_trs_fs_posix();
   init_wifi();
   init_io();
+
+#ifdef CONFIG_TRS_IO_PP
+  init_fpga();
+#endif
 
   vTaskDelete(NULL);
 }

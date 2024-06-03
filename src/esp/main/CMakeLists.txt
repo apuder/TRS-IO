@@ -33,4 +33,5 @@ idf_component_register(SRCS ${src}
                                 trs-io
                                 keyb
                                 ptrs
+                                xflash
                                 jtag)

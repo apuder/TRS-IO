@@ -21,7 +21,8 @@ static const ESP_SPIFFS_PARTITION partitions[] = {
   {"html", 2},
 #ifdef CONFIG_TRS_IO_PP
   {"elFinder", 5},
-  {"roms", 5}
+  {"roms", 5},
+  {"fpga", 1}
 #endif
 };
 
