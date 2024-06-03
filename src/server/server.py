@@ -1,7 +1,7 @@
 # Simulates the TRS-IO++, for easier development.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import os.path, json
+import os, json, time
 
 EXT_TO_MINE_TYPE = {
         ".html": "text/html",
@@ -9,6 +9,71 @@ EXT_TO_MINE_TYPE = {
         ".ttf": "font/ttf",
         ".js": "text/javascript",
 }
+
+STATE_DIR = "state"
+DEFAULT_SETTINGS = {
+    "color": 1,
+    "tz": "GMT-8",
+    "ssid": "fandango",
+    "passwd": "22PineCreekSLO",
+    "smb_url": "smb://unifi/TRS-IO/smb-m3",
+    "smb_user": "lk",
+    "smb_passwd": "XXX"
+}
+
+def createStateDirIfNecessary():
+    global STATE_DIR
+
+    if not os.path.isdir(STATE_DIR):
+        os.mkdir(STATE_DIR)
+
+def getSettingsPathname():
+    return os.path.join(STATE_DIR, "settings.json")
+
+def readSettings():
+    path = getSettingsPathname()
+    if os.path.exists(path):
+        settings = json.load(open(path))
+    else:
+        settings = DEFAULT_SETTINGS
+
+    return settings
+
+def writeSettings(settings):
+    createStateDirIfNecessary()
+    path = getSettingsPathname()
+    f = open(path, "w")
+    json.dump(settings, f, indent="    ")
+    f.close()
+
+def makeStatus():
+    settings = readSettings()
+
+    t = time.localtime()
+    status = {
+        "hardware_rev": 1,
+        "vers_major": 2,
+        "vers_minor": 0,
+        "wifi_status": 2,
+        "ip": "192.168.1.188",
+        "config": 0, # only for TRS-IO++
+        "time": "%d:%02d" % (t.tm_hour, t.tm_min),
+        "smb_err": "Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE",
+        "posix_err": "Failed to initialize the SD card",
+        "has_sd_card": True,
+        "frehd_loaded": "FREHD.ROM not found",
+
+        "color": settings["color"],
+        "tz": settings["tz"],
+        "ssid": settings["ssid"],
+        "passwd": settings["passwd"],
+        "smb_url": settings["smb_url"],
+        "smb_user": settings["smb_user"],
+        "smb_passwd": settings["smb_passwd"]
+    }
+
+    return status
+
 
 class TrsIoRequestHandler(BaseHTTPRequestHandler):
     # Handler for GET requests.
@@ -88,29 +153,13 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
         self.send_json(data)
 
     def handle_config(self):
-        self.send_json({})
+        length = int(self.headers["content-length"])
+        request = json.loads(self.rfile.read(length))
+        writeSettings(request)
+        self.send_json(makeStatus())
 
     def handle_status(self):
-        data = {
-            "hardware_rev": 1,
-            "vers_major": 2,
-            "vers_minor": 0,
-            "wifi_status": 2,
-            "ip": "192.168.1.188",
-            "config": 0, # only for TRS-IO++
-            "color": 1,
-            "ssid": "fandango",
-            "passwd": "22PineCreekSLO",
-            "smb_url": "smb://unifi/TRS-IO/smb-m3",
-            "smb_user": "lk",
-            "smb_passwd": "XXX",
-            "time": "1:42",
-            "smb_err": "Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE",
-            "posix_err": "Failed to initialize the SD card",
-            "has_sd_card": True,
-            "frehd_loaded": "FREHD.ROM not found"
-        }
-        self.send_json(data)
+        self.send_json(makeStatus())
 
     def send_json(self, data):
         self.send_response(200)

@@ -28,6 +28,7 @@
                         <ul>
                             <li><span class="dashboard-label">Hardware version</span>: <span id="hardware_rev"></span></li>
                             <li><span class="dashboard-label">Software version</span>: <span id="vers_major"></span>.<span id="vers_minor"></span></li>
+                            <!-- TODO only display time if Wi-Fi status is connected: -->
                             <li><span class="dashboard-label">Current time</span>: <span id="time"></span></li>
                             <li><span class="dashboard-label">IP address</span>: <span id="ip"></span></li>
                             <li><span class="dashboard-label">Wi-Fi status</span>: <span id="wifi_status"></span></li>
@@ -81,24 +82,70 @@ output...
                     </article>
                     <article class="settings">
                         <input type="radio" name="active-article" id="settings_article" checked>
+
+                        <section>
+                            <h2>General</h2>
+
+                            <div class="form-row">
+                                <label>Phosphor:</label>
+                                <div class="form-inputs">
+                                    <label class="pill"><input type="radio" name="color" value="0">White</label>
+                                    <label class="pill"><input type="radio" name="color" value="1">Green</label>
+                                    <label class="pill"><input type="radio" name="color" value="2">Amber</label>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="tz">Time Zone:</label>
+                                <div class="form-inputs">
+                                    <input type="text" id="tz">
+                                    <button class="small" id="timezoneDetectButton">Detect</button>
+                                </div>
+                            </div>
+                        </section>
+
                         <section>
                             <h2>Wi-Fi</h2>
 
-                            <label><span>SSID:</span><input type="text" id="ssid"></label>
-                            <label><span>Password:</span><input type="text" id="passwd"></label>
+                            <div class="form-row">
+                                <label for="ssid">Network:</label>
+                                <div class="form-inputs">
+                                    <input type="text" id="ssid">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="passwd">Password:</label>
+                                <div class="form-inputs">
+                                    <input type="text" id="passwd">
+                                </div>
+                            </div>
                         </section>
 
                         <section>
                             <h2>SMB</h2>
 
-                            <label><span>URL:</span><input type="text" id="smb_url"></label>
-                            <label><span>Username:</span><input type="text" id="smb_user"></label>
-                            <label><span>Password:</span><input type="password" id="smb_passwd"></label>
+                            <div class="form-row">
+                                <label for="smb_url">URL:</label>
+                                <div class="form-inputs">
+                                    <input type="text" id="smb_url">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="smb_user">Username:</label>
+                                <div class="form-inputs">
+                                    <input type="text" id="smb_user">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="smb_passwd">Password:</label>
+                                <div class="form-inputs">
+                                    <input type="password" id="smb_passwd">
+                                </div>
+                            </div>
                         </section>
 
                         <div class="button-set">
-                            <button>Save</button>
-                            <button>Cancel</button>
+                            <button id="saveSettings">Save</button>
+                            <button id="revertSettings">Revert</button>
                         </div>
                     </article>
                 </div>

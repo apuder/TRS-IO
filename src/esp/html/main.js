@@ -1,8 +1,28 @@
-const WIFI_STATUS_TO_STRING = new Map();
-WIFI_STATUS_TO_STRING.set(1, "Connecting");
-WIFI_STATUS_TO_STRING.set(2, "Connected");
-WIFI_STATUS_TO_STRING.set(3, "Not connected");
-WIFI_STATUS_TO_STRING.set(4, "Not configured");
+const WIFI_STATUS_TO_STRING = new Map([
+    [1, "Connecting"],
+    [2, "Connected"],
+    [3, "Not connected"],
+    [4, "Not configured"],
+]);
+const CONFIGURATIONS = [
+    "TRS-IO (Model 1)",
+    "TRS-IO (Model III)",
+    "PocketTRS (Model 1, internal TRS-IO)",
+    "Reserved",
+    "PocketTRS (Model III, internal TRS-IO)",
+    "PocketTRS (Model 4, internal TRS-IO)",
+    "PocketTRS (Model 4P, internal TRS-IO)",
+    "Custom 1",
+    "Custom 2",
+    "PocketTRS (Model 1, external TRS-IO)",
+    "Reserved",
+    "PocketTRS (Model III, external TRS-IO)",
+    "PocketTRS (Model 4, external TRS-IO)",
+    "PocketTRS (Model 4P, external TRS-IO)",
+    "Custom 1",
+    "Custom 2"
+];
+let g_mostRecentStatus = undefined;
 function updateStatusField(id, value) {
     if (typeof (value) === "number") {
         value = value.toString();
@@ -14,6 +34,24 @@ function updateStatusField(id, value) {
     }
     element.textContent = value;
 }
+function getSettingsField(id) {
+    const element = document.getElementById(id);
+    if (element === null) {
+        console.error("Element not found: " + id);
+        return "";
+    }
+    return element.value;
+}
+function getSettingsEnumField(name) {
+    const elements = document.getElementsByName(name);
+    for (const element of elements) {
+        const inputElement = element;
+        if (inputElement.checked) {
+            return inputElement.value;
+        }
+    }
+    return "unknown";
+}
 function updateSettingsField(id, value) {
     const element = document.getElementById(id);
     if (element === null) {
@@ -22,8 +60,25 @@ function updateSettingsField(id, value) {
     }
     element.value = value;
 }
+function updateSettingsEnumField(name, value) {
+    const elements = document.getElementsByName(name);
+    for (const element of elements) {
+        const inputElement = element;
+        inputElement.checked = inputElement.value === value;
+    }
+}
+function updateSettingsForm(status) {
+    updateSettingsEnumField("color", status.color.toString());
+    updateSettingsField("tz", status.tz);
+    updateSettingsField("ssid", status.ssid);
+    updateSettingsField("passwd", status.passwd);
+    updateSettingsField("smb_url", status.smb_url);
+    updateSettingsField("smb_user", status.smb_user);
+    updateSettingsField("smb_passwd", status.smb_passwd);
+}
 function updateStatus(status, initialFetch) {
     var _a;
+    g_mostRecentStatus = status;
     updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
     updateStatusField("vers_minor", status.vers_minor);
@@ -34,11 +89,7 @@ function updateStatus(status, initialFetch) {
     updateStatusField("posix_err", status.posix_err);
     updateStatusField("frehd_loaded", status.frehd_loaded);
     if (initialFetch) {
-        updateSettingsField("ssid", status.ssid);
-        updateSettingsField("passwd", status.passwd);
-        updateSettingsField("smb_url", status.smb_url);
-        updateSettingsField("smb_user", status.smb_user);
-        updateSettingsField("smb_passwd", status.smb_passwd);
+        updateSettingsForm(status);
     }
 }
 async function fetchStatus(initialFetch) {
@@ -48,6 +99,32 @@ async function fetchStatus(initialFetch) {
 }
 function scheduleFetchStatus() {
     setInterval(async () => await fetchStatus(false), 2000);
+}
+async function saveSettings() {
+    const settings = {
+        color: parseInt(getSettingsEnumField("color")),
+        tz: getSettingsField("tz"),
+        ssid: getSettingsField("ssid"),
+        passwd: getSettingsField("passwd"),
+        smb_url: getSettingsField("smb_url"),
+        smb_user: getSettingsField("smb_user"),
+        smb_passwd: getSettingsField("smb_passwd"),
+    };
+    const response = await fetch("/config", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(settings),
+    });
+    if (response.status !== 200) {
+        console.log("Failed to save settings", response);
+    }
+    else {
+        const status = await response.json();
+        updateStatus(status, false);
+    }
 }
 function resizeDots() {
     const canvas = document.getElementById("dots_canvas");
@@ -75,7 +152,28 @@ function redrawDots() {
         }
     }
 }
+function configureButtons() {
+    const timezoneDetectButton = document.getElementById("timezoneDetectButton");
+    const timezoneField = document.getElementById("tz");
+    if (timezoneDetectButton !== null && timezoneField !== null) {
+        timezoneDetectButton.addEventListener("click", () => {
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (timezone !== "") {
+                timezoneField.value = timezone;
+            }
+        });
+    }
+    const saveStatusButton = document.getElementById("saveSettings");
+    saveStatusButton.addEventListener("click", () => saveSettings());
+    const revertStatusButton = document.getElementById("revertSettings");
+    revertStatusButton.addEventListener("click", () => {
+        if (g_mostRecentStatus !== undefined) {
+            updateSettingsForm(g_mostRecentStatus);
+        }
+    });
+}
 export function main() {
+    configureButtons();
     fetchStatus(true);
     resizeDots();
     redrawDots();

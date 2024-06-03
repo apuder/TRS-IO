@@ -29,7 +29,7 @@ body {
     font-size: 20px;
 }
 
-button {
+button, label.pill {
     background: var(--brown);
     color: var(--yellow);
     border: 0;
@@ -39,6 +39,12 @@ button {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
+    user-select: none;
+}
+
+button.small, label.pill {
+    font-size: 12px;
+    padding: 4px 16px 2px;
 }
 
 button:hover {
@@ -179,21 +185,36 @@ article:has(input[name=active-article]:not(:checked)) {
             margin-top: 0;
         }
 
-        label {
+        .form-row {
             display: flex;
             align-items: baseline;
             margin-top: 2px;
 
-            span {
+            & > label {
                 min-width: 8em;
             }
 
-            input {
-                width: 13em;
+            .form-inputs {
+                display: flex;
+                align-items: baseline;
+                gap: 10px;
             }
 
-            #smb_url {
+            input {
                 width: 20em;
+            }
+
+            .pill {
+                border: 1px solid var(--brown);
+            }
+
+            .pill:has(input:not(:checked)) {
+                background: transparent;
+                color: var(--brown);
+            }
+
+            input[type="radio"] {
+                display: none;
             }
         }
     }
