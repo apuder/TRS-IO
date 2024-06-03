@@ -49,3 +49,41 @@ public:
   }
 };
 
+class BitstreamSourceFlash : public BitstreamSource {
+private:
+  const char* fn;
+  FILE* f;
+
+public:
+  BitstreamSourceFlash(const char* fn) {
+    this->fn = fn;
+  }
+
+  bool open() {
+    char* path;
+    asprintf(&path, "/fpga/%s", fn);
+    f = fopen(path, "rb");
+    free(path);
+    if (f == NULL) {
+      return false;
+    }
+    return true;
+  }
+
+  bool read(void* buf, int n, int* br) {
+    size_t _br;
+
+    if (feof(f)) {
+      return false;
+    }
+    _br = fread(buf, 1, n, f);
+    *br = (int) _br;
+    return true;
+  }
+
+  bool close() {
+    fclose(f);
+    return true;
+  }
+};
+

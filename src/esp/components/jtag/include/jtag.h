@@ -85,6 +85,7 @@ private:
   }
 
 public:
+  virtual ~JTAGAdapter() {}
   virtual void setup() = 0;
   int determineChainLength();
   int scan(int expected_ir_len, int expected_devices, uint32_t expected_idcode);

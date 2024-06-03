@@ -312,6 +312,7 @@ void JTAGAdapterTrsIO::testProgramToFLASH()
   }
 }
 
+#if 0
 static JTAGAdapterTrsIO jtag;
 
 void uploadFPGAFirmware()
@@ -322,3 +323,4 @@ void uploadFPGAFirmware()
   jtag.doProgramToSRAM(path);
   free(path);
 }
+#endif
