@@ -100,6 +100,22 @@ async function fetchStatus(initialFetch) {
 function scheduleFetchStatus() {
     setInterval(async () => await fetchStatus(false), 2000);
 }
+async function sleep(ms) {
+    return new Promise(accept => {
+        setTimeout(() => accept(), ms);
+    });
+}
+async function startSaveIndicator() {
+    const stars = document.createElement("span");
+    stars.classList.add("stars");
+    const container = document.querySelector(".article-container");
+    container.append(stars);
+    for (let i = 0; i < 5; i++) {
+        stars.textContent = "*" + (i % 2 === 0 ? "*" : "\u00A0"); // nbsp
+        await sleep(200);
+    }
+    stars.remove();
+}
 async function saveSettings() {
     const settings = {
         color: parseInt(getSettingsEnumField("color")),
@@ -110,7 +126,7 @@ async function saveSettings() {
         smb_user: getSettingsField("smb_user"),
         smb_passwd: getSettingsField("smb_passwd"),
     };
-    const response = await fetch("/config", {
+    const responsePromise = fetch("/config", {
         method: "POST",
         cache: "no-cache",
         headers: {
@@ -118,6 +134,8 @@ async function saveSettings() {
         },
         body: JSON.stringify(settings),
     });
+    const saveIndicatorPromise = startSaveIndicator();
+    const [response, _] = await Promise.all([responsePromise, saveIndicatorPromise]);
     if (response.status !== 200) {
         console.log("Failed to save settings", response);
     }

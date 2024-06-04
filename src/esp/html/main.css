@@ -224,6 +224,16 @@ article:has(input[name=active-article]:not(:checked)) {
     width: var(--page-small-margin);
 }
 
+.stars {
+    position: absolute;
+    top: 30px;
+    right: 45px;
+    color: var(--brown);
+    font-size: 20px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
 footer {
     height: var(--page-small-margin);
 }
