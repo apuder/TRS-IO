@@ -31,6 +31,10 @@ interface RomInfo {
     selected: string[],
 }
 
+interface ErrorResponse {
+    error: string,
+}
+
 const WIFI_STATUS_TO_STRING = new Map<number,string>([
     [1, "Connecting"],
     [2, "Connected"],
@@ -155,6 +159,65 @@ function scheduleFetchStatus() {
     setInterval(async () => await fetchStatus(false), 2000);
 }
 
+function displayError(message: string): void {
+    console.log(message); // TODO
+}
+
+// Returns whether successful
+async function deleteRomFile(filename: string): Promise<boolean> {
+    const response = await fetch("/get-roms", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            command: "deleteRom",
+            filename,
+        }),
+    });
+    if (response.status === 200) {
+        const romInfo = await response.json() as RomInfo | ErrorResponse;
+        if ("error" in romInfo) {
+            displayError(romInfo.error);
+        } else {
+            updateRomInfo(romInfo);
+            return true;
+        }
+    } else {
+        displayError("Error deleting ROM");
+    }
+    return false;
+}
+
+// Returns whether successful
+async function renameRomFile(oldFilename: string, newFilename: string): Promise<boolean> {
+    const response = await fetch("/get-roms", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            command: "renameRom",
+            oldFilename,
+            newFilename,
+        }),
+    });
+    if (response.status === 200) {
+        const romInfo = await response.json() as RomInfo | ErrorResponse;
+        if ("error" in romInfo) {
+            displayError(romInfo.error);
+        } else {
+            updateRomInfo(romInfo);
+            return true;
+        }
+    } else {
+        displayError("Error renaming ROM");
+    }
+    return false;
+}
+
 function updateRomInfo(romInfo: RomInfo) {
     romInfo.roms.sort((a, b) => {
         return a.filename.localeCompare(b.filename, undefined, {
@@ -170,11 +233,11 @@ function updateRomInfo(romInfo: RomInfo) {
 
         const tr = document.createElement("tr");
 
-        let td = document.createElement("td");
-        td.textContent = rom.filename;
-        tr.append(td);
+        let filenameTd = document.createElement("td");
+        filenameTd.textContent = rom.filename;
+        tr.append(filenameTd);
 
-        td = document.createElement("td");
+        let td = document.createElement("td");
         td.textContent = rom.size.toLocaleString(undefined, {
             useGrouping: true,
         });
@@ -187,31 +250,85 @@ function updateRomInfo(romInfo: RomInfo) {
         tr.append(td);
 
         td = document.createElement("td");
+        const renameLink = document.createElement("a");
+        renameLink.textContent = "Rename";
+        renameLink.href = "#";
+        renameLink.addEventListener("click", async e => {
+            e.preventDefault();
+            filenameTd.contentEditable = "true";
+            filenameTd.focus();
+
+            // Select entire filename.
+            const textNode = filenameTd.childNodes[0];
+            if (textNode.textContent !== null) {
+                const filename = textNode.textContent;
+                const dot = filename.lastIndexOf(".");
+                const range = document.createRange();
+                range.setStart(textNode, 0);
+                range.setEnd(textNode, dot === -1 ? textNode.textContent.length : dot);
+
+                const s = window.getSelection();
+                if (s !== null) {
+                    s.removeAllRanges();
+                    s.addRange(range)
+                }
+            }
+
+            const finish = () => {
+                filenameTd.removeEventListener("blur", blurListener);
+                filenameTd.removeEventListener("keydown", keyListener);
+                filenameTd.contentEditable = "false";
+            };
+
+            const rollback = () => {
+                // Abort and return to old name.
+                filenameTd.textContent = rom.filename;
+                finish();
+            };
+
+            const commit = async () => {
+                const newFilename = filenameTd.textContent;
+                if (newFilename === null || newFilename === "") {
+                    rollback();
+                } else {
+                    const success = await renameRomFile(rom.filename, newFilename);
+                    if (success) {
+                        finish();
+                    } else {
+                        rollback();
+                    }
+                }
+            };
+
+            const blurListener = () => {
+                commit();
+            };
+
+            const keyListener = (e: KeyboardEvent) => {
+                switch (e.key) {
+                    case "Enter":
+                        e.preventDefault();
+                        commit();
+                        break;
+
+                    case "Escape":
+                        e.preventDefault();
+                        rollback();
+                        break;
+                }
+            };
+
+            filenameTd.addEventListener("blur", blurListener);
+            filenameTd.addEventListener("keydown", keyListener);
+        });
         const deleteLink = document.createElement("a");
         deleteLink.textContent = "Delete";
         deleteLink.href = "#";
-        deleteLink.classList.add("deleteLink");
         deleteLink.addEventListener("click", async e => {
             e.preventDefault();
-            const response = await fetch("/get-roms", {
-                method: "POST",
-                cache: "no-cache",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    command: "deleteRom",
-                    filename: rom.filename,
-                }),
-            });
-            if (response.status === 200) {
-                const romInfo = await response.json() as RomInfo;
-                updateRomInfo(romInfo);
-            } else {
-                console.log("Error deleting ROM", rom.filename, response);
-            }
+            const success = await deleteRomFile(rom.filename);
         });
-        td.append("Rename/", deleteLink);
+        td.append(renameLink, "/", deleteLink);
         tr.append(td);
 
         for (let model of [0, 2, 3, 4]) {

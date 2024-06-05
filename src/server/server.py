@@ -98,6 +98,10 @@ def makeRomInfo():
     ]
     return data
 
+# Make sure the filename isn't trying to reach outside the ROM directory.
+def isValidRomFilename(filename):
+    return filename != "" and not filename.startswith(".") and "/" not in filename
+
 class TrsIoRequestHandler(BaseHTTPRequestHandler):
     # Handler for GET requests.
     def do_GET(self):
@@ -167,10 +171,29 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
         command = request["command"]
         if command == "deleteRom":
             filename = request["filename"]
+            if not isValidRomFilename(filename):
+                return self.send_json_error(f"Invalid filename \"{filename}\"")
             pathname = os.path.join(ROMS_DIR, filename)
             if not os.path.exists(pathname):
-                return self.send_error(400)
+                return self.send_json_error(f"ROM \"{filename}\" does not exist")
             os.remove(pathname)
+        elif command == "renameRom":
+            oldFilename = request["oldFilename"]
+            newFilename = request["newFilename"]
+            if not isValidRomFilename(oldFilename):
+                return self.send_json_error(f"Invalid filename \"{oldFilename}\"")
+            if not isValidRomFilename(newFilename):
+                return self.send_json_error(f"Invalid filename \"{newFilename}\"")
+            oldPathname = os.path.join(ROMS_DIR, oldFilename)
+            newPathname = os.path.join(ROMS_DIR, newFilename)
+            if not os.path.exists(oldPathname):
+                return self.send_json_error(f"ROM \"{oldFilename}\" does not exist")
+            if os.path.exists(newPathname):
+                return self.send_json_error(f"ROM \"{newFilename}\" already exists")
+            try:
+                os.rename(oldPathname, newPathname)
+            except OSError as e:
+                return self.send_json_error(f"Error renaming \"{oldFilename}\" to \"{newFilename}\": {e}")
         else:
             return self.send_error(400)
         self.send_json(makeRomInfo())
@@ -187,6 +210,12 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "application/json")
         self.end_headers()
         self.wfile.write(bytes(json.dumps(data), "utf-8"))
+
+    def send_json_error(self, message):
+        print("Responding with error message: %s" % message)
+        self.send_json({
+            "error": message,
+        })
 
 def main():
     hostname = "localhost"
