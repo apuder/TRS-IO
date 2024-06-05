@@ -94,11 +94,67 @@ function updateStatus(status, initialFetch) {
 }
 async function fetchStatus(initialFetch) {
     const response = await fetch("/status");
-    const status = await response.json();
-    updateStatus(status, initialFetch);
+    if (response.status === 200) {
+        const status = await response.json();
+        updateStatus(status, initialFetch);
+    }
+    else {
+        console.log("Error fetching status", response);
+    }
 }
 function scheduleFetchStatus() {
     setInterval(async () => await fetchStatus(false), 2000);
+}
+function updateRomInfo(romInfo) {
+    romInfo.roms.sort((a, b) => {
+        return a.filename.localeCompare(b.filename, undefined, {
+            numeric: true,
+        });
+    });
+    const tbody = document.querySelector(".rom-table tbody");
+    tbody.replaceChildren();
+    for (let romIndex = 0; romIndex < romInfo.roms.length; romIndex++) {
+        const rom = romInfo.roms[romIndex];
+        const tr = document.createElement("tr");
+        let td = document.createElement("td");
+        td.textContent = rom.filename;
+        tr.append(td);
+        td = document.createElement("td");
+        td.textContent = rom.size.toLocaleString(undefined, {
+            useGrouping: true,
+        });
+        tr.append(td);
+        td = document.createElement("td");
+        td.textContent = new Date(rom.createdAt * 1000).toLocaleString(undefined, {
+            dateStyle: "short",
+        });
+        tr.append(td);
+        td = document.createElement("td");
+        td.textContent = "Rename/Delete";
+        tr.append(td);
+        for (let model of [0, 2, 3, 4]) {
+            td = document.createElement("td");
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = "modelRom" + model;
+            if (romInfo.selected[model] === rom.filename) {
+                input.checked = true;
+            }
+            td.append(input);
+            tr.append(td);
+        }
+        tbody.append(tr);
+    }
+}
+async function fetchRomInfo() {
+    const response = await fetch("/get-roms");
+    if (response.status === 200) {
+        const romInfo = await response.json();
+        updateRomInfo(romInfo);
+    }
+    else {
+        console.log("Error fetching ROM info", response);
+    }
 }
 async function sleep(ms) {
     return new Promise(accept => {
@@ -193,6 +249,7 @@ function configureButtons() {
 export function main() {
     configureButtons();
     fetchStatus(true);
+    fetchRomInfo();
     resizeDots();
     redrawDots();
     scheduleFetchStatus();

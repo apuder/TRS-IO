@@ -27,6 +27,7 @@ body {
     height: 100vh;
     font-family: "Helvetica", sans-serif;
     font-size: 20px;
+    accent-color: var(--brown);
 }
 
 button, label.pill {
@@ -163,6 +164,24 @@ article:has(input[name=active-article]:not(:checked)) {
 
 .dashboard-label {
     font-weight: bold;
+}
+
+.rom-table {
+    border-collapse: collapse;
+
+    :is(th, td) {
+        text-align: center;
+    }
+
+    :is(th, td):nth-child(1),
+    :is(th, td):nth-child(4) {
+        text-align: left;
+    }
+
+    :is(th, td):nth-child(2),
+    :is(th, td):nth-child(3) {
+        text-align: right;
+    }
 }
 
 .printer-output {

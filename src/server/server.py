@@ -1,7 +1,7 @@
 # Simulates the TRS-IO++, for easier development.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import os, json, time
+import os, json, time, glob
 
 EXT_TO_MINE_TYPE = {
         ".html": "text/html",
@@ -11,6 +11,7 @@ EXT_TO_MINE_TYPE = {
 }
 
 STATE_DIR = "state"
+ROMS_DIR = "state/roms"
 DEFAULT_SETTINGS = {
     "color": 1,
     "tz": "GMT-8",
@@ -21,11 +22,12 @@ DEFAULT_SETTINGS = {
     "smb_passwd": "XXX"
 }
 
-def createStateDirIfNecessary():
+def createStateDirsIfNecessary():
     global STATE_DIR
+    global ROMS_DIR
 
-    if not os.path.isdir(STATE_DIR):
-        os.mkdir(STATE_DIR)
+    os.makedirs(STATE_DIR, exist_ok=True)
+    os.makedirs(ROMS_DIR, exist_ok=True)
 
 def getSettingsPathname():
     return os.path.join(STATE_DIR, "settings.json")
@@ -40,7 +42,7 @@ def readSettings():
     return settings
 
 def writeSettings(settings):
-    createStateDirIfNecessary()
+    createStateDirsIfNecessary()
     path = getSettingsPathname()
     f = open(path, "w")
     json.dump(settings, f, indent="    ")
@@ -130,26 +132,26 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(contents)
 
     def handle_get_roms(self):
+        createStateDirsIfNecessary()
+        romPathnames = glob.glob(os.path.join(ROMS_DIR, "*"))
         data = {
-            "roms": [
-                "trs80m13diag.bin",
-                "level2.bin",
-                "rsl2.bin",
-                "xdrom-full.bin",
-                "level1.bin",
-                "model3.bin",
-                "model3-frehd.bin",
-                "rsl2-frehd.bin",
-                "xrom-full.bin"
-            ],
-            "selected": [
-                4,
-                0,
-                6,
-                0,
-                0
-            ]
+            "roms": [],
+            "selected": [],
         }
+        for romPathname in romPathnames:
+            data["roms"].append({
+                "filename": os.path.basename(romPathname),
+                "size": os.path.getsize(romPathname),
+                "createdAt": int(os.path.getmtime(romPathname)),
+            })
+        data["selected"] = [
+            data["roms"][4]["filename"],
+            data["roms"][0]["filename"],
+            data["roms"][6]["filename"],
+            data["roms"][0]["filename"],
+            data["roms"][0]["filename"],
+        ]
+
         self.send_json(data)
 
     def handle_config(self):
