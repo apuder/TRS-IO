@@ -76,6 +76,27 @@ def makeStatus():
 
     return status
 
+def makeRomInfo():
+    createStateDirsIfNecessary()
+    romPathnames = glob.glob(os.path.join(ROMS_DIR, "*"))
+    data = {
+        "roms": [],
+        "selected": [],
+    }
+    for romPathname in romPathnames:
+        data["roms"].append({
+            "filename": os.path.basename(romPathname),
+            "size": os.path.getsize(romPathname),
+            "createdAt": int(os.path.getmtime(romPathname)),
+        })
+    data["selected"] = [
+        data["roms"][4]["filename"],
+        data["roms"][0]["filename"],
+        data["roms"][6]["filename"],
+        data["roms"][0]["filename"],
+        data["roms"][0]["filename"],
+    ]
+    return data
 
 class TrsIoRequestHandler(BaseHTTPRequestHandler):
     # Handler for GET requests.
@@ -102,7 +123,9 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
 
     # Handler for POST requests.
     def do_POST(self):
-        if self.path == "/config":
+        if self.path == "/get-roms":
+            return self.handle_roms_command()
+        elif self.path == "/config":
             return self.handle_config()
         self.send_error(404)
 
@@ -132,36 +155,32 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(contents)
 
     def handle_get_roms(self):
-        createStateDirsIfNecessary()
-        romPathnames = glob.glob(os.path.join(ROMS_DIR, "*"))
-        data = {
-            "roms": [],
-            "selected": [],
-        }
-        for romPathname in romPathnames:
-            data["roms"].append({
-                "filename": os.path.basename(romPathname),
-                "size": os.path.getsize(romPathname),
-                "createdAt": int(os.path.getmtime(romPathname)),
-            })
-        data["selected"] = [
-            data["roms"][4]["filename"],
-            data["roms"][0]["filename"],
-            data["roms"][6]["filename"],
-            data["roms"][0]["filename"],
-            data["roms"][0]["filename"],
-        ]
-
-        self.send_json(data)
+        self.send_json(makeRomInfo())
 
     def handle_config(self):
-        length = int(self.headers["content-length"])
-        request = json.loads(self.rfile.read(length))
+        request = self.read_json();
         writeSettings(request)
         self.send_json(makeStatus())
 
+    def handle_roms_command(self):
+        request = self.read_json();
+        command = request["command"]
+        if command == "deleteRom":
+            filename = request["filename"]
+            pathname = os.path.join(ROMS_DIR, filename)
+            if not os.path.exists(pathname):
+                return self.send_error(400)
+            os.remove(pathname)
+        else:
+            return self.send_error(400)
+        self.send_json(makeRomInfo())
+
     def handle_status(self):
         self.send_json(makeStatus())
+
+    def read_json(self):
+        length = int(self.headers["content-length"])
+        return json.loads(self.rfile.read(length))
 
     def send_json(self, data):
         self.send_response(200)

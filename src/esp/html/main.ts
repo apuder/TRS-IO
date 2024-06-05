@@ -183,11 +183,35 @@ function updateRomInfo(romInfo: RomInfo) {
         td = document.createElement("td");
         td.textContent = new Date(rom.createdAt*1000).toLocaleString(undefined, {
             dateStyle: "short",
-        } as any);
+        } as any); // "any" needed because TS doesn't know about "dateStyle" option.
         tr.append(td);
 
         td = document.createElement("td");
-        td.textContent = "Rename/Delete";
+        const deleteLink = document.createElement("a");
+        deleteLink.textContent = "Delete";
+        deleteLink.href = "#";
+        deleteLink.classList.add("deleteLink");
+        deleteLink.addEventListener("click", async e => {
+            e.preventDefault();
+            const response = await fetch("/get-roms", {
+                method: "POST",
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    command: "deleteRom",
+                    filename: rom.filename,
+                }),
+            });
+            if (response.status === 200) {
+                const romInfo = await response.json() as RomInfo;
+                updateRomInfo(romInfo);
+            } else {
+                console.log("Error deleting ROM", rom.filename, response);
+            }
+        });
+        td.append("Rename/", deleteLink);
         tr.append(td);
 
         for (let model of [0, 2, 3, 4]) {
