@@ -173,6 +173,11 @@ article:has(input[name=active-article]:not(:checked)) {
         text-align: center;
     }
 
+    tbody:not(.renaming) td:nth-child(1):hover {
+        /* copy chrome */
+        outline: 1px auto rgb(0 95 204);
+    }
+
     :is(th, td):nth-child(1),
     :is(th, td):nth-child(4) {
         text-align: left;

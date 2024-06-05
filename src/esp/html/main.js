@@ -189,12 +189,11 @@ function updateRomInfo(romInfo) {
             dateStyle: "short",
         }); // "any" needed because TS doesn't know about "dateStyle" option.
         tr.append(td);
-        td = document.createElement("td");
-        const renameLink = document.createElement("a");
-        renameLink.textContent = "Rename";
-        renameLink.href = "#";
-        renameLink.addEventListener("click", async (e) => {
-            e.preventDefault();
+        const startRename = () => {
+            if (tbody.classList.contains("renaming")) {
+                return;
+            }
+            tbody.classList.add("renaming");
             filenameTd.contentEditable = "true";
             filenameTd.focus();
             // Select entire filename.
@@ -212,9 +211,12 @@ function updateRomInfo(romInfo) {
                 }
             }
             const finish = () => {
+                var _a;
                 filenameTd.removeEventListener("blur", blurListener);
                 filenameTd.removeEventListener("keydown", keyListener);
                 filenameTd.contentEditable = "false";
+                (_a = window.getSelection()) === null || _a === void 0 ? void 0 : _a.removeAllRanges();
+                tbody.classList.remove("renaming");
             };
             const rollback = () => {
                 // Abort and return to old name.
@@ -223,7 +225,7 @@ function updateRomInfo(romInfo) {
             };
             const commit = async () => {
                 const newFilename = filenameTd.textContent;
-                if (newFilename === null || newFilename === "") {
+                if (newFilename === null || newFilename === "" || newFilename === rom.filename) {
                     rollback();
                 }
                 else {
@@ -253,6 +255,15 @@ function updateRomInfo(romInfo) {
             };
             filenameTd.addEventListener("blur", blurListener);
             filenameTd.addEventListener("keydown", keyListener);
+        };
+        filenameTd.addEventListener("click", () => startRename());
+        td = document.createElement("td");
+        const renameLink = document.createElement("a");
+        renameLink.textContent = "Rename";
+        renameLink.href = "#";
+        renameLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+            startRename();
         });
         const deleteLink = document.createElement("a");
         deleteLink.textContent = "Delete";

@@ -249,12 +249,12 @@ function updateRomInfo(romInfo: RomInfo) {
         } as any); // "any" needed because TS doesn't know about "dateStyle" option.
         tr.append(td);
 
-        td = document.createElement("td");
-        const renameLink = document.createElement("a");
-        renameLink.textContent = "Rename";
-        renameLink.href = "#";
-        renameLink.addEventListener("click", async e => {
-            e.preventDefault();
+        const startRename = () => {
+            if (tbody.classList.contains("renaming")) {
+                return;
+            }
+            tbody.classList.add("renaming");
+
             filenameTd.contentEditable = "true";
             filenameTd.focus();
 
@@ -278,6 +278,8 @@ function updateRomInfo(romInfo: RomInfo) {
                 filenameTd.removeEventListener("blur", blurListener);
                 filenameTd.removeEventListener("keydown", keyListener);
                 filenameTd.contentEditable = "false";
+                window.getSelection()?.removeAllRanges();
+                tbody.classList.remove("renaming");
             };
 
             const rollback = () => {
@@ -288,7 +290,7 @@ function updateRomInfo(romInfo: RomInfo) {
 
             const commit = async () => {
                 const newFilename = filenameTd.textContent;
-                if (newFilename === null || newFilename === "") {
+                if (newFilename === null || newFilename === "" || newFilename === rom.filename) {
                     rollback();
                 } else {
                     const success = await renameRomFile(rom.filename, newFilename);
@@ -320,6 +322,16 @@ function updateRomInfo(romInfo: RomInfo) {
 
             filenameTd.addEventListener("blur", blurListener);
             filenameTd.addEventListener("keydown", keyListener);
+        };
+        filenameTd.addEventListener("click", () => startRename());
+
+        td = document.createElement("td");
+        const renameLink = document.createElement("a");
+        renameLink.textContent = "Rename";
+        renameLink.href = "#";
+        renameLink.addEventListener("click", async e => {
+            e.preventDefault();
+            startRename();
         });
         const deleteLink = document.createElement("a");
         deleteLink.textContent = "Delete";
