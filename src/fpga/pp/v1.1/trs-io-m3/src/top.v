@@ -32,11 +32,12 @@ module top(
 
   output INT,
   input INT_IN_N,
-  output reg WAIT,
+  output WAIT,
   input WAIT_IN_N,
   output EXTIOSEL,
   input EXTIOSEL_IN_N,
-  output CASS_OUT,
+  output CASS_OUT_L,
+  output CASS_OUT_R,
 
   input UART_RX,
   output UART_TX,
@@ -75,7 +76,6 @@ localparam add_dip_4 = 1'b0;
 wire [3:0] this_mode = mode_trs_io_m3;
 
 
-reg TRS_INT;
 wire[7:0] TRS_A = _A[7:0];
 wire[7:0] TRS_D = _D;
 
@@ -86,17 +86,17 @@ assign DBUS_DIR = TRS_DIR;
 
 wire CS = CS_FPGA;
 
-assign ABUS_DIR = 1;
+assign ABUS_DIR = 1'b1;
 assign ABUS_DIR_N = ~ABUS_DIR;
-assign ABUS_EN = 0;
+assign ABUS_EN = 1'b0;
 
-assign CTRL_DIR = 1;
-assign CTRL_EN = 0;
-assign CTRL1_EN = 1;
+assign CTRL_DIR = 1'b1;
+assign CTRL_EN = 1'b0;
+assign CTRL1_EN = 1'b1;
 
 
-localparam [2:0] VERSION_MAJOR = 0;
-localparam [4:0] VERSION_MINOR = 3;
+localparam [2:0] VERSION_MAJOR = 3'd0;
+localparam [4:0] VERSION_MINOR = 5'd3;
 
 localparam [7:0] COOKIE = 8'hAF;
 
@@ -109,12 +109,12 @@ wire clk;
  */
 
 Gowin_rPLL clk_wiz_0(
-   .clkout(clk), //output clkout
-   .clkin(clk_in) //input clkin
+   .clkout(clk), //output
+   .clkin(clk_in) //input
 );
 
 
-reg rst = 1'b0;;
+reg rst = 1'b0;
 
 always @ (posedge clk)
 begin
@@ -150,7 +150,6 @@ wire printer_sel_m3_in  = printer_sel_m3 & ~TRS_IN;
 wire printer_sel_m3_out = printer_sel_m3 & ~TRS_OUT;
 wire printer_sel_rd = printer_sel_m3_in;
 wire printer_sel_wr = printer_sel_m3_out;
-wire printer_sel = printer_sel_rd | printer_sel_wr;
 
 // trs-io @ 1Fh
 wire trs_io_sel_in  = (TRS_A == 8'd31) & ~TRS_IN;
@@ -161,10 +160,13 @@ wire trs_io_sel = trs_io_sel_in | trs_io_sel_out;
 wire frehd_sel_in  = (TRS_A[7:4] == 4'hC) & ~TRS_IN;
 wire frehd_sel_out = (TRS_A[7:4] == 4'hC) & ~TRS_OUT;
 
+// cassette @ FFh
+wire cass_sel_out = (TRS_A == 8'hFF) & ~TRS_OUT;
+
 // m3: hires graphics @ 80h-83h
 wire hires_sel_in = (TRS_A[7:2] == (8'h80 >> 2)) & ~TRS_IN;
 
-// m3: orchestra-90 @ 79h,75h
+// m3/4: orchestra-90 @ 79h,75h
 wire orch90l_sel_out = (TRS_A == 8'h75) & ~TRS_OUT;
 wire orch90r_sel_out = (TRS_A == 8'h79) & ~TRS_OUT;
 
@@ -186,6 +188,9 @@ reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0]
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;
 
 reg [6:0] esp_req_count = 6'd1;
+reg trs_io_wait = 1'b0;
+
+assign WAIT = trs_io_wait;
 
 always @(posedge clk) begin
   if (esp_sel_risingedge) begin
@@ -194,11 +199,11 @@ always @(posedge clk) begin
   end
   if (esp_sel_risingedge) begin
     // Assert WAIT
-    WAIT <= 1'b1;
+    trs_io_wait <= 1'b1;
   end
   else if (esp_done_risingedge) begin
     // When ESP is done, de-assert WAIT
-    WAIT <= 1'b0;
+    trs_io_wait <= 1'b0;
   end
   if (esp_req_count != 7'd0) begin
     esp_req_count <= esp_req_count + 7'd1;
@@ -278,6 +283,7 @@ reg trs_io_data_ready = 1'b0;
 assign INT = trs_io_data_ready;
 
 reg trigger_action = 1'b0;
+reg spi_error = 1'b0;
 
 always @(posedge clk) begin
   trigger_action <= 1'b0;
@@ -379,6 +385,7 @@ always @(posedge clk) begin
           default:
             begin
               state <= idle;
+              spi_error <= 1'b1;
             end
         endcase
       end
@@ -399,6 +406,14 @@ always @(posedge clk) begin
       state <= idle;
       endcase
   end
+end
+
+
+reg [7:0] trs_data;
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == dbus_write)
+    trs_data <= params[0];
 end
 
 
@@ -457,7 +472,8 @@ wire esp_status_smb_mounted = esp_status[2];
 wire esp_status_sd_mounted  = esp_status[3];
 
 always @(posedge clk) begin
-  if (trigger_action && cmd == set_esp_status) esp_status <= params[0];
+  if (trigger_action && cmd == set_esp_status)
+    esp_status <= params[0];
 end
 
 
@@ -472,11 +488,21 @@ always @(posedge clk) begin
 end
 
 
-reg [7:0] trs_data;
-
-always @(posedge clk) begin
-  if (trigger_action && cmd == dbus_write)
-    trs_data <= params[0];
+// forward references 
+wire [7:0] spi_data_in;
+ 
+always @(posedge clk)
+begin
+  if (trigger_action)
+    case (cmd)
+      dbus_read:   byte_out <= TRS_D;
+      abus_read:   byte_out <= TRS_A;
+      get_cookie:  byte_out <= COOKIE;
+      get_version: byte_out <= {VERSION_MAJOR, VERSION_MINOR};
+      get_config:  byte_out <= {4'b0000, ~CONF};
+      get_spi_data:byte_out <= spi_data_in;
+      get_mode:    byte_out <= {4'b0000, this_mode | ((add_dip_4 & ~CONF[3]) << 3)};
+    endcase
 end
 
 
@@ -491,28 +517,12 @@ assign TRS_OE = ~(~TRS_WR | ~TRS_OUT |
 
 
 wire [7:0] hires_dout;
-wire [7:0] spi_data_in;
 
 assign _D = (~TRS_RD | ~TRS_IN)
              ? ( ({8{esp_sel_in      }} & trs_data   ) |
                  ({8{hires_sel_in    }} & hires_dout ) |
                  ({8{spi_data_sel_in }} & spi_data_in) )
-             : 8'bz;
-
-
-always @(posedge clk)
-begin
-  if (trigger_action)
-    case (cmd)
-      dbus_read:   byte_out <= TRS_D;
-      abus_read:   byte_out <= TRS_A;
-      get_cookie:  byte_out <= COOKIE;
-      get_version: byte_out <= {VERSION_MAJOR, VERSION_MINOR};
-      get_config:  byte_out <= {4'b0, ~CONF};
-      get_spi_data:byte_out <= spi_data_in;
-      get_mode:    byte_out <= {4'b0000, this_mode | ((add_dip_4 & ~CONF[3]) << 3)};
-    endcase
-end
+             : 8'hzz;
 
 
 //-----HDMI------------------------------------------------------------------------
@@ -541,15 +551,15 @@ wire clk3_pixel_x5;
 
 // 125.875 MHz (126 MHz actual)
 Gowin_rPLL3 pll3(
-  .clkout(clk3_pixel_x5), //output clkout
-  .clkin(clk_in) //input clkin
+  .clkout(clk3_pixel_x5), //output
+  .clkin(clk_in) //input
 );
 
 // 25.175 MHz (25.2 MHz actual)
 Gowin_CLKDIV0 clk3div0(
-  .clkout(clk3_pixel), //output clkout
-  .hclkin(clk3_pixel_x5), //input hclkin
-  .resetn(1'b1) //input resetn
+  .clkout(clk3_pixel), //output
+  .hclkin(clk3_pixel_x5), //input
+  .resetn(1'b1) //input
 );
 
 reg [23:0] rgb3 = 24'h0;
@@ -607,8 +617,8 @@ wire hertz50;
 reg sync3;
 
 vga3 vga3(
-  .clk(clk),
-  .srst(rst),
+  .clk(clk), // input
+  .srst(rst), // input
   .vga_clk(clk3_vga), // 25.2 MHz
   .TRS_A(TRS_A), // input [7:0]
   .TRS_D(TRS_D), // input [7:0]
@@ -701,10 +711,8 @@ end
 
 //-----Cassette out----------------------------------------------------------------
 
-wire cass_sel_out = (TRS_A == 8'hFF) & ~TRS_OUT;
-
 // raw 2-bit cassette output
-reg[1:0] cass_reg = 2'b00;
+reg [1:0] cass_reg = 2'b00;
 
 always @(posedge clk)
 begin
@@ -742,25 +750,8 @@ begin
 end
 
 
-//assign CASS_OUT_LEFT  = cass_pdml_reg[9];
-//assign CASS_OUT_RIGHT = cass_pdmr_reg[9];
-
-
-//-----LED------------------------------------------------------------------------------------
-
-reg [25:0] heartbeat;
-
-always @ (posedge clk)
-   heartbeat <= heartbeat + 26'b1;
-
-
-assign LED[0] = WAIT;
-assign LED[1] = esp_sel;
-assign LED[2] = lock;
-assign LED[3] = esp_status_esp_ready;
-
-//assign UART_TX = UART_RX;
-assign UART_TX = 1'bz;
+assign CASS_OUT_L = cass_pdml_reg[9];
+assign CASS_OUT_R = cass_pdmr_reg[9];
 
 
 //----XFLASH---------------------------------------------------------------------
@@ -816,5 +807,22 @@ assign spi_data_in = spi_shift_reg;
 assign FLASH_SPI_CS_N = ~spi_ctrl_reg[7];
 assign FLASH_SPI_CLK  = spi_counter[3];
 assign FLASH_SPI_SI   = spi_sdo;
+
+
+//-----LED------------------------------------------------------------------------------------
+
+reg [25:0] heartbeat;
+
+always @ (posedge clk)
+   heartbeat <= heartbeat + 26'b1;
+
+
+assign LED[0] = WAIT;
+assign LED[1] = esp_sel;
+assign LED[2] = lock;
+assign LED[3] = esp_status_esp_ready;
+
+//assign UART_TX = UART_RX;
+assign UART_TX = 1'bz;
 
 endmodule

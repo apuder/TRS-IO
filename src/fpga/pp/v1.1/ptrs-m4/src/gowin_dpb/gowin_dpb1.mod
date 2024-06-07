@@ -6,7 +6,7 @@
 
 -mod_name Gowin_DPB1
 -file_name gowin_dpb1
--path E:/Documents/FPGA/TRS-IO++/src/gowin_dpb/
+-path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true

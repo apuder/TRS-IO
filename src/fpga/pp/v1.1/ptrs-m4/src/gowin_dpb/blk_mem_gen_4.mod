@@ -6,7 +6,7 @@
 
 -mod_name blk_mem_gen_4
 -file_name blk_mem_gen_4
--path E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_dpb/
+-path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true

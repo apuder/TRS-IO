@@ -6,7 +6,7 @@
 
 -mod_name blk_mem_gen_0
 -file_name blk_mem_gen_0
--path E:/Documents/FPGA/TRS-IO++PTRS-ap/src/gowin_dpb/
+-path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
@@ -21,5 +21,5 @@
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file E:\Documents\FPGA\TRS-IO++PTRS-ap\src\model3_frehd_rom.mi
+-init_file ../model3_frehd_rom.mi
 -init_match port_A

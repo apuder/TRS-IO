@@ -6,7 +6,7 @@
 
 -mod_name Gowin_CLKDIV2
 -file_name gowin_clkdiv2
--path E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_clkdiv/
+-path ./gowin_clkdiv/
 -type CLKDIV
 -file_type vlg
 -division_factor 2
