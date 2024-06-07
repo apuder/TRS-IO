@@ -1122,7 +1122,4 @@ assign LED[1] = esp_sel;
 assign LED[2] = hdmi_sel;
 assign LED[3] = esp_status_esp_ready;
 
-//assign UART_TX = UART_RX;
-assign UART_TX = 1'bz;
-
 endmodule

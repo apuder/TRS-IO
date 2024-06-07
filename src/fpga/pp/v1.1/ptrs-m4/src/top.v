@@ -115,8 +115,10 @@ Gowin_rPLL clk_wiz_0(
 
 //-------Configuration-----------------------------------------------------------
 
-wire use_internal_trs_io = ~CONF[3];
+// conf[3] switch 'off' enables the internal trs-io
+wire use_internal_trs_io = CONF[3];
 
+// external expansion connector enable
 wire xio_enab;
 
 
@@ -859,6 +861,7 @@ Gowin_DCS0 z80_clkdcs(
 
 
 reg [3:0] z80_rst_cnt = 4'b0;
+
 always @ (posedge clk) begin
   if (trigger_action && cmd == ptrs_rst) z80_rst_cnt <= 4'b1111;
   else if (z80_rst_cnt != 0) z80_rst_cnt <= z80_rst_cnt - 1;
@@ -911,7 +914,7 @@ always @(posedge clk) begin
 end
 
 
-reg z80_is_paused = 1'b0;
+reg z80_is_paused = 1'b1;
 
 always @(posedge clk) begin
   if (trigger_action && cmd == z80_pause) z80_is_paused <= 1'b1;
