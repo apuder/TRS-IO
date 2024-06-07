@@ -32,6 +32,7 @@ static menu_t main_menu = {
   .items = main_menu_items
 };
 
+static int current_model = -1;
 
 
 void configure_pocket_trs(bool is_80_cols)
@@ -75,11 +76,15 @@ void configure_pocket_trs(bool is_80_cols)
 
 void ptrs_load_rom()
 {
+  if (current_model == -1) {
+    return;
+  }
+
   // Pause Z80
   spi_z80_pause();
 
   // Upload ROM
-  string& rom_file = settings_get_rom(SETTINGS_ROM_M3); //TODO hardcoded for M3
+  string& rom_file = settings_get_rom(current_model);
   string rom_path = "/roms/" + rom_file;
   ESP_LOGI("PTRS", "Uploading ROM: '%s'", rom_file.c_str());
   FILE* f = fopen(rom_path.c_str(), "rb");
@@ -100,11 +105,13 @@ void ptrs_load_rom()
   }
 
   // Reset and resume Z80
+  ESP_LOGI("PTRS", "Resetting Z80");
   spi_ptrs_rst();
 }
 
-void init_ptrs()
+void init_ptrs(int model)
 {
+  current_model = model;
   init_cass();
   ptrs_load_rom();
 }

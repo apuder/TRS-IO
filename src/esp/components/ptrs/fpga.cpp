@@ -2,6 +2,8 @@
 #include "bitstream-src.h"
 #include "flash.h"
 #include "xflash.h"
+#include "settings.h"
+#include "ptrs.h"
 #include "jtag.h"
 #include "spi.h"
 #include "led.h"
@@ -88,8 +90,27 @@ static const bool is_custom[] = {
   true
 };
 
+static const int ptrs_model[] = {
+  -1,
+  SETTINGS_ROM_M1,
+  -1,
+  SETTINGS_ROM_M3,
+  SETTINGS_ROM_M4,
+  SETTINGS_ROM_M4P,
+  -1,
+  -1,
+  -1,
+  SETTINGS_ROM_M1,
+  -1,
+  SETTINGS_ROM_M3,
+  SETTINGS_ROM_M4,
+  SETTINGS_ROM_M4P,
+  -1,
+  -1
+};
 
-void init_fpga()
+
+static void check_firmware()
 {
   JTAGAdapterTrsIO* jtag;
   unsigned char buf[256];
@@ -172,4 +193,23 @@ void init_fpga()
 err:
   set_led(false, false, false, false, false);
   delete bs;
+}
+
+static void fpga_task(void* args)
+{
+  check_firmware();
+  int conf = spi_get_config() & 0x0f;
+  int model = ptrs_model[conf];
+  ESP_LOGI(TAG, "TRS-IO++ running in %s mode", (model == -1) ? "TRS-IO" : "PocketTRS");
+  if (model != -1) {
+    // TRS-IO++ running in PocketTRS mode
+    init_ptrs(model);
+  }
+
+  vTaskDelete(NULL);
+}
+
+void init_fpga()
+{
+  xTaskCreatePinnedToCore(fpga_task, "fpga", 6000, NULL, 1, NULL, 0);
 }

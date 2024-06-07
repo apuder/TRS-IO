@@ -65,7 +65,6 @@ void app_main(void)
   init_http();
 #ifdef CONFIG_TRS_IO_PP
   init_keyb();
-  init_ptrs();
 #endif
   init_trs_fs_posix();
   init_wifi();
