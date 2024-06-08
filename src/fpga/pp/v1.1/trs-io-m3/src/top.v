@@ -803,7 +803,6 @@ end
 
 assign spi_data_in = spi_shift_reg;
 
-
 assign FLASH_SPI_CS_N = ~spi_ctrl_reg[7];
 assign FLASH_SPI_CLK  = spi_counter[3];
 assign FLASH_SPI_SI   = spi_sdo;

@@ -1,20 +1,21 @@
 -series GW2A
--device GW2A-18C
+-device GW2A-18
+-device_version C
 -package PBGA256
 -part_number GW2A-LV18PG256C8/I7
 
 
 -mod_name Gowin_rPLL0
 -file_name gowin_rpll0
--path E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_rpll/
+-path ./gowin_rpll/
 -type PLL
 -rPll true
 -file_type vlg
 -dev_type GW2A-18C
 -dyn_idiv_sel false
--idiv_sel 3
+-idiv_sel 5
 -dyn_fbdiv_sel false
--fbdiv_sel 14
+-fbdiv_sel 37
 -dyn_odiv_sel false
 -odiv_sel 4
 -dyn_da_en true

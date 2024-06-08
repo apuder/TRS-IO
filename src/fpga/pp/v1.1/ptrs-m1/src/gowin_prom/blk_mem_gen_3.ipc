@@ -7,9 +7,9 @@ type=ram_prom
 version=1.0
 
 [Config]
-DEPTH=2048
+DEPTH=1024
 LANG=0
-MEM_FILE=E:\\Documents\\FPGA\\TRS-IO++PTRS-working\\src\\trs80m3_chr.mi
+MEM_FILE=../trs80m1_chr.mi
 READ=1
 RESET_MODE=true
-WIDTH=8
+WIDTH=6

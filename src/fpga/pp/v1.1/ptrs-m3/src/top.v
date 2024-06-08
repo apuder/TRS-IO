@@ -926,6 +926,7 @@ TTRS80 TTRS80 (
    .z80_pause(z80_is_paused),
    .keyb_matrix(keyb_matrix),
    .vga_clk(clk_pixel),
+   .genlock(sync),
 
    // Display RAM and ROM/RAM interface
    .clk(clk),

@@ -9,11 +9,11 @@ version=1.0
 [Config]
 Area=true
 BYTE_SIZE=0
-DEPTH_A=14336
-DEPTH_B=14336
+DEPTH_A=12288
+DEPTH_B=12288
 DIMENSION_MATCH=65
 LANG=0
-MEM_FILE=E:\\Documents\\FPGA\\TRS-IO++PTRS-ap\\src\\model3_frehd_rom.mi
+MEM_FILE=../FreHD1.9_EPROM.mi
 READ_A=0
 READ_B=0
 RESET_MODE=true

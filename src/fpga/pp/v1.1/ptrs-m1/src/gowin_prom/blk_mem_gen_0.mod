@@ -6,7 +6,7 @@
 
 -mod_name blk_mem_gen_0
 -file_name blk_mem_gen_0
--path E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_prom/
+-path ./gowin_prom/
 -type RAM_ROM
 -file_type vlg
 -pROM true
@@ -14,4 +14,4 @@
 -width 8
 -read_mode bypass
 -reset_mode sync
--init_file E:\Documents\FPGA\TRS-IO++PTRS-working\src\model3_frehd_rom.mi
+-init_file ../model3_frehd_rom.mi

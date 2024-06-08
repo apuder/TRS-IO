@@ -73,7 +73,7 @@ localparam [3:0]
   mode_ptrs_m4p    = 4'b0101;
 
 localparam add_dip_4 = 1'b1;
-wire [3:0] this_mode = mode_ptrs_m4;
+wire [3:0] this_mode = mode_ptrs_m4p;
 
 
 wire[7:0] TRS_A, TRS_AH;
@@ -936,6 +936,7 @@ TTRS80 TTRS80 (
    .z80_pause(z80_is_paused),
    .keyb_matrix(keyb_matrix),
    .vga_clk(clk_pixel),
+   .genlock(sync),
 
    // Display RAM and ROM/RAM interface
    .clk(clk),

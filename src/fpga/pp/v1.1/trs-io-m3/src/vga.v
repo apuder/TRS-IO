@@ -28,10 +28,10 @@ module vga1(
 // resolution of the M1 display resulting in a small border around the M1 display.
 // In 64x16 mode the characters are 6x12 or 6x36 when rows are repeated.
 // For convenience the VGA X and Y counters are partitioned into high and low parts which
-// count the character position and the position within the character resepctively.
+// count the character position and the position within the character respectively.
 reg [2:0] vga_xxx;     // 0-5
 reg [6:0] vga_XXXXXXX; // 0-66-2/6 active, -87 total
-reg [5:0] vga_yyyy_yy; // vga_yyyy_yy[5:2] = 0-11, vga_yyyy_yy[0:1]=0-2 in 64x16 mode
+reg [5:0] vga_yyyy_yy; // vga_yyyy_yy[5:2] = 0-11, vga_yyyy_yy[1:0]=0-2 in 64x16 mode
 reg [4:0] vga_YYYYY;   // 0-16-23/36 active, -17-15/36 total in 64x16 mode
 // VGA in active area.
 wire vga_act = ( (vga_XXXXXXX < 7'd67)

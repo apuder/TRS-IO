@@ -21,4 +21,4 @@ WIDTH_B=8
 WRITE_A=0
 WRITE_B=0
 DIMENSION_MATCH=65
-MEM_FILE=E:\\Documents\\FPGA\\TRS-IO++\\src\\cls.mi
+MEM_FILE=../cls.mi

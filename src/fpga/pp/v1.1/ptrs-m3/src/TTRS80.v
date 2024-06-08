@@ -21,6 +21,7 @@ module TTRS80 (
    input z80_pause,
    input [7:0] keyb_matrix[0:7],
    input vga_clk,
+   input genlock,
 
    // Display RAM and ROM/RAM interface
    input clk,
@@ -172,7 +173,7 @@ blk_mem_gen_1 trs_ram (
 // count the character position and the position within the character respectively.
 reg [2:0] vga_xxx;     // 0-7
 reg [6:0] vga_XXXXXXX; // 0-79 active, -99 total
-reg [4:0] vga_yyyyy;   // 0-23 in 64x16 mode, 0-19 in 80x24 mode
+reg [4:0] vga_yyyyy;   // 0-23 in 64x16 mode
 reg [4:0] vga_YYYYY;   // 0-19 active, -21-20/24 total in 64x16 mode
 reg vga_Z;
 // VGA in active area.
@@ -189,9 +190,9 @@ wire [6:0] dsp_XXXXXXX = vga_XXXXXXX - 7'd8;
 wire [4:0] dsp_YYYYY   = vga_YYYYY   - 5'd2;
 // Display in active area.
 wire dsp_act = ((dsp_XXXXXXX < 7'd64) & (dsp_YYYYY < 5'd16));
-// 64/32 or 80/40 column display mode.
-// If modsel=1 then in 32/40 column mode.
-// in 32/40 column mode only the even columns are active.
+// 64/32 column display mode.
+// If modsel=1 then in 32 column mode.
+// in 32 column mode only the even columns are active.
 wire mod_modsel; // forward reference
 wire col_act = (mod_modsel ? ~dsp_XXXXXXX[0] : 1'b1);
 
@@ -310,14 +311,14 @@ wire trs_nmi_stat_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111001); // e4-e7
 wire trs_rs232_in_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111010); // e8-eb
 wire trs_rtc_sel        = ~z80_iorq_n & (z80_addr[7:2] == 6'b111011); // ec-ef
 wire trs_disk_in_sel    = ~z80_iorq_n & (z80_addr[7:2] == 6'b111100); // f0-f3
-                                                                 // f4-f7
+                                                                      // f4-f7
 wire trs_lp_in_sel      = ~z80_iorq_n & (z80_addr[7:2] == 6'b111110); // f8-fb
 wire trs_cass_in_sel    = ~z80_iorq_n & (z80_addr[7:2] == 6'b111111); // fc-ff
 
 // FDC
-wire trs_fdc_cmnd_sel  = trs_disk_in_sel & (z80_addr[1:0] == 2'b00); // f0 output
-wire trs_fdc_stat_sel  = trs_disk_in_sel & (z80_addr[1:0] == 2'b00); // f0 input
-wire trs_fdc_track_sel = trs_disk_in_sel & (z80_addr[1:0] == 2'b01); // f1 input/output
+wire trs_fdc_cmnd_sel  = trs_disk_out_sel & (z80_addr[1:0] == 2'b00); // f0 output
+wire trs_fdc_stat_sel  = trs_disk_in_sel  & (z80_addr[1:0] == 2'b00); // f0 input
+wire trs_fdc_track_sel = trs_disk_in_sel  & (z80_addr[1:0] == 2'b01); // f1 input/output
 //wire [7:0] trs_fdc_stat = 8'hff; // no fdc
 wire [7:0] trs_fdc_stat = 8'h34; // seek error
 wire [7:0] trs_fdc_track = 8'h00;
@@ -469,30 +470,40 @@ end
 // Bump the VGA counters.
 always @ (posedge vga_clk)
 begin
-   if(vga_xxx == 3'b111)
+   if(genlock)
    begin
-      if(vga_XXXXXXX == 7'd99)
+      vga_xxx <= 3'b000;
+      vga_XXXXXXX <= 7'd0;
+      vga_yyyyy <= 5'd0;
+      vga_YYYYY <= 5'd0;
+   end
+   else
+   begin
+      if(vga_xxx == 3'b111)
       begin
-         vga_XXXXXXX <= 7'd0;
+         if(vga_XXXXXXX == 7'd99)
+         begin
+            vga_XXXXXXX <= 7'd0;
 
-         if({vga_YYYYY, vga_yyyyy} == {5'd21, 5'd20})
-         begin
-            vga_yyyyy <= 5'd0;
-            vga_YYYYY <= 5'd0;
-            vga_Z <= ~vga_Z;
-         end
-         else if(vga_yyyyy == 5'd23)
-         begin
-            vga_yyyyy <= 5'd0;
-            vga_YYYYY <= vga_YYYYY + 5'd1;
+            if({vga_YYYYY, vga_yyyyy} == {5'd21, 5'd20})
+            begin
+               vga_yyyyy <= 5'd0;
+               vga_YYYYY <= 5'd0;
+               vga_Z <= ~vga_Z;
+            end
+            else if(vga_yyyyy == 5'd23)
+            begin
+               vga_yyyyy <= 5'd0;
+               vga_YYYYY <= vga_YYYYY + 5'd1;
+            end
+            else
+               vga_yyyyy <= vga_yyyyy + 5'd1;
          end
          else
-            vga_yyyyy <= vga_yyyyy + 5'd1;
+            vga_XXXXXXX <= vga_XXXXXXX + 7'd1;
       end
-      else
-         vga_XXXXXXX <= vga_XXXXXXX + 7'd1;
+      vga_xxx <= vga_xxx + 3'b1;
    end
-   vga_xxx <= vga_xxx + 3'b1;
 end
 
 
