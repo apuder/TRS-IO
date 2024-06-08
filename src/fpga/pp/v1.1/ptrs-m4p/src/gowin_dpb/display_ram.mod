@@ -6,7 +6,7 @@
 
 -mod_name display_ram
 -file_name display_ram
--path E:/Documents/FPGA/TRS-IO++/src/gowin_dpb/
+-path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
@@ -21,5 +21,5 @@
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file E:\Documents\FPGA\TRS-IO++\src\cls.mi
+-init_file ../cls.mi
 -init_match port_A

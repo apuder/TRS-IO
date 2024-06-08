@@ -414,7 +414,7 @@ always @ (posedge z80_clk)
 begin
    if(~z80_reset_n)
    begin
-      trs_hires_options_reg <= 8'h00;
+      trs_hires_options_reg <= 8'hFC;
    end
    else
    begin

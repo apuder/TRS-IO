@@ -9,7 +9,7 @@ version=1.0
 [Config]
 DEPTH=14336
 LANG=0
-MEM_FILE=E:\\Documents\\FPGA\\TRS-IO++PTRS-working\\src\\model3_frehd_rom.mi
+MEM_FILE=../model3_frehd_rom.mi
 READ=0
 RESET_MODE=true
 WIDTH=8

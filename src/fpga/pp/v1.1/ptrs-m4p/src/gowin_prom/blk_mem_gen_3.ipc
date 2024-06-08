@@ -9,7 +9,7 @@ version=1.0
 [Config]
 DEPTH=2048
 LANG=0
-MEM_FILE=E:\\Documents\\FPGA\\TRS-IO++PTRS-working\\src\\trs80m3_chr.mi
+MEM_FILE=../trs80m3_chr.mi
 READ=1
 RESET_MODE=true
 WIDTH=8

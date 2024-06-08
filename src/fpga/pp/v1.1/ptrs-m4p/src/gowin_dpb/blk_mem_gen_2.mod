@@ -1,12 +1,13 @@
 -series GW2A
--device GW2A-18C
+-device GW2A-18
+-device_version C
 -package PBGA256
 -part_number GW2A-LV18PG256C8/I7
 
 
 -mod_name blk_mem_gen_2
 -file_name blk_mem_gen_2
--path E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_dpb/
+-path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
@@ -21,3 +22,5 @@
 -write_mode_1 normal
 -speed false
 -reset_mode sync
+-init_file ../cls.mi
+-init_match port_A
