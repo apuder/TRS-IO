@@ -6,7 +6,7 @@
 
 -mod_name blk_mem_gen_1
 -file_name blk_mem_gen_1
--path E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_sp/
+-path ./gowin_sp/
 -type RAM_SP
 -file_type vlg
 -depth 65536

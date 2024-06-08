@@ -6,7 +6,7 @@
 
 -mod_name blk_mem_gen_3
 -file_name blk_mem_gen_3
--path E:/Documents/FPGA/TRS-IO++/src/gowin_sp/
+-path ./gowin_sp/
 -type RAM_SP
 -file_type vlg
 -depth 1024
@@ -14,4 +14,4 @@
 -read_mode pipeline
 -write_mode normal
 -reset_mode sync
--init_file E:\Documents\FPGA\NextTRS1\src\trs80m1_chr.mi
+-init_file ../trs80m1_chr.mi

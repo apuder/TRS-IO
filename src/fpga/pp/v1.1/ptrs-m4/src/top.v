@@ -975,6 +975,7 @@ TTRS80 TTRS80 (
    .xio_in_n(TRS_IN),
    .xio_out_n(TRS_OUT),
    .xio_addr({TRS_AH, TRS_A}),
+   .xio_m1_n(TRS_M1),
    .xio_enab(xio_enab),
    // Inputs/Outputs
    .xio_data_in(TRS_DI),
@@ -995,7 +996,7 @@ assign _WR_N    = xio_enab ? TRS_WR    : 1'b1;
 assign _IOREQ_N = xio_enab ? TRS_IOREQ : 1'b1;
 assign _IN_N    = xio_enab ? TRS_IN    : 1'b1;
 assign _OUT_N   = xio_enab ? TRS_OUT   : 1'b1;
-//assign _M1_N,
+assign _M1_N    = xio_enab ? TRS_M1    : 1'b1;
 assign _A       = xio_enab ? {TRS_AH, TRS_A} : 16'h0000;
 
 

@@ -6,7 +6,7 @@
 
 -mod_name Gowin_DCS0
 -file_name gowin_dcs0
--path E:/Documents/FPGA/TRS-IO++PTRS-working/src/gowin_dcs/
+-path ./gowin_dcs/
 -type DCS
 -file_type vlg
 -glitchless false

@@ -6,7 +6,7 @@
 
 -mod_name Gowin_SP_RAM
 -file_name gowin_sp
--path E:/Documents/FPGA/TRS-IO++PTRS/src/gowin_sp/
+-path ./gowin_sp/
 -type RAM_SP
 -file_type vlg
 -depth 49152
@@ -14,4 +14,4 @@
 -read_mode bypass
 -write_mode normal
 -reset_mode sync
--init_file E:\Documents\FPGA\TRS-IO++PTRS\src\lb80txt9.mi
+-init_file ../lb80txt9.mi

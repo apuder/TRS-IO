@@ -149,14 +149,6 @@ blk_mem_gen_0 trs_rom (
    .resetb(1'b0)
 );
 
-//reg [7:0] trs_rom_data;
-
-//always @ (negedge z80_clk)
-//begin
-//   if(trs_rom_sel & ~z80_rd_n)
-//      trs_rom_data <= _trs_rom_data;
-//end
-
 
 // Forward reference
 reg [1:0] bnk_addr; // forward reference
