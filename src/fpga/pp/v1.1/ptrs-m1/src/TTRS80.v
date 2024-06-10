@@ -1,13 +1,13 @@
 `timescale 1ns / 1ps
 
-// Crude implementation of a TRS-80 Model 1 using the T80 core.
+// Implementation of a TRS-80 Model 1 using the T80 core.
 //
 // Inputs:
 //    z80_clk - Z80 clock input.
 //    z80_reset_n - Reset input, active low.
 //    keyb_matrix - Keyboard input (basically row (address) and column (data)
 //                  data from keyboard matrix).
-//    vga_clk - VGA clock input, 25.2MHz for 640x480@60Hz display.
+//    vga_clk - VGA clock input, 40MHz for 800x600@60Hz display.
 //
 // Outputs:
 //    pixel_data - Single bit (on/off) pixel signal.  If driving the Z (blanking)
@@ -308,7 +308,8 @@ wire trs_rs232_out_sel  = ~z80_iorq_n & (z80_addr[7:2] == 6'b111010); // e8-eb
 wire trs_drv_sel        = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111000); // 37e0-37e3
 wire trs_lp_out_sel     = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111010); // 37e8-37eb
 wire trs_disk_out_sel   = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111011); // 37ec-37ef
-wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111111); // fc-ff
+//wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111111); // fc-ff
+wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:1] == 7'b1111111);// fe-ff
 // Input ports
 wire trs_int_stat_sel   = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111000); // 37e0-37e3
 wire trs_rs232_in_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111010); // e8-eb
@@ -332,7 +333,9 @@ wire trs_le18_y_sel       = ~z80_iorq_n & (z80_addr[7:0] == 8'hEE); // ee
 wire trs_le18_options_sel = ~z80_iorq_n & (z80_addr[7:0] == 8'hEF); // ef
 
 // External expansion bus
-wire trs_xio_sel = (~z80_iorq_n & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b10) | (z80_addr[7:5] == 3'b110)) | trs_lp_in_sel & trs_lp_out_sel); // 00-df
+wire trs_xio_sel = (~z80_iorq_n & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b10) | (z80_addr[7:5] == 3'b110) | // 00-df
+                                   (z80_addr[7:2] == 6'b111110) |   // f8-fb printer
+                                   (z80_addr[7:1] == 7'b1111110)) ); // fc-fd spi flash
 
 reg [7:0] trs_cass_reg;     // fc-ff
 wire   cass_casout0    = trs_cass_reg[0];
@@ -387,7 +390,7 @@ assign z80_data = ~z80_rd_n ?
                     (~trs_kbd_data & {8{trs_kbd_sel}}) |
 
                     (~trs_le18_data  & {8{trs_le18_data_sel }}) |
-                    (~xio_data_in    & {8{trs_xio_sel & 1'b1 & ~xio_sel_n}}) |
+                    (~xio_data_in    & {8{trs_xio_sel & ~xio_sel_n}}) |
                     (~trs_int_stat   & {8{trs_int_stat_sel  }}) |
                     (~trs_fdc_stat   & {8{trs_fdc_stat_sel  }}) |
                     (~trs_fdc_track  & {8{trs_fdc_track_sel }}) ) :
@@ -525,7 +528,7 @@ begin
 end
 
 
-// Divide 20MHz vga clock to 40Hz RTC clock.
+// Divide 40MHz vga clock to 40Hz RTC clock.
 reg [18:0] rtc_div;
 wire rtc_clk = ~rtc_div[18];
 
@@ -582,10 +585,10 @@ assign xio_data_out= z80_data;
 assign xio_m1_n    = z80_m1_n;
 assign xio_enab    = 1'b1;
 
-assign z80_wait_n = ~(trs_xio_sel & 1'b1 & ~xio_wait_n);
+assign z80_wait_n = ~(trs_xio_sel & ~xio_wait_n);
 
 
-assign cass_out = {~trs_cass_reg[1], trs_cass_reg[0]};
+assign cass_out = {cass_casout1, cass_casout0};
 assign cass_out_sel = trs_cass_out_sel & ~z80_wr_n;
 assign cpu_fast = 1'b0;
 

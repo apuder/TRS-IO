@@ -180,6 +180,12 @@ wire spi_ctrl_sel_out = (TRS_A[7:0] == 8'hFC) & ~TRS_OUT;
 wire spi_data_sel_in  = (TRS_A[7:0] == 8'hFD) & ~TRS_IN;
 wire spi_data_sel_out = (TRS_A[7:0] == 8'hFD) & ~TRS_OUT;
 
+// External expansion bus
+wire trs_xio_sel = (~TRS_IOREQ & ~(use_internal_trs_io & (TRS_A == 8'd31) | // 1f  trs-io
+                                   use_internal_trs_io & (TRS_A[7:4] == 4'hC) | // c0-cf  frehd
+                                   use_internal_trs_io & (TRS_A[7:2] == (8'hF8 >> 2)) | // f8-fb  printer
+                                   (TRS_A[7:1] == (8'hFC >> 1)) ) ); // fc-fd  flash spi
+
 
 wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
 wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
@@ -612,9 +618,9 @@ assign _D = xio_enab
            ? ((TRS_RD & TRS_IN) ? TRS_D : 8'hzz)
            : 8'h00; 
 
-wire [7:0] TRS_DI = ~( ({8{xio_enab & ~EXTIOSEL_IN_N}} & ~_D         )
-                     | ({8{esp_sel_in               }} & ~trs_data   )
-                     | ({8{spi_data_sel_in          }} & ~spi_data_in) );
+wire [7:0] TRS_DI = ~( ({8{xio_enab & trs_xio_sel}} & ~_D  )
+                     | ({8{esp_sel_in     }} & ~trs_data   )
+                     | ({8{spi_data_sel_in}} & ~spi_data_in) );
 
 
 //-----HDMI------------------------------------------------------------------------
@@ -985,9 +991,9 @@ TTRS80 TTRS80 (
    .xio_data_out(TRS_D)
 );
 
-assign wait_in_n     = (use_internal_trs_io ? ~trs_io_wait       : 1'b1) & (xio_enab ? WAIT_IN_N     : 1'b1);
-assign int_in_n      = (use_internal_trs_io ? ~trs_io_data_ready : 1'b1) & (xio_enab ? INT_IN_N      : 1'b1);
-assign extiosel_in_n = (use_internal_trs_io ? ~esp_sel_in        : 1'b1) & (xio_enab ? EXTIOSEL_IN_N : 1'b1);
+assign wait_in_n     = ~((use_internal_trs_io & trs_io_wait      ) | (xio_enab & trs_xio_sel & ~WAIT_IN_N));
+assign int_in_n      = ~((use_internal_trs_io & trs_io_data_ready) | (xio_enab &               ~INT_IN_N ));
+assign extiosel_in_n = ~((                      esp_sel_in       ) | (xio_enab & trs_xio_sel             ));
 assign WAIT          = 1'b0;
 assign INT           = 1'b0;
 assign EXTIOSEL      = 1'b0;
@@ -1017,7 +1023,6 @@ assign LED[0] = ~extiosel_in_n;
 assign LED[1] = ~wait_in_n;
 assign LED[2] = ~int_in_n;
 //assign LED[0] = keyb_matrix_pressed;
-//assign LED[1] = xio_enab;
 assign LED[3] = heartbeat[25] | spi_error;
 
 endmodule

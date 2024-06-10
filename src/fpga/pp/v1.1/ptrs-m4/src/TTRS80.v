@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// Crude implementation of a TRS-80 Model 4 using the T80 core.
+// Implementation of a TRS-80 Model 4 using the T80 core.
 //
 // Inputs:
 //    z80_clk - Z80 clock input.
@@ -323,7 +323,8 @@ wire trs_mod_sel        = ~z80_iorq_n & (z80_addr[7:2] == 6'b111011); // ec-ef
 wire trs_disk_out_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111100); // f0-f3
 wire trs_drv_sel        = ~z80_iorq_n & (z80_addr[7:2] == 6'b111101); // f4-f7
 wire trs_lp_out_sel     = ~z80_iorq_n & (z80_addr[7:2] == 6'b111110); // f8-fb
-wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111111); // fc-ff
+//wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111111); // fc-ff
+wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:1] == 7'b1111111);// fe-ff
 // Input ports
 wire trs_int_stat_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111000); // e0-e3
 wire trs_nmi_stat_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111001); // e4-e7
@@ -332,7 +333,8 @@ wire trs_rtc_sel        = ~z80_iorq_n & (z80_addr[7:2] == 6'b111011); // ec-ef
 wire trs_disk_in_sel    = ~z80_iorq_n & (z80_addr[7:2] == 6'b111100); // f0-f3
                                                                       // f4-f7
 wire trs_lp_in_sel      = ~z80_iorq_n & (z80_addr[7:2] == 6'b111110); // f8-fb
-wire trs_cass_in_sel    = ~z80_iorq_n & (z80_addr[7:2] == 6'b111111); // fc-ff
+//wire trs_cass_in_sel    = ~z80_iorq_n & (z80_addr[7:2] == 6'b111111); // fc-ff
+wire trs_cass_in_sel    = ~z80_iorq_n & (z80_addr[7:1] == 7'b1111111);// fe-ff
 
 // FDC
 wire trs_fdc_cmnd_sel  = trs_disk_out_sel & (z80_addr[1:0] == 2'b00); // f0 output
@@ -347,8 +349,10 @@ wire trs_hires_sel      = ~z80_iorq_n & (z80_addr[7:2] == 6'b100000); // 80-83
 assign trs_hires_data_sel = trs_hires_sel & (z80_addr[1:0] == 2'b10); // 82
 
 // External expansion bus
-wire trs_xio_sel = (~z80_iorq_n & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b10) | (z80_addr[7:5] == 3'b110)) | trs_lp_in_sel & trs_lp_out_sel) & // 00-df
-                   ~trs_hires_sel; // minus 80-83
+wire trs_xio_sel = (~z80_iorq_n & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b10) | (z80_addr[7:5] == 3'b110) | // 00-df
+                                   (z80_addr[7:2] == 6'b111110) |   // f8-fb printer
+                                   (z80_addr[7:1] == 7'b1111110)) ) // fc-fd spi flash
+                   & ~trs_hires_sel; // minus 80-83
 
 reg [7:0] trs_opreg_reg;    // 84-87
 assign opreg_sel      = trs_opreg_reg[1:0];
@@ -459,7 +463,7 @@ assign z80_data = ~z80_rd_n ?
                     (~trs_kbd_data & {8{trs_kbd_sel}}) |
 
                     (~trs_hires_data & {8{trs_hires_data_sel}}) |
-                    (~xio_data_in    & {8{trs_xio_sel & mod_enextio & ~xio_sel_n}}) |
+                    (~xio_data_in    & {8{trs_xio_sel & ~xio_sel_n}}) |
                     (~trs_int_stat   & {8{trs_int_stat_sel  }}) |
                     (~trs_nmi_stat   & {8{trs_nmi_stat_sel  }}) |
                     (~trs_fdc_stat   & {8{trs_fdc_stat_sel  }}) |
@@ -601,7 +605,7 @@ end
 
 // Combine all interrupt sources to the z80.
 // The individual interrupts are active high, but in the status register 0 means active.
-assign trs_int_stat = ~{4'b0000, mod_enextio & ~xio_int_n, rtc_int, 2'b00};
+assign trs_int_stat = ~{4'b0000, ~xio_int_n, rtc_int, 2'b00};
 assign trs_nmi_stat = ~{8'b00000000};
 // The interrupts are enabled by a 1 in the mask register.
 assign z80_int_n = ~|(~trs_int_stat & trs_int_mask_reg);
@@ -650,10 +654,10 @@ assign xio_data_out= z80_data;
 assign xio_m1_n    = z80_m1_n;
 assign xio_enab    = mod_enextio;
 
-assign z80_wait_n = ~(trs_xio_sel & mod_enextio & ~xio_wait_n);
+assign z80_wait_n = ~(trs_xio_sel & ~xio_wait_n);
 
 
-assign cass_out = {~trs_cass_reg[1], trs_cass_reg[0]};
+assign cass_out = {cass_casout1, cass_casout0};
 assign cass_out_sel = trs_cass_out_sel & ~z80_wr_n;
 assign cpu_fast = mod_cpufast;
 
