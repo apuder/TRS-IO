@@ -534,6 +534,8 @@ begin
       vga_XXXXXXX <= 7'd0;
       vga_yyyyy <= 5'd0;
       vga_YYYYY <= 5'd0;
+      vga_Z <= ~vga_Z;
+      vga_80_64_n <= opreg_80_64_n;
    end
    else
    begin
