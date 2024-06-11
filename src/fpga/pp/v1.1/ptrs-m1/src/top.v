@@ -736,30 +736,48 @@ wire [1:0] cass_reg;
 // bit1 is inverted and added to bit0 for the analog output
 wire [1:0] cass_outx = {~cass_reg[1], cass_reg[0]};
 // the sum is 0, 1, or 2
-wire [1:0] cass_outy = {1'b0, cass_outx[1]} + {1'b0, cass_outx[0]};
+wire [1:0] cass_outy = {1'b0, cass_outx[1]} + {1'b0, cass_outx[0]} - 2'b01;
 
 reg [8:0] cass_outl_reg;
 reg [8:0] cass_outr_reg;
 
-always @ (posedge clk)
+always @ (posedge z80_clk)
 begin
-   cass_outl_reg <= {orch85l_reg[7], orch85l_reg} + {cass_outy - 2'b01, 7'b0000000};
-   cass_outr_reg <= {orch85r_reg[7], orch85r_reg} + {cass_outy - 2'b01, 7'b0000000};
+   cass_outl_reg <= {orch85l_reg[7], orch85l_reg} + {cass_outy, 7'b0000000};
+   cass_outr_reg <= {orch85r_reg[7], orch85r_reg} + {cass_outy, 7'b0000000};
 end
 
 reg [9:0] cass_pdml_reg;
 reg [9:0] cass_pdmr_reg;
 
-always @ (posedge clk)
+always @ (posedge z80_clk)
 begin
    cass_pdml_reg <= {1'b0, cass_pdml_reg[8:0]} + {1'b0, ~cass_outl_reg[8], cass_outl_reg[7:0]};
    cass_pdmr_reg <= {1'b0, cass_pdmr_reg[8:0]} + {1'b0, ~cass_outr_reg[8], cass_outr_reg[7:0]};
 end
 
+reg [15:0] cass_outz;
+
+always @ (posedge z80_clk)
+begin
+   cass_outz <= cass_outz - {{8{cass_outz[15]}}, cass_outz[15:8]} + {{8{cass_outy[1]}}, cass_outy, 6'b0};
+end
+
+wire cass_filt_en = 1'b1;
+
+reg [8:0] cass_audl_reg;
+reg [8:0] cass_audr_reg;
+
+always @ (posedge z80_clk)
+begin
+   cass_audl_reg <= {orch85l_reg[7], orch85l_reg} + (cass_filt_en ? cass_outz[15:7] : {cass_outy, 7'b0000000});
+   cass_audr_reg <= {orch85r_reg[7], orch85r_reg} + (cass_filt_en ? cass_outz[15:7] : {cass_outy, 7'b0000000});
+end
+
 always @(posedge clk_audio)
 begin
-   audio_sample_word <= '{{cass_outr_reg, 7'b0000000},
-                          {cass_outl_reg, 7'b0000000}};
+   audio_sample_word <= '{{cass_audr_reg, 7'b0000000},
+                          {cass_audl_reg, 7'b0000000}};
 end
 
 
