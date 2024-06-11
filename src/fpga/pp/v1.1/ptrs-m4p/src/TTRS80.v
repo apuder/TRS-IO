@@ -395,6 +395,8 @@ wire   mod_enextio    = trs_mod_reg[4];
 wire   mod_diswait    = trs_mod_reg[5];
 wire   mod_cpufast    = trs_mod_reg[6];
 reg [7:0] trs_cass_reg;     // fc-ff
+wire cass_casout0     = trs_cass_reg[0];
+wire cass_casout1     = trs_cass_reg[1];
 
 always @ (posedge z80_clk)
 begin
