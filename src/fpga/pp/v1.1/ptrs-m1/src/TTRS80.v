@@ -334,8 +334,8 @@ wire trs_le18_options_sel = ~z80_iorq_n & (z80_addr[7:0] == 8'hEF); // ef
 
 // External expansion bus
 wire trs_xio_sel = (~z80_iorq_n & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b10) | (z80_addr[7:5] == 3'b110) | // 00-df
-                                   (z80_addr[7:2] == 6'b111110) |   // f8-fb printer
-                                   (z80_addr[7:1] == 7'b1111110)) ); // fc-fd spi flash
+                                   (z80_addr[7:1] == 7'b1111110)) | // fc-fd spi flash
+                    ~z80_mreq_n & ((z80_addr[15:2] == (16'h37E8 >> 2))) ); // 37e8-37eb printer
 
 reg [7:0] trs_cass_reg;     // fc-ff
 wire   cass_casout0    = trs_cass_reg[0];

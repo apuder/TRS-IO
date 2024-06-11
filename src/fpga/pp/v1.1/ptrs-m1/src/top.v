@@ -183,9 +183,8 @@ wire spi_data_sel_out = (TRS_A[7:0] == 8'hFD) & ~TRS_OUT;
 // External expansion bus
 wire trs_xio_sel = (~TRS_IOREQ & ~(use_internal_trs_io & (TRS_A == 8'd31) | // 1f  trs-io
                                    use_internal_trs_io & (TRS_A[7:4] == 4'hC) | // c0-cf  frehd
-                                   use_internal_trs_io & (TRS_A[7:2] == (8'hF8 >> 2)) | // f8-fb  printer
-                                   (TRS_A[7:1] == (8'hFC >> 1)) ) ); // fc-fd  flash spi
-
+                                   (TRS_A[7:1] == (8'hFC >> 1)) ) | // fc-fd  flash spi
+                    ~TRS_MREQ  & ~(use_internal_trs_io & (TRS_A[15:2] == (16'h37E8 >> 2))) ); // 37e8-37eb  printer
 
 wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
 wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
