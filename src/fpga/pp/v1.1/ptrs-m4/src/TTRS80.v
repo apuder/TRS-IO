@@ -350,7 +350,7 @@ assign trs_hires_data_sel = trs_hires_sel & (z80_addr[1:0] == 2'b10); // 82
 
 // External expansion bus
 wire trs_xio_sel = (~z80_iorq_n & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b10) | (z80_addr[7:5] == 3'b110) | // 00-df
-                                   (z80_addr[7:2] == 6'b111110) |   // f8-fb printer
+                                   (z80_addr[7:2] == 6'b111110 ) |  // f8-fb printer
                                    (z80_addr[7:1] == 7'b1111110)) ) // fc-fd spi flash
                    & ~trs_hires_sel; // minus 80-83
 

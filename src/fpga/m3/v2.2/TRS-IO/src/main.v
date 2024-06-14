@@ -307,7 +307,7 @@ localparam [7:0]
   set_esp_status      = 8'd32;
 
 
-reg[7:0] byte_in, byte_out;
+reg [7:0] byte_in, byte_out;
 reg byte_received = 1'b0;
 
 reg [7:0] params[0:4];

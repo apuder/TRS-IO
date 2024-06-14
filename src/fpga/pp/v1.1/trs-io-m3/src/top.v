@@ -180,9 +180,9 @@ wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
 wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
 wire esp_sel = esp_sel_in | esp_sel_out;
 
-wire esp_sel_risingedge = io_access & esp_sel;
-
 assign EXTIOSEL = esp_sel_in | hires_sel_in | spi_data_sel_in;
+
+wire esp_sel_risingedge = io_access & esp_sel;
 
 reg [2:0] esp_done_raw; always @(posedge clk) esp_done_raw <= {esp_done_raw[1:0], ESP_DONE};
 wire esp_done_risingedge = esp_done_raw[2:1] == 2'b01;

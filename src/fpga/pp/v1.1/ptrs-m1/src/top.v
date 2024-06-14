@@ -181,14 +181,16 @@ wire spi_data_sel_in  = (TRS_A[7:0] == 8'hFD) & ~TRS_IN;
 wire spi_data_sel_out = (TRS_A[7:0] == 8'hFD) & ~TRS_OUT;
 
 // External expansion bus
-wire trs_xio_sel = (~TRS_IOREQ & ~(use_internal_trs_io & (TRS_A == 8'd31) | // 1f  trs-io
-                                   use_internal_trs_io & (TRS_A[7:4] == 4'hC) | // c0-cf  frehd
-                                   (TRS_A[7:1] == (8'hFC >> 1)) ) | // fc-fd  flash spi
-                    ~TRS_MREQ  & ~(use_internal_trs_io & (TRS_A[15:2] == (16'h37E8 >> 2))) ); // 37e8-37eb  printer
+wire trs_xio_sel = (~TRS_IOREQ & ~((use_internal_trs_io & (TRS_A == 8'd31))     | // 1f     trs-io
+                                   (use_internal_trs_io & (TRS_A[7:4] == 4'hC)) | // c0-cf  frehd
+                                   (TRS_A[7:1] == (8'hFC >> 1)) )               | // fc-fd  flash spi
+                    ~TRS_MREQ  & ~((use_internal_trs_io & (TRS_A[15:2] == (16'h37E8 >> 2)))) ); // 37e8-37eb  printer
 
 wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
 wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
 wire esp_sel = esp_sel_in | esp_sel_out;
+
+wire extiosel = esp_sel_in | spi_data_sel_in;
 
 wire esp_sel_risingedge = io_access & esp_sel;
 
@@ -1005,12 +1007,14 @@ TTRS80 TTRS80 (
    .xio_enab(xio_enab),
    // Inputs/Outputs
    .xio_data_in(TRS_DI),
-   .xio_data_out(TRS_D)
+   .xio_data_out(TRS_D),
+
+   .int_stat_5(use_internal_trs_io ? trs_io_data_ready : _D[5])
 );
 
 assign wait_in_n     = ~((use_internal_trs_io & trs_io_wait      ) | (xio_enab & trs_xio_sel & ~WAIT_IN_N));
-assign int_in_n      = ~((use_internal_trs_io & trs_io_data_ready) | (xio_enab &               ~INT_IN_N ));
-assign extiosel_in_n = ~((                      esp_sel_in       ) | (xio_enab & trs_xio_sel             ));
+assign int_in_n      = ~(                                            (xio_enab &               ~INT_IN_N ));
+assign extiosel_in_n = ~((                      extiosel         ) | (xio_enab & trs_xio_sel             ));
 assign WAIT          = 1'b0;
 assign INT           = 1'b0;
 assign EXTIOSEL      = 1'b0;

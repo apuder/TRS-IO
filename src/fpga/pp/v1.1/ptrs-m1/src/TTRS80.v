@@ -68,7 +68,10 @@ module TTRS80 (
    output xio_enab,
    // Inputs/Outputs
    input [7:0] xio_data_in,
-   output [7:0] xio_data_out
+   output [7:0] xio_data_out,
+
+   // TRS-IO
+   input int_stat_5
 );
 
 
@@ -308,8 +311,7 @@ wire trs_rs232_out_sel  = ~z80_iorq_n & (z80_addr[7:2] == 6'b111010); // e8-eb
 wire trs_drv_sel        = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111000); // 37e0-37e3
 wire trs_lp_out_sel     = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111010); // 37e8-37eb
 wire trs_disk_out_sel   = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111011); // 37ec-37ef
-//wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111111); // fc-ff
-wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:1] == 7'b1111111);// fe-ff
+wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:0] == 8'b11111111); // ff
 // Input ports
 wire trs_int_stat_sel   = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111000); // 37e0-37e3
 wire trs_rs232_in_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111010); // e8-eb
@@ -337,7 +339,7 @@ wire trs_xio_sel = (~z80_iorq_n & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b
                                    (z80_addr[7:1] == 7'b1111110)) | // fc-fd spi flash
                     ~z80_mreq_n & ((z80_addr[15:2] == (16'h37E8 >> 2))) ); // 37e8-37eb printer
 
-reg [7:0] trs_cass_reg;     // fc-ff
+reg [7:0] trs_cass_reg;     // ff
 wire   cass_casout0    = trs_cass_reg[0];
 wire   cass_casout1    = trs_cass_reg[1];
 wire   cass_casmotoron = trs_cass_reg[2];
@@ -389,11 +391,11 @@ assign z80_data = ~z80_rd_n ?
                     (~trs_dsp_data & {8{trs_dsp_sel}}) |
                     (~trs_kbd_data & {8{trs_kbd_sel}}) |
 
-                    (~trs_le18_data  & {8{trs_le18_data_sel }}) |
+                    (~trs_le18_data  & {8{trs_le18_data_sel}}) |
                     (~xio_data_in    & {8{trs_xio_sel & ~xio_sel_n}}) |
-                    (~trs_int_stat   & {8{trs_int_stat_sel  }}) |
-                    (~trs_fdc_stat   & {8{trs_fdc_stat_sel  }}) |
-                    (~trs_fdc_track  & {8{trs_fdc_track_sel }}) ) :
+                    (~trs_int_stat   & {8{trs_int_stat_sel }}) |
+                    (~trs_fdc_stat   & {8{trs_fdc_stat_sel }}) |
+                    (~trs_fdc_track  & {8{trs_fdc_track_sel}}) ) :
                   8'bzzzzzzzz;
 
 
@@ -563,7 +565,7 @@ end
 
 // Combine all interrupt sources to the z80.
 // The individual interrupts are active high, and in the status register 1 means active.
-assign trs_int_stat = {rtc_int, fdc_int, 6'b000000};
+assign trs_int_stat = {rtc_int, fdc_int, int_stat_5, 5'b00000};
 
 assign z80_int_n = ~(rtc_int | fdc_int | ~xio_int_n);
 assign z80_nmi_n = 1'b1;
