@@ -510,7 +510,7 @@ assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
 
 //---ESP Status----------------------------------------------------------------------------
 
-reg[7:0] esp_status = 0;
+reg [7:0] esp_status = 0;
 
 wire esp_status_esp_ready   = esp_status[0];
 wire esp_status_wifi_up     = esp_status[1];
@@ -859,31 +859,20 @@ assign FLASH_SPI_SI   = spi_sdo;
 
 //------PocketTRS-------------------------------------------------------------
 
-wire z80_clk1, z80_clkH, z80_clkL;
+// divide the 84MHz clock by 48 for ~1.77MHz
+// the div counter runs from -24 to +23 which is 48 counts
 
-// 84/5 = 16.8
-Gowin_CLKDIV0 z80_clkdiv0(
-  .clkout(z80_clk1), //output
-  .hclkin(clk), //input
-  .resetn(1'b1) //input
-);
+reg [5:0] z80_clk_div = 6'b111111;
 
-// 16.8/4 = 4.2
-Gowin_CLKDIV1 z80_clkdiv1(
-  .clkout(z80_clkH), //output
-  .hclkin(z80_clk1), //input
-  .resetn(1'b1) //input
-);
+always @ (posedge clk)
+begin
+   z80_clk_div <= (z80_clk_div == 6'd23 ) ? -6'd24  : (z80_clk_div + 6'd1);
+end
 
-// 4.2/2 = 2.1
-Gowin_CLKDIV2 z80_clkdiv2(
-  .clkout(z80_clkL), //output
-  .hclkin(z80_clkH), //input
-  .resetn(1'b1) //input
-);
+wire z80_clk;
 
-
-wire z80_clk = z80_clkL;
+//assign z80_clk = ~z80_clk_div[5];
+BUFG z80_clk_bufg(.O(z80_clk), .I(~z80_clk_div[5]));
 
 
 reg [3:0] z80_rst_cnt = 4'b0;
@@ -1009,7 +998,7 @@ TTRS80 TTRS80 (
    .xio_data_in(TRS_DI),
    .xio_data_out(TRS_D),
 
-   .int_stat_5(use_internal_trs_io ? trs_io_data_ready : _D[5])
+   .int_stat(use_internal_trs_io ? {~trs_io_data_ready, _D[4:0]} : _D[5:0])
 );
 
 assign wait_in_n     = ~((use_internal_trs_io & trs_io_wait      ) | (xio_enab & trs_xio_sel & ~WAIT_IN_N));

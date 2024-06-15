@@ -500,7 +500,7 @@ assign MISO = CS_active ? byte_data_sent[7] : 1'bz;
 
 //---ESP Status----------------------------------------------------------------------------
 
-reg[7:0] esp_status = 0;
+reg [7:0] esp_status = 0;
 
 wire esp_status_esp_ready   = esp_status[0];
 wire esp_status_wifi_up     = esp_status[1];

@@ -71,7 +71,7 @@ module TTRS80 (
    output [7:0] xio_data_out,
 
    // TRS-IO
-   input int_stat_5
+   input [5:0] int_stat
 );
 
 
@@ -114,12 +114,13 @@ T80a T80a (
 
 // Generate the memory decodes for the ROM, RAM, display, and keyboard.
 wire trs_rom_sel = ~z80_mreq_n & ((z80_addr[15:13] == 3'b000) | (z80_addr[15:12] == 4'b0010)); // 8k+4k=12k @ 0x0000-0x2fff
+wire trs_ext_sel = ~z80_mreq_n & ((z80_addr[15:11] == 5'b00110) && !(z80_addr[10:5] == 6'b111111)); // ~2k @ 0x3000-0x3dff
 wire trs_kbd_sel = ~z80_mreq_n & ((z80_addr[15:10] == 6'b001110)); // 1k @ 0x3800-0x3bff
 wire trs_dsp_sel = ~z80_mreq_n & ((z80_addr[15:10] == 6'b001111)); // 1k @ 0x3c00-0x3fff
 wire trs_ram_sel = ~z80_mreq_n & ((z80_addr[15:14] == 2'b01) | (z80_addr[15] == 1'b1)); // 48k @ 0x4000-0xffff
 
 
-// Instantiate the ROM.
+// Instantiate the ROM and the extension ROM.
 wire [7:0] trs_rom_data;
 
 blk_mem_gen_0 trs_rom (
@@ -138,6 +139,29 @@ blk_mem_gen_0 trs_rom (
    .wreb(dsp_rom_ram_wre), // input
    .dinb(dsp_rom_ram_din), // input
    .doutb(rom_dout), // output [7:0]
+   .oceb(1'b1),
+   .resetb(1'b0)
+);
+
+
+wire [7:0] trs_ext_data;
+
+ext_rom trs_ext_rom (
+   .clka(z80_clk), // input
+   .cea(trs_ext_sel & ~z80_rd_n), // input
+   .ada(z80_addr[10:0]), // input [10:0]
+   .wrea(1'b0), // input
+   .dina(8'b00000000), // input
+   .douta(trs_ext_data), // output [7:0]
+   .ocea(1'b1),
+   .reseta(1'b0),
+
+   .clkb(clk), // input
+   .ceb(1'b0), // input
+   .adb(dsp_rom_ram_addr[10:0]), // input [13:0]
+   .wreb(dsp_rom_ram_wre), // input
+   .dinb(dsp_rom_ram_din), // input
+   .doutb(), // output [7:0]
    .oceb(1'b1),
    .resetb(1'b0)
 );
@@ -313,16 +337,16 @@ wire trs_lp_out_sel     = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111010); 
 wire trs_disk_out_sel   = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111011); // 37ec-37ef
 wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:0] == 8'b11111111); // ff
 // Input ports
-wire trs_int_stat_sel   = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111000); // 37e0-37e3
 wire trs_rs232_in_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111010); // e8-eb
 wire trs_rtc_sel        = ~z80_iorq_n & (z80_addr[7:2] == 6'b111011); // ec-ef
+wire trs_int_stat_sel   = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111000); // 37e0-37e3
 wire trs_lp_in_sel      = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111010); // 37e8-37eb
 wire trs_disk_in_sel    = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111011); // 37ec-37ef
 
 // FDC
 wire trs_fdc_cmnd_sel  = trs_disk_out_sel & (z80_addr[1:0] == 2'b00); // 37ec output
 wire trs_fdc_stat_sel  = trs_disk_in_sel  & (z80_addr[1:0] == 2'b00); // 37ec input
-wire trs_fdc_track_sel = trs_disk_in_sel & (z80_addr[1:0] == 2'b01); // 37ed input/output
+wire trs_fdc_track_sel = trs_disk_in_sel  & (z80_addr[1:0] == 2'b01); // 37ed input/output
 //wire [7:0] trs_fdc_stat = 8'hff; // no fdc
 wire [7:0] trs_fdc_stat = 8'h34; // seek error
 wire [7:0] trs_fdc_track = 8'h00;
@@ -339,7 +363,7 @@ wire trs_xio_sel = (~z80_iorq_n & ((z80_addr[7] == 1'b0) | (z80_addr[7:6] == 2'b
                                    (z80_addr[7:1] == 7'b1111110)) | // fc-fd spi flash
                     ~z80_mreq_n & ((z80_addr[15:2] == (16'h37E8 >> 2))) ); // 37e8-37eb printer
 
-reg [7:0] trs_cass_reg;     // ff
+reg [7:0] trs_cass_reg; // ff
 wire   cass_casout0    = trs_cass_reg[0];
 wire   cass_casout1    = trs_cass_reg[1];
 wire   cass_casmotoron = trs_cass_reg[2];
@@ -386,7 +410,8 @@ wire [7:0] trs_int_stat;
 // Invert the data and the final mux'ed result so that the value for an
 // undriven bus is 0xff instead of 0x00.
 assign z80_data = ~z80_rd_n ?
-                  ~((~trs_rom_data & {8{trs_rom_sel}}) | 
+                  ~((~trs_rom_data & {8{trs_rom_sel}}) |
+                    (~trs_ext_data & {8{trs_ext_sel}}) |
                     (~trs_ram_data & {8{trs_ram_sel}}) |
                     (~trs_dsp_data & {8{trs_dsp_sel}}) |
                     (~trs_kbd_data & {8{trs_kbd_sel}}) |
@@ -565,7 +590,7 @@ end
 
 // Combine all interrupt sources to the z80.
 // The individual interrupts are active high, and in the status register 1 means active.
-assign trs_int_stat = {rtc_int, fdc_int, int_stat_5, 5'b00000};
+assign trs_int_stat = {rtc_int, fdc_int, int_stat};
 
 assign z80_int_n = ~(rtc_int | fdc_int | ~xio_int_n);
 assign z80_nmi_n = 1'b1;
