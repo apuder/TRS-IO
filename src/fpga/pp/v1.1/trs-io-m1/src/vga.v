@@ -224,11 +224,11 @@ wire [5:0] char_rom_data;
 blk_mem_gen_3 char_rom (
    .clk(vga_clk), // input
    .ce(dsp_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b010)),
-   .ad({dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [9:0]
+   .ad({dsp_yyyy_yy[5], dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [10:0]
    .wre(1'b0),
    .din(6'b000000),
    .dout(char_rom_data), // output [5:0]
-   .oce(dsp_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b011)),
+   .oce(dsp_act & (dsp_data_b[7] == 1'b0) & (dsp_xxx == 3'b011)),
    .reset(1'b0)
 );
 
@@ -315,11 +315,10 @@ begin
             if(char_rom_addr[11] == 1'b0)
             begin
                if(reg_modsel)
-                  txt_pixel_shift_reg <= ( char_rom_addr[3] ? 6'h00 :
-                     ( ~dsp_XXXXXXX[0] ? {{2{char_rom_data[5]}}, {2{char_rom_data[4]}}, {2{char_rom_data[3]}}}
-                                       : {{2{char_rom_data[2]}}, {2{char_rom_data[1]}}, {2{char_rom_data[0]}}} ) );
+                  txt_pixel_shift_reg <= ( ~dsp_XXXXXXX[0] ? {{2{char_rom_data[5]}}, {2{char_rom_data[4]}}, {2{char_rom_data[3]}}}
+                                                           : {{2{char_rom_data[2]}}, {2{char_rom_data[1]}}, {2{char_rom_data[0]}}} );
                else
-                  txt_pixel_shift_reg <= (char_rom_addr[3] ? 6'h00 : char_rom_data);
+                  txt_pixel_shift_reg <= char_rom_data;
             end
             else
             begin

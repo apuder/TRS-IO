@@ -29,12 +29,12 @@ module TTRS80 (
    input dsp_ce,
    input rom_ce,
    input ram_ce,
+   input ext_ce,
+   input chr_ce,
    input [15:0] dsp_rom_ram_addr,
    input dsp_rom_ram_wre,
    input [7:0] dsp_rom_ram_din,
-   output [7:0] dsp_dout,
-   output [7:0] rom_dout,
-   output [7:0] ram_dout,
+   output [7:0] dsp_rom_ram_dout,
 
    // Outputs
    output cpu_fast,
@@ -122,13 +122,15 @@ wire trs_ram_sel = ~z80_mreq_n & ((z80_addr[15:14] == 2'b01) | (z80_addr[15] == 
 
 // Instantiate the ROM and the extension ROM.
 wire [7:0] trs_rom_data;
+wire [7:0] rom_dout;
+wire wren_romwe;
 
 blk_mem_gen_0 trs_rom (
    .clka(z80_clk), // input
-   .cea(trs_rom_sel & ~z80_rd_n), // input
+   .cea(trs_rom_sel & (~z80_rd_n | ~z80_wr_n)), // input
    .ada(z80_addr[13:0]), // input [13:0]
-   .wrea(1'b0), // input
-   .dina(8'b00000000), // input
+   .wrea(wren_romwe & ~z80_wr_n), // input
+   .dina(z80_data), // input
    .douta(trs_rom_data), // output [7:0]
    .ocea(1'b1),
    .reseta(1'b0),
@@ -145,23 +147,25 @@ blk_mem_gen_0 trs_rom (
 
 
 wire [7:0] trs_ext_data;
+wire [7:0] ext_dout;
+wire wren_extwe;
 
 ext_rom trs_ext_rom (
    .clka(z80_clk), // input
-   .cea(trs_ext_sel & ~z80_rd_n), // input
+   .cea(trs_ext_sel & (~z80_rd_n | ~z80_wr_n)), // input
    .ada(z80_addr[10:0]), // input [10:0]
-   .wrea(1'b0), // input
-   .dina(8'b00000000), // input
+   .wrea(wren_extwe & ~z80_wr_n), // input
+   .dina(z80_data), // input
    .douta(trs_ext_data), // output [7:0]
    .ocea(1'b1),
    .reseta(1'b0),
 
    .clkb(clk), // input
-   .ceb(1'b0), // input
-   .adb(dsp_rom_ram_addr[10:0]), // input [13:0]
+   .ceb(ext_ce), // input
+   .adb(dsp_rom_ram_addr[10:0]), // input [10:0]
    .wreb(dsp_rom_ram_wre), // input
    .dinb(dsp_rom_ram_din), // input
-   .doutb(), // output [7:0]
+   .doutb(ext_dout), // output [7:0]
    .oceb(1'b1),
    .resetb(1'b0)
 );
@@ -169,6 +173,7 @@ ext_rom trs_ext_rom (
 
 // Instantiate the RAM (48k).
 wire [7:0] trs_ram_data;
+wire [7:0] ram_dout;
 
 blk_mem_gen_1 trs_ram (
    .clka(z80_clk), // input
@@ -233,7 +238,7 @@ wire [9:0]  dsp_ada   = z80_is_running ? z80_addr[9:0]                         :
 wire        dsp_wrea  = z80_is_running ? ~z80_wr_n                             : dsp_rom_ram_wre;
 wire [7:0]  dsp_dina  = z80_is_running ? z80_data                              : dsp_rom_ram_din;
 
-assign dsp_dout = trs_dsp_data;
+wire [7:0] dsp_dout = trs_dsp_data;
 
 blk_mem_gen_2 trs_dsp (
    .clka(dsp_clka), // input
@@ -336,6 +341,7 @@ wire trs_drv_sel        = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111000); 
 wire trs_lp_out_sel     = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111010); // 37e8-37eb
 wire trs_disk_out_sel   = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111011); // 37ec-37ef
 wire trs_cass_out_sel   = ~z80_iorq_n & (z80_addr[7:0] == 8'b11111111); // ff
+wire trs_wren_out_sel   = ~z80_iorq_n & (z80_addr[7:0] == 8'b11111100); // fc - write enables
 // Input ports
 wire trs_rs232_in_sel   = ~z80_iorq_n & (z80_addr[7:2] == 6'b111010); // e8-eb
 wire trs_rtc_sel        = ~z80_iorq_n & (z80_addr[7:2] == 6'b111011); // ec-ef
@@ -369,16 +375,24 @@ wire   cass_casout1    = trs_cass_reg[1];
 wire   cass_casmotoron = trs_cass_reg[2];
 assign cass_modsel     = trs_cass_reg[3];
 
+reg [7:0] trs_wren_reg; // fc
+assign wren_romwe   = (trs_wren_reg[1:0] == 2'b10);
+assign wren_extwe   = (trs_wren_reg[3:2] == 2'b10);
+
 always @ (posedge z80_clk)
 begin
    if(~z80_reset_n)
    begin
       trs_cass_reg <= 8'h00;
+      trs_wren_reg <= 8'h00;
    end
    else
    begin
       if(trs_cass_out_sel & ~z80_wr_n)
          trs_cass_reg <= z80_data;
+
+      if(trs_wren_out_sel & ~z80_wr_n)
+         trs_wren_reg <= z80_data;
    end
 end
 
@@ -427,14 +441,26 @@ assign z80_data = ~z80_rd_n ?
 // Instantiate the character generator ROM.
 // The character ROM has a latency of 2 clock cycles.
 wire [5:0] char_rom_data;
+wire [5:0] chr_dout;
 
 blk_mem_gen_3 char_rom (
-   .clk(vga_clk), // input
-   .ad({trs_dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [9:0]
-   .dout(char_rom_data), // output [5:0]
-   .ce(dsp_act & col_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b010)),
-   .oce(dsp_act & col_act & (dsp_yyyy_yy[5] == 1'b0) & (dsp_xxx == 3'b011)),
-   .reset(1'b0)
+   .clka(vga_clk), // input
+   .cea(dsp_act & col_act & (trs_dsp_data_b[7] == 1'b0) & (dsp_xxx == 3'b010)),
+   .ada({dsp_yyyy_yy[5], trs_dsp_data_b[6:0], dsp_yyyy_yy[4:2]}), // input [10:0]
+   .wrea(1'b0), // input
+   .dina(6'b000000), // input [5:0]
+   .douta(char_rom_data), // output [5:0]
+   .ocea(dsp_act & col_act & (trs_dsp_data_b[7] == 1'b0) & (dsp_xxx == 3'b011)),
+   .reseta(1'b0),
+
+   .clkb(clk), // input
+   .ceb(chr_ce),
+   .adb(dsp_rom_ram_addr[10:0]), // input [10:0]
+   .wreb(dsp_rom_ram_wre), // input
+   .dinb(dsp_rom_ram_din), // input [5:0]
+   .doutb(chr_dout), // output [5:0]
+   .oceb(1'b1),
+   .resetb(1'b0)
 );
 
 
@@ -514,7 +540,7 @@ begin
       if(dsp_act & col_act & (dsp_xxx == 3'b100))
       begin
          if(char_rom_addr[11] == 1'b0)
-            dsp_pixel_shift_reg <= (char_rom_addr[3] ? 6'h00 : char_rom_data);
+            dsp_pixel_shift_reg <= char_rom_data;
          else
          begin
             // The character is 12 rows.
@@ -639,5 +665,32 @@ begin
          v_sync <= 1'b0;
    end
 end
+
+
+// latch the last accessed memory and gate it to the output
+
+reg dsp_ce_reg;
+reg rom_ce_reg;
+reg ext_ce_reg;
+reg ram_ce_reg;
+reg chr_ce_reg;
+
+always @ (posedge clk)
+begin
+   if(dsp_ce | rom_ce | ext_ce | ram_ce | chr_ce)
+   begin
+      dsp_ce_reg <= dsp_ce;
+      rom_ce_reg <= rom_ce;
+      ext_ce_reg <= ext_ce;
+      ram_ce_reg <= ram_ce;
+      chr_ce_reg <= chr_ce;
+   end
+end
+
+assign dsp_rom_ram_dout = ({8{dsp_ce_reg}} & dsp_dout) |
+                          ({8{rom_ce_reg}} & rom_dout) |
+                          ({8{ext_ce_reg}} & ext_dout) |
+                          ({8{ram_ce_reg}} & ram_dout) |
+                          ({8{chr_ce_reg}} & {2'b00, chr_dout});
 
 endmodule

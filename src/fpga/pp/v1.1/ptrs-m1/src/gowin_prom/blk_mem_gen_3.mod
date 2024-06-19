@@ -11,8 +11,8 @@
 -type RAM_ROM
 -file_type vlg
 -pROM true
--depth 1024
+-depth 2048
 -width 6
 -read_mode pipeline
 -reset_mode sync
--init_file ../trs80m1_chr.mi
+-init_file ../GenDon3-9E.mi

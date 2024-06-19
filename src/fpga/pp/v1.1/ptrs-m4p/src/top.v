@@ -543,7 +543,7 @@ end
 wire do_dsp_poke = trigger_action && cmd == z80_dsp_poke;
 wire do_dsp_peek = trigger_action && cmd == z80_dsp_peek;
 wire dsp_ce = do_dsp_peek || do_dsp_poke;
-reg [10:0] dsp_addr;
+reg [15:0] dsp_addr;
 wire dsp_wre = do_dsp_poke;
 wire [7:0] dsp_din = params[0];
 wire [7:0] _dsp_dout;
@@ -569,9 +569,9 @@ trigger dsp_incr_trigger(
 );
 
 always @(posedge clk) begin
-  if (trigger_action && cmd == z80_dsp_set_addr) dsp_addr <= {params[1], params[0]}[10:0];
+  if (trigger_action && cmd == z80_dsp_set_addr) dsp_addr <= {params[1], params[0]};
   if (dsp_ram_data_read) dsp_dout <= _dsp_dout;
-  if (dsp_incr_addr) dsp_addr <= dsp_addr + 11'd1;
+  if (dsp_incr_addr) dsp_addr <= dsp_addr + 16'd1;
 end
  
  
@@ -949,11 +949,11 @@ end
 
 wire ttrs80_poke_rom = trigger_action && cmd == bram_poke;
 
-wire [15:0] ttrs80_addr = ({16{ttrs80_poke_rom}} & {params[1], params[0]}) |
-                          ({16{~ttrs80_poke_rom}} & {5'b00000, dsp_addr});
+wire [15:0] ttrs80_addr = ttrs80_poke_rom ? {params[1], params[0]}
+                                          : dsp_addr;
 
-wire [7:0] ttrs80_din = ({8{ttrs80_poke_rom}} & params[2]) |
-                        ({8{~ttrs80_poke_rom}} & dsp_din);
+wire [7:0] ttrs80_din = ttrs80_poke_rom ? params[2]
+                                        : dsp_din;
 
 TTRS80 TTRS80 (
    // Inputs
@@ -969,12 +969,11 @@ TTRS80 TTRS80 (
    .dsp_ce(dsp_ce),
    .rom_ce(ttrs80_poke_rom),
    .ram_ce(1'b0),
+   .chr_ce(1'b0),
    .dsp_rom_ram_addr(ttrs80_addr),
    .dsp_rom_ram_wre(dsp_wre | ttrs80_poke_rom),
    .dsp_rom_ram_din(ttrs80_din),
-   .dsp_dout(_dsp_dout),
-   .rom_dout(),
-   .ram_dout(),
+   .dsp_rom_ram_dout(_dsp_dout),
 
    // Outputs
    .cpu_fast(cpu_fast),

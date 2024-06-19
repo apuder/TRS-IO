@@ -5,7 +5,7 @@
 //Part Number: GW1NR-LV9QN88PC6/I5
 //Device: GW1NR-9
 //Device Version: C
-//Created Time: Sat Jun 08 10:05:56 2024
+//Created Time: Tue Jun 18 07:43:25 2024
 
 //Change the instance name and port connections to the signal names
 //--------Copy here to design--------
@@ -16,7 +16,7 @@
         .oce(oce_i), //input oce
         .ce(ce_i), //input ce
         .reset(reset_i), //input reset
-        .ad(ad_i) //input [9:0] ad
+        .ad(ad_i) //input [10:0] ad
     );
 
 //--------Copy end-------------------

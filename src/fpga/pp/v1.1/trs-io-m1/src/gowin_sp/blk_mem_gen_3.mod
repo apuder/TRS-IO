@@ -10,9 +10,9 @@
 -path ./src/gowin_sp/
 -type RAM_SP
 -file_type vlg
--depth 1024
+-depth 2048
 -width 6
 -read_mode pipeline
 -write_mode normal
 -reset_mode sync
--init_file ../trs80m1_chr.mi
+-init_file ../GenDon3-9E.mi

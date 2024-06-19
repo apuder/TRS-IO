@@ -11,9 +11,9 @@
         <File path="src/gowin_dpb/blk_mem_gen_0.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/blk_mem_gen_1.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/blk_mem_gen_2.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/blk_mem_gen_3.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/blk_mem_gen_4.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/ext_rom.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_prom/blk_mem_gen_3.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll0.v" type="file.verilog" enable="1"/>
         <File path="src/hdmi/audio_clock_regeneration_packet.sv" type="file.verilog" enable="1"/>

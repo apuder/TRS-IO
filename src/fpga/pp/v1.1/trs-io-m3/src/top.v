@@ -723,15 +723,15 @@ end
 // bit1 is inverted and added to bit0 for the analog output
 wire [1:0] cass_outx = {~cass_reg[1], cass_reg[0]};
 // the sum is 0, 1, or 2
-wire [1:0] cass_outy = {1'b0, cass_outx[1]} + {1'b0, cass_outx[0]};
+wire [1:0] cass_outy = {1'b0, cass_outx[1]} + {1'b0, cass_outx[0]} - 2'b01;
 
 reg [8:0] cass_outl_reg;
 reg [8:0] cass_outr_reg;
 
 always @ (posedge clk)
 begin
-   cass_outl_reg <= {orch90l_reg[7], orch90l_reg} + {cass_outy - 2'b01, 7'b0000000};
-   cass_outr_reg <= {orch90r_reg[7], orch90r_reg} + {cass_outy - 2'b01, 7'b0000000};
+   cass_outl_reg <= {orch90l_reg[7], orch90l_reg} + {cass_outy, 7'b0000000};
+   cass_outr_reg <= {orch90r_reg[7], orch90r_reg} + {cass_outy, 7'b0000000};
 end
 
 reg [9:0] cass_pdml_reg;

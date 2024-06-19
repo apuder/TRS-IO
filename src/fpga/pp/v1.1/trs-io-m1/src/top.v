@@ -614,97 +614,99 @@ end
 
 //--------BRAM-------------------------------------------------------------------------
 
-wire ram_rd_en, ram_rd_regce;
+wire ram_rde, ram_oce;
 
 trigger rama_read_trigger(
   .clk(clk),
   .cond(io_access & trs_ram_sel_rd),
-  .one(ram_rd_en),
-  .two(ram_rd_regce),
+  .one(ram_rde),
+  .two(ram_oce),
   .three()
 );
 
-wire ram_wr_en;
+wire ram_wre;
 
 trigger rama_write_trigger(
   .clk(clk),
   .cond(io_access & trs_ram_sel_wr),
   .one(),
-  .two(ram_wr_en),
+  .two(ram_wre),
   .three()
 );
 
 wire [7:0] ram_dout;
 
-wire enb;
-wire regceb;
-wire web;
-wire [14:0] addrb;
+wire ram_ceb;
+wire ram_oceb;
+wire ram_web;
+wire [15:0] addrb;
 wire [7:0] dinb;
-wire [7:0] doutb;
+wire [7:0] ram_doutb;
 
 
 Gowin_DPB0 bram(
-  .clka(clk), //input
-  .cea(ram_rd_en | ram_wr_en), //input
-  .ada(TRS_A[14:0]), //input [14:0]
-  .wrea(~TRS_WR), //input
-  .dina(TRS_D), //input [7:0]
-  .douta(ram_dout), //output [7:0]
-  .ocea(ram_rd_regce), //input
-  .reseta(1'b0), //input
+  .clka(clk), // input
+  .cea(ram_rde | ram_wre), // input
+  .ada(TRS_A[14:0]), // input [14:0]
+  .wrea(~TRS_WR), // input
+  .dina(TRS_D), // input [7:0]
+  .douta(ram_dout), // output [7:0]
+  .ocea(ram_oce), // input
+  .reseta(1'b0), // input
 
-  .clkb(clk), //input
-  .ceb(enb), //input
-  .adb(addrb), //input [14:0]
-  .wreb(web), //input
-  .dinb(dinb), //input [7:0]
-  .doutb(doutb), //output [7:0]
-  .oceb(regceb), //input
-  .resetb(1'b0) //input
+  .clkb(clk), // input
+  .ceb(ram_ceb), // input
+  .adb(addrb[14:0]), // input [14:0]
+  .wreb(ram_web), // input
+  .dinb(dinb), // input [7:0]
+  .doutb(ram_doutb), // output [7:0]
+  .oceb(ram_oceb), // input
+  .resetb(1'b0) // input
 );
 
 
 //---EXTENSION ROM----------------------------------------------------------------
 
-wire extrom_rd_en, extrom_rd_regce;
+wire extrom_rde, extrom_oce;
 
-trigger extrom_rd_trigger (
+trigger extrom_rd_trigger(
   .clk(clk),
   .cond(io_access & trs_extrom_sel_rd),
-  .one(extrom_rd_en),
-  .two(extrom_rd_regce),
+  .one(extrom_rde),
+  .two(extrom_oce),
   .three()
 );
 
-wire extrom_wr_en;
+wire extrom_wre;
 
 trigger extrom_write_trigger(
   .clk(clk),
   .cond(io_access & trs_extrom_sel_wr),
   .one(),
-  .two(extrom_wr_en),
+  .two(extrom_wre),
   .three()
 );
 
 wire [7:0] extrom_dout;
+wire [7:0] extrom_doutb;
+wire extrom_wr_en;
 
 Gowin_DPB2 extrom (
    .clka(clk), // input
-   .cea(extrom_rd_en | extrom_wr_en), // input
+   .cea(extrom_rde | extrom_wre), // input
    .ada(TRS_A[10:0]), // input [10:0]
-   .wrea(~TRS_WR), // input
+   .wrea(extrom_wr_en & ~TRS_WR), // input
    .dina(TRS_D), // input [7:0]
    .douta(extrom_dout), // output [7:0]
-   .ocea(extrom_rd_regce),
+   .ocea(extrom_oce),
    .reseta(1'b0),
  
    .clkb(clk), // input
    .ceb(1'b0), // input
-   .adb(11'h000), // input [10:0]
+   .adb(addrb[10:0]), // input [10:0]
    .wreb(1'b0), // input
-   .dinb(8'h00), // input [7:0]
-   .doutb(), // output [7:0]
+   .dinb(dinb), // input [7:0]
+   .doutb(extrom_doutb), // output [7:0]
    .oceb(1'b0), // input
    .resetb(1'b0)
 );
@@ -712,26 +714,26 @@ Gowin_DPB2 extrom (
 
 //--------BRAM-------------------------------------------------------------------------
 
-assign addrb = {params[1][6:0], params[0]};
+assign addrb = {params[1], params[0]};
 assign dinb = params[2];
 
-wire enb_peek, enb_poke;
-assign enb = enb_peek | enb_poke;
-assign web = (cmd == bram_poke);
+wire ceb_peek, ceb_poke;
+assign ram_ceb = ceb_peek | ceb_poke;
+assign ram_web = (cmd == bram_poke);
 wire bram_peek_done;
 
 trigger bram_poke_trigger(
   .clk(clk),
   .cond(trigger_action & (cmd == bram_poke)),
-  .one(enb_poke),
+  .one(ceb_poke),
   .two(),
   .three());
 
 trigger bram_peek_trigger(
   .clk(clk),
   .cond(trigger_action & (cmd == bram_peek)),
-  .one(enb_peek),
-  .two(regceb),
+  .one(ceb_peek),
+  .two(ram_oceb),
   .three(bram_peek_done));
 
 
@@ -751,7 +753,7 @@ begin
       get_mode:    byte_out <= {4'b0000, this_mode | ((add_dip_4 & ~CONF[3]) << 3)};
     endcase
   else if (bram_peek_done)
-    byte_out <= doutb;
+    byte_out <= ram_doutb;
 end
 
 
@@ -1007,15 +1009,15 @@ end
 // bit1 is inverted and added to bit0 for the analog output
 wire [1:0] cass_outx = {~cass_reg[1], cass_reg[0]};
 // the sum is 0, 1, or 2
-wire [1:0] cass_outy = {1'b0, cass_outx[1]} + {1'b0, cass_outx[0]};
+wire [1:0] cass_outy = {1'b0, cass_outx[1]} + {1'b0, cass_outx[0]} - 2'b01;
 
 reg [8:0] cass_outl_reg;
 reg [8:0] cass_outr_reg;
 
 always @ (posedge clk)
 begin
-   cass_outl_reg <= {orch85l_reg[7], orch85l_reg} + {cass_outy - 2'b01, 7'b0000000};
-   cass_outr_reg <= {orch85r_reg[7], orch85r_reg} + {cass_outy - 2'b01, 7'b0000000};
+   cass_outl_reg <= {orch85l_reg[7], orch85l_reg} + {cass_outy, 7'b0000000};
+   cass_outr_reg <= {orch85r_reg[7], orch85r_reg} + {cass_outy, 7'b0000000};
 end
 
 reg [9:0] cass_pdml_reg;
@@ -1060,6 +1062,7 @@ assign PMOD = {~pmod_a[7:5], ~pmod_a[1], pmod_a[4:2], pmod_a[0]};
 // bit7 is CS  (active high)
 // bit6 is WPN (active low)
 reg [7:0] spi_ctrl_reg = 8'h00;
+assign extrom_wr_en = (spi_ctrl_reg[3:2] == 2'b10);
 
 always @(posedge clk)
 begin
