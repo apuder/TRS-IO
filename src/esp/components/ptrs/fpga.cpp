@@ -234,6 +234,5 @@ static void fpga_task(void* args)
 
 void init_fpga()
 {
-  fpga_task(NULL);
-//  xTaskCreatePinnedToCore(fpga_task, "fpga", 6000, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(fpga_task, "fpga", 6000, NULL, 1, NULL, 0);
 }
