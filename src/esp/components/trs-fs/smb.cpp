@@ -122,7 +122,9 @@ FRESULT TRS_FS_SMB::f_open (
   }
 
   asprintf(&smb_path, "%s%s", base_dir, path);
+  lock();
   fp->f = (struct smb2fh*) smb2_open(smb2, smb_path, m);
+  unlock();
   free(smb_path);
   return (fp->f == NULL) ? FR_NO_FILE : FR_OK;
 }
@@ -137,7 +139,9 @@ FRESULT TRS_FS_SMB::f_opendir (
     path = "";
   }
   asprintf(&smb_path, "%s%s", base_dir, path);
+  lock();
   dp->dir = (struct smb2dir*) smb2_opendir(smb2, smb_path);
+  unlock();
   free(smb_path);
   return (dp->dir != NULL) ? FR_OK : FR_DISK_ERR;
 }
@@ -148,7 +152,9 @@ FRESULT TRS_FS_SMB::f_write (
                              UINT btw,         /* [IN] Number of bytes to write */
                              UINT* bw          /* [OUT] Pointer to the variable to return number of bytes written */
                              ) {
+  lock();
   int _bw = smb2_write(smb2, (struct smb2fh*) fp->f, (uint8_t*) buff, btw);
+  unlock();
   *bw = _bw;
   return (_bw >= 0) ? FR_OK : FR_DISK_ERR;
 }
@@ -159,7 +165,9 @@ FRESULT TRS_FS_SMB::f_read (
                             UINT btr,    /* [IN] Number of bytes to read */
                             UINT* br     /* [OUT] Number of bytes read */
                             ) {
+  lock();
   int _br = smb2_read(smb2, (struct smb2fh*) fp->f, (uint8_t*) buff, btr);
+  unlock();
   *br = _br;
   return (_br >= 0) ? FR_OK : FR_DISK_ERR;
 }
@@ -168,6 +176,7 @@ FRESULT TRS_FS_SMB::f_readdir (
                                DIR_* dp,      /* [IN] Directory object */
                                FILINFO* fno  /* [OUT] File information structure */
                                   ) {
+  lock();
   while (1) {
     struct smb2dirent* entry = smb2_readdir(smb2, (struct smb2dir*) dp->dir);
     if (entry == NULL) {
@@ -186,6 +195,7 @@ FRESULT TRS_FS_SMB::f_readdir (
     fno->fattrib = 1;
     break;
   }
+  unlock();
   return FR_OK;
 }
 
@@ -207,21 +217,28 @@ FRESULT TRS_FS_SMB::f_lseek (
                              ) {
   uint64_t current_offset;
   
+  lock();
   smb2_lseek(smb2, (struct smb2fh*) fp->f, ofs, SEEK_SET, &current_offset);
+  unlock();
   return FR_OK;
 }
   
 FRESULT TRS_FS_SMB::f_close (
                              FIL* fp     /* [IN] Pointer to the file object */
                              ) {
+  lock();
   smb2_close(smb2, (struct smb2fh*) fp->f);
+  unlock();
   return FR_OK;
 }
 
 FRESULT TRS_FS_SMB::f_unlink (
                               const TCHAR* path  /* [IN] Object name */
                               ) {
-  return smb2_unlink(smb2, path) ? FR_NO_FILE : FR_OK;
+  lock();
+  bool res = smb2_unlink(smb2, path);
+  unlock();
+  return res ? FR_NO_FILE : FR_OK;
 }
 
 FRESULT TRS_FS_SMB::f_stat (
@@ -231,19 +248,24 @@ FRESULT TRS_FS_SMB::f_stat (
   char* smb_path;
 
   asprintf(&smb_path, "%s%s", base_dir, path);
+  lock();
   struct smb2fh* fh = smb2_open(smb2, smb_path, O_RDONLY);
+  unlock();
   free(smb_path);
   if (fh == NULL) {
     return FR_NO_FILE;
   }
   struct smb2_stat_64 st;
+  lock();
   if (smb2_fstat(smb2, fh, &st) != 0) {
     smb2_close(smb2, fh);
+    unlock();
     return FR_NO_FILE;
   }
   strcpy(fno->fname, path);
   fno->fsize = st.smb2_size;
   fno->fattrib = 1; //XXX
   smb2_close(smb2, fh);
+  unlock();
   return FR_OK;
 }

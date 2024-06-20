@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include "fileio.h"
 #include <string.h>
 #include <assert.h>
@@ -32,10 +34,25 @@ bool trs_fs_has_sd_card_reader();
 
 
 class TRS_FS {
+private:
+  SemaphoreHandle_t xSemaphore = NULL;
+
 protected:
   const char* err_msg;
 
+  void lock() {
+    xSemaphoreTake(xSemaphore, portMAX_DELAY);
+  }
+
+  void unlock() {
+    xSemaphoreGive(xSemaphore);
+  }
+
 public:
+  TRS_FS() {
+    xSemaphore = xSemaphoreCreateMutex();
+  }
+
   virtual ~TRS_FS() {}
   
   virtual FS_TYPE type() = 0;

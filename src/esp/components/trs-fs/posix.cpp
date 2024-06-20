@@ -1,4 +1,7 @@
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+
 #include <driver/sdspi_host.h>
 
 namespace VFS {
@@ -130,7 +133,9 @@ FRESULT TRS_FS_POSIX::f_open (
   }
 
   asprintf(&abs_path, "%s/%s", mount, path);
+  lock();
   fp->f = fopen(abs_path, m);
+  unlock();
   free(abs_path);
   return (fp->f == NULL) ? FR_NO_FILE : FR_OK;
 }
@@ -145,7 +150,9 @@ FRESULT TRS_FS_POSIX::f_opendir (
     path = "";
   }
   asprintf(&abs_path, "%s/%s", mount, path);
+  lock();
   dp->dir = opendir(abs_path);
+  unlock();
   free(abs_path);
   return (dp->dir != NULL) ? FR_OK : FR_DISK_ERR;
 }
@@ -156,7 +163,9 @@ FRESULT TRS_FS_POSIX::f_write (
                              UINT btw,         /* [IN] Number of bytes to write */
                              UINT* bw          /* [OUT] Pointer to the variable to return number of bytes written */
                              ) {
+  lock();
   int _bw = fwrite(buff, 1, btw, (FILE*) fp->f);
+  unlock();
   *bw = _bw;
   return (_bw >= 0) ? FR_OK : FR_DISK_ERR;
 }
@@ -167,7 +176,9 @@ FRESULT TRS_FS_POSIX::f_read (
                             UINT btr,    /* [IN] Number of bytes to read */
                             UINT* br     /* [OUT] Number of bytes read */
                             ) {
+  lock();
   int _br = fread(buff, 1, btr, (FILE*) fp->f);
+  unlock();
   *br = _br;
   return (_br >= 0) ? FR_OK : FR_DISK_ERR;
 }
@@ -176,6 +187,7 @@ FRESULT TRS_FS_POSIX::f_readdir (
                                DIR_* dp,      /* [IN] Directory object */
                                FILINFO* fno  /* [OUT] File information structure */
                                   ) {
+  lock();
   while (1) {
     struct dirent* entry = readdir((DIR*) dp->dir);
     if (entry == NULL) {
@@ -194,6 +206,7 @@ FRESULT TRS_FS_POSIX::f_readdir (
     //fno->fattrib = 1;
     break;
   }
+  unlock();
   return FR_OK;
 }
 
@@ -213,14 +226,18 @@ FRESULT TRS_FS_POSIX::f_lseek (
                              FIL*    fp,  /* [IN] File object */
                              FSIZE_t ofs  /* [IN] File read/write pointer */
                              ) {
+  lock();
   fseek((FILE*) fp->f, ofs, SEEK_SET);
+  unlock();
   return FR_OK;
 }
   
 FRESULT TRS_FS_POSIX::f_close (
                              FIL* fp     /* [IN] Pointer to the file object */
                              ) {
+  lock();
   fclose((FILE*) fp->f);
+  unlock();
   return FR_OK;
 }
 
@@ -229,7 +246,9 @@ FRESULT TRS_FS_POSIX::f_unlink (
                               ) {
   char* abs_path;
   asprintf(&abs_path, "%s/%s", mount, path);
+  lock();
   int r = unlink(abs_path);
+  unlock();
   free(abs_path);
   return r ? FR_NO_FILE : FR_OK;
 }
@@ -241,7 +260,9 @@ FRESULT TRS_FS_POSIX::f_stat (
   char* abs_path;
   struct stat s;
   asprintf(&abs_path, "%s/%s", mount, path);
+  lock();
   int r = stat(abs_path, &s);
+  unlock();
   free(abs_path);
   if (r != 0) {
     return FR_NO_FILE;
