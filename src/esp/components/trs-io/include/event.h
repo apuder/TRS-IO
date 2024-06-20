@@ -16,6 +16,7 @@
 #define EVT_CASS_MOTOR_OFF (1 << 8)
 #define EVT_I2S_START      (1 << 9)
 #define EVT_I2S_STOP       (1 << 10)
+#define EVT_FS_MOUNTED     (1 << 11)
 
 void evt_signal(EventBits_t bits);
 EventBits_t evt_wait(EventBits_t bits);

@@ -72,6 +72,9 @@ static void set_fs() {
     open_drives();
   }
   current_trs_fs = trs_fs;
+  if (trs_fs != NULL && trs_fs->get_err_msg() == NULL) {
+    evt_signal(EVT_FS_MOUNTED);
+  }
   check_frehd();
 }
 

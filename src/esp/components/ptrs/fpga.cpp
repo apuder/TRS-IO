@@ -2,6 +2,7 @@
 #include "bitstream-src.h"
 #include "flash.h"
 #include "xflash.h"
+#include "event.h"
 #include "settings.h"
 #include "ptrs.h"
 #include "jtag.h"
@@ -11,6 +12,9 @@
 
 
 #define TAG "FPGA"
+
+//#define VERIFY_FLASH
+
 
 static const char* configurations[] = {
   "TRS-IO (Model 1)",
@@ -112,21 +116,26 @@ static const int ptrs_model[] = {
 
 static void check_firmware()
 {
+  BitstreamSource* bs;
   JTAGAdapterTrsIO* jtag;
   unsigned char buf[256];
+#ifdef VERIFY_FLASH
+  unsigned char buf2[256];
+#endif
   unsigned long addr = 0;
   int cnt;
+  uint32_t id;
   
   int conf = spi_get_config() & 0x0f;
   int mode = spi_get_mode();
   ESP_LOGI(TAG, "Current firmware: %s", configurations[mode]);
   ESP_LOGI(TAG, "Target firmware: %s", configurations[conf]);
-  if (conf == RESERVED) {
+  int curr_bs = conf_to_bs[mode];
+  int target_bs = conf_to_bs[conf];
+  if (target_bs == RESERVED) {
     ESP_LOGE(TAG, "Selected RESERVED. Not changing FPGA firmware");
     return;
   }
-  int curr_bs = conf_to_bs[mode];
-  int target_bs = conf_to_bs[conf];
   if (curr_bs == target_bs) {
     ESP_LOGI(TAG, "FPGA already running correct firmware");
     return;
@@ -134,23 +143,30 @@ static void check_firmware()
 
   const char* new_bs = bitstreams[target_bs];
   ESP_LOGI(TAG, "Uploading FPGA firmware: %s", new_bs);
-  // Set LED to solid blue
-  set_led(false, false, true, false, false);
+
   if (is_custom[target_bs]) {
-    ESP_LOGE(TAG, "Cannot handle custom firmware yet!");
-    return;
+    ESP_LOGI(TAG, "Waiting for mounted filesystem");
+    evt_wait(EVT_FS_MOUNTED);
+    bs = new BitstreamSourceFile(new_bs);
+  } else {
+    bs = new BitstreamSourceFlash(new_bs);
   }
 
-  BitstreamSource* bs = new BitstreamSourceFlash(new_bs);
   if (!bs->open()) {
     ESP_LOGE(TAG, "Could not open bistream file");
     goto err;
   }
 
+  // Set LED to solid blue
+  set_led(false, false, true, false, false);
+
+  id = flashReadMfdDevId();
+  ESP_LOGI(TAG, "Flash ID: %x", id);
+
   do {
     // if the address is the start of a sector then erase the sector
     if((addr & (FLASH_SECTOR_SIZE - 1)) == 0) {
-      ESP_LOGI(TAG, "Address: %06lX", addr);
+      ESP_LOGI(TAG, "Address: 0x%06lX", addr);
       flashSectorErase(addr);
       // Make watchdog happy
       vTaskDelay(1 / portTICK_PERIOD_MS);
@@ -161,6 +177,13 @@ static void check_firmware()
     }
 
     flashWrite(addr, buf, cnt);
+
+#ifdef VERIFY_FLASH
+    flashRead(addr, buf2, cnt);
+    if(memcmp(buf, buf2, cnt) != 0) {
+      ESP_LOGI(TAG, "Verify error!");
+    }
+#endif
 
     addr += cnt;
 
@@ -198,8 +221,8 @@ err:
 static void fpga_task(void* args)
 {
   check_firmware();
-  int conf = spi_get_config() & 0x0f;
-  int model = ptrs_model[conf];
+  int mode = spi_get_mode();
+  int model = ptrs_model[mode];
   ESP_LOGI(TAG, "TRS-IO++ running in %s mode", (model == -1) ? "TRS-IO" : "PocketTRS");
   if (model != -1) {
     // TRS-IO++ running in PocketTRS mode
@@ -211,5 +234,6 @@ static void fpga_task(void* args)
 
 void init_fpga()
 {
-  xTaskCreatePinnedToCore(fpga_task, "fpga", 6000, NULL, 1, NULL, 0);
+  fpga_task(NULL);
+//  xTaskCreatePinnedToCore(fpga_task, "fpga", 6000, NULL, 1, NULL, 0);
 }
