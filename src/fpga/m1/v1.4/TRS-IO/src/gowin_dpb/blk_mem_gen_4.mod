@@ -6,7 +6,7 @@
 
 -mod_name blk_mem_gen_4
 -file_name blk_mem_gen_4
--path C:/Users/matt/Documents/FPGA/TRS-IO/src/gowin_dpb/
+-path ./gowin_dpb/
 -type RAM_DP
 -file_type vlg
 -bram_b true
@@ -21,5 +21,5 @@
 -write_mode_1 normal
 -speed false
 -reset_mode sync
--init_file C:\Users\matt\Documents\FPGA\TRS-IO\src\splash_le18.mi
+-init_file ../splash_le18.mi
 -init_match port_A

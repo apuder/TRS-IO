@@ -60,6 +60,12 @@ void settings_set_screen_color(uint8_t color);
 uint8_t settings_get_screen_color();
 
 
+//-----Keyboard Layout------------------------------------------------------
+
+void settings_set_keyb_layout(uint8_t layout);
+uint8_t settings_get_keyb_layout();
+
+
 void settings_reset_all();
 void settings_commit();
 void init_settings();

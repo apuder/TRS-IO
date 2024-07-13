@@ -7,6 +7,8 @@
 #include "wifi.h"
 #include "fs-spiffs.h"
 #include "ntp_sync.h"
+#include "fabgl.h"
+#include "keyb.h"
 #include <freertos/task.h>
 
 
@@ -35,11 +37,26 @@ static char smb_url[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
 static char smb_user[MAX_LEN_SMB_USER + 1] EXT_RAM_ATTR;
 static char smb_passwd[MAX_LEN_SMB_PASSWD + 1] EXT_RAM_ATTR;
 
+static bool keyb_layout_dirty;
+static uint8_t keyb_layout = 0;
+static const char** keyb_name_items = NULL;
+
+static void init_keyb_names()
+{
+  uint8_t i;
+  uint8_t n_countries = SupportedLayouts::count();
+  keyb_name_items = (const char**) malloc((n_countries + 1) * sizeof(char*));
+  for (i = 0; i < n_countries; i++) {
+    keyb_name_items[i] = SupportedLayouts::names()[i];
+  }
+  keyb_name_items[i] = NULL;
+}
 
 static form_item_t ptrs_form_items[] = {
   FORM_ITEM_HEADER("GENERAL:"),
   FORM_ITEM_CHECKBOX("Enable TRS-IO", &enable_trs_io, NULL),
   FORM_ITEM_SELECT("Screen color", &screen_color, screen_color_items, &screen_color_dirty),
+  FORM_ITEM_SELECT_PTR("Keyboard", &keyb_layout, &keyb_name_items, &keyb_layout_dirty),
   FORM_ITEM_INPUT("Timezone", tz, MAX_LEN_TZ, 0, &tz_dirty),
   FORM_ITEM_HEADER("WIFI:"),
   FORM_ITEM_INPUT("SSID", wifi_ssid, MAX_LEN_WIFI_SSID, 0, &wifi_dirty),
@@ -56,8 +73,14 @@ static form_t ptrs_form = {
 	.form_items = ptrs_form_items
 };
 
-void configure_ptrs_settings()
+bool configure_ptrs_settings()
 {
+  bool reboot = false;
+
+  if (keyb_name_items == NULL) {
+    init_keyb_names();
+  }
+
   string& _wifi_ssid = settings_get_wifi_ssid();
   string& _wifi_passwd = settings_get_wifi_passwd();
   string& _tz = settings_get_tz();
@@ -73,6 +96,7 @@ void configure_ptrs_settings()
   strncpy(smb_passwd, _smb_passwd.c_str(), MAX_LEN_SMB_PASSWD);
 
   screen_color = settings_get_screen_color();
+  keyb_layout = settings_get_keyb_layout();
 
   form(&ptrs_form, false);
 
@@ -80,6 +104,12 @@ void configure_ptrs_settings()
     // Set screen color
     settings_set_screen_color(screen_color);
     spi_set_screen_color(screen_color);
+  }
+
+  if (keyb_layout_dirty) {
+    // Set keyboard layout
+    settings_set_keyb_layout(keyb_layout);
+    set_keyb_layout();
   }
 
   if (smb_dirty) {
@@ -95,10 +125,12 @@ void configure_ptrs_settings()
   }
 
   if (wifi_dirty) {
-    wnd_popup("Rebooting TRS-IO++...");
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    set_wifi_credentials(wifi_ssid, wifi_passwd);
+    settings_set_wifi_ssid(wifi_ssid);
+    settings_set_wifi_passwd(wifi_passwd);
+    reboot = true;
   }
 
   settings_commit();
+
+  return reboot;
 }

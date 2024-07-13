@@ -7,6 +7,8 @@
 #include "settings.h"
 #include "spi.h"
 #include "wifi.h"
+#include "http.h"
+#include "ptrs.h"
 #include "event.h"
 #include "trs-fs.h"
 #include "esp_task.h"
@@ -277,11 +279,13 @@ static void IRAM_ATTR io_task(void* p)
 #ifndef CONFIG_TRS_IO_PP
     // Read pins [S2..S0,A3..A0]
     const uint8_t s = GPIO.in >> 12;
+    const uint8_t mask = 0x70;
 #else
     // Read pins [S3..S0] to upper nibble
     const uint8_t s = GPIO.in >> 8;
+    const uint8_t mask = 0xf0;
 #endif
-    switch(s & 0x70) {
+    switch(s & mask) {
     case 0x00:
       trs_io_write();
       break;
@@ -313,9 +317,17 @@ static void IRAM_ATTR io_task(void* p)
       xray_status = XRAY_STATUS_BREAKPOINT;
       break;
 #endif
-    case 0x70:
+#ifdef CONFIG_TRS_IO_PP
+    case 0xd0:
+      evt_signal(EVT_CASS_MOTOR_ON);
+      break;
+    case 0xe0:
+      evt_signal(EVT_CASS_MOTOR_OFF);
+      break;
+    case 0xf0:
       evt_send_esp_status();
       break;
+#endif
     }
     
     // Pulse a rising edge for ESP_DONE to mark end of operation
@@ -396,11 +408,11 @@ static void action_task(void* p)
     }
 
 #ifdef CONFIG_TRS_IO_PP
-    if (is_reset_button_pressed()) {
+    if (is_reset_button_short_press()) {
       spi_ptrs_rst();
     }
     if (is_reset_button_long_press()) {
-      uploadFPGAFirmware();
+      ptrs_load_rom();
     }
 #endif
 

@@ -53,7 +53,9 @@ public:
   void configureWifi() {
     const char* ssid = S(0);
     const char* passwd = S(1);
-    set_wifi_credentials(ssid, passwd);
+    settings_set_wifi_ssid(ssid);
+    settings_set_wifi_passwd(passwd);
+    esp_restart();
   }
 
   void sendWifiSSID() {

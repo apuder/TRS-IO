@@ -60,13 +60,13 @@ uint8_t spi_get_fpga_version()
   return trans.base.rx_data[0];
 }
 
-uint8_t spi_get_printer_byte()
+uint8_t spi_get_mode()
 {
   spi_transaction_ext_t trans;
 
   memset(&trans, 0, sizeof(spi_transaction_ext_t));
   trans.base.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_VARIABLE_DUMMY;
-  trans.base.cmd = FPGA_CMD_GET_PRINTER_BYTE;
+  trans.base.cmd = FPGA_CMD_GET_MODE;
   trans.address_bits = 0 * 8;
   trans.dummy_bits = 2;
   trans.base.length = 0 * 8;
@@ -590,6 +590,23 @@ void spi_set_esp_status(uint8_t status)
   trans.address_bits = 1 * 8;
   const uint32_t b0 = status;
   trans.base.addr = b0;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+}
+
+void spi_set_cass_in()
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_SET_CASS_IN;
+  trans.address_bits = 0 * 8;
   trans.base.length = 0 * 8;
   trans.base.rxlength = 0 * 8;
 

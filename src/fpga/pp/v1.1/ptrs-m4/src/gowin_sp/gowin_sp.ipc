@@ -1,0 +1,17 @@
+[General]
+ipc_version=4
+file=gowin_sp
+module=Gowin_SP_RAM
+target_device=gw2a18c-011
+type=ram_sp
+version=3.0
+
+[Config]
+BYTE_SIZE=0
+DEPTH=49152
+LANG=0
+READ=0
+RESET_MODE=true
+WIDTH=8
+WRITE=0
+MEM_FILE=../lb80txt9.mi

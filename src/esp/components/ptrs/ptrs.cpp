@@ -1,9 +1,13 @@
 
 
 #include "ptrs.h"
+#include "cass.h"
 #include "roms.h"
+#include "spi.h"
+#include "settings.h"
 #include <trs-lib.h>
 #include <fabgl.h>
+#include <esp_log.h>
 
 #define MENU_CONFIGURE 0
 #define MENU_ROMS 1
@@ -28,23 +32,25 @@ static menu_t main_menu = {
   .items = main_menu_items
 };
 
+static int current_model = -1;
 
 
 void configure_pocket_trs(bool is_80_cols)
 {
+  bool reboot = false;
   bool show_from_left = false;
   uint8_t status;
 
   init_trs_lib(is_80_cols);
 
-  while(true) {
+  while(!reboot) {
     status = menu(&main_menu, show_from_left, true);
     if (status == MENU_ABORT || status == MENU_EXIT) {
       break;
     }
     switch (status) {
     case MENU_CONFIGURE:
-      configure_ptrs_settings();
+      reboot = configure_ptrs_settings();
       break;
     case MENU_ROMS:
       configure_roms();
@@ -56,67 +62,56 @@ void configure_pocket_trs(bool is_80_cols)
     show_from_left = true;
   }
 
-  exit_trs_lib();
-}
-
-#if 0
-void configure_pocket_trsx()
-{
-  bool show_from_left = false;
-  bool exit = false;
-  uint8_t mode = trs_screen.getMode();
-
-  screenBuffer = new ScreenBuffer(mode);
-  trs_screen.push(screenBuffer);
-  screenBuffer->copyBufferFrom(screenBuffer->getNext());
-
-  ScreenBuffer* backgroundBuffer = new ScreenBuffer(mode);
-  trs_screen.push(backgroundBuffer);
-
-  set_screen(screenBuffer->getBuffer(), backgroundBuffer->getBuffer(),
-	     screenBuffer->getWidth(), screenBuffer->getHeight());
-
-  set_screen_callback(screen_update);
-  set_keyboard_callback(get_next_key);
-
-  while (!exit) {
-    uint8_t action = menu(&main_menu, show_from_left, true);
-    switch (action) {
-    case MENU_CONFIGURE:
-      configure();
-      break;
-    case MENU_CALIBRATE:
-      calibrate();
-      break;
-    case MENU_STATUS:
-      status();
-      break;
-    case MENU_RESET:
-      SettingsBase::reset();
-      storage_erase();
-      esp_restart();
-      break;
-    case MENU_HELP:
-      help();
-      break;
-    case MENU_EXIT:
-    case MENU_ABORT:
-      exit = true;
-      break;
-    }
-    show_from_left = true;
+  if (reboot) {
+    wnd_popup("Rebooting TRS-IO++...");
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
   }
 
-  // Copy original screen content of the TRS emulation
-  // to the background buffer
-  backgroundBuffer->copyBufferFrom(screenBuffer->getNext());
-  screen_show(true);
-  trs_screen.pop();
-  trs_screen.pop();
-}
-#endif
+  exit_trs_lib();
 
-void init_ptrs()
+  if (reboot) {
+    esp_restart();
+  }
+}
+
+void ptrs_load_rom()
 {
-  // Do nothing
+  if (current_model == -1) {
+    return;
+  }
+
+  // Pause Z80
+  spi_z80_pause();
+
+  // Upload ROM
+  string& rom_file = settings_get_rom(current_model);
+  string rom_path = "/roms/" + rom_file;
+  ESP_LOGI("PTRS", "Uploading ROM: '%s'", rom_file.c_str());
+  FILE* f = fopen(rom_path.c_str(), "rb");
+  if (f != NULL) {
+    uint8_t* buf = (uint8_t*) malloc(1024);
+    int br;
+    uint16_t addr = 0;
+    do {
+      br = fread(buf, 1, sizeof(buf), f);
+      for (int x = 0; x < br; x++) {
+        spi_bram_poke(addr++, buf[x]);
+      }
+    } while (br != 0);
+    fclose(f);
+    free(buf);
+  } else {
+    ESP_LOGE("PTRS", "ROM '%s' not found!", rom_file.c_str());
+  }
+
+  // Reset and resume Z80
+  ESP_LOGI("PTRS", "Resetting Z80");
+  spi_ptrs_rst();
+}
+
+void init_ptrs(int model)
+{
+  current_model = model;
+  init_cass();
+  ptrs_load_rom();
 }

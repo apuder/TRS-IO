@@ -85,28 +85,4 @@ void configure_roms()
     settings_commit();
   }
   free(rom_items);
-#if 0
-  if (rom_type_dirty) {
-    // Download ROM
-    settings_set_rom(string(rom_items[rom_selected]));
-    string new_rom = "/roms/";
-    new_rom += rom_items[rom_selected];
-    printf("Downloading ROM: %s\n", new_rom.c_str());
-    FILE* f = fopen(new_rom.c_str(), "rb");
-    if (f != NULL) {
-      static uint8_t buf[100];
-      int br;
-      uint16_t addr = 0;
-      do {
-        br = fread(buf, 1, sizeof(buf), f);
-        for (int x = 0; x < br; x++) {
-          spi_bram_poke(addr++, buf[x]);
-        }
-      } while (br != 0);
-      fclose(f);
-    }
-  }
-
-  settings_commit();
-#endif
 }

@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "bitstream-src.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -70,14 +71,6 @@
 
 
 
-class BitstreamSource {
-public:
-  virtual ~BitstreamSource() {}
-  virtual bool open() = 0;
-  virtual bool read(void* buf, int n, int* br) = 0;
-  virtual bool close() = 0;
-};
-
 class JTAGAdapter {
 private:
   inline void outport(uint32_t d) {
@@ -92,6 +85,7 @@ private:
   }
 
 public:
+  virtual ~JTAGAdapter() {}
   virtual void setup() = 0;
   int determineChainLength();
   int scan(int expected_ir_len, int expected_devices, uint32_t expected_idcode);

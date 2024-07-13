@@ -1,0 +1,17 @@
+[General]
+ipc_version=4
+file=blk_mem_gen_3
+module=blk_mem_gen_3
+target_device=gw2a18c-011
+type=ram_sp
+version=3.0
+
+[Config]
+BYTE_SIZE=0
+DEPTH=1024
+LANG=0
+MEM_FILE=../trs80m1_chr.mi
+READ=1
+RESET_MODE=true
+WIDTH=5
+WRITE=0

@@ -6,7 +6,7 @@
 
 -mod_name Gowin_rPLL0
 -file_name gowin_rpll0
--path C:/Users/matt/Documents/FPGA/TRS-IO/src/gowin_rpll/
+-path ./gowin_rpll/
 -type PLL
 -rPll true
 -file_type vlg

@@ -245,6 +245,34 @@ static void init_screen_color()
   }
 }
 
+//-----Keyboard Layout------------------------------------------------------
+
+#define KEY_KEYB_LAYOUT "keyb"
+
+// Index for US Layout in fabgl
+#define DEFAULT_US_LAYOUT 3
+
+static int32_t keyb_layout;
+
+void settings_set_keyb_layout(uint8_t layout)
+{
+  nvs_set_i32(storage, KEY_KEYB_LAYOUT, layout);
+  keyb_layout = layout;
+}
+
+uint8_t settings_get_keyb_layout()
+{
+  return keyb_layout & 0xff;
+}
+
+
+static void init_keyb_layout()
+{
+  if (nvs_get_i32(storage, KEY_KEYB_LAYOUT, &keyb_layout) != ESP_OK) {
+    keyb_layout = DEFAULT_US_LAYOUT; 
+  }
+}
+
 //-------------------------------------------------------------------------
 
 void settings_reset_all()
@@ -255,7 +283,7 @@ void settings_reset_all()
 
 void settings_commit()
 {
-  nvs_commit(storage);
+  ESP_ERROR_CHECK(nvs_commit(storage));
 }
 
 void init_settings()
@@ -277,4 +305,5 @@ void init_settings()
   init_smb_credentials();
   init_rom();
   init_screen_color();
+  init_keyb_layout();
 }

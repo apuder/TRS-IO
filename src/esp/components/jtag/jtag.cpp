@@ -8,52 +8,12 @@
 #include <stdio.h>
 #include <assert.h>
 
-
-#include "trs-fs.h"
 #include "spi.h"
 #include "jtag.h"
 
 
 void JTAG_SendDataMSB(char* p, int bitlength, bool exit);
 
-
-class BitstreamSourceFile : public BitstreamSource {
-private:
-  const char* fn;
-  FIL f;
-
-public:
-  BitstreamSourceFile(const char* fn) {
-    this->fn = fn;
-  }
-
-  bool open() {
-    if (trs_fs == NULL || trs_fs->get_err_msg() != NULL) {
-      return false;
-    }
-    if (trs_fs->f_open(&f, fn, FA_READ) != FR_OK) {
-      return false;
-    }
-    return true;
-  }
-
-  bool read(void* buf, int n, int* br) {
-    UINT _br;
-
-    if (trs_fs->f_read(&f, buf, n, &_br) != FR_OK) {
-      return false;
-    }
-    *br = (int) _br;
-    return true;
-  }
-
-  bool close() {
-    if (trs_fs->f_close(&f) != FR_OK) {
-      return false;
-    }
-    return true;
-  }
-};
 
 
 int JTAGAdapter::determineChainLength()
@@ -352,6 +312,7 @@ void JTAGAdapterTrsIO::testProgramToFLASH()
   }
 }
 
+#if 0
 static JTAGAdapterTrsIO jtag;
 
 void uploadFPGAFirmware()
@@ -362,3 +323,4 @@ void uploadFPGAFirmware()
   jtag.doProgramToSRAM(path);
   free(path);
 }
+#endif

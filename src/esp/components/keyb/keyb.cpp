@@ -3,6 +3,8 @@
 #include "fabgl.h"
 #include "ptrs.h"
 #include "spi.h"
+#include "settings.h"
+#include <esp_log.h>
 
 static fabgl::PS2Controller PS2Controller;
 
@@ -129,22 +131,22 @@ static const TRSKey trsKeys[] = {
   {5, 4}, //  VK_QUOTEDBL
   {6, ADD_SHIFT_KEY | 32}, //  VK_EQUALS
   {6, 32}, //  VK_MINUS
-  {6, 32}, //  VK_KP_MINUS
+  {6, REMOVE_SHIFT_KEY | 32}, //  VK_KP_MINUS
   {6, 8}, //  VK_PLUS
-  {6, 8}, //  VK_KP_PLUS
-  {6, 4}, //  VK_KP_MULTIPLY
+  {6, ADD_SHIFT_KEY | 8}, //  VK_KP_PLUS
+  {6, ADD_SHIFT_KEY | 4}, //  VK_KP_MULTIPLY
   {6, 4}, //  VK_ASTERISK
   {7, 2}, //  VK_BACKSLASH
-  {6, 128}, //  VK_KP_DIVIDE
+  {6, REMOVE_SHIFT_KEY | 128}, //  VK_KP_DIVIDE
   {6, 128}, //  VK_SLASH
-  {6, 64}, //  VK_KP_PERIOD
+  {6, REMOVE_SHIFT_KEY | 64}, //  VK_KP_PERIOD
   {6, 64}, //  VK_PERIOD
   {6, REMOVE_SHIFT_KEY | 4}, //  VK_COLON
   {6, 16}, //  VK_COMMA
   {6, 8}, //  VK_SEMICOLON
   {5, 64}, //  VK_AMPERSAND
   {0, 0}, //  VK_VERTICALBAR
-  {5, 8}, //  VK_HASH
+  {5, ADD_SHIFT_KEY | 8}, //  VK_HASH
   {1, REMOVE_SHIFT_KEY | 1}, //  VK_AT
   {0, 0}, //  VK_CARET
   {5, 16}, //  VK_DOLLAR
@@ -276,11 +278,32 @@ static const TRSKey trsKeys[] = {
 
 static uint8_t keyb_buffer[8] = {0};
 
+bool is_m1()
+{
+  return false;
+}
+
 static void process_key(int vk, bool down)
 {
-  static bool shiftPressed = false;
-  if (vk == fabgl::VK_LSHIFT || vk == fabgl::VK_RSHIFT) {
-    shiftPressed = down;
+  static uint8_t shiftMask = 0;
+
+  if (is_m1() && vk == fabgl::VK_RSHIFT) {
+    // For the M1, treat RSHIFT like LSHIFT
+    vk = fabgl::VK_LSHIFT;
+  }
+  if (vk == fabgl::VK_LSHIFT) {
+    if (down) {
+      shiftMask |= 1;
+    } else {
+      shiftMask &= ~1;
+    }
+  }
+  if (vk == fabgl::VK_RSHIFT) {
+    if (down) {
+      shiftMask |= 2;
+    } else {
+      shiftMask &= ~2;
+    }
   }
   
   int offset = trsKeys[vk].offset;
@@ -295,21 +318,20 @@ static void process_key(int vk, bool down)
         keyb_buffer[7] |= 1;
       }
       if (removeShiftKey) {
-        keyb_buffer[7] &= ~1;
+        keyb_buffer[7] &= ~3;
       }
     } else {
       keyb_buffer[offset - 1] &= ~mask;
-      if (addShiftKey && !shiftPressed) {
-        keyb_buffer[7] &= ~1;
-      }
-      if (removeShiftKey && shiftPressed) {
-        keyb_buffer[7] |= 1;
+      if (addShiftKey || removeShiftKey) {
+        // On key up, restore original shift mask
+        keyb_buffer[7] &= ~3;
+        keyb_buffer[7] |= shiftMask;
       }
     }
-    spi_send_keyb(offset - 1, keyb_buffer[offset - 1]);
     if (addShiftKey || removeShiftKey) {
       spi_send_keyb(7, keyb_buffer[7]);
     }
+    spi_send_keyb(offset - 1, keyb_buffer[offset - 1]);
   }
 }
 
@@ -320,7 +342,6 @@ static void process_key(int vk, bool down)
 void check_keyb()
 {
   static uint8_t reset_trigger = 0;
-  static fabgl::VirtualKey lastvk = fabgl::VK_NONE;
   auto keyboard = PS2Controller.keyboard();
 
   if (keyboard == nullptr || !keyboard->isKeyboardAvailable()) {
@@ -384,7 +405,22 @@ void check_keyb()
 #endif
   }
 }
+
+void set_keyb_layout()
+{
+  uint8_t layout = settings_get_keyb_layout();
+  if (PS2Controller.keyboard() != nullptr) {
+    if (!PS2Controller.keyboard()->isKeyboardAvailable() ) {
+      ESP_LOGE("KEYB", "No PS/2 keyboard available");
+    } else {
+  	  PS2Controller.keyboard()->setLayout(SupportedLayouts::layouts()[layout]);
+      ESP_LOGI("KEYB", "Keyboard layout %s", SupportedLayouts::names()[layout]);
+    }
+  }
+}
+
 void init_keyb()
 {
   PS2Controller.begin(PS2Preset::KeyboardPort0, KbdMode::CreateVirtualKeysQueue);
+  set_keyb_layout();
 }

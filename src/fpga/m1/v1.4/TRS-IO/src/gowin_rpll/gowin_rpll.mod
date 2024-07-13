@@ -6,7 +6,7 @@
 
 -mod_name Gowin_rPLL
 -file_name gowin_rpll
--path C:/git/TRS-IO-M3/src/fpga/nano/v1.3-xray/TRS-IO/src/gowin_rpll/
+-path ./gowin_rpll/
 -type PLL
 -rPll true
 -file_type vlg

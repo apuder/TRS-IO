@@ -16,10 +16,11 @@
 #define PTRS_CONFIG_MODEL_4P   (PTRS_CONFIG_DIP_1 | PTRS_CONFIG_DIP_3)
 
 void configure_pocket_trs(bool is_80_cols);
-void configure_ptrs_settings();
+bool configure_ptrs_settings();
 void ptrs_status();
 void init_trs_lib(bool is_80_cols);
-void init_ptrs();
+void ptrs_load_rom();
+void init_ptrs(int model);
 
 
 #endif

@@ -48,7 +48,7 @@
 #define FPGA_CMD_XRAY_RESUME 13
 #define FPGA_CMD_SET_FULL_ADDR 14
 #define FPGA_CMD_GET_FPGA_VERSION 15
-#define FPGA_CMD_GET_PRINTER_BYTE 16
+#define FPGA_CMD_GET_MODE 16
 #define FPGA_CMD_SET_SCREEN_COLOR 17
 #define FPGA_CMD_ABUS_READ 18
 #define FPGA_CMD_SEND_KEYB 19
@@ -60,14 +60,24 @@
 #define FPGA_CMD_Z80_DSP_PEEK 25
 #define FPGA_CMD_SET_LED 26
 #define FPGA_CMD_GET_CONFIG 27
+#define FPGA_CMD_SET_CASS_IN 28
 #define FPGA_CMD_SET_SPI_CTRL_REG 29
 #define FPGA_CMD_SET_SPI_DATA 30
 #define FPGA_CMD_GET_SPI_DATA 31
 #define FPGA_CMD_SET_ESP_STATUS 32
 
+
+#define PTRS_CONFIG_DIP_1   (1 << 0)
+#define PTRS_CONFIG_DIP_2   (1 << 1)
+#define PTRS_CONFIG_DIP_3   (1 << 2)
+#define PTRS_CONFIG_DIP_4   (1 << 3)
+#define PTRS_CONFIG_HIRES   (1 << 4)
+#define PTRS_CONFIG_WIDE    (1 << 5)
+#define PTRS_CONFIG_80_COLS (1 << 6)
+
 uint8_t spi_get_cookie();
 uint8_t spi_get_fpga_version();
-uint8_t spi_get_printer_byte();
+uint8_t spi_get_mode();
 void spi_bram_poke(uint16_t addr, uint8_t data);
 uint8_t spi_bram_peek(uint16_t addr);
 void spi_xram_poke_code(uint8_t addr, uint8_t data);
@@ -91,6 +101,7 @@ void spi_z80_dsp_poke(uint8_t v);
 uint8_t spi_z80_dsp_peek();
 void spi_set_led(bool r, bool g, bool b);
 uint8_t spi_get_config();
+void spi_set_cass_in();
 void spi_set_spi_ctrl_reg(uint8_t reg);
 void spi_set_spi_data(uint8_t data);
 uint8_t spi_get_spi_data();

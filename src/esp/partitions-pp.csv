@@ -6,3 +6,5 @@ factory,  app,  factory, ,        0x180000,
 html,     data, spiffs,  ,        200K,
 elFinder, data, spiffs,  ,        6M,
 roms,     data, spiffs,  ,        1M,
+fpga,     data, spiffs,  ,        6M,
+# End
