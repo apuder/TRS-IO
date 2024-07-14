@@ -514,26 +514,32 @@ async function handleRomUpload(file: File) {
 }
 
 async function handleRomDrop(e: DragEvent) {
-    // Prevent default behavior (Prevent file from being opened)
+    // Prevent default behavior (prevent file from being opened)
     e.preventDefault();
 
+    const files: File[] = [];
     if (e.dataTransfer) {
         if (e.dataTransfer.items) {
             // Use DataTransferItemList interface to access the files.
             for (const item of e.dataTransfer.items) {
-                // If dropped items aren't files, reject them
+                // If dropped items aren't files, reject them.
                 if (item.kind === "file") {
                     const file = item.getAsFile();
-                    if (file) {
-                        await handleRomUpload(file);
+                    if (file !== null) {
+                        files.push(file);
                     }
                 }
             }
         } else {
             // Use DataTransfer interface to access the files.
             for (const file of e.dataTransfer.files) {
-                await handleRomUpload(file);
+                files.push(file);
             }
+        }
+        // Do this in a separate pass because the lists above will get blanked out
+        // while these await calls block.
+        for (const file of files) {
+            await handleRomUpload(file);
         }
     }
 }
