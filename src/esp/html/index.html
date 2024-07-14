@@ -38,24 +38,28 @@
                         </ul>
                     </article>
                     <article class="roms">
-                        <input type="radio" name="active-article" id="roms_article">
+                        <input type="radio" name="active-article" id="roms_article" checked>
                         <table class="rom-table">
                             <thead>
                                 <tr>
                                     <th>Filename</th>
+                                    <th></th>
                                     <th>Size</th>
                                     <th>Uploaded</th>
-                                    <th>Actions</th>
                                     <th>1</th>
                                     <th>3</th>
                                     <th>4</th>
                                     <th>4P</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                             </tbody>
                         </table>
-                        <button>Upload ROM</button>
+                        <div class="button-set">
+                            <input id="uploadRomInput" type="file" accept=".rom, .bin" multiple>
+                            <label id="uploadRomButton" for="uploadRomInput" class="button">Upload ROM</label>
+                        </div>
                     </article>
                     <article class="printer">
                         <input type="radio" name="active-article" id="printer_article">
@@ -65,7 +69,7 @@ output...
                         </div>
                     </article>
                     <article class="settings">
-                        <input type="radio" name="active-article" id="settings_article" checked>
+                        <input type="radio" name="active-article" id="settings_article">
 
                         <section>
                             <h2>General</h2>

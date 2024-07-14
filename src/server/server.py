@@ -1,13 +1,17 @@
 # Simulates the TRS-IO++, for easier development.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import os, json, time, glob
+import os, json, time, glob, base64
 
 EXT_TO_MINE_TYPE = {
         ".html": "text/html",
         ".css": "text/css",
         ".ttf": "font/ttf",
         ".js": "text/javascript",
+        ".svg": "image/svg+xml",
+        ".jpeg": "image/jpeg",
+        ".jpg": "image/jpeg",
+        ".png": "image/png",
 }
 
 STATE_DIR = "state"
@@ -90,9 +94,9 @@ def makeRomInfo():
             "createdAt": int(os.path.getmtime(romPathname)),
         })
     data["selected"] = [
-        data["roms"][4]["filename"],
         data["roms"][0]["filename"],
-        data["roms"][6]["filename"],
+        data["roms"][0]["filename"],
+        data["roms"][0]["filename"],
         data["roms"][0]["filename"],
         data["roms"][0]["filename"],
     ]
@@ -194,6 +198,15 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
                 os.rename(oldPathname, newPathname)
             except OSError as e:
                 return self.send_json_error(f"Error renaming \"{oldFilename}\" to \"{newFilename}\": {e}")
+        elif command == "uploadRom":
+            filename = request["filename"]
+            contents = base64.b64decode(request["contents"])
+            if not isValidRomFilename(filename):
+                return self.send_json_error(f"Invalid filename \"{filename}\"")
+            print(filename, type(contents), len(contents))
+            pathname = os.path.join(ROMS_DIR, filename)
+            with open(pathname, "wb") as f:
+                f.write(contents)
         else:
             return self.send_error(400)
         self.send_json(makeRomInfo())

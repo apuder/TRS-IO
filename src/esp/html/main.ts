@@ -232,12 +232,26 @@ function updateRomInfo(romInfo: RomInfo) {
         const rom = romInfo.roms[romIndex];
 
         const tr = document.createElement("tr");
+        let td;
 
         let filenameTd = document.createElement("td");
         filenameTd.textContent = rom.filename;
         tr.append(filenameTd);
 
-        let td = document.createElement("td");
+        td = document.createElement("td");
+        const renameIcon = document.createElement("img");
+        renameIcon.src = "/icons/edit.svg";
+        const renameLink = document.createElement("a");
+        renameLink.append(renameIcon);
+        renameLink.href = "#";
+        renameLink.addEventListener("click", async e => {
+            e.preventDefault();
+            startRename();
+        });
+        td.append(renameLink);
+        tr.append(td);
+
+        td = document.createElement("td");
         td.textContent = rom.size.toLocaleString(undefined, {
             useGrouping: true,
         });
@@ -325,24 +339,6 @@ function updateRomInfo(romInfo: RomInfo) {
         };
         filenameTd.addEventListener("click", () => startRename());
 
-        td = document.createElement("td");
-        const renameLink = document.createElement("a");
-        renameLink.textContent = "Rename";
-        renameLink.href = "#";
-        renameLink.addEventListener("click", async e => {
-            e.preventDefault();
-            startRename();
-        });
-        const deleteLink = document.createElement("a");
-        deleteLink.textContent = "Delete";
-        deleteLink.href = "#";
-        deleteLink.addEventListener("click", async e => {
-            e.preventDefault();
-            const success = await deleteRomFile(rom.filename);
-        });
-        td.append(renameLink, "/", deleteLink);
-        tr.append(td);
-
         for (let model of [0, 2, 3, 4]) {
             td = document.createElement("td");
             const input = document.createElement("input");
@@ -354,6 +350,19 @@ function updateRomInfo(romInfo: RomInfo) {
             td.append(input);
             tr.append(td);
         }
+
+        td = document.createElement("td");
+        const deleteIcon = document.createElement("img");
+        deleteIcon.src = "/icons/delete.svg";
+        const deleteLink = document.createElement("a");
+        deleteLink.append(deleteIcon);
+        deleteLink.href = "#";
+        deleteLink.addEventListener("click", async e => {
+            e.preventDefault();
+            const success = await deleteRomFile(rom.filename);
+        });
+        td.append(deleteLink);
+        tr.append(td);
 
         tbody.append(tr);
     }
@@ -475,8 +484,88 @@ function configureButtons() {
     });
 }
 
+async function handleRomUpload(file: File) {
+    const contents = new Uint8Array(await file.arrayBuffer());
+    const contentsString = Array.from(contents, byte => String.fromCodePoint(byte)).join("");
+
+    const response = await fetch("/get-roms", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            command: "uploadRom",
+            filename: file.name,
+            contents: window.btoa(contentsString),
+        }),
+    });
+    if (response.status !== 200) {
+        displayError("Error uploading ROM");
+    } else {
+        const romInfo = await response.json() as RomInfo | ErrorResponse;
+        if ("error" in romInfo) {
+            displayError(romInfo.error);
+        } else {
+            updateRomInfo(romInfo);
+            return true;
+        }
+    }
+}
+
+async function handleRomDrop(e: DragEvent) {
+    // Prevent default behavior (Prevent file from being opened)
+    e.preventDefault();
+
+    if (e.dataTransfer) {
+        if (e.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the files.
+            for (const item of e.dataTransfer.items) {
+                // If dropped items aren't files, reject them
+                if (item.kind === "file") {
+                    const file = item.getAsFile();
+                    if (file) {
+                        await handleRomUpload(file);
+                    }
+                }
+            }
+        } else {
+            // Use DataTransfer interface to access the files.
+            for (const file of e.dataTransfer.files) {
+                await handleRomUpload(file);
+            }
+        }
+    }
+}
+
+function configureRomUpload() {
+    const uploadRomInput = document.getElementById("uploadRomInput") as HTMLInputElement;
+    uploadRomInput.addEventListener("change", async () => {
+        if (uploadRomInput.files !== null) {
+            for (const file of uploadRomInput.files) {
+                await handleRomUpload(file);
+            }
+            uploadRomInput.value = "";
+        }
+    });
+
+    const romsSection = document.querySelector(".roms") as HTMLElement;
+    romsSection.addEventListener("drop", async e => {
+        romsSection.classList.remove("hover")
+        await handleRomDrop(e);
+    });
+    romsSection.addEventListener("dragover", e => {
+        romsSection.classList.add("hover");
+
+        // Prevent default behavior (prevent file from being opened).
+        e.preventDefault();
+    });
+    romsSection.addEventListener("dragleave",  () => romsSection.classList.remove("hover"));
+}
+
 export function main() {
     configureButtons();
+    configureRomUpload();
     fetchStatus(true);
     fetchRomInfo();
     resizeDots();

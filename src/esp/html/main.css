@@ -30,7 +30,7 @@ body {
     accent-color: var(--brown);
 }
 
-button, label.pill {
+button, label.pill, .button {
     background: var(--brown);
     color: var(--yellow);
     border: 0;
@@ -146,6 +146,10 @@ article {
     height: 100%;
 }
 
+article.hover {
+    border-style: dashed;
+}
+
 article input[name=active-article] {
     display: none;
 }
@@ -166,6 +170,17 @@ article:has(input[name=active-article]:not(:checked)) {
     font-weight: bold;
 }
 
+.roms {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    align-items: start;
+
+    #uploadRomInput {
+        display: none;
+    }
+}
+
 .rom-table {
     border-collapse: collapse;
 
@@ -173,19 +188,34 @@ article:has(input[name=active-article]:not(:checked)) {
         text-align: center;
     }
 
-    tbody:not(.renaming) td:nth-child(1):hover {
+    tbody:not(.renaming) td:nth-child(1):hover,
+    tbody:not(.renaming) td:nth-child(1):has(+ :hover) {
         /* copy chrome */
         outline: 1px auto rgb(0 95 204);
     }
 
-    :is(th, td):nth-child(1),
-    :is(th, td):nth-child(4) {
+    :is(th, td):nth-child(1) {
         text-align: left;
     }
 
-    :is(th, td):nth-child(2),
-    :is(th, td):nth-child(3) {
+    :is(th, td):nth-child(3),
+    :is(th, td):nth-child(4) {
         text-align: right;
+    }
+
+    :is(th, td):nth-child(5),
+    :is(th, td):nth-child(6),
+    :is(th, td):nth-child(7),
+    :is(th, td):nth-child(8) {
+        width: 1.3em;
+        box-sizing: content-box;
+    }
+
+    :is(th, td):nth-child(3),
+    :is(th, td):nth-child(4),
+    :is(th, td):nth-child(5),
+    :is(th, td):nth-child(9) {
+        padding-left: 1em;
     }
 }
 
