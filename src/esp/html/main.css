@@ -288,6 +288,19 @@ article:has(input[name=active-article]:not(:checked)) {
     font-weight: bold;
 }
 
+.message-box {
+    position: absolute;
+    top: 30px;
+    right: 45px;
+    color: var(--brown);
+    background-color: rgb(0 0 0 / 10%);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 20px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
 footer {
     height: var(--page-small-margin);
 }

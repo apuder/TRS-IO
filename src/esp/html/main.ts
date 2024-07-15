@@ -160,7 +160,13 @@ function scheduleFetchStatus() {
 }
 
 function displayError(message: string): void {
-    console.log(message); // TODO
+    const messageBox = document.createElement("span");
+    messageBox.classList.add("message-box");
+    messageBox.textContent = message;
+
+    const container = document.querySelector(".article-container") as Element;
+    container.append(messageBox);
+    setTimeout(() => messageBox.remove(), 3000);
 }
 
 // Returns whether successful
@@ -292,9 +298,8 @@ function updateRomInfo(romInfo: RomInfo) {
         tr.append(td);
 
         const startRename = () => {
-            let renaming = true;
-
-            if (tbody.classList.contains("renaming")) {
+            const areRenaming = () => tbody.classList.contains("renaming");
+            if (areRenaming()) {
                 return;
             }
             tbody.classList.add("renaming");
@@ -314,7 +319,7 @@ function updateRomInfo(romInfo: RomInfo) {
                 const s = window.getSelection();
                 if (s !== null) {
                     s.removeAllRanges();
-                    s.addRange(range)
+                    s.addRange(range);
                 }
             }
 
@@ -327,28 +332,22 @@ function updateRomInfo(romInfo: RomInfo) {
             };
 
             const rollback = () => {
-                if (!renaming) {
-                    return;
-                }
-                renaming = false;
                 // Abort and return to old name.
-                filenameTd.textContent = rom.filename;
                 finish();
+                filenameTd.textContent = rom.filename;
             };
 
             const commit = async () => {
-                if (!renaming) {
+                if (!areRenaming()) {
                     return;
                 }
-                renaming = false;
+                finish();
                 const newFilename = filenameTd.textContent;
                 if (newFilename === null || newFilename === "" || newFilename === rom.filename) {
                     rollback();
                 } else {
                     const success = await renameRomFile(rom.filename, newFilename);
-                    if (success) {
-                        finish();
-                    } else {
+                    if (!success) {
                         rollback();
                     }
                 }
@@ -463,6 +462,7 @@ async function saveSettings(): Promise<void> {
     const [response, _] = await Promise.all([responsePromise, saveIndicatorPromise]);
     if (response.status !== 200) {
         console.log("Failed to save settings", response);
+        displayError("Cannot save settings");
     } else {
         const status = await response.json() as Status;
         updateStatus(status, false);
