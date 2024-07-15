@@ -165,6 +165,35 @@ async function renameRomFile(oldFilename, newFilename) {
     }
     return false;
 }
+// Returns whether successful
+async function assignRomFile(model, filename) {
+    const response = await fetch("/get-roms", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            command: "assignRom",
+            model,
+            filename,
+        }),
+    });
+    if (response.status === 200) {
+        const romInfo = await response.json();
+        if ("error" in romInfo) {
+            displayError(romInfo.error);
+        }
+        else {
+            updateRomInfo(romInfo);
+            return true;
+        }
+    }
+    else {
+        displayError("Error assigning ROM");
+    }
+    return false;
+}
 function updateRomInfo(romInfo) {
     romInfo.roms.sort((a, b) => {
         return a.filename.localeCompare(b.filename, undefined, {
@@ -203,6 +232,7 @@ function updateRomInfo(romInfo) {
         }); // "any" needed because TS doesn't know about "dateStyle" option.
         tr.append(td);
         const startRename = () => {
+            let renaming = true;
             if (tbody.classList.contains("renaming")) {
                 return;
             }
@@ -232,11 +262,19 @@ function updateRomInfo(romInfo) {
                 tbody.classList.remove("renaming");
             };
             const rollback = () => {
+                if (!renaming) {
+                    return;
+                }
+                renaming = false;
                 // Abort and return to old name.
                 filenameTd.textContent = rom.filename;
                 finish();
             };
             const commit = async () => {
+                if (!renaming) {
+                    return;
+                }
+                renaming = false;
                 const newFilename = filenameTd.textContent;
                 if (newFilename === null || newFilename === "" || newFilename === rom.filename) {
                     rollback();
@@ -278,6 +316,9 @@ function updateRomInfo(romInfo) {
             if (romInfo.selected[model] === rom.filename) {
                 input.checked = true;
             }
+            input.addEventListener("change", async () => {
+                const success = await assignRomFile(model, rom.filename);
+            });
             td.append(input);
             tr.append(td);
         }
@@ -428,8 +469,8 @@ async function handleRomUpload(file) {
 async function handleRomDrop(e) {
     // Prevent default behavior (prevent file from being opened)
     e.preventDefault();
-    const files = [];
     if (e.dataTransfer) {
+        const files = [];
         if (e.dataTransfer.items) {
             // Use DataTransferItemList interface to access the files.
             for (const item of e.dataTransfer.items) {

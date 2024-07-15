@@ -23,7 +23,8 @@ DEFAULT_SETTINGS = {
     "passwd": "22PineCreekSLO",
     "smb_url": "smb://unifi/TRS-IO/smb-m3",
     "smb_user": "lk",
-    "smb_passwd": "XXX"
+    "smb_passwd": "XXX",
+    "rom_assignments": ["", "", "", "", ""],
 }
 
 def createStateDirsIfNecessary():
@@ -39,7 +40,8 @@ def getSettingsPathname():
 def readSettings():
     path = getSettingsPathname()
     if os.path.exists(path):
-        settings = json.load(open(path))
+        with open(path) as f:
+            settings = json.load(f)
     else:
         settings = DEFAULT_SETTINGS
 
@@ -48,9 +50,8 @@ def readSettings():
 def writeSettings(settings):
     createStateDirsIfNecessary()
     path = getSettingsPathname()
-    f = open(path, "w")
-    json.dump(settings, f, indent="    ")
-    f.close()
+    with open(path, "w") as f:
+        json.dump(settings, f, indent="    ")
 
 def makeStatus():
     settings = readSettings()
@@ -83,9 +84,10 @@ def makeStatus():
 def makeRomInfo():
     createStateDirsIfNecessary()
     romPathnames = glob.glob(os.path.join(ROMS_DIR, "*"))
+    settings = readSettings()
     data = {
         "roms": [],
-        "selected": [],
+        "selected": settings.get("rom_assignments", DEFAULT_SETTINGS["rom_assignments"]),
     }
     for romPathname in romPathnames:
         data["roms"].append({
@@ -93,13 +95,6 @@ def makeRomInfo():
             "size": os.path.getsize(romPathname),
             "createdAt": int(os.path.getmtime(romPathname)),
         })
-    data["selected"] = [
-        data["roms"][0]["filename"],
-        data["roms"][0]["filename"],
-        data["roms"][0]["filename"],
-        data["roms"][0]["filename"],
-        data["roms"][0]["filename"],
-    ]
     return data
 
 # Make sure the filename isn't trying to reach outside the ROM directory.
@@ -147,7 +142,8 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
         # print(path)
 
         try:
-            contents = open(path, "rb").read()
+            with open(path, "rb") as f:
+                contents = f.read()
         except Exception as e:
             # print(e)
             self.send_error(404)
@@ -167,7 +163,9 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
 
     def handle_config(self):
         request = self.read_json();
-        writeSettings(request)
+        settings = readSettings()
+        settings.update(request)
+        writeSettings(settings)
         self.send_json(makeStatus())
 
     def handle_roms_command(self):
@@ -198,15 +196,34 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
                 os.rename(oldPathname, newPathname)
             except OSError as e:
                 return self.send_json_error(f"Error renaming \"{oldFilename}\" to \"{newFilename}\": {e}")
+            # Update settings.
+            settings = readSettings()
+            rom_assignments = settings.get("rom_assignments", DEFAULT_SETTINGS["rom_assignments"])
+            for i in range(len(rom_assignments)):
+                if rom_assignments[i] == oldFilename:
+                    rom_assignments[i] = newFilename
+            settings["rom_assignments"] = rom_assignments
+            writeSettings(settings)
         elif command == "uploadRom":
             filename = request["filename"]
             contents = base64.b64decode(request["contents"])
             if not isValidRomFilename(filename):
                 return self.send_json_error(f"Invalid filename \"{filename}\"")
-            print(filename, type(contents), len(contents))
             pathname = os.path.join(ROMS_DIR, filename)
             with open(pathname, "wb") as f:
                 f.write(contents)
+        elif command == "assignRom":
+            model = request["model"]
+            filename = request["filename"]
+            if model < 0 or model > 4:
+                return self.send_json_error(f"Invalid model \"{model}\"")
+            if not isValidRomFilename(filename):
+                return self.send_json_error(f"Invalid filename \"{filename}\"")
+            settings = readSettings()
+            rom_assignments = settings.get("rom_assignments", DEFAULT_SETTINGS["rom_assignments"])
+            rom_assignments[model] = filename
+            settings["rom_assignments"] = rom_assignments
+            writeSettings(settings)
         else:
             return self.send_error(400)
         self.send_json(makeRomInfo())
