@@ -98,6 +98,8 @@ function updateStatus(status, initialFetch) {
     updateStatusIcon("wifi_status_icon", status.wifi_status === 2, wifiStatusText);
     updateStatusIcon("smb_share_status_icon", status.smb_err === "", status.smb_err);
     updateStatusIcon("sd_card_status_icon", status.posix_err === "", status.posix_err);
+    const deviceTypeSpan = document.getElementById("device_type");
+    deviceTypeSpan.textContent = status.config === undefined ? "TRS-IO" : "TRS-IO++";
     if (initialFetch) {
         updateSettingsForm(status);
     }
