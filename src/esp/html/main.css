@@ -78,11 +78,11 @@ input {
 
 header {
     display: flex;
-    justify-content: end;
+    justify-content: space-between;
     align-items: center;
     font-family: "eurostile-bold-extended", sans-serif;
     font-size: 60px;
-    padding-right: var(--page-small-margin);
+    padding-inline: var(--page-small-margin);
     height: var(--page-large-margin);
 }
 
@@ -118,6 +118,16 @@ nav ul li label {
 
 nav ul li label:hover {
     background: var(--brown-highlight);
+}
+
+.status-icons {
+    display: flex;
+    gap: 13px;
+    align-items: center;
+}
+
+.status-icons img.disabled {
+    filter: opacity(30%);
 }
 
 .article-container {

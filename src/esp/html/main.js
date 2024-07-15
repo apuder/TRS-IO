@@ -67,6 +67,12 @@ function updateSettingsEnumField(name, value) {
         inputElement.checked = inputElement.value === value;
     }
 }
+function updateStatusIcon(id, enabled, message) {
+    const icon = document.getElementById(id);
+    icon.classList.toggle("enabled", enabled);
+    icon.classList.toggle("disabled", !enabled);
+    icon.title = message;
+}
 function updateSettingsForm(status) {
     updateSettingsEnumField("color", status.color.toString());
     updateSettingsField("tz", status.tz);
@@ -79,15 +85,19 @@ function updateSettingsForm(status) {
 function updateStatus(status, initialFetch) {
     var _a;
     g_mostRecentStatus = status;
+    const wifiStatusText = (_a = WIFI_STATUS_TO_STRING.get(status.wifi_status)) !== null && _a !== void 0 ? _a : "Unknown";
     updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
     updateStatusField("vers_minor", status.vers_minor);
     updateStatusField("time", status.time);
     updateStatusField("ip", status.ip);
-    updateStatusField("wifi_status", (_a = WIFI_STATUS_TO_STRING.get(status.wifi_status)) !== null && _a !== void 0 ? _a : "Unknown");
+    updateStatusField("wifi_status", wifiStatusText);
     updateStatusField("smb_err", status.smb_err);
     updateStatusField("posix_err", status.posix_err);
     updateStatusField("frehd_loaded", status.frehd_loaded);
+    updateStatusIcon("wifi_status_icon", status.wifi_status === 2, wifiStatusText);
+    updateStatusIcon("smb_share_status_icon", status.smb_err === "", status.smb_err);
+    updateStatusIcon("sd_card_status_icon", status.posix_err === "", status.posix_err);
     if (initialFetch) {
         updateSettingsForm(status);
     }
