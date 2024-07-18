@@ -486,25 +486,16 @@ async function saveSettings(): Promise<void> {
     }
 }
 
-function resizeDots(): void {
-    const canvas = document.getElementById("dots_canvas") as HTMLCanvasElement;
-    const parent = canvas.parentNode as HTMLElement;
-
-    canvas.width = parent.offsetWidth;
-    canvas.height = parent.offsetHeight;
-}
-
-function redrawDots(): void {
-    const canvas = document.getElementById("dots_canvas") as HTMLCanvasElement;
+function drawDots(canvas: HTMLCanvasElement): void {
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-    ctx.fillStyle = "rgb(0 0 0 / 0%)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const width = canvas.width;
     const height = canvas.height;
     const emptyY = height*3/6;
     const fullY = height*5/6;
+
+    ctx.fillStyle = "rgb(0 0 0 / 0%)";
+    ctx.fillRect(0, 0, width, height);
 
     ctx.fillStyle = "#67525440"; // var(--brown)
     for (let y = 0; y < height; y++) {
@@ -517,6 +508,23 @@ function redrawDots(): void {
             ctx.fill();
         }
     }
+}
+
+function configureDots() {
+    // Draw dots once into an off-screen canvas.
+    const sourceCanvas = document.createElement("canvas");
+    sourceCanvas.width = 1024;
+    sourceCanvas.height = 600;
+    drawDots(sourceCanvas);
+
+    // Use it as a background image.
+    sourceCanvas.toBlob(blob => {
+        if (blob !== null) {
+            const url = URL.createObjectURL(blob);
+            const parent = document.querySelector(".article-container") as HTMLElement;
+            parent.style.background = `url(${url}) bottom left repeat-x, linear-gradient(var(--yellow-top), var(--yellow-bottom))`;
+        }
+    }, "image/png");
 }
 
 function configureButtons() {
@@ -632,7 +640,6 @@ export function main() {
     configureRomUpload();
     fetchStatus(true);
     fetchRomInfo();
-    resizeDots();
-    redrawDots();
+    configureDots();
     scheduleFetchStatus();
 }
