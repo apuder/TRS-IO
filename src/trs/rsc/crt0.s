@@ -28,6 +28,11 @@
 
 	.module crt0
 	.globl	_main
+	.globl	_init_trs_lib
+	.globl	_exit_trs_lib
+  .globl  exit
+  .globl  abort
+  .globl  error
 	.globl  l__DATA
 	.globl  s__DATA
 	.globl  l__INITIALIZER
@@ -35,6 +40,7 @@
 	.globl  s__INITIALIZED
 
 init:
+	ex	de,hl  ; Move args pointer to de
 	;; For M4, turn on MIII memory map. NOP on a M1/III
 	xor	a
 	out	(0x84), a
@@ -58,16 +64,34 @@ cont1:
 	ld	sp,hl
 
 	;; Initialise global variables
+	push	de
 	call	gsinit
-	call	_main
+	call	_init_trs_lib
+	pop	hl
 	push	hl
 	pop	de
+cont2:        ; Convert \n to \0
+	ld	a,(de)
+	cp	#0x0d
+	jr	z,cont3
+	inc	de
+	jr	cont2
+cont3:
+	xor	a
+	ld	(de),a
+  push de      ; Remember location
+	call	_main
+  pop hl
+  ld (hl),#0x0d
+  push de      ; Remember return code from main()
+	call	_exit_trs_lib
+	pop	hl
 	ld	sp,(sp_save)
-	ld	a,e
-	or	d
+	ld	a,l
+	or	h
 	jr	z,ok
-	jp	0x4030
-ok:	jp	0x402d
+	jp	abort
+ok:	jp	exit
 
 sp_save:
 	.dw	0
