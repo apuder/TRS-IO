@@ -366,9 +366,11 @@ static void action_task(void* p)
     check_events();
 
     if (trigger_trs_io_action) {
-      TrsIO::processInBackground();
+      bool deferDone = TrsIO::processInBackground();
       trigger_trs_io_action = false;
-      spi_trs_io_done();
+      if (!deferDone) {
+        spi_trs_io_done();
+      }
     }
 
 #ifndef CONFIG_TRS_IO_MODEL_3

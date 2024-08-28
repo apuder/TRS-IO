@@ -6,7 +6,7 @@ endif()
 idf_component_register(SRC_DIRS "."
                        INCLUDE_DIRS "include"
                        EMBED_FILES xray-load.bin
-                       REQUIRES retrostore-c-sdk retrostore trs-fs)
+                       REQUIRES retrostore-c-sdk retrostore trs-fs xfer)
 
 # Force static linking of this component
 set_property(TARGET ${COMPONENT_LIB} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-u theTrsIOCoreModule")

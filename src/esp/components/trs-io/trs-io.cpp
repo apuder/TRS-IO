@@ -39,6 +39,8 @@ uint16_t TrsIO::numParamStr;
 uint16_t TrsIO::numParamBlob16;
 uint16_t TrsIO::numParamBlob32;
 
+bool TrsIO::deferDoneFlag;
+
 extern "C" {
     void init_trs_io() {
         TrsIO::init();
@@ -178,10 +180,11 @@ uint8_t TrsIO::inZ80() {
     return *nextByteToSend++;
 }
 
-#include <stdio.h>
-void TrsIO::processInBackground() {
+bool TrsIO::processInBackground() {
+  deferDoneFlag = false;
   currentModule->process();
   nextByteToSend = sendBuffer;
+  return deferDoneFlag;
 }
 
 void TrsIO::process() {

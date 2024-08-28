@@ -1,7 +1,7 @@
 
 MAKE = make
 
-DIRS = TRS-LIB rsc
+DIRS = TRS-LIB rsc xfer
 
 
 all:
