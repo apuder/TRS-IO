@@ -40,14 +40,6 @@ private:
 protected:
   const char* err_msg;
 
-  void lock() {
-    xSemaphoreTake(xSemaphore, portMAX_DELAY);
-  }
-
-  void unlock() {
-    xSemaphoreGive(xSemaphore);
-  }
-
 public:
   TRS_FS() {
     xSemaphore = xSemaphoreCreateMutex();
@@ -56,6 +48,14 @@ public:
   virtual ~TRS_FS() {}
   
   virtual FS_TYPE type() = 0;
+
+  void lock() {
+    xSemaphoreTake(xSemaphore, portMAX_DELAY);
+  }
+
+  void unlock() {
+    xSemaphoreGive(xSemaphore);
+  }
 
   const char* get_err_msg() {
     return err_msg;
