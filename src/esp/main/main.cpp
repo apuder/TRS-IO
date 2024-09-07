@@ -9,6 +9,9 @@
 #include "event.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_system.h"
+#include "esp_spi_flash.h"
+#include "esp32/spiram.h"
 
 #include "trs-io.h"
 #include "trs-fs.h"
@@ -39,12 +42,33 @@ extern const char* GIT_REV;
 extern const char* GIT_BRANCH;
 
 
+static void check()
+{
+#ifdef CONFIG_TRS_IO_PP
+  size_t flash_size = spi_flash_get_chip_size() / (1024 * 1024);
+  size_t psram_size = esp_spiram_get_size() / (1024 * 1024);
+
+  if (flash_size == 16) {
+    ESP_LOGI(TAG, "Found 16MB flash size");
+  } else {
+    ESP_LOGE(TAG, "Flash size needs to be configured to 16MB. Found %dMB", flash_size);
+  }
+  if (psram_size == 8) {
+    ESP_LOGI(TAG, "Found 8MB of PSRAM");
+  } else {
+    ESP_LOGE(TAG, "Need 8MB of PSRAM. Found %dMB", psram_size);
+  }
+#endif
+}
+
 extern "C" {
 
 void app_main(void)
 {
   ESP_LOGI(TAG, "TRS-IO branch=%s, rev=%s", GIT_BRANCH, GIT_REV);
   ESP_LOGI(TAG, "Configured for %s", CONFIG);
+
+  check();
 
   init_events();
   init_trs_io();

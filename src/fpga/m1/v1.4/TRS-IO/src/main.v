@@ -113,7 +113,7 @@ end
 
 wire ras_access = ras_trigger[10];
 
-assign MUX_A = ({ras_trigger[3:0], ras_access_rising_edge} == 5'b0) ? 2'b10 : 2'b01;
+assign MUX_A = ({ras_trigger[3:0], ras_access_rising_edge} == 5'b0) ? 2'b01 : 2'b10;
 wire read_ah = ras_trigger[3];
 
 always @(posedge clk)

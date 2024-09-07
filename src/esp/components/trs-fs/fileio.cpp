@@ -26,7 +26,9 @@ FRESULT f_open (
                 ) {
   f_log("f_open: %s", path);
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_open(fp, path, mode);
+  trs_fs->unlock();
   f_log("err: %d", err);
   return err;
 }
@@ -37,7 +39,9 @@ FRESULT f_opendir (
                    ) {
   f_log("f_opendir: %s", path);
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_opendir(dp, path);
+  trs_fs->unlock();
   f_log("err: %d", err);
   return err;
 }
@@ -50,7 +54,9 @@ FRESULT f_write (
                  ) {
   f_log("f_write");
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_write(fp, buff, btw, bw);
+  trs_fs->unlock();
   f_log("err: %d", err);
   return err;
 }
@@ -63,7 +69,9 @@ FRESULT f_read (
                 ) {
   f_log("f_read");
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_read(fp, buff, btr, br);
+  trs_fs->unlock();
   f_log("err: %d", err);
   return err;
 }
@@ -74,7 +82,9 @@ FRESULT f_readdir (
                    ) {
   f_log("f_readdir");
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_readdir(dp, fno);
+  trs_fs->unlock();
   f_log("fn : %s", fno->fname);
   f_log("err: %d", err);
   return err;
@@ -85,7 +95,9 @@ FSIZE_t f_tell (
                 ) {
   f_log("f_tell");
   CHECK();
+  trs_fs->lock();
   FSIZE_t size = trs_fs->f_tell(fp);
+  trs_fs->unlock();
   f_log("size: %d", size);
   return size;
 }
@@ -95,7 +107,9 @@ FRESULT f_sync (
                 ) {
   f_log("f_sync");
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_sync(fp);
+  trs_fs->unlock();
   f_log("err: %d", err);
   return err;
 }
@@ -106,7 +120,9 @@ FRESULT f_lseek (
                  ) {
   f_log("f_lseek");
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_lseek(fp, ofs);
+  trs_fs->unlock();
   f_log("err: %d", err);
   return err;
 }
@@ -116,7 +132,9 @@ FRESULT f_close (
                  ) {
   f_log("f_close");
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_close(fp);
+  trs_fs->unlock();
   f_log("err: %d", err);
   return err;
 }
@@ -126,7 +144,9 @@ FRESULT f_unlink (
                   ) {
   f_log("f_unlink: %s", path);
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_unlink(path);
+  trs_fs->unlock();
   f_log("err: %d", err);
   return err;
 }
@@ -137,7 +157,9 @@ FRESULT f_stat (
                 ) {
   f_log("f_stat: %s", path);
   CHECK();
+  trs_fs->lock();
   FRESULT err = trs_fs->f_stat(path, fno);
   f_log("err: %d", err);
+  trs_fs->unlock();
   return err;
 }

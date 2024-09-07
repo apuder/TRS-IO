@@ -134,8 +134,6 @@ int main() {
   bool run = true;
   menu_t* the_menu;
   
-  init_trs_lib();
-  
   init_window(&wnd, 0, 0, 0, 0);
 
   while (run) {
@@ -190,8 +188,6 @@ int main() {
     }
     show_from_left = true;
   }
-
-  exit_trs_lib();
 
   return 0;
 }

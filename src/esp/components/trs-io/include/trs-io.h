@@ -18,7 +18,7 @@
 #define TRS_IO_SEND_WIFI_SSID 3
 #define TRS_IO_SEND_WIFI_IP 4
 
-#define TRS_IO_MAX_MODULES 5
+#define TRS_IO_MAX_MODULES 6
 #define TRS_IO_MAX_COMMANDS 15
 #define TRS_IO_MAX_RECEIVE_BUFFER (48 * 1024)
 #define TRS_IO_MAX_SEND_BUFFER (48 * 1024)
@@ -86,6 +86,8 @@ private:
     uint16_t numCommands;
     command_t commands[TRS_IO_MAX_COMMANDS];
 
+    static bool deferDoneFlag;
+
 protected:
     void addCommand(cmd_t proc, const char* signature) {
         assert(numCommands != TRS_IO_MAX_COMMANDS);
@@ -94,6 +96,11 @@ protected:
         commands[numCommands].signature = signature;
         numCommands++;
     }
+
+    void deferDone() {
+      deferDoneFlag = true;
+    }
+
 public:
 
     explicit TrsIO(int id) {
@@ -245,7 +252,7 @@ protected:
     void process();
 
 public:
-    static void processInBackground();
+    static bool processInBackground();
     static unsigned long getSendBufferFreeSize() {
         return (sendBuffer + TRS_IO_MAX_SEND_BUFFER) - sendPtr;
     }
