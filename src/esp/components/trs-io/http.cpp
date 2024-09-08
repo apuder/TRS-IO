@@ -411,6 +411,7 @@ static void mg_task(void* p)
   init_mdns();
 
   // Start Mongoose
+  // mg_log_set(MG_LL_DEBUG);
   mg_mgr_init(&mgr);
   mg_queue_init(&prn_queue, printer_buf, sizeof(printer_buf));
   mg_http_listen(&mgr, "http://0.0.0.0:80", mongoose_event_handler, &mgr);

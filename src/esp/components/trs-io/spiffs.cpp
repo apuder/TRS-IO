@@ -18,9 +18,8 @@ typedef struct {
 } ESP_SPIFFS_PARTITION;
 
 static const ESP_SPIFFS_PARTITION partitions[] = {
-  {"html", 2},
+  {"html", 10},
 #ifdef CONFIG_TRS_IO_PP
-  {"elFinder", 5},
   {"roms", 5},
   {"fpga", 1}
 #endif
@@ -29,10 +28,7 @@ static const ESP_SPIFFS_PARTITION partitions[] = {
 static const int num_partitions = sizeof(partitions) / sizeof(ESP_SPIFFS_PARTITION);
 
 static const char* directories[] = {
-  "/html/printer",
-#ifdef CONFIG_TRS_IO_PP
-  "/elFinder/roms"
-#endif
+  "/html/printer"
 };
 
 static const int num_directories = sizeof(directories) / sizeof(const char*);

@@ -7,6 +7,11 @@ build:
 flash:
 	idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.trs-io-pp" flash
 
+# Just the C++ code, not the spiffs partitions.
+.PHONY: app-flash
+app-flash:
+	idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.trs-io-pp" app-flash
+
 .PHONY: monitor
 monitor:
 	@echo "Quit with Ctrl-]."
@@ -14,4 +19,8 @@ monitor:
 	@echo "Help with Ctrl-T Ctrl-H."
 	@echo "Now reset ESP."
 	idf.py -p /dev/cu.usbserial-0001 monitor
+
+.PHONY: menuconfig
+menuconfig:
+	idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.trs-io-pp" menuconfig
 
