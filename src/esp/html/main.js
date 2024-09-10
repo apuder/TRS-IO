@@ -58,7 +58,7 @@ function updateSettingsField(id, value) {
         console.error("Element not found: " + id);
         return;
     }
-    element.value = value;
+    element.value = value !== null && value !== void 0 ? value : "";
 }
 function updateSettingsEnumField(name, value) {
     const elements = document.getElementsByName(name);
@@ -244,9 +244,14 @@ function updateRomInfo(romInfo) {
         });
         tr.append(td);
         td = document.createElement("td");
-        td.textContent = new Date(rom.createdAt * 1000).toLocaleString(undefined, {
-            dateStyle: "short",
-        }); // "any" needed because TS doesn't know about "dateStyle" option.
+        if (rom.createdAt === 0) {
+            td.textContent = "—"; // em dash for missing date.
+        }
+        else {
+            td.textContent = new Date(rom.createdAt * 1000).toLocaleString(undefined, {
+                dateStyle: "short",
+            }); // "any" needed because TS doesn't know about "dateStyle" option.
+        }
         tr.append(td);
         const startRename = () => {
             const areRenaming = () => tbody.classList.contains("renaming");

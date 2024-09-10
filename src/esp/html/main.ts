@@ -99,14 +99,14 @@ function getSettingsEnumField(name: string): string {
     return "unknown";
 }
 
-function updateSettingsField(id: string, value: string): void {
+function updateSettingsField(id: string, value: string | undefined): void {
     const element = document.getElementById(id) as HTMLInputElement;
     if (element === null) {
         console.error("Element not found: " + id);
         return;
     }
 
-    element.value = value;
+    element.value = value ?? "";
 }
 
 function updateSettingsEnumField(name: string, value: string): void {
@@ -309,9 +309,13 @@ function updateRomInfo(romInfo: RomInfo) {
         tr.append(td);
 
         td = document.createElement("td");
-        td.textContent = new Date(rom.createdAt*1000).toLocaleString(undefined, {
-            dateStyle: "short",
-        } as any); // "any" needed because TS doesn't know about "dateStyle" option.
+        if (rom.createdAt === 0) {
+            td.textContent = "—"; // em dash for missing date.
+        } else {
+            td.textContent = new Date(rom.createdAt*1000).toLocaleString(undefined, {
+                dateStyle: "short",
+            } as any); // "any" needed because TS doesn't know about "dateStyle" option.
+        }
         tr.append(td);
 
         const startRename = () => {

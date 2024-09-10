@@ -1,4 +1,6 @@
 
+#include <dirent.h>
+#include <sys/stat.h>
 #include "retrostore.h"
 #include "wifi.h"
 #include "spi.h"
@@ -68,19 +70,54 @@ static uint8_t get_config()
 
 static void mongoose_handle_get_roms(char** response,
                                      const char** content_type)
-
 {
+  DIR *d;
+  struct dirent *dir;
+  struct stat st;
+  static const char *ROM_DIR = "/roms";
+
+  *response = NULL;
+
+  cJSON* roms = cJSON_CreateArray();
+  // TODO maybe use the_fs:
+  d = opendir(ROM_DIR);
+  if (d == NULL) {
+      ESP_LOGI(TAG, "can't open dir %s (%s)", ROM_DIR, strerror(errno));
+      return;
+  }
+  while ((dir = readdir(d)) != NULL) {
+      string pathname = string(ROM_DIR) + "/" + dir->d_name;
+      printf("ROM: %s\n", pathname.c_str());
+      int result = stat(pathname.c_str(), &st);
+      if (result == -1) {
+          ESP_LOGI(TAG, "can't stat %s (%s)", pathname.c_str(), strerror(errno));
+          return;
+      }
+      cJSON* rom = cJSON_CreateObject();
+      cJSON_AddStringToObject(rom, "filename", dir->d_name);
+      cJSON_AddNumberToObject(rom, "size", st.st_size);
+      cJSON_AddNumberToObject(rom, "createdAt", st.st_mtim.tv_sec);
+      cJSON_AddItemToArray(roms, rom);
+  }
+  closedir(d);
+
+  cJSON* selected = cJSON_CreateArray();
+  for (string &romFilename : settings_get_roms()) {
+      cJSON_AddItemToArray(selected, cJSON_CreateString(romFilename.c_str()));
+  }
+
+  cJSON* data = cJSON_CreateObject();
+  cJSON_AddItemToObject(data, "roms", roms);
+  cJSON_AddItemToObject(data, "selected", selected);
+
+  *response = cJSON_PrintUnformatted(data);
+  cJSON_Delete(data);
+
+  /*
   int i;
   uint8_t rom_selected[SETTINGS_MAX_ROMS];
   vector<FSFile>& rom_files = the_fs->getFileList();
 
-  static char* resp = NULL;
-
-  if (resp != NULL) {
-    free(resp);
-    resp = NULL;
-  }
-  
   for (i = 0; i < SETTINGS_MAX_ROMS; i++) {
     rom_selected[i] = 0xff;
   }
@@ -115,9 +152,9 @@ static void mongoose_handle_get_roms(char** response,
   cJSON_AddItemToObject(rom_def, "roms", roms);
   cJSON_AddItemToObject(rom_def, "selected", rom_arr);
 
-  resp = cJSON_PrintUnformatted(rom_def);
-  *response = resp;
+  *response = cJSON_PrintUnformatted(rom_def);
   cJSON_Delete(rom_def);
+  */
 
   *content_type = "application/json";
 }
@@ -149,30 +186,28 @@ static bool extract_rom_param(struct mg_http_message* message,
 }
 #endif
 
-static bool extract_post_param(struct mg_http_message* message,
+static bool extract_post_param(cJSON *json,
                                const char* param,
                                settings_set_t set,
-                               settings_get_t get,
-                               size_t max_len)
+                               settings_get_t get)
 {
-  // SMB URL is the longest parameter
-  static char buf[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
-
-  if (mg_http_get_var(&message->body, param, buf, sizeof(buf)) < 0) {
-    // Could not decode parameter
-    return false;
+  cJSON *value = cJSON_GetObjectItemCaseSensitive(json, param);
+  if (!cJSON_IsString(value) || value->valuestring == NULL) {
+      // Value is missing, ignore it.
+      return false;
   }
-  // In case someone tries to force a buffer overflow
-  buf[max_len + 1] = '\0';
 
   string& orig = get();
-  if (strcmp(orig.c_str(), buf) == 0) {
+  if (strcmp(orig.c_str(), value->valuestring) == 0) {
     // Setting has not changed
     return false;
   }
-  set(string(buf));
+  set(string(value->valuestring));
   return true;
 }
+
+static void mongoose_handle_status(char** response,
+                                   const char** content_type);
 
 static bool mongoose_handle_config(struct mg_http_message* message,
                                    char** response,
@@ -181,20 +216,20 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   bool reboot = false;
   bool smb_connect = false;
 
-  *response = "";
-  *content_type = "text/plain";
+  cJSON *json = cJSON_Parse(message->body.ptr);
 
-  reboot |= extract_post_param(message, "ssid", settings_set_wifi_ssid, settings_get_wifi_ssid, MAX_LEN_WIFI_SSID);
-  reboot |= extract_post_param(message, "passwd", settings_set_wifi_passwd, settings_get_wifi_passwd, MAX_LEN_WIFI_PASSWD);
-  extract_post_param(message, "tz", settings_set_tz, settings_get_tz, MAX_LEN_TZ);
+  reboot |= extract_post_param(json, "ssid", settings_set_wifi_ssid, settings_get_wifi_ssid);
+  reboot |= extract_post_param(json, "passwd", settings_set_wifi_passwd, settings_get_wifi_passwd);
+  extract_post_param(json, "tz", settings_set_tz, settings_get_tz);
   set_timezone();
 
-  smb_connect |= extract_post_param(message, "smb_url", settings_set_smb_url, settings_get_smb_url, MAX_LEN_SMB_URL);
-  smb_connect |= extract_post_param(message, "smb_user", settings_set_smb_user, settings_get_smb_user, MAX_LEN_SMB_USER);
-  smb_connect |= extract_post_param(message, "smb_passwd", settings_set_smb_passwd, settings_get_smb_passwd, MAX_LEN_SMB_PASSWD);
+  smb_connect |= extract_post_param(json, "smb_url", settings_set_smb_url, settings_get_smb_url);
+  smb_connect |= extract_post_param(json, "smb_user", settings_set_smb_user, settings_get_smb_user);
+  smb_connect |= extract_post_param(json, "smb_passwd", settings_set_smb_passwd, settings_get_smb_passwd);
 
-  extract_post_param(message, "color", set_screen_color, get_screen_color, 16);
+  extract_post_param(json, "color", set_screen_color, get_screen_color);
 #ifdef CONFIG_TRS_IO_PP
+  // XXX fix.
   extract_rom_param(message, "rom_m1", SETTINGS_ROM_M1);
   extract_rom_param(message, "rom_m3", SETTINGS_ROM_M3);
   extract_rom_param(message, "rom_m4", SETTINGS_ROM_M4);
@@ -207,20 +242,17 @@ static bool mongoose_handle_config(struct mg_http_message* message,
     init_trs_fs_smb();
   }
 
+  cJSON_Delete(json);
+
+  // Respond with the new status so that the UI has it right away.
+  mongoose_handle_status(response, content_type);
+
   return reboot;
 }
 
-static void mongoose_handle_status(struct mg_http_message* message,
-                                   char** response,
+static void mongoose_handle_status(char** response,
                                    const char** content_type)
 {
-  static char* resp = NULL;
-
-  if (resp != NULL) {
-    free(resp);
-    resp = NULL;
-  }
-
   cJSON* s = cJSON_CreateObject();
   cJSON_AddNumberToObject(s, "hardware_rev", TRS_IO_HARDWARE_REVISION);
   cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
@@ -285,8 +317,7 @@ static void mongoose_handle_status(struct mg_http_message* message,
     cJSON_AddStringToObject(s, "frehd_loaded", frehd_msg);
   }
 
-  resp = cJSON_PrintUnformatted(s);
-  *response = resp;
+  *response = cJSON_PrintUnformatted(s);
   cJSON_Delete(s);
 
   *content_type = "application/json";
@@ -306,16 +337,23 @@ static void mongoose_event_handler(struct mg_connection *c,
   case MG_EV_HTTP_MSG:
     {
       struct mg_http_message* message = (struct mg_http_message*) eventData;
-      char* response = NULL;
-      int response_len = 0;
-      const char* content_type = "text/html";
+      ESP_LOGI(TAG, "request %.*s %.*s",
+              message->method.len,
+              message->method.ptr,
+              message->uri.len,
+              message->uri.ptr);
+      char* response = NULL; // Always allocated.
+      const char* content_type = "text/html"; // Never allocated.
 
       if (mg_http_match_uri(message, "/config")) {
         reboot = mongoose_handle_config(message, &response, &content_type);
-        response_len = strlen(response);
+        if (response == NULL) {
+            mg_printf(c, "HTTP/1.1 400 OK\r\nConnection: close\r\n\r\n");
+            return;
+        }
+
       } else if (mg_http_match_uri(message, "/status")) {
-        mongoose_handle_status(message, &response, &content_type);
-        response_len = strlen(response);
+        mongoose_handle_status(&response, &content_type);
       } else if (mg_http_match_uri(message, "/log")) {
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
@@ -323,13 +361,18 @@ static void mongoose_event_handler(struct mg_connection *c,
 #ifdef CONFIG_TRS_IO_PP
       } else if (mg_http_match_uri(message, "/get-roms")) {
         mongoose_handle_get_roms(&response, &content_type);
-        response_len = strlen(response);
+        if (response == NULL) {
+            mg_printf(c, "HTTP/1.1 500 OK\r\nConnection: close\r\n\r\n");
+            return;
+        }
 #endif
       }
 
       if (response != NULL) {
+        int response_len = strlen(response);
         mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
         mg_send(c, response, response_len);
+        free(response);
 #ifdef CONFIG_TRS_IO_PP
       } else if (mg_http_match_uri(message, "/roms/php/connector.minimal.php")) {
         process_file_browser_req(c, message);
