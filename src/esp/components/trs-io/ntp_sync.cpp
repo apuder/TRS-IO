@@ -5,6 +5,7 @@
 #include "wifi.h"
 #include "ntp_sync.h"
 #include "lwip/apps/sntp.h"
+#include "timezones.h"
 
 
 void set_timezone() {
@@ -12,15 +13,14 @@ void set_timezone() {
   if (tz.empty()) {
     return;
   }
-  string patched = tz;
-  for (int i = 0; i < patched.size(); i++) {
-    if (patched[i] == '-') {
-      patched[i] = '+';
-    } else if (patched[i] == '+') {
-      patched[i] = '-';
-    }
+
+  // Convert from a friendly timezone (like "America/Los_Angeles").
+  string posix = friendlyTimezoneToPosix(tz);
+  if (posix.empty()) {
+      posix = tz;
   }
-  setenv("TZ", patched.c_str(), 1);
+
+  setenv("TZ", posix.c_str(), 1);
   tzset();
 }
 
