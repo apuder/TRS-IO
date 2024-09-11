@@ -94,7 +94,6 @@ static void mongoose_handle_get_roms(char** response,
   *response = NULL;
 
   cJSON* roms = cJSON_CreateArray();
-  // TODO maybe use the_fs:
   d = opendir(ROM_DIR);
   if (d == NULL) {
       ESP_LOGW(TAG, "can't open dir %s (%s)", ROM_DIR, strerror(errno));
@@ -126,50 +125,6 @@ static void mongoose_handle_get_roms(char** response,
   cJSON_AddItemToObject(data, "selected", selected);
 
   *response = cJSON_PrintUnformatted(data);
-
-  /* TODO
-  int i;
-  uint8_t rom_selected[SETTINGS_MAX_ROMS];
-  vector<FSFile>& rom_files = the_fs->getFileList();
-
-  for (i = 0; i < SETTINGS_MAX_ROMS; i++) {
-    rom_selected[i] = 0xff;
-  }
-
-  vector<string>& current_roms = settings_get_roms();
-  cJSON* roms = cJSON_CreateArray();
-
-  for (i = 0; i < rom_files.size(); i++) {
-    const char* rom_file = rom_files.at(i).name.c_str();
-    cJSON* rom = cJSON_CreateString(rom_file);
-    cJSON_AddItemToArray(roms, rom);
-
-    for (int j = 0; j < SETTINGS_MAX_ROMS; j++) {
-      if (j == 1) {
-        // Skip Model 2
-        continue;
-      }
-      if (rom_selected[j] == 0xff && strcmp(current_roms.at(j).c_str(), rom_file) == 0) {
-        rom_selected[j] = i;
-        break;
-      }
-    }
-  }
-
-  cJSON* rom_arr = cJSON_CreateArray();
-  for (i = 0; i < SETTINGS_MAX_ROMS; i++) {
-    cJSON* sel = cJSON_CreateNumber(rom_selected[i] == 0xff ? 0 : rom_selected[i]);
-    cJSON_AddItemToArray(rom_arr, sel);
-  }
-
-  cJSON* rom_def = cJSON_CreateObject();
-  cJSON_AddItemToObject(rom_def, "roms", roms);
-  cJSON_AddItemToObject(rom_def, "selected", rom_arr);
-
-  *response = cJSON_PrintUnformatted(rom_def);
-  cJSON_Delete(rom_def);
-  */
-
   *content_type = "application/json";
 }
 
@@ -270,33 +225,7 @@ static void mongoose_handle_roms(struct mg_http_message* message,
     // For both GET and POST:
     mongoose_handle_get_roms(response, content_type);
 }
-
-static bool extract_rom_param(struct mg_http_message* message,
-                              const char* param,
-                              int model)
-{
-  static char buf[4] EXT_RAM_ATTR;
-
-  if (mg_http_get_var(&message->body, param, buf, sizeof(buf)) < 0) {
-    // Could not decode parameter
-    return false;
-  }
-
-  vector<FSFile>& rom_files = the_fs->getFileList();
-  // In case someone tries to force a buffer overflow
-  buf[sizeof(buf) - 1] = '\0';
-  int new_rom_idx = atoi(buf);
-  string& new_rom = rom_files.at(new_rom_idx).name;
-
-  string& orig = settings_get_rom(model);
-  if (strcmp(orig.c_str(), new_rom.c_str()) == 0) {
-    // Setting has not changed
-    return false;
-  }
-  settings_set_rom(model, new_rom);
-  return true;
-}
-#endif
+#endif // CONFIG_TRS_IO_PP
 
 static bool extract_post_param(cJSON *json,
                                const char* param,
@@ -348,13 +277,6 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   smb_connect |= extract_post_param(json, "smb_passwd", settings_set_smb_passwd, settings_get_smb_passwd);
 
   extract_post_param(json, "color", set_screen_color, get_screen_color);
-#ifdef CONFIG_TRS_IO_PP
-  // TODO fix.
-  extract_rom_param(message, "rom_m1", SETTINGS_ROM_M1);
-  extract_rom_param(message, "rom_m3", SETTINGS_ROM_M3);
-  extract_rom_param(message, "rom_m4", SETTINGS_ROM_M4);
-  extract_rom_param(message, "rom_m4p", SETTINGS_ROM_M4P);
-#endif
 
   settings_commit();
 
