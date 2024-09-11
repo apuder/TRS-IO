@@ -53,6 +53,7 @@ void settings_set_rom(int model, const string& rom);
 string& settings_get_rom(int model);
 vector<string>& settings_get_roms();
 void settings_set_roms();
+void settings_rename_rom(const string &oldFilename, const string &newFilename);
 
 
 //-----Screen Color-----------------------------------------------

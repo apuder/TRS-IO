@@ -34,11 +34,23 @@
 #define MDNS_NAME "trs-io"
 #define PRINTER_QUEUE_SIZE 100
 
+static const char * const ROM_DIR = "/roms";
 static mg_queue prn_queue;
 static int num_printer_sockets = 0;
 
 typedef void (*settings_set_t)(const string&);
 typedef string& (*settings_get_t)();
+
+// Utility class to auto-delete the JSON pointer when it goes out of scope.
+class AutoDeleteJson {
+    cJSON *json;
+
+public:
+    AutoDeleteJson(cJSON *json): json(json) {}
+    ~AutoDeleteJson() {
+        cJSON_Delete(json);
+    }
+};
 
 static void set_screen_color(const string& color)
 {
@@ -68,13 +80,16 @@ static uint8_t get_config()
   return config;
 }
 
+static string makeRomPathname(const char *filename) {
+    return string(ROM_DIR) + "/" + filename;
+}
+
 static void mongoose_handle_get_roms(char** response,
                                      const char** content_type)
 {
   DIR *d;
   struct dirent *dir;
   struct stat st;
-  static const char *ROM_DIR = "/roms";
 
   *response = NULL;
 
@@ -82,15 +97,14 @@ static void mongoose_handle_get_roms(char** response,
   // TODO maybe use the_fs:
   d = opendir(ROM_DIR);
   if (d == NULL) {
-      ESP_LOGI(TAG, "can't open dir %s (%s)", ROM_DIR, strerror(errno));
+      ESP_LOGW(TAG, "can't open dir %s (%s)", ROM_DIR, strerror(errno));
       return;
   }
   while ((dir = readdir(d)) != NULL) {
-      string pathname = string(ROM_DIR) + "/" + dir->d_name;
-      printf("ROM: %s\n", pathname.c_str());
+      string pathname = makeRomPathname(dir->d_name);
       int result = stat(pathname.c_str(), &st);
       if (result == -1) {
-          ESP_LOGI(TAG, "can't stat %s (%s)", pathname.c_str(), strerror(errno));
+          ESP_LOGW(TAG, "can't stat %s (%s)", pathname.c_str(), strerror(errno));
           return;
       }
       cJSON* rom = cJSON_CreateObject();
@@ -107,13 +121,13 @@ static void mongoose_handle_get_roms(char** response,
   }
 
   cJSON* data = cJSON_CreateObject();
+  AutoDeleteJson autoDeleteJson(data);
   cJSON_AddItemToObject(data, "roms", roms);
   cJSON_AddItemToObject(data, "selected", selected);
 
   *response = cJSON_PrintUnformatted(data);
-  cJSON_Delete(data);
 
-  /*
+  /* TODO
   int i;
   uint8_t rom_selected[SETTINGS_MAX_ROMS];
   vector<FSFile>& rom_files = the_fs->getFileList();
@@ -157,6 +171,104 @@ static void mongoose_handle_get_roms(char** response,
   */
 
   *content_type = "application/json";
+}
+
+static void mongoose_handle_roms(struct mg_http_message* message,
+                                 char** response,
+                                 const char** content_type)
+{
+    // Default to error.
+    *response = NULL;
+
+    if (mg_vcasecmp(&message->method, "POST") == 0) {
+        cJSON *json = cJSON_Parse(message->body.ptr);
+        if (json == NULL) {
+            ESP_LOGW(TAG, "Can't parse ROM JSON: %.*s", message->body.len, message->body.ptr);
+            return;
+        }
+        AutoDeleteJson autoDeleteJson(json);
+
+        // Fetch command.
+        cJSON *command = cJSON_GetObjectItemCaseSensitive(json, "command");
+        if (!cJSON_IsString(command) || command->valuestring == NULL) {
+            // Command is missing, ignore request.
+            ESP_LOGW(TAG, "Missing ROM command");
+            return;
+        }
+
+        if (strcmp(command->valuestring, "uploadRom") == 0) {
+            cJSON *filename = cJSON_GetObjectItemCaseSensitive(json, "filename");
+            cJSON *contents64 = cJSON_GetObjectItemCaseSensitive(json, "contents");
+            if (!cJSON_IsString(filename) || filename->valuestring == NULL ||
+                    !cJSON_IsString(contents64) || contents64->valuestring == NULL) {
+
+                ESP_LOGW(TAG, "Missing ROM upload filename or contents");
+                return;
+            }
+            // Decode base64.
+            int len64 = strlen(contents64->valuestring);
+            int maxLen = len64/4*3;
+            vector<unsigned char> contents(maxLen + 1); // Decode function adds a nul byte (?!).
+            int actualLen = mg_base64_decode(contents64->valuestring, len64, (char *) &contents.front());
+            string pathname = makeRomPathname(filename->valuestring);
+            FILE *f = fopen(pathname.c_str(), "wb");
+            if (f == NULL) {
+                ESP_LOGW(TAG, "Can't write to ROM file \"%s\" (%s)", pathname.c_str(),
+                        strerror(errno));
+                return;
+            }
+            fwrite(&contents.front(), 1, actualLen, f);
+            fclose(f);
+        } else if (strcmp(command->valuestring, "deleteRom") == 0) {
+            cJSON *filename = cJSON_GetObjectItemCaseSensitive(json, "filename");
+            if (!cJSON_IsString(filename) || filename->valuestring == NULL) {
+                ESP_LOGW(TAG, "Missing ROM delete filename");
+                return;
+            }
+            string pathname = makeRomPathname(filename->valuestring);
+            int result = unlink(pathname.c_str());
+            if (result == -1) {
+                ESP_LOGW(TAG, "can't delete ROM %s (%s)", pathname.c_str(), strerror(errno));
+                return;
+            }
+        } else if (strcmp(command->valuestring, "renameRom") == 0) {
+            cJSON *oldFilename = cJSON_GetObjectItemCaseSensitive(json, "oldFilename");
+            cJSON *newFilename = cJSON_GetObjectItemCaseSensitive(json, "newFilename");
+            if (!cJSON_IsString(oldFilename) || oldFilename->valuestring == NULL ||
+                    !cJSON_IsString(newFilename) || newFilename->valuestring == NULL) {
+
+                ESP_LOGW(TAG, "Missing ROM rename filenames");
+                return;
+            }
+            string oldPathname = makeRomPathname(oldFilename->valuestring);
+            string newPathname = makeRomPathname(newFilename->valuestring);
+            int result = rename(oldPathname.c_str(), newPathname.c_str());
+            if (result == -1) {
+                ESP_LOGW(TAG, "can't rename ROM %s to %s (%s)",
+                        oldPathname.c_str(), newPathname.c_str(), strerror(errno));
+                return;
+            }
+            settings_rename_rom(oldFilename->valuestring, newFilename->valuestring);
+        } else if (strcmp(command->valuestring, "assignRom") == 0) {
+            cJSON *model = cJSON_GetObjectItemCaseSensitive(json, "model");
+            cJSON *filename = cJSON_GetObjectItemCaseSensitive(json, "filename");
+            if (!cJSON_IsString(filename) || filename->valuestring == NULL ||
+                    !cJSON_IsNumber(model)) {
+
+                ESP_LOGW(TAG, "Missing ROM assign model or filename");
+                return;
+            }
+            settings_set_rom(model->valueint, filename->valuestring);
+        } else {
+            ESP_LOGW(TAG, "Unknown ROM command: %s", command->valuestring);
+            return;
+        }
+
+        // JSON is auto-deleted.
+    }
+
+    // For both GET and POST:
+    mongoose_handle_get_roms(response, content_type);
 }
 
 static bool extract_rom_param(struct mg_http_message* message,
@@ -209,6 +321,7 @@ static bool extract_post_param(cJSON *json,
 static void mongoose_handle_status(char** response,
                                    const char** content_type);
 
+// Returns whether to reboot the ESP.
 static bool mongoose_handle_config(struct mg_http_message* message,
                                    char** response,
                                    const char** content_type)
@@ -216,7 +329,14 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   bool reboot = false;
   bool smb_connect = false;
 
+  *response = NULL;
+
   cJSON *json = cJSON_Parse(message->body.ptr);
+  if (json == NULL) {
+      ESP_LOGW(TAG, "Can't parse config JSON: %.*s", message->body.len, message->body.ptr);
+      return false;
+  }
+  AutoDeleteJson autoDeleteJson(json);
 
   reboot |= extract_post_param(json, "ssid", settings_set_wifi_ssid, settings_get_wifi_ssid);
   reboot |= extract_post_param(json, "passwd", settings_set_wifi_passwd, settings_get_wifi_passwd);
@@ -229,7 +349,7 @@ static bool mongoose_handle_config(struct mg_http_message* message,
 
   extract_post_param(json, "color", set_screen_color, get_screen_color);
 #ifdef CONFIG_TRS_IO_PP
-  // XXX fix.
+  // TODO fix.
   extract_rom_param(message, "rom_m1", SETTINGS_ROM_M1);
   extract_rom_param(message, "rom_m3", SETTINGS_ROM_M3);
   extract_rom_param(message, "rom_m4", SETTINGS_ROM_M4);
@@ -242,8 +362,6 @@ static bool mongoose_handle_config(struct mg_http_message* message,
     init_trs_fs_smb();
   }
 
-  cJSON_Delete(json);
-
   // Respond with the new status so that the UI has it right away.
   mongoose_handle_status(response, content_type);
 
@@ -254,6 +372,7 @@ static void mongoose_handle_status(char** response,
                                    const char** content_type)
 {
   cJSON* s = cJSON_CreateObject();
+  AutoDeleteJson autoDeleteJson(s);
   cJSON_AddNumberToObject(s, "hardware_rev", TRS_IO_HARDWARE_REVISION);
   cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
@@ -318,8 +437,6 @@ static void mongoose_handle_status(char** response,
   }
 
   *response = cJSON_PrintUnformatted(s);
-  cJSON_Delete(s);
-
   *content_type = "application/json";
 }
 
@@ -360,7 +477,7 @@ static void mongoose_event_handler(struct mg_connection *c,
         return;
 #ifdef CONFIG_TRS_IO_PP
       } else if (mg_http_match_uri(message, "/get-roms")) {
-        mongoose_handle_get_roms(&response, &content_type);
+        mongoose_handle_roms(message, &response, &content_type);
         if (response == NULL) {
             mg_printf(c, "HTTP/1.1 500 OK\r\nConnection: close\r\n\r\n");
             return;

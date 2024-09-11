@@ -199,6 +199,23 @@ void settings_set_roms()
   }
 }
 
+// Call when the file has been renamed.
+void settings_rename_rom(const string &oldFilename, const string &newFilename)
+{
+    bool changed = false;
+
+    for (int i = 0; i < roms.size(); i++) {
+        if (roms[i] == oldFilename) {
+            roms[i] = newFilename;
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        settings_set_roms();
+    }
+}
+
 static void init_rom()
 {
   char key[] = KEY_ROM_PREFIX "0\0";
@@ -208,8 +225,10 @@ static void init_rom()
     string rom;
     key[strlen(KEY_ROM_PREFIX)] = '0' + i;
     if (nvs_get_str(storage, key, NULL, &len) == ESP_OK) {
-      rom.resize(len);
-      nvs_get_str(storage, key, (char*) rom.data(), &len);
+      // Len includes terminating nul.
+      vector<char> buffer(len);
+      nvs_get_str(storage, key, &buffer.front(), &len);
+      rom = &buffer.front();
     }
 
     if (rom.empty()) {

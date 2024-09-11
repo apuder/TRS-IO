@@ -1,3 +1,7 @@
+SHELL = /bin/bash
+
+.PHONY: all
+all: build pause app-flash monitor
 
 .PHONY: build
 build:
@@ -24,3 +28,6 @@ monitor:
 menuconfig:
 	idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.trs-io-pp" menuconfig
 
+.PHONY: pause
+pause:
+	@read -p "Press Enter when ready to flash . . . "
