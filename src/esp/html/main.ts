@@ -3,20 +3,30 @@ interface Status {
     hardware_rev: number,
     vers_major: number,
     vers_minor: number,
+    // See WIFI_STATUS_TO_STRING:
     wifi_status: number,
     ip: string,
+    // Dip switches:
     config?: number, // only for TRS-IO++
+    // 0 = White, 1 = Green, 2 = Amber.
     color: number,
+    // Wifi:
     ssid: string,
     passwd: string,
+    // SMB:
     smb_url: string,
     smb_user: string,
     smb_passwd: string,
+    // Current local time:
     time: string,
+    // Error connecting to SMB, or empty string if connected:
     smb_err: string,
+    // Error mounting SD card, or empty string if mounted:
     posix_err: string,
     has_sd_card: boolean,
+    // Error loading FreHD, or empty string if present:
     frehd_loaded: string,
+    // Timezone name:
     tz: string,
 }
 
@@ -146,9 +156,9 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     updateStatusField("time", status.time);
     updateStatusField("ip", status.ip);
     updateStatusField("wifi_status", wifiStatusText);
-    updateStatusField("smb_err", status.smb_err);
+    updateStatusField("smb_err", status.smb_err == "" ? "Connected" : status.smb_err);
     updateStatusField("posix_err", status.posix_err);
-    updateStatusField("frehd_loaded", status.frehd_loaded);
+    updateStatusField("frehd_loaded", status.frehd_loaded == "" ? "Present" : status.frehd_loaded);
 
     updateStatusIcon("wifi_status_icon", status.wifi_status === 2, wifiStatusText);
     updateStatusIcon("smb_share_status_icon", status.smb_err === "", status.smb_err);
