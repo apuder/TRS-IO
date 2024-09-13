@@ -233,17 +233,23 @@ static bool extract_post_param(cJSON *json,
                                settings_get_t get)
 {
   cJSON *value = cJSON_GetObjectItemCaseSensitive(json, param);
-  if (!cJSON_IsString(value) || value->valuestring == NULL) {
+
+  string newValue;
+  if (cJSON_IsNumber(value)) {
+      newValue = to_string(value->valueint);
+  } else if (!cJSON_IsString(value) || value->valuestring == NULL) {
       // Value is missing, ignore it.
       return false;
+  } else {
+      newValue = value->valuestring;
   }
 
-  string& orig = get();
-  if (strcmp(orig.c_str(), value->valuestring) == 0) {
+  if (get() == newValue) {
     // Setting has not changed
     return false;
   }
-  set(string(value->valuestring));
+
+  set(newValue);
   return true;
 }
 

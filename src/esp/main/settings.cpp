@@ -8,6 +8,27 @@
 
 static nvs_handle storage;
 
+// If storage has the key, the value is written into "value" and true is returned.
+// Otherwise "value" is untouched and false is returned.
+static bool get_nvs_string(char *key, string &value)
+{
+    size_t len;
+    if (nvs_get_str(storage, key, NULL, &len) == ESP_OK) {
+        // Must write to a temporary buffer because the value.data() method
+        // returns a buffer that must not be modified.
+
+        // Len includes terminating nul.
+        vector<char> buffer(len);
+        nvs_get_str(storage, key, &buffer.front(), &len);
+
+        value = &buffer.front();
+
+        return true;
+    }
+
+    return false;
+}
+
 //-----Timezone-------------------------------------------------------------
 
 #define NTP_KEY_TZ "tz"
@@ -28,12 +49,7 @@ void settings_set_tz(const string& new_tz)
 
 static void init_tz()
 {
-  size_t len;
-
-  if (nvs_get_str(storage, NTP_KEY_TZ, NULL, &len) == ESP_OK) {
-    tz.resize(len);
-    nvs_get_str(storage, NTP_KEY_TZ, (char*) tz.data(), &len);
-  }
+  get_nvs_string(NTP_KEY_TZ, tz);
 }
 
 
@@ -76,17 +92,8 @@ void settings_set_wifi_passwd(const string& passwd)
 
 static void init_wifi_credentials()
 {
-  size_t len;
-
-  if (nvs_get_str(storage, WIFI_KEY_SSID, NULL, &len) == ESP_OK) {
-    wifi_ssid.resize(len);
-    nvs_get_str(storage, WIFI_KEY_SSID, (char*) wifi_ssid.data(), &len);
-  }
-
-  if (nvs_get_str(storage, WIFI_KEY_PASSWD, NULL, &len) == ESP_OK) {
-    wifi_passwd.resize(len);
-    nvs_get_str(storage, WIFI_KEY_PASSWD, (char*) wifi_passwd.data(), &len);
-  }
+  get_nvs_string(WIFI_KEY_SSID, wifi_ssid);
+  get_nvs_string(WIFI_KEY_PASSWD, wifi_passwd);
 }
 
 
@@ -141,20 +148,9 @@ void settings_set_smb_passwd(const string& passwd)
 
 static void init_smb_credentials()
 {
-  size_t len;
-
-  if (nvs_get_str(storage, SMB_KEY_URL, NULL, &len) == ESP_OK) {
-    smb_url.resize(len);
-    nvs_get_str(storage, SMB_KEY_URL, (char*) smb_url.data(), &len);
-  }
-  if (nvs_get_str(storage, SMB_KEY_USER, NULL, &len) == ESP_OK) {
-    smb_user.resize(len);
-    nvs_get_str(storage, SMB_KEY_USER, (char*) smb_user.data(), &len);
-  }
-  if (nvs_get_str(storage, SMB_KEY_PASSWD, NULL, &len) == ESP_OK) {
-    smb_passwd.resize(len);
-    nvs_get_str(storage, SMB_KEY_PASSWD, (char*) smb_passwd.data(), &len);
-  }
+  get_nvs_string(SMB_KEY_URL, smb_url);
+  get_nvs_string(SMB_KEY_USER, smb_user);
+  get_nvs_string(SMB_KEY_PASSWD, smb_passwd);
 }
 
 
@@ -219,17 +215,11 @@ void settings_rename_rom(const string &oldFilename, const string &newFilename)
 static void init_rom()
 {
   char key[] = KEY_ROM_PREFIX "0\0";
-  size_t len;
 
   for(int i = 0; i < SETTINGS_MAX_ROMS; i++) {
     string rom;
     key[strlen(KEY_ROM_PREFIX)] = '0' + i;
-    if (nvs_get_str(storage, key, NULL, &len) == ESP_OK) {
-      // Len includes terminating nul.
-      vector<char> buffer(len);
-      nvs_get_str(storage, key, &buffer.front(), &len);
-      rom = &buffer.front();
-    }
+    get_nvs_string(key, rom);
 
     if (rom.empty()) {
       rom = default_roms[i];
