@@ -296,15 +296,16 @@ article:has(input[name=active-article]:not(:checked)) {
 
 .message-box {
     position: absolute;
-    top: 30px;
-    right: 45px;
+    bottom: 30px;
+    right: 30px;
     color: var(--brown);
-    background-color: rgb(0 0 0 / 10%);
+    background-color: rgb(255 255 255 / 20%);
     padding: 5px 10px;
+    border: 3px solid var(--brown);
     border-radius: 5px;
     font-size: 20px;
-    font-family: monospace;
     font-weight: bold;
+    transition: bottom 300ms;
 }
 
 footer {

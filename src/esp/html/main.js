@@ -22,7 +22,62 @@ const CONFIGURATIONS = [
     "Custom 1",
     "Custom 2"
 ];
-let g_mostRecentStatus = undefined;
+// Message displayed to the user (usually an error).
+class UserMessage {
+    constructor(message, autohide) {
+        this.messageBox = document.createElement("span");
+        this.messageBox.classList.add("message-box");
+        this.messageBox.textContent = message;
+        const container = document.querySelector(".article-container");
+        container.append(this.messageBox);
+        if (autohide) {
+            setTimeout(() => this.hide(), 3000);
+        }
+    }
+    // Fade out and hide this message.
+    async hide() {
+        const animation = this.messageBox.animate([
+            { opacity: "0", },
+        ], {
+            duration: 300,
+            fill: "forwards",
+        });
+        await animation.finished;
+        this.messageBox.remove();
+        updateUserMessages();
+    }
+}
+let gMostRecentStatus = undefined;
+let gStatusFetchAbortController = undefined;
+const gUserMessages = [];
+let gOfflineUserMessage = undefined;
+function updateUserMessages() {
+    // Remove dead messages.
+    for (let i = gUserMessages.length - 1; i >= 0; i--) {
+        if (gUserMessages[i].messageBox.parentNode === null) {
+            gUserMessages.splice(i, 1);
+        }
+    }
+    // Reposition them.
+    for (let i = 0; i < gUserMessages.length; i++) {
+        const userMessage = gUserMessages[i];
+        userMessage.messageBox.style.bottom = (30 + 50 * i) + "px";
+    }
+}
+// Display a brief error to the user.
+function displayError(message, autohide = true) {
+    const userMessage = new UserMessage(message, autohide);
+    gUserMessages.push(userMessage);
+    updateUserMessages();
+    return userMessage;
+}
+function getDeviceName(status) {
+    return status === undefined
+        ? "device"
+        : status.config === undefined
+            ? "TRS-IO"
+            : "TRS-IO++";
+}
 function updateStatusField(id, value) {
     if (typeof (value) === "number") {
         value = value.toString();
@@ -84,7 +139,7 @@ function updateSettingsForm(status) {
 }
 function updateStatus(status, initialFetch) {
     var _a;
-    g_mostRecentStatus = status;
+    gMostRecentStatus = status;
     const wifiStatusText = (_a = WIFI_STATUS_TO_STRING.get(status.wifi_status)) !== null && _a !== void 0 ? _a : "Unknown";
     updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
@@ -99,16 +154,42 @@ function updateStatus(status, initialFetch) {
     updateStatusIcon("smb_share_status_icon", status.smb_err === "", status.smb_err);
     updateStatusIcon("sd_card_status_icon", status.posix_err === "", status.posix_err);
     const deviceTypeSpan = document.getElementById("device_type");
-    deviceTypeSpan.textContent = status.config === undefined ? "TRS-IO" : "TRS-IO++";
+    deviceTypeSpan.textContent = getDeviceName(status);
     if (initialFetch) {
         updateSettingsForm(status);
     }
 }
 async function fetchStatus(initialFetch) {
-    const response = await fetch("/status");
+    // Abort any existing fetch.
+    if (gStatusFetchAbortController !== undefined) {
+        gStatusFetchAbortController.abort();
+        gStatusFetchAbortController = undefined;
+    }
+    // Fetch status.
+    let response;
+    try {
+        gStatusFetchAbortController = new AbortController();
+        response = await fetch("/status", {
+            cache: "no-store",
+            signal: gStatusFetchAbortController.signal,
+        });
+    }
+    catch (error) {
+        // Fetch was aborted.
+        if (gOfflineUserMessage === undefined) {
+            gOfflineUserMessage = displayError("Can’t reach " + getDeviceName(gMostRecentStatus), false);
+        }
+        return;
+    }
+    // Get response.
+    gStatusFetchAbortController = undefined;
     if (response.status === 200) {
         const status = await response.json();
         updateStatus(status, initialFetch);
+        if (gOfflineUserMessage !== undefined) {
+            gOfflineUserMessage.hide();
+            gOfflineUserMessage = undefined;
+        }
     }
     else {
         console.log("Error fetching status", response);
@@ -116,14 +197,6 @@ async function fetchStatus(initialFetch) {
 }
 function scheduleFetchStatus() {
     setInterval(async () => await fetchStatus(false), 2000);
-}
-function displayError(message) {
-    const messageBox = document.createElement("span");
-    messageBox.classList.add("message-box");
-    messageBox.textContent = message;
-    const container = document.querySelector(".article-container");
-    container.append(messageBox);
-    setTimeout(() => messageBox.remove(), 3000);
 }
 // Returns whether successful
 async function deleteRomFile(filename) {
@@ -456,8 +529,8 @@ function configureButtons() {
     saveStatusButton.addEventListener("click", () => saveSettings());
     const revertStatusButton = document.getElementById("revertSettings");
     revertStatusButton.addEventListener("click", () => {
-        if (g_mostRecentStatus !== undefined) {
-            updateSettingsForm(g_mostRecentStatus);
+        if (gMostRecentStatus !== undefined) {
+            updateSettingsForm(gMostRecentStatus);
         }
     });
 }

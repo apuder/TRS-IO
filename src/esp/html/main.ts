@@ -71,7 +71,71 @@ const CONFIGURATIONS = [
     "Custom 2"
 ];
 
-let g_mostRecentStatus: Status | undefined = undefined;
+// Message displayed to the user (usually an error).
+class UserMessage {
+    public readonly messageBox: HTMLSpanElement;
+
+    public constructor(message: string, autohide: boolean) {
+        this.messageBox = document.createElement("span");
+        this.messageBox.classList.add("message-box");
+        this.messageBox.textContent = message;
+
+        const container = document.querySelector(".article-container") as Element;
+        container.append(this.messageBox);
+        if (autohide) {
+            setTimeout(() => this.hide(), 3000);
+        }
+    }
+
+    // Fade out and hide this message.
+    public async hide() {
+        const animation = this.messageBox.animate([
+            { opacity: "0", },
+        ], {
+            duration: 300,
+            fill: "forwards",
+        });
+        await animation.finished;
+        this.messageBox.remove();
+        updateUserMessages();
+    }
+}
+
+let gMostRecentStatus: Status | undefined = undefined;
+let gStatusFetchAbortController: AbortController | undefined = undefined;
+const gUserMessages: UserMessage[] = [];
+let gOfflineUserMessage: UserMessage | undefined = undefined;
+
+function updateUserMessages() {
+    // Remove dead messages.
+    for (let i = gUserMessages.length - 1; i >= 0; i--) {
+        if (gUserMessages[i].messageBox.parentNode === null) {
+            gUserMessages.splice(i, 1);
+        }
+    }
+
+    // Reposition them.
+    for (let i = 0; i < gUserMessages.length; i++) {
+        const userMessage = gUserMessages[i];
+        userMessage.messageBox.style.bottom = (30 + 50*i) + "px";
+    }
+}
+
+// Display a brief error to the user.
+function displayError(message: string, autohide = true): UserMessage {
+    const userMessage = new UserMessage(message, autohide);
+    gUserMessages.push(userMessage);
+    updateUserMessages();
+    return userMessage;
+}
+
+function getDeviceName(status: Status | undefined): string {
+    return status === undefined
+        ? "device"
+        : status.config === undefined
+            ? "TRS-IO"
+            : "TRS-IO++";
+}
 
 function updateStatusField(id: string, value: number | string): void {
     if (typeof(value) === "number") {
@@ -146,7 +210,7 @@ function updateSettingsForm(status: Status): void {
 }
 
 function updateStatus(status: Status, initialFetch: boolean): void {
-    g_mostRecentStatus = status;
+    gMostRecentStatus = status;
 
     const wifiStatusText = WIFI_STATUS_TO_STRING.get(status.wifi_status) ?? "Unknown";
 
@@ -165,7 +229,7 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     updateStatusIcon("sd_card_status_icon", status.posix_err === "", status.posix_err);
 
     const deviceTypeSpan = document.getElementById("device_type") as HTMLSpanElement;
-    deviceTypeSpan.textContent = status.config === undefined ? "TRS-IO" : "TRS-IO++";
+    deviceTypeSpan.textContent = getDeviceName(status);
 
     if (initialFetch) {
         updateSettingsForm(status);
@@ -173,10 +237,37 @@ function updateStatus(status: Status, initialFetch: boolean): void {
 }
 
 async function fetchStatus(initialFetch: boolean) {
-    const response = await fetch("/status");
+    // Abort any existing fetch.
+    if (gStatusFetchAbortController !== undefined) {
+        gStatusFetchAbortController.abort();
+        gStatusFetchAbortController = undefined;
+    }
+
+    // Fetch status.
+    let response;
+    try {
+        gStatusFetchAbortController = new AbortController();
+        response = await fetch("/status", {
+            cache: "no-store",
+            signal: gStatusFetchAbortController.signal,
+        });
+    } catch (error: any) {
+        // Fetch was aborted.
+        if (gOfflineUserMessage === undefined) {
+            gOfflineUserMessage = displayError("Can’t reach " + getDeviceName(gMostRecentStatus), false);
+        }
+        return;
+    }
+
+    // Get response.
+    gStatusFetchAbortController = undefined;
     if (response.status === 200) {
         const status = await response.json() as Status;
         updateStatus(status, initialFetch);
+        if (gOfflineUserMessage !== undefined) {
+            gOfflineUserMessage.hide();
+            gOfflineUserMessage = undefined;
+        }
     } else {
         console.log("Error fetching status", response);
     }
@@ -184,16 +275,6 @@ async function fetchStatus(initialFetch: boolean) {
 
 function scheduleFetchStatus() {
     setInterval(async () => await fetchStatus(false), 2000);
-}
-
-function displayError(message: string): void {
-    const messageBox = document.createElement("span");
-    messageBox.classList.add("message-box");
-    messageBox.textContent = message;
-
-    const container = document.querySelector(".article-container") as Element;
-    container.append(messageBox);
-    setTimeout(() => messageBox.remove(), 3000);
 }
 
 // Returns whether successful
@@ -558,8 +639,8 @@ function configureButtons() {
 
     const revertStatusButton = document.getElementById("revertSettings") as HTMLButtonElement;
     revertStatusButton.addEventListener("click", () => {
-        if (g_mostRecentStatus !== undefined) {
-            updateSettingsForm(g_mostRecentStatus);
+        if (gMostRecentStatus !== undefined) {
+            updateSettingsForm(gMostRecentStatus);
         }
     });
 }

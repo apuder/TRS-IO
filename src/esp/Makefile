@@ -1,7 +1,10 @@
 SHELL = /bin/bash
 
+.PHONY: app
+app: build pause app-flash monitor
+
 .PHONY: all
-all: build pause app-flash monitor
+all: build pause flash monitor
 
 .PHONY: build
 build:
