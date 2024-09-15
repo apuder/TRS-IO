@@ -279,7 +279,7 @@ function scheduleFetchStatus() {
 
 // Returns whether successful
 async function deleteRomFile(filename: string): Promise<boolean> {
-    const response = await fetch("/get-roms", {
+    const response = await fetch("/roms", {
         method: "POST",
         cache: "no-cache",
         headers: {
@@ -306,7 +306,7 @@ async function deleteRomFile(filename: string): Promise<boolean> {
 
 // Returns whether successful
 async function renameRomFile(oldFilename: string, newFilename: string): Promise<boolean> {
-    const response = await fetch("/get-roms", {
+    const response = await fetch("/roms", {
         method: "POST",
         cache: "no-cache",
         headers: {
@@ -334,7 +334,7 @@ async function renameRomFile(oldFilename: string, newFilename: string): Promise<
 
 // Returns whether successful
 async function assignRomFile(model: number, filename: string): Promise<boolean> {
-    const response = await fetch("/get-roms", {
+    const response = await fetch("/roms", {
         method: "POST",
         cache: "no-cache",
         headers: {
@@ -521,7 +521,7 @@ function updateRomInfo(romInfo: RomInfo) {
 }
 
 async function fetchRomInfo() {
-    const response = await fetch("/get-roms");
+    const response = await fetch("/roms");
     if (response.status === 200) {
         const romInfo = await response.json() as RomInfo;
         updateRomInfo(romInfo);
@@ -649,7 +649,7 @@ async function handleRomUpload(file: File) {
     const contents = new Uint8Array(await file.arrayBuffer());
     const contentsString = Array.from(contents, byte => String.fromCodePoint(byte)).join("");
 
-    const response = await fetch("/get-roms", {
+    const response = await fetch("/roms", {
         method: "POST",
         cache: "no-cache",
         headers: {

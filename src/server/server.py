@@ -153,7 +153,7 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
         mime_type = EXT_TO_MINE_TYPE.get(file_extension, "application/octet-stream")
 
         self.send_response(200)
-        self.send_header("Content-type", mime_type)
+        self.send_header("Content-Type", mime_type)
         self.send_header("Content-Length", str(len(contents)))
         self.end_headers()
         self.wfile.write(contents)
@@ -237,7 +237,7 @@ class TrsIoRequestHandler(BaseHTTPRequestHandler):
 
     def send_json(self, data):
         self.send_response(200)
-        self.send_header("Content-type", "application/json")
+        self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(bytes(json.dumps(data), "utf-8"))
 

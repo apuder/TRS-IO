@@ -404,7 +404,7 @@ static void mongoose_event_handler(struct mg_connection *c,
         mg_ws_upgrade(c, message, NULL);
         return;
 #ifdef CONFIG_TRS_IO_PP
-      } else if (mg_http_match_uri(message, "/get-roms")) {
+      } else if (mg_http_match_uri(message, "/roms")) {
         mongoose_handle_roms(message, &response, &content_type);
         if (response == NULL) {
             mg_printf(c, "HTTP/1.1 500 OK\r\nConnection: close\r\n\r\n");
