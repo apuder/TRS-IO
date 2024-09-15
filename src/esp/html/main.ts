@@ -220,9 +220,9 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     updateStatusField("time", status.time);
     updateStatusField("ip", status.ip);
     updateStatusField("wifi_status", wifiStatusText);
-    updateStatusField("smb_err", status.smb_err == "" ? "Connected" : status.smb_err);
-    updateStatusField("posix_err", status.posix_err);
-    updateStatusField("frehd_loaded", status.frehd_loaded == "" ? "Present" : status.frehd_loaded);
+    updateStatusField("smb_err", status.smb_err || "Connected");
+    updateStatusField("posix_err", status.posix_err || "Found");
+    updateStatusField("frehd_loaded", status.frehd_loaded || "Found");
 
     updateStatusIcon("wifi_status_icon", status.wifi_status === 2, wifiStatusText);
     updateStatusIcon("smb_share_status_icon", status.smb_err === "", status.smb_err);

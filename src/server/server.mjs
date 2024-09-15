@@ -6,17 +6,6 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import express from 'express';
 
-const EXT_TO_MINE_TYPE = {
-        ".html": "text/html",
-        ".css": "text/css",
-        ".ttf": "font/ttf",
-        ".js": "text/javascript",
-        ".svg": "image/svg+xml",
-        ".jpeg": "image/jpeg",
-        ".jpg": "image/jpeg",
-        ".png": "image/png",
-};
-
 const STATE_DIR = "state";
 const ROMS_DIR = "state/roms";
 const DEFAULT_SETTINGS = {
@@ -35,7 +24,7 @@ function isValidRomFilename(filename) {
     return filename !== "" && !filename.startsWith(".") && filename.indexOf("/") === -1;
 }
 
-function send_json_error(res, message) {
+function sendJsonError(res, message) {
     console.log("Responding with error message: " + message);
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
@@ -84,9 +73,9 @@ function makeStatus() {
         "config": 0, // only for TRS-IO++
         "time": now.getHours().toString() + ":"  + now.getMinutes().toString().padStart(2, "0"),
         "smb_err": "Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE",
-        "posix_err": "Failed to initialize the SD card",
+        //"posix_err": "Failed to initialize the SD card",
         "has_sd_card": true,
-        "frehd_loaded": "FREHD.ROM not found",
+        //"frehd_loaded": "FREHD.ROM not found",
 
         "color": settings["color"],
         "tz": settings["tz"],
@@ -189,11 +178,11 @@ app.post("/roms", (req, res) => {
         case "deleteRom": {
             const filename = data.filename;
             if (!isValidRomFilename(filename)) {
-                return send_json_error(res, `Invalid filename "${filename}"`);
+                return sendJsonError(res, `Invalid filename "${filename}"`);
             }
             const pathname = path.join(ROMS_DIR, filename);
             if (!fs.existsSync(pathname)) {
-                return send_json_error(res, `ROM "${filename}" does not exist`);
+                return sendJsonError(res, `ROM "${filename}" does not exist`);
             }
             fs.unlinkSync(pathname);
             break;
@@ -203,23 +192,23 @@ app.post("/roms", (req, res) => {
             const oldFilename = data.oldFilename;
             const newFilename = data.newFilename;
             if (!isValidRomFilename(oldFilename)) {
-                return send_json_error(res, `Invalid filename "${oldFilename}"`);
+                return sendJsonError(res, `Invalid filename "${oldFilename}"`);
             }
             if (!isValidRomFilename(newFilename)) {
-                return send_json_error(res, `Invalid filename "${newFilename}"`);
+                return sendJsonError(res, `Invalid filename "${newFilename}"`);
             }
             const oldPathname = path.join(ROMS_DIR, oldFilename);
             const newPathname = path.join(ROMS_DIR, newFilename);
             if (!fs.existsSync(oldPathname)) {
-                return send_json_error(res, `ROM "${oldFilename}" does not exist`);
+                return sendJsonError(res, `ROM "${oldFilename}" does not exist`);
             }
             if (fs.existsSync(newPathname)) {
-                return send_json_error(res, `ROM "${newFilename}" already exists`);
+                return sendJsonError(res, `ROM "${newFilename}" already exists`);
             }
             try {
                 fs.renameSync(oldPathname, newPathname);
             } catch (error) {
-                return send_json_error(res, `Error renaming "${oldFilename}" to "${newFilename}": ${e.message}`);
+                return sendJsonError(res, `Error renaming "${oldFilename}" to "${newFilename}": ${e.message}`);
             }
             // Update settings.
             const settings = readSettings();
@@ -238,7 +227,7 @@ app.post("/roms", (req, res) => {
             const filename = data.filename;
             const contents = Buffer.from(data.contents, 'base64');
             if (!isValidRomFilename(filename)) {
-                return send_json_error(res, `Invalid filename "${filename}"`);
+                return sendJsonError(res, `Invalid filename "${filename}"`);
             }
             const pathname = path.join(ROMS_DIR, filename);
             fs.writeFileSync(pathname, contents);
@@ -249,10 +238,10 @@ app.post("/roms", (req, res) => {
             const model = data.model;
             const filename = data.filename;
             if (model < 0 || model > 4) {
-                return send_json_error(res, `Invalid model "${model}"`);
+                return sendJsonError(res, `Invalid model "${model}"`);
             }
             if (!isValidRomFilename(filename)) {
-                return send_json_error(res, `Invalid filename "${filename}"`);
+                return sendJsonError(res, `Invalid filename "${filename}"`);
             }
             const settings = readSettings();
             const romAssignments = settings.rom_assignments ?? DEFAULT_SETTINGS.rom_assignments;
