@@ -619,6 +619,8 @@ function configureRomUpload() {
 function configurePrinter() {
     const printerNode = document.querySelector(".printer-output");
     const printer = new Printer(printerNode);
+    const clearPrinterButton = document.getElementById("clearPrinterButton");
+    clearPrinterButton.addEventListener("click", () => printer.clearPrintout());
     const attemptConnection = () => {
         const webSocket = new WebSocket("ws://" + window.location.host + "/printer");
         webSocket.addEventListener("message", async (e) => {

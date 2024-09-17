@@ -399,7 +399,7 @@ static void mongoose_event_handler(struct mg_connection *c,
 
       } else if (mg_http_match_uri(message, "/status")) {
         mongoose_handle_status(&response, &content_type);
-      } else if (mg_http_match_uri(message, "/log")) {
+      } else if (mg_http_match_uri(message, "/printer")) {
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
         return;
@@ -448,10 +448,10 @@ static void mongoose_event_handler(struct mg_connection *c,
       size_t len;
       while ((len = mg_queue_next(&prn_queue, &ptr)) > 0) {
         assert(len == 1);
-        const char* p = charToUTF8(*ptr);
         for (struct mg_connection* t = c->mgr->conns; t != NULL; t = t->next) {
-          if (!t->is_websocket) continue;  // Ignore non-websocket connections
-          mg_ws_send(t, p, strlen(p), WEBSOCKET_OP_TEXT);
+            if (t->is_websocket) {
+                mg_ws_send(t, ptr, len, WEBSOCKET_OP_BINARY);
+            }
         }
         mg_queue_del(&prn_queue, 1);
       }

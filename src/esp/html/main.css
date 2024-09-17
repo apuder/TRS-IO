@@ -225,6 +225,12 @@ article:has(input[name=active-article]:not(:checked)) {
     }
 }
 
+.printer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .printer-output {
     background: white;
     color: black;
@@ -298,7 +304,7 @@ article:has(input[name=active-article]:not(:checked)) {
     position: absolute;
     bottom: 30px;
     right: 30px;
-    color: var(--yellow-bottom);
+    color: var(--yellow);
     background-color: var(--brown);
     padding: 5px 10px;
     border-radius: 8px;

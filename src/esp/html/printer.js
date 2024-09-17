@@ -48,6 +48,9 @@ export class Printer {
             this.line += String.fromCodePoint(ch);
         }
     }
+    clearPrintout() {
+        this.linePrinterPaper.replaceChildren();
+    }
     printLine(line) {
         // Figure out scroll space at the bottom:
         const bottomSpace = Math.abs(this.linePrinterPaper.scrollHeight - this.linePrinterPaper.scrollTop - this.linePrinterPaper.clientHeight);
@@ -64,8 +67,5 @@ export class Printer {
             // Stay scrolled at the bottom.
             this.linePrinterPaper.scrollTop = this.linePrinterPaper.scrollHeight;
         }
-    }
-    clearPrintout() {
-        this.linePrinterPaper.replaceChildren();
     }
 }
