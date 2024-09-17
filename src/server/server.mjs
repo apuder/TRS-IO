@@ -18,6 +18,40 @@ const DEFAULT_SETTINGS = {
     "smb_passwd": "XXX",
     "rom_assignments": ["", "", "", "", ""],
 };
+const PRINTER_OUTPUT = `40 CLS
+45 OUT 255,04
+100 CLS
+200 REM *** COUNT DOWN FROM 10 TO 0 ***
+210 FOR C=10 TO 0 STEP -1
+220 PRINT C
+230 FOR Z=1 TO 300:NEXT
+233 CLS
+235 NEXT C
+250 PRINT "BLASTOFF ! ! !":T = 400:GOSUB 910
+300 REM *** SPACESHIP ***
+310 CLS
+320 PRINT@512,"   *   "
+330 PRINT     "  *U*  "
+340 PRINT     "  *S*  "
+350 PRINT     "  *A*  "
+360 PRINT     " ***** "
+370 PRINT     "*******"
+380 T=400:GOSUB 910
+400 REM *** LAUNCH THE SPACESHIP ***
+410 PRINT "  !!!  ":T=300:GOSUB 910
+420 PRINT "  !!!  ":T=200:GOSUB 910
+430 PRINT "  !!!  ":T=100:GOSUB 910
+440 FOR K=1 TO 16
+450   PRINT:T = 100:GOSUB 910
+460 NEXT K
+500 REM *** END OF THE PROGRAM ***
+510 CLS
+520 PRINT"ALL SYSTEMS ARE GO.EVERYTHING IS AOK ! "
+530 GOTO 530
+900 REM *** TIME DELAY ***
+910 FOR Z=1 TO T
+920 NEXT:RETURN
+`;
 
 // Make sure the filename isn't trying to reach outside the ROM directory.
 function isValidRomFilename(filename) {
@@ -258,4 +292,38 @@ app.post("/roms", (req, res) => {
 
 const httpServer = app.listen(PORT, () => {
   console.log(`Example app listening on http://localhost:${PORT}/`);
+});
+
+const printerWs = new WebSocketServer({ noServer: true });
+printerWs.on('connection', ws => {
+    console.log("ws connection")
+    ws.on('error', console.error);
+    let i = 0;
+    const sendByte = () => {
+        const byte = PRINTER_OUTPUT.codePointAt(i);
+        const byteArray = new Uint8Array([byte === 10 ? 13 : byte]);
+        ws.send(byteArray);
+        i += 1;
+        if (i === PRINTER_OUTPUT.length) {
+            i = 0;
+        }
+        setTimeout(sendByte, 20);
+    };
+
+    sendByte();
+});
+
+httpServer.on('upgrade', function upgrade(request, socket, head) {
+    console.log("upgrade", request.url);
+    const { pathname: path } = new URL(request.url, "ws://host");
+    console.log("pathname", path);
+
+    if (path === '/printer') {
+        printerWs.handleUpgrade(request, socket, head, ws => {
+            printerWs.emit('connection', ws, request);
+        });
+    } else {
+        console.log("Unknown WebSocket upgrade for path " + path);
+        socket.destroy();
+    }
 });

@@ -1,3 +1,4 @@
+import { Printer } from "./printer.js";
 const WIFI_STATUS_TO_STRING = new Map([
     [1, "Connecting"],
     [2, "Connected"],
@@ -615,11 +616,31 @@ function configureRomUpload() {
     });
     romsSection.addEventListener("dragleave", () => romsSection.classList.remove("hover"));
 }
+function configurePrinter() {
+    const printerNode = document.querySelector(".printer-output");
+    const printer = new Printer(printerNode);
+    const attemptConnection = () => {
+        const webSocket = new WebSocket("ws://" + window.location.host + "/printer");
+        webSocket.addEventListener("message", async (e) => {
+            if (e.data instanceof Blob) {
+                const bytes = new Uint8Array(await e.data.arrayBuffer());
+                for (let i = 0; i < bytes.length; i++) {
+                    printer.printChar(bytes[i]);
+                }
+            }
+        });
+        webSocket.addEventListener("close", e => {
+            setTimeout(attemptConnection, 1000);
+        });
+    };
+    attemptConnection();
+}
 export function main() {
     configureButtons();
     configureRomUpload();
     fetchStatus(true);
     fetchRomInfo();
     configureDots();
+    configurePrinter();
     scheduleFetchStatus();
 }

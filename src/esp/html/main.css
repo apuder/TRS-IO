@@ -298,11 +298,10 @@ article:has(input[name=active-article]:not(:checked)) {
     position: absolute;
     bottom: 30px;
     right: 30px;
-    color: var(--brown);
-    background-color: rgb(255 255 255 / 20%);
+    color: var(--yellow-bottom);
+    background-color: var(--brown);
     padding: 5px 10px;
-    border: 3px solid var(--brown);
-    border-radius: 5px;
+    border-radius: 8px;
     font-size: 20px;
     font-weight: bold;
     transition: bottom 300ms;
