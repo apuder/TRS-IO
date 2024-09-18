@@ -137,6 +137,8 @@ function updateSettingsForm(status) {
     updateSettingsField("smb_url", status.smb_url);
     updateSettingsField("smb_user", status.smb_user);
     updateSettingsField("smb_passwd", status.smb_passwd);
+    const keyboardSelect = document.getElementById("keyboard_layout");
+    keyboardSelect.selectedIndex = status.keyboard_layout;
 }
 function updateStatus(status, initialFetch) {
     var _a;
@@ -453,6 +455,7 @@ async function startSaveIndicator() {
     stars.remove();
 }
 async function saveSettings() {
+    const keyboardSelect = document.getElementById("keyboard_layout");
     const settings = {
         color: parseInt(getSettingsEnumField("color")),
         tz: getSettingsField("tz"),
@@ -461,6 +464,7 @@ async function saveSettings() {
         smb_url: getSettingsField("smb_url"),
         smb_user: getSettingsField("smb_user"),
         smb_passwd: getSettingsField("smb_passwd"),
+        keyboard_layout: keyboardSelect.selectedIndex,
     };
     const responsePromise = fetch("/config", {
         method: "POST",

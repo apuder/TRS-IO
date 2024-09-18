@@ -9,14 +9,15 @@ import express from 'express';
 const STATE_DIR = "state";
 const ROMS_DIR = "state/roms";
 const DEFAULT_SETTINGS = {
-    "color": 1,
-    "tz": "GMT-8",
-    "ssid": "fandango",
-    "passwd": "22PineCreekSLO",
-    "smb_url": "smb://unifi/TRS-IO/smb-m3",
-    "smb_user": "lk",
-    "smb_passwd": "XXX",
-    "rom_assignments": ["", "", "", "", ""],
+    color: 1,
+    tz: "GMT-8",
+    ssid: "fandango",
+    passwd: "22PineCreekSLO",
+    smb_url: "smb://unifi/TRS-IO/smb-m3",
+    smb_user: "lk",
+    smb_passwd: "XXX",
+    rom_assignments: ["", "", "", "", ""],
+    keyboard_layout: 3, // US English
 };
 const PRINTER_OUTPUT = `40 CLS
 45 OUT 255,04
@@ -99,25 +100,27 @@ function makeStatus() {
 
     const now = new Date();
     const status = {
-        "hardware_rev": 1,
-        "vers_major": 2,
-        "vers_minor": 0,
-        "wifi_status": 2,
-        "ip": "192.168.1.188",
-        "config": 0, // only for TRS-IO++
-        "time": now.getHours().toString() + ":"  + now.getMinutes().toString().padStart(2, "0"),
-        "smb_err": "Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE",
+        hardware_rev: 1,
+        vers_major: 2,
+        vers_minor: 0,
+        wifi_status: 2,
+        ip: "192.168.1.188",
+        config: 0, // only for TRS-IO++
+        time: now.getHours().toString() + ":"  + now.getMinutes().toString().padStart(2, "0"),
+        smb_err: "Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE",
         //"posix_err": "Failed to initialize the SD card",
-        "has_sd_card": true,
+        has_sd_card: true,
         //"frehd_loaded": "FREHD.ROM not found",
 
-        "color": settings["color"],
-        "tz": settings["tz"],
-        "ssid": settings["ssid"],
-        "passwd": settings["passwd"],
-        "smb_url": settings["smb_url"],
-        "smb_user": settings["smb_user"],
-        "smb_passwd": settings["smb_passwd"]
+        keyboard_layout: settings.keyboard_layout,
+
+        color: settings.color,
+        tz: settings.tz,
+        ssid: settings.ssid,
+        passwd: settings.passwd,
+        smb_url: settings.smb_url,
+        smb_user: settings.smb_user,
+        smb_passwd: settings.smb_passwd,
     };
 
     return status;
@@ -143,52 +146,10 @@ function makeGetRoms() {
 const PORT = 8080;
 const app = express();
 
-/*
-const wsServer = new ws.Server({ noServer: true });
-
-httpServer.on('upgrade', (req, socket, head) => {
-    wsServer.handleUpgrade(req, socket, head, (ws) => {
-        wsServer.emit('connection', ws, req);
-    });
-});
-
-const wss1 = new WebSocketServer({ noServer: true });
-const wss2 = new WebSocketServer({ noServer: true });
-
-wss1.on('connection', function connection(ws) {
-  ws.on('error', console.error);
-
-  // ...
-});
-
-wss2.on('connection', function connection(ws) {
-  ws.on('error', console.error);
-
-  // ...
-});
-
-server.on('upgrade', function upgrade(request, socket, head) {
-  const { pathname } = new URL(request.url, 'wss://base.url');
-
-  if (pathname === '/foo') {
-    wss1.handleUpgrade(request, socket, head, function done(ws) {
-      wss1.emit('connection', ws, request);
-    });
-  } else if (pathname === '/bar') {
-    wss2.handleUpgrade(request, socket, head, function done(ws) {
-      wss2.emit('connection', ws, request);
-    });
-  } else {
-    socket.destroy();
-  }
-});
-*/
-
 app.use('/', express.static('../esp/html'));
 
 // Automatically decode JSON on POST.
 app.use(express.json());
-
 
 app.get('/status', (req, res) => {
     res.setHeader('Content-Type', 'application/json');

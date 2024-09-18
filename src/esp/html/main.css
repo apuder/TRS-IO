@@ -58,7 +58,7 @@ button:hover {
     width: fit-content;
 }
 
-input {
+input, select {
     font-family: monospace;
     font-size: 18px;
     background: rgb(255 255 255 / 20%);

@@ -27,6 +27,7 @@
 #include "esp_log.h"
 #include "mongoose.h"
 #include "web_debugger.h"
+#include "keyb.h"
 #include <string.h>
 #include "cJSON.h"
 
@@ -64,6 +65,19 @@ static string& get_screen_color()
   static string color;
   color = to_string(settings_get_screen_color());
   return color;
+}
+
+static void set_keyboard_layout(const string& keyboard_layout)
+{
+  uint8_t new_keyboard_layout = stoi(keyboard_layout);
+  settings_set_keyb_layout(new_keyboard_layout);
+}
+
+static string& get_keyboard_layout()
+{
+  static string keyboard_layout;
+  keyboard_layout = to_string(settings_get_keyb_layout());
+  return keyboard_layout;
 }
 
 #ifdef CONFIG_TRS_IO_PP
@@ -227,6 +241,7 @@ static void mongoose_handle_roms(struct mg_http_message* message,
 }
 #endif // CONFIG_TRS_IO_PP
 
+// Return whether the setting changed.
 static bool extract_post_param(cJSON *json,
                                const char* param,
                                settings_set_t set,
@@ -283,9 +298,13 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   smb_connect |= extract_post_param(json, "smb_passwd", settings_set_smb_passwd, settings_get_smb_passwd);
 
   extract_post_param(json, "color", set_screen_color, get_screen_color);
+  bool keyboard = extract_post_param(json, "keyboard_layout", set_keyboard_layout, get_keyboard_layout);
 
   settings_commit();
 
+  if (keyboard) {
+      set_keyb_layout();
+  }
   if (smb_connect) {
     init_trs_fs_smb();
   }
@@ -337,6 +356,7 @@ static void mongoose_handle_status(char** response,
   if (!smb_passwd.empty()) {
     cJSON_AddStringToObject(s, "smb_passwd", smb_passwd.c_str());
   }
+  cJSON_AddNumberToObject(s, "keyboard_layout", settings_get_keyb_layout());
 
   time_t now;
   struct tm timeinfo;

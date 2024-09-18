@@ -30,6 +30,8 @@ interface Status {
     frehd_loaded: string,
     // Timezone name:
     tz: string,
+    // Keyboard layout (see esp/components/FabGL/src/devdrivers/kbdlayouts.h):
+    keyboard_layout: number,
 }
 
 interface Rom {
@@ -209,6 +211,9 @@ function updateSettingsForm(status: Status): void {
     updateSettingsField("smb_url", status.smb_url);
     updateSettingsField("smb_user", status.smb_user);
     updateSettingsField("smb_passwd", status.smb_passwd);
+
+    const keyboardSelect = document.getElementById("keyboard_layout") as HTMLSelectElement;
+    keyboardSelect.selectedIndex = status.keyboard_layout;
 }
 
 function updateStatus(status: Status, initialFetch: boolean): void {
@@ -554,6 +559,7 @@ async function startSaveIndicator(): Promise<void> {
 }
 
 async function saveSettings(): Promise<void> {
+    const keyboardSelect = document.getElementById("keyboard_layout") as HTMLSelectElement;
     const settings = {
         color: parseInt(getSettingsEnumField("color")),
         tz: getSettingsField("tz"),
@@ -562,6 +568,7 @@ async function saveSettings(): Promise<void> {
         smb_url: getSettingsField("smb_url"),
         smb_user: getSettingsField("smb_user"),
         smb_passwd: getSettingsField("smb_passwd"),
+        keyboard_layout: keyboardSelect.selectedIndex,
     };
 
     const responsePromise = fetch("/config", {
