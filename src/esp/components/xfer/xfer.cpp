@@ -182,6 +182,28 @@ bool XFERModule::dosCLOSE(dos_err_t& err) {
   return true;  
 }
 
+bool XFERModule::dosREMOVE(dos_err_t& err, const char* fn) {
+  uint16_t len = 0;
+
+  in.cmd = XFER_CMD_REMOVE;
+
+  if (strlen(fn) > MAX_FNAME_LEN) {
+    return false;
+  }
+  strcpy(in.params.remove.fn, fn);
+  if (!xferModule.sendCMD(sizeof(cmd_in_remove_t) + 1, &in)) {
+    return false;
+  }
+  if (!xferModule.getResult(len, (const void*&) out)) {
+    return false;
+  }
+  if (len != 1) {
+    return false;
+  }
+  err = out->remove.err;
+  return true;
+}
+
 
 void test_xfer()
 {
@@ -285,6 +307,18 @@ void test_xfer()
   } while(count != 0);
   if (!xferModule.dosCLOSE(err)) {
     printf("Err dosCLOSE\n");
+    return;
+  }
+  xferModule.consumedResult();
+
+  // Remove file XFER/TXT
+  if (!xferModule.dosREMOVE(err, "XFER/TXT")) {
+    printf("Err dosREMOVE");
+    return;
+  }
+  if (err != NO_ERR) {
+    printf("dosREMOVE err: %d\n", err);
+    xferModule.consumedResult();
     return;
   }
   xferModule.consumedResult();

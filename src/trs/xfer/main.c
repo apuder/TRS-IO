@@ -14,7 +14,8 @@ static const char* commands[] = {
   "INIT",
   "READ",
   "WRITE",
-  "CLOSE"
+  "CLOSE",
+  "REMOVE"
 };
 
 
@@ -155,6 +156,22 @@ static uint16_t process_cmd_close(cmd_in_close_t* in, cmd_out_close_t* out)
   return 1;
 }
 
+static uint16_t process_cmd_remove(cmd_in_remove_t* in, cmd_out_remove_t* out)
+{
+  dos_err_t err = dos_fspec(&in->fn[0], &fcb);
+  if (err != NO_ERR) {
+    out->err = err;
+    return 1;
+  }
+  err = dos_open(&fcb, NULL, 0);
+  if (err != NO_ERR && err != ERR_LRL) {
+    out->err = err;
+    return 1;
+  }
+  out->err = dos_remove(&fcb);
+  return 1;
+}
+
 static void process_cmd()
 {
   uint16_t len = 0;
@@ -189,6 +206,9 @@ static void process_cmd()
       break;
     case XFER_CMD_CLOSE:
       len = process_cmd_close(&in.params.close, &out.close);
+      break;
+    case XFER_CMD_REMOVE:
+      len = process_cmd_remove(&in.params.remove, &out.remove);
       break;
   }
   // Send result to ESP

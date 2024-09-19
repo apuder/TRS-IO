@@ -21,6 +21,7 @@
 #define XFER_CMD_READ 3
 #define XFER_CMD_WRITE 4
 #define XFER_CMD_CLOSE 5
+#define XFER_CMD_REMOVE 6
 
 
 typedef struct __PACKED__ _cmd_in_dir_t {
@@ -72,6 +73,14 @@ typedef struct __PACKED__ _cmd_out_close_t {
   dos_err_t err;
 } cmd_out_close_t;
 
+typedef struct __PACKED__ _cmd_in_remove_t {
+  char fn[15];
+} cmd_in_remove_t;
+
+typedef struct __PACKED__ _cmd_out_remove_t {
+  dos_err_t err;
+} cmd_out_remove_t;
+
 typedef union __PACKED__ _params_t {
   cmd_in_dir_t dir;
   cmd_in_open_t open;
@@ -79,6 +88,7 @@ typedef union __PACKED__ _params_t {
   cmd_in_write_t write;
   cmd_in_read_t read;
   cmd_in_close_t close;
+  cmd_in_remove_t remove;
 } params_t;
 
 typedef struct __PACKED__ _xfer_in_t {
@@ -99,6 +109,7 @@ typedef union __PACKED__ _xfer_out_t {
   cmd_out_write_t write;
   cmd_out_read_t read;
   cmd_out_close_t close;
+  cmd_out_remove_t remove;
 } xfer_out_t;
 
 #endif
