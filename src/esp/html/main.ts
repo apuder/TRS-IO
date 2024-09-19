@@ -221,19 +221,27 @@ function updateStatus(status: Status, initialFetch: boolean): void {
 
     const wifiStatusText = WIFI_STATUS_TO_STRING.get(status.wifi_status) ?? "Unknown";
 
+    const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
+    const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";
+    const smbConnected = status.smb_err === undefined || status.smb_err === "";
+
+    const sdCardStatus = sdCardMounted ? "Mounted" : status.posix_err;
+    const frehdStatus = frehdLoaded ? "Found" : status.frehd_loaded;
+    const smbStatus = smbConnected ? "Connected" : status.smb_err;
+
     updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
     updateStatusField("vers_minor", status.vers_minor);
     updateStatusField("time", status.time);
     updateStatusField("ip", status.ip);
     updateStatusField("wifi_status", wifiStatusText);
-    updateStatusField("smb_err", status.smb_err || "Connected");
-    updateStatusField("posix_err", status.posix_err || "Found");
-    updateStatusField("frehd_loaded", status.frehd_loaded || "Found");
+    updateStatusField("smb_err", smbStatus);
+    updateStatusField("posix_err", sdCardStatus);
+    updateStatusField("frehd_loaded", frehdStatus);
 
     updateStatusIcon("wifi_status_icon", status.wifi_status === 2, wifiStatusText);
-    updateStatusIcon("smb_share_status_icon", status.smb_err === "", status.smb_err);
-    updateStatusIcon("sd_card_status_icon", status.posix_err === "", status.posix_err);
+    updateStatusIcon("smb_share_status_icon", smbConnected, smbStatus);
+    updateStatusIcon("sd_card_status_icon", sdCardMounted, sdCardStatus);
 
     const deviceTypeSpan = document.getElementById("device_type") as HTMLSpanElement;
     deviceTypeSpan.textContent = getDeviceName(status);
