@@ -23,3 +23,7 @@ typedef uint8_t sector_t[256];
 #define DIR_ENTRY_SIZE(d) (((d)->lrl == 0 ? 256 : (d)->lrl) * ((d)->ern - ((d)->eof != 0)) + (d)->eof)
 
 #define NO_ERR 0
+#define ERR_ILLEGAL_FILENAME 19
+#define ERR_EOF 28
+#define ERR_REC_OUT_OF_RANGE 29
+#define ERR_LRL 42

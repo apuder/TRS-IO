@@ -92,7 +92,8 @@ bool XFERModule::dosOPEN(dos_err_t& err, const char* fn) {
   in.cmd = XFER_CMD_OPEN;
 
   if (strlen(fn) > MAX_FNAME_LEN) {
-    return false;
+    err = ERR_ILLEGAL_FILENAME;
+    return true;
   }
   strcpy(in.params.open.fn, fn);
   if (!xferModule.sendCMD(sizeof(cmd_in_open_t) + 1, &in)) {
@@ -114,7 +115,8 @@ bool XFERModule::dosINIT(dos_err_t& err, const char* fn) {
   in.cmd = XFER_CMD_INIT;
 
   if (strlen(fn) > MAX_FNAME_LEN) {
-    return false;
+    err = ERR_ILLEGAL_FILENAME;
+    return true;
   }
   strcpy(in.params.init.fn, fn);
   if (!xferModule.sendCMD(sizeof(cmd_in_init_t) + 1, &in)) {
@@ -188,7 +190,8 @@ bool XFERModule::dosREMOVE(dos_err_t& err, const char* fn) {
   in.cmd = XFER_CMD_REMOVE;
 
   if (strlen(fn) > MAX_FNAME_LEN) {
-    return false;
+    err = ERR_ILLEGAL_FILENAME;
+    return true;
   }
   strcpy(in.params.remove.fn, fn);
   if (!xferModule.sendCMD(sizeof(cmd_in_remove_t) + 1, &in)) {
@@ -205,6 +208,8 @@ bool XFERModule::dosREMOVE(dos_err_t& err, const char* fn) {
 }
 
 
+#define CHECK_XFER(svc) if (!(svc)) {printf("XFER not available"); return; }
+
 void test_xfer()
 {
   // Test for DIR
@@ -213,10 +218,7 @@ void test_xfer()
   dir_buf_t* dir;
   sector_t sector;
 
-  if (!xferModule.dosDIR(0, err, n, dir)) {
-    printf("Err dosDIR\n");
-    return;
-  }
+  CHECK_XFER(xferModule.dosDIR(0, err, n, dir));
   if (err != NO_ERR) {
     printf("dosDIR err: %d\n", err);
   } else {
@@ -230,10 +232,7 @@ void test_xfer()
   xferModule.consumedResult();
 
   // Test for writing to a file called XFER/TXT
-  if (!xferModule.dosINIT(err, "XFER/TXT")) {
-    printf("Err dosINIT");
-    return;
-  }
+  CHECK_XFER(xferModule.dosINIT(err, "XFER/TXT"));
   if (err != NO_ERR) {
     printf("dosINIT err: %d\n", err);
     xferModule.consumedResult();
@@ -248,10 +247,7 @@ void test_xfer()
     sector[idx++] = v++;
     if (idx == 0) {
       // Sector is full
-      if (!xferModule.dosWRITE(err, sizeof(sector_t), &sector)) {
-        printf("Err dosWRITE\n");
-        return;
-      }
+      CHECK_XFER(xferModule.dosWRITE(err, sizeof(sector_t), &sector));
       if (err != NO_ERR) {
         printf("dosWRITE err: %d\n", err);
         xferModule.consumedResult();
@@ -260,27 +256,18 @@ void test_xfer()
       xferModule.consumedResult();
     }
   }
-  if (!xferModule.dosWRITE(err, idx, &sector)) {
-    printf("Err dosWRITE\n");
-    return;
-  }
+  CHECK_XFER(xferModule.dosWRITE(err, idx, &sector));
   if (err != NO_ERR) {
     printf("dosWRITE err: %d\n", err);
     xferModule.consumedResult();
     return;
   }
   xferModule.consumedResult();
-  if (!xferModule.dosCLOSE(err)) {
-    printf("Err dosCLOSE\n");
-    return;
-  }
+  CHECK_XFER(xferModule.dosCLOSE(err));
   xferModule.consumedResult();
 
   // Read back that some file
-  if (!xferModule.dosOPEN(err, "XFER/TXT")) {
-    printf("Err dosOPEN");
-    return;
-  }
+  CHECK_XFER(xferModule.dosOPEN(err, "XFER/TXT"));
   if (err != NO_ERR) {
     printf("dosOPEN err: %d\n", err);
     xferModule.consumedResult();
@@ -293,10 +280,7 @@ void test_xfer()
   uint16_t count;
   sector_t* sector_in;
   do {
-    if (!xferModule.dosREAD(err, count, sector_in)) {
-      printf("Err dosREAD\n");
-      return;
-    }
+    CHECK_XFER(xferModule.dosREAD(err, count, sector_in));
     xferModule.consumedResult();
     // Verify content
     for (int i = 0; i < count; i++) {
@@ -305,17 +289,11 @@ void test_xfer()
       }
     }
   } while(count != 0);
-  if (!xferModule.dosCLOSE(err)) {
-    printf("Err dosCLOSE\n");
-    return;
-  }
+  CHECK_XFER(xferModule.dosCLOSE(err));
   xferModule.consumedResult();
 
   // Remove file XFER/TXT
-  if (!xferModule.dosREMOVE(err, "XFER/TXT")) {
-    printf("Err dosREMOVE");
-    return;
-  }
+  CHECK_XFER(xferModule.dosREMOVE(err, "XFER/TXT"));
   if (err != NO_ERR) {
     printf("dosREMOVE err: %d\n", err);
     xferModule.consumedResult();
