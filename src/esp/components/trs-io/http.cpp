@@ -344,6 +344,7 @@ static void mongoose_handle_status(char** response,
   cJSON_AddNumberToObject(s, "board", 2);
 #endif
   cJSON_AddStringToObject(s, "git_commit", GIT_REV);
+  cJSON_AddStringToObject(s, "git_tag", GIT_TAG);
   cJSON_AddStringToObject(s, "git_branch", GIT_BRANCH);
 
   uint8_t color = settings_get_screen_color();

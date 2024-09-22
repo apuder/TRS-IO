@@ -22,6 +22,7 @@ interface Status {
     // Dip switches:
     config?: number, // only for TRS-IO++, see CONFIGURATIONS list.
     git_commit: string,
+    git_tag: string,
     git_branch: string,
     // 0 = White, 1 = Green, 2 = Amber.
     color: number,
@@ -160,6 +161,18 @@ function displayError(message: string, autohide = true): UserMessage {
     return userMessage;
 }
 
+// Replaces the optional trailing "+" with an English message.
+function cleanUpGitCommit(gitTag: string, gitCommit: string): string {
+    if (gitCommit.endsWith("+")) {
+        gitCommit = gitCommit.substring(0, gitCommit.length - 1) + ", with local changes";
+    }
+    if (gitTag !== "") {
+        gitCommit = gitTag + " (" + gitCommit + ")";
+    }
+
+    return gitCommit;
+}
+
 // Generic name for the device we're connected to (not the specific configuration of it).
 function getDeviceName(status: Status | undefined): string {
     return status === undefined
@@ -270,7 +283,7 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     }
     updateStatusField("board", BOARD_TYPE_TO_STRING.get(status.board) ?? "Unknown");
     updateStatusField("configuration", configuration.name);
-    updateStatusField("git_commit", status.git_commit);
+    updateStatusField("git_commit", cleanUpGitCommit(status.git_tag, status.git_commit));
     updateStatusField("git_branch", status.git_branch);
     updateStatusField("time", status.time);
     updateStatusField("wifi_ssid", status.ssid || "Not configured");

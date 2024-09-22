@@ -93,6 +93,16 @@ function displayError(message, autohide = true) {
     updateUserMessages();
     return userMessage;
 }
+// Replaces the optional trailing "+" with an English message.
+function cleanUpGitCommit(gitTag, gitCommit) {
+    if (gitCommit.endsWith("+")) {
+        gitCommit = gitCommit.substring(0, gitCommit.length - 1) + ", with local changes";
+    }
+    if (gitTag !== "") {
+        gitCommit = gitTag + " (" + gitCommit + ")";
+    }
+    return gitCommit;
+}
 // Generic name for the device we're connected to (not the specific configuration of it).
 function getDeviceName(status) {
     return status === undefined
@@ -186,7 +196,7 @@ function updateStatus(status, initialFetch) {
     }
     updateStatusField("board", (_b = BOARD_TYPE_TO_STRING.get(status.board)) !== null && _b !== void 0 ? _b : "Unknown");
     updateStatusField("configuration", configuration.name);
-    updateStatusField("git_commit", status.git_commit);
+    updateStatusField("git_commit", cleanUpGitCommit(status.git_tag, status.git_commit));
     updateStatusField("git_branch", status.git_branch);
     updateStatusField("time", status.time);
     updateStatusField("wifi_ssid", status.ssid || "Not configured");

@@ -110,6 +110,7 @@ function makeStatus() {
         config: 3, // only for TRS-IO++
         board: 2, // TRS-IO++
         git_commit: "e1e27ab+",
+        git_tag: "",
         git_branch: "master",
         time: now.getHours().toString() + ":"  + now.getMinutes().toString().padStart(2, "0"),
         smb_err: "Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE",
