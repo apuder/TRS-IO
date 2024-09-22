@@ -1,4 +1,11 @@
 import { Printer } from "./printer.js";
+// Hardware board type.
+var BoardType;
+(function (BoardType) {
+    BoardType[BoardType["TRS_IO_MODEL_1"] = 0] = "TRS_IO_MODEL_1";
+    BoardType[BoardType["TRS_IO_MODEL_3"] = 1] = "TRS_IO_MODEL_3";
+    BoardType[BoardType["TRS_IO_PP"] = 2] = "TRS_IO_PP";
+})(BoardType || (BoardType = {}));
 // DIP switch configuration.
 class Configuration {
     constructor(name) {
@@ -31,6 +38,11 @@ const WIFI_STATUS_TO_STRING = new Map([
     [2, "Connected"],
     [3, "Not connected"],
     [4, "Not configured"],
+]);
+const BOARD_TYPE_TO_STRING = new Map([
+    [BoardType.TRS_IO_MODEL_1, "TRS-IO for Model 1"],
+    [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model 3"],
+    [BoardType.TRS_IO_PP, "TRS-IO++"],
 ]);
 // Message displayed to the user (usually an error).
 class UserMessage {
@@ -151,7 +163,7 @@ function updateSettingsForm(status) {
     keyboardSelect.selectedIndex = status.keyboard_layout;
 }
 function updateStatus(status, initialFetch) {
-    var _a;
+    var _a, _b;
     gMostRecentStatus = status;
     const wifiStatusText = (_a = WIFI_STATUS_TO_STRING.get(status.wifi_status)) !== null && _a !== void 0 ? _a : "Unknown";
     const configuration = status.config === undefined ? TRS_IO_CONFIGURATION : CONFIGURATIONS[status.config];
@@ -164,19 +176,23 @@ function updateStatus(status, initialFetch) {
     updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
     updateStatusField("vers_minor", status.vers_minor);
-    const ptrsVers = document.getElementById("ptrs_vers");
-    if (status.ptrs_vers_major === undefined || status.ptrs_vers_minor === undefined) {
-        ptrsVers.style.display = "none";
+    const fpgaVers = document.getElementById("fpga_vers");
+    if (status.fpga_vers_major === undefined || status.fpga_vers_minor === undefined) {
+        fpgaVers.style.display = "none";
     }
     else {
-        ptrsVers.style.removeProperty("display");
-        updateStatusField("ptrs_vers_major", status.ptrs_vers_major);
-        updateStatusField("ptrs_vers_minor", status.ptrs_vers_minor);
+        fpgaVers.style.removeProperty("display");
+        updateStatusField("fpga_vers_major", status.fpga_vers_major);
+        updateStatusField("fpga_vers_minor", status.fpga_vers_minor);
     }
+    updateStatusField("board", (_b = BOARD_TYPE_TO_STRING.get(status.board)) !== null && _b !== void 0 ? _b : "Unknown");
     updateStatusField("configuration", configuration.name);
+    updateStatusField("git_commit", status.git_commit);
+    updateStatusField("git_branch", status.git_branch);
     updateStatusField("time", status.time);
-    updateStatusField("ip", status.ip);
+    updateStatusField("wifi_ssid", status.ssid || "Not configured");
     updateStatusField("wifi_status", wifiStatusText);
+    updateStatusField("ip", status.ip);
     updateStatusField("smb_err", smbStatus);
     updateStatusField("posix_err", sdCardStatus);
     updateStatusField("frehd_loaded", frehdStatus);

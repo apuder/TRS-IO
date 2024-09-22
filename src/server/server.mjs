@@ -103,11 +103,14 @@ function makeStatus() {
         hardware_rev: 1,
         vers_major: 2,
         vers_minor: 0,
-        ptrs_vers_major: 0,
-        ptrs_vers_minor: 9,
+        fpga_vers_major: 0,
+        fpga_vers_minor: 9,
         wifi_status: 2,
         ip: "192.168.1.188",
-        config: 0, // only for TRS-IO++
+        config: 3, // only for TRS-IO++
+        board: 2, // TRS-IO++
+        git_commit: "e1e27ab+",
+        git_branch: "master",
         time: now.getHours().toString() + ":"  + now.getMinutes().toString().padStart(2, "0"),
         smb_err: "Session setup failed with (0xc000006d) STATUS_LOGON_FAILURE",
         //"posix_err": "Failed to initialize the SD card",

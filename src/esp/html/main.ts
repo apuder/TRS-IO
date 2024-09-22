@@ -1,18 +1,28 @@
 
 import {Printer} from "./printer.js";
 
+// Hardware board type.
+enum BoardType {
+    TRS_IO_MODEL_1,
+    TRS_IO_MODEL_3,
+    TRS_IO_PP,
+}
+
 interface Status {
     hardware_rev: number,
     vers_major: number,
     vers_minor: number,
     // These two only for TRS-IO++:
-    ptrs_vers_major?: number,
-    ptrs_vers_minor?: number,
+    fpga_vers_major?: number,
+    fpga_vers_minor?: number,
     // See WIFI_STATUS_TO_STRING:
     wifi_status: number,
     ip: string,
+    board: BoardType,
     // Dip switches:
     config?: number, // only for TRS-IO++, see CONFIGURATIONS list.
+    git_commit: string,
+    git_branch: string,
     // 0 = White, 1 = Green, 2 = Amber.
     color: number,
     // Wifi:
@@ -84,6 +94,12 @@ const WIFI_STATUS_TO_STRING = new Map<number,string>([
     [2, "Connected"],
     [3, "Not connected"],
     [4, "Not configured"],
+]);
+
+const BOARD_TYPE_TO_STRING = new Map<number,string>([
+    [BoardType.TRS_IO_MODEL_1, "TRS-IO for Model 1"],
+    [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model 3"],
+    [BoardType.TRS_IO_PP, "TRS-IO++"],
 ]);
 
 // Message displayed to the user (usually an error).
@@ -245,18 +261,22 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
     updateStatusField("vers_minor", status.vers_minor);
-    const ptrsVers = document.getElementById("ptrs_vers") as HTMLElement;
-    if (status.ptrs_vers_major === undefined || status.ptrs_vers_minor === undefined) {
-        ptrsVers.style.display = "none";
+    const fpgaVers = document.getElementById("fpga_vers") as HTMLElement;
+    if (status.fpga_vers_major === undefined || status.fpga_vers_minor === undefined) {
+        fpgaVers.style.display = "none";
     } else {
-        ptrsVers.style.removeProperty("display");
-        updateStatusField("ptrs_vers_major", status.ptrs_vers_major);
-        updateStatusField("ptrs_vers_minor", status.ptrs_vers_minor);
+        fpgaVers.style.removeProperty("display");
+        updateStatusField("fpga_vers_major", status.fpga_vers_major);
+        updateStatusField("fpga_vers_minor", status.fpga_vers_minor);
     }
+    updateStatusField("board", BOARD_TYPE_TO_STRING.get(status.board) ?? "Unknown");
     updateStatusField("configuration", configuration.name);
+    updateStatusField("git_commit", status.git_commit);
+    updateStatusField("git_branch", status.git_branch);
     updateStatusField("time", status.time);
-    updateStatusField("ip", status.ip);
+    updateStatusField("wifi_ssid", status.ssid || "Not configured");
     updateStatusField("wifi_status", wifiStatusText);
+    updateStatusField("ip", status.ip);
     updateStatusField("smb_err", smbStatus);
     updateStatusField("posix_err", sdCardStatus);
     updateStatusField("frehd_loaded", frehdStatus);

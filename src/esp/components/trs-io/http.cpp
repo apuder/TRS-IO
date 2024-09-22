@@ -43,6 +43,9 @@ static int num_printer_sockets = 0;
 typedef void (*settings_set_t)(const string&);
 typedef string& (*settings_get_t)();
 
+extern const char* GIT_REV;
+extern const char* GIT_BRANCH;
+
 // Utility class to auto-delete the JSON pointer when it goes out of scope.
 class AutoDeleteJson {
     cJSON *json;
@@ -319,18 +322,29 @@ static bool mongoose_handle_config(struct mg_http_message* message,
 static void mongoose_handle_status(char** response,
                                    const char** content_type)
 {
+  uint8_t fpga_version = spi_get_fpga_version();
+
   cJSON* s = cJSON_CreateObject();
   AutoDeleteJson autoDeleteJson(s);
   cJSON_AddNumberToObject(s, "hardware_rev", TRS_IO_HARDWARE_REVISION);
   cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
-  cJSON_AddNumberToObject(s, "ptrs_vers_major", POCKET_TRS_VERSION_MAJOR);
-  cJSON_AddNumberToObject(s, "ptrs_vers_minor", POCKET_TRS_VERSION_MINOR);
+  cJSON_AddNumberToObject(s, "fpga_vers_major", fpga_version >> 4);
+  cJSON_AddNumberToObject(s, "fpga_vers_minor", fpga_version & 0x0F);
   cJSON_AddNumberToObject(s, "wifi_status", *get_wifi_status());
   cJSON_AddStringToObject(s, "ip", get_wifi_ip());
-#ifdef CONFIG_TRS_IO_PP
-  cJSON_AddNumberToObject(s, "config", get_config());
+#ifdef CONFIG_TRS_IO_MODEL_1
+  cJSON_AddNumberToObject(s, "board", 0);
 #endif
+#ifdef CONFIG_TRS_IO_MODEL_3
+  cJSON_AddNumberToObject(s, "board", 1);
+#endif
+#ifdef CONFIG_TRS_IO_PP
+  cJSON_AddNumberToObject(s, "config", get_config()); // DIP switches
+  cJSON_AddNumberToObject(s, "board", 2);
+#endif
+  cJSON_AddStringToObject(s, "git_commit", GIT_REV);
+  cJSON_AddStringToObject(s, "git_branch", GIT_BRANCH);
 
   uint8_t color = settings_get_screen_color();
   string& tz = settings_get_tz();
