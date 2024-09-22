@@ -21,6 +21,7 @@
 #include "ntp_sync.h"
 #include "esp_wifi.h"
 #include "esp_mock.h"
+#include "version-ptrs.h"
 #include "version.h"
 #include "mdns.h"
 #include "esp_event.h"
@@ -323,6 +324,8 @@ static void mongoose_handle_status(char** response,
   cJSON_AddNumberToObject(s, "hardware_rev", TRS_IO_HARDWARE_REVISION);
   cJSON_AddNumberToObject(s, "vers_major", TRS_IO_VERSION_MAJOR);
   cJSON_AddNumberToObject(s, "vers_minor", TRS_IO_VERSION_MINOR);
+  cJSON_AddNumberToObject(s, "ptrs_vers_major", POCKET_TRS_VERSION_MAJOR);
+  cJSON_AddNumberToObject(s, "ptrs_vers_minor", POCKET_TRS_VERSION_MINOR);
   cJSON_AddNumberToObject(s, "wifi_status", *get_wifi_status());
   cJSON_AddStringToObject(s, "ip", get_wifi_ip());
 #ifdef CONFIG_TRS_IO_PP

@@ -103,6 +103,8 @@ function makeStatus() {
         hardware_rev: 1,
         vers_major: 2,
         vers_minor: 0,
+        ptrs_vers_major: 0,
+        ptrs_vers_minor: 9,
         wifi_status: 2,
         ip: "192.168.1.188",
         config: 0, // only for TRS-IO++

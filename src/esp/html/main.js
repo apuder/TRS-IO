@@ -1,28 +1,37 @@
 import { Printer } from "./printer.js";
+// DIP switch configuration.
+class Configuration {
+    constructor(name) {
+        this.name = name;
+    }
+}
+// Controlled by the DIP switches and given to us in the "config" status field.
+const CONFIGURATIONS = [
+    new Configuration("TRS-IO (Model 1)"),
+    new Configuration("PocketTRS (Model 1, internal TRS-IO)"),
+    new Configuration("Reserved"),
+    new Configuration("PocketTRS (Model III, internal TRS-IO)"),
+    new Configuration("PocketTRS (Model 4, internal TRS-IO)"),
+    new Configuration("PocketTRS (Model 4P, internal TRS-IO)"),
+    new Configuration("Custom 1"),
+    new Configuration("Custom 2"),
+    new Configuration("TRS-IO (Model III)"),
+    new Configuration("PocketTRS (Model 1, external TRS-IO)"),
+    new Configuration("Reserved"),
+    new Configuration("PocketTRS (Model III, external TRS-IO)"),
+    new Configuration("PocketTRS (Model 4, external TRS-IO)"),
+    new Configuration("PocketTRS (Model 4P, external TRS-IO)"),
+    new Configuration("Custom 1"),
+    new Configuration("Custom 2"),
+];
+// Missing "config" status field, indicating TRS-IO board.
+const TRS_IO_CONFIGURATION = new Configuration("TRS-IO");
 const WIFI_STATUS_TO_STRING = new Map([
     [1, "Connecting"],
     [2, "Connected"],
     [3, "Not connected"],
     [4, "Not configured"],
 ]);
-const CONFIGURATIONS = [
-    "TRS-IO (Model 1)",
-    "TRS-IO (Model III)",
-    "PocketTRS (Model 1, internal TRS-IO)",
-    "Reserved",
-    "PocketTRS (Model III, internal TRS-IO)",
-    "PocketTRS (Model 4, internal TRS-IO)",
-    "PocketTRS (Model 4P, internal TRS-IO)",
-    "Custom 1",
-    "Custom 2",
-    "PocketTRS (Model 1, external TRS-IO)",
-    "Reserved",
-    "PocketTRS (Model III, external TRS-IO)",
-    "PocketTRS (Model 4, external TRS-IO)",
-    "PocketTRS (Model 4P, external TRS-IO)",
-    "Custom 1",
-    "Custom 2"
-];
 // Message displayed to the user (usually an error).
 class UserMessage {
     constructor(message, autohide) {
@@ -72,6 +81,7 @@ function displayError(message, autohide = true) {
     updateUserMessages();
     return userMessage;
 }
+// Generic name for the device we're connected to (not the specific configuration of it).
 function getDeviceName(status) {
     return status === undefined
         ? "device"
@@ -144,6 +154,7 @@ function updateStatus(status, initialFetch) {
     var _a;
     gMostRecentStatus = status;
     const wifiStatusText = (_a = WIFI_STATUS_TO_STRING.get(status.wifi_status)) !== null && _a !== void 0 ? _a : "Unknown";
+    const configuration = status.config === undefined ? TRS_IO_CONFIGURATION : CONFIGURATIONS[status.config];
     const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
     const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";
     const smbConnected = status.smb_err === undefined || status.smb_err === "";
@@ -153,6 +164,16 @@ function updateStatus(status, initialFetch) {
     updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
     updateStatusField("vers_minor", status.vers_minor);
+    const ptrsVers = document.getElementById("ptrs_vers");
+    if (status.ptrs_vers_major === undefined || status.ptrs_vers_minor === undefined) {
+        ptrsVers.style.display = "none";
+    }
+    else {
+        ptrsVers.style.removeProperty("display");
+        updateStatusField("ptrs_vers_major", status.ptrs_vers_major);
+        updateStatusField("ptrs_vers_minor", status.ptrs_vers_minor);
+    }
+    updateStatusField("configuration", configuration.name);
     updateStatusField("time", status.time);
     updateStatusField("ip", status.ip);
     updateStatusField("wifi_status", wifiStatusText);

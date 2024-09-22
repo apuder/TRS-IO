@@ -5,11 +5,14 @@ interface Status {
     hardware_rev: number,
     vers_major: number,
     vers_minor: number,
+    // These two only for TRS-IO++:
+    ptrs_vers_major?: number,
+    ptrs_vers_minor?: number,
     // See WIFI_STATUS_TO_STRING:
     wifi_status: number,
     ip: string,
     // Dip switches:
-    config?: number, // only for TRS-IO++
+    config?: number, // only for TRS-IO++, see CONFIGURATIONS list.
     // 0 = White, 1 = Green, 2 = Amber.
     color: number,
     // Wifi:
@@ -49,31 +52,39 @@ interface ErrorResponse {
     error: string,
 }
 
+// DIP switch configuration.
+class Configuration {
+    public constructor(public readonly name: string) {}
+}
+
+// Controlled by the DIP switches and given to us in the "config" status field.
+const CONFIGURATIONS: Configuration[] = [
+    new Configuration("TRS-IO (Model 1)"),
+    new Configuration("PocketTRS (Model 1, internal TRS-IO)"),
+    new Configuration("Reserved"),
+    new Configuration("PocketTRS (Model III, internal TRS-IO)"),
+    new Configuration("PocketTRS (Model 4, internal TRS-IO)"),
+    new Configuration("PocketTRS (Model 4P, internal TRS-IO)"),
+    new Configuration("Custom 1"),
+    new Configuration("Custom 2"),
+    new Configuration("TRS-IO (Model III)"),
+    new Configuration("PocketTRS (Model 1, external TRS-IO)"),
+    new Configuration("Reserved"),
+    new Configuration("PocketTRS (Model III, external TRS-IO)"),
+    new Configuration("PocketTRS (Model 4, external TRS-IO)"),
+    new Configuration("PocketTRS (Model 4P, external TRS-IO)"),
+    new Configuration("Custom 1"),
+    new Configuration("Custom 2"),
+];
+// Missing "config" status field, indicating TRS-IO board.
+const TRS_IO_CONFIGURATION = new Configuration("TRS-IO");
+
 const WIFI_STATUS_TO_STRING = new Map<number,string>([
     [1, "Connecting"],
     [2, "Connected"],
     [3, "Not connected"],
     [4, "Not configured"],
 ]);
-
-const CONFIGURATIONS = [
-    "TRS-IO (Model 1)",
-    "TRS-IO (Model III)",
-    "PocketTRS (Model 1, internal TRS-IO)",
-    "Reserved",
-    "PocketTRS (Model III, internal TRS-IO)",
-    "PocketTRS (Model 4, internal TRS-IO)",
-    "PocketTRS (Model 4P, internal TRS-IO)",
-    "Custom 1",
-    "Custom 2",
-    "PocketTRS (Model 1, external TRS-IO)",
-    "Reserved",
-    "PocketTRS (Model III, external TRS-IO)",
-    "PocketTRS (Model 4, external TRS-IO)",
-    "PocketTRS (Model 4P, external TRS-IO)",
-    "Custom 1",
-    "Custom 2"
-];
 
 // Message displayed to the user (usually an error).
 class UserMessage {
@@ -133,6 +144,7 @@ function displayError(message: string, autohide = true): UserMessage {
     return userMessage;
 }
 
+// Generic name for the device we're connected to (not the specific configuration of it).
 function getDeviceName(status: Status | undefined): string {
     return status === undefined
         ? "device"
@@ -220,6 +232,7 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     gMostRecentStatus = status;
 
     const wifiStatusText = WIFI_STATUS_TO_STRING.get(status.wifi_status) ?? "Unknown";
+    const configuration = status.config === undefined ? TRS_IO_CONFIGURATION : CONFIGURATIONS[status.config];
 
     const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
     const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";
@@ -232,6 +245,15 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
     updateStatusField("vers_minor", status.vers_minor);
+    const ptrsVers = document.getElementById("ptrs_vers") as HTMLElement;
+    if (status.ptrs_vers_major === undefined || status.ptrs_vers_minor === undefined) {
+        ptrsVers.style.display = "none";
+    } else {
+        ptrsVers.style.removeProperty("display");
+        updateStatusField("ptrs_vers_major", status.ptrs_vers_major);
+        updateStatusField("ptrs_vers_minor", status.ptrs_vers_minor);
+    }
+    updateStatusField("configuration", configuration.name);
     updateStatusField("time", status.time);
     updateStatusField("ip", status.ip);
     updateStatusField("wifi_status", wifiStatusText);
