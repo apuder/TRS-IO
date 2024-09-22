@@ -258,7 +258,6 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     const frehdStatus = frehdLoaded ? "Found" : status.frehd_loaded;
     const smbStatus = smbConnected ? "Connected" : status.smb_err;
 
-    updateStatusField("hardware_rev", status.hardware_rev);
     updateStatusField("vers_major", status.vers_major);
     updateStatusField("vers_minor", status.vers_minor);
     const fpgaVers = document.getElementById("fpga_vers") as HTMLElement;
