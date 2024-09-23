@@ -43,7 +43,9 @@ static int num_printer_sockets = 0;
 typedef void (*settings_set_t)(const string&);
 typedef string& (*settings_get_t)();
 
+// In build/esp-idf/main/version.cpp:
 extern const char* GIT_REV;
+extern const char* GIT_TAG;
 extern const char* GIT_BRANCH;
 
 // Utility class to auto-delete the JSON pointer when it goes out of scope.
