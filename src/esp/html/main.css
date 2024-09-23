@@ -120,6 +120,10 @@ nav ul {
     }
 }
 
+body:not(.ptrs-mode) .ptrs-only {
+    display: none !important;
+}
+
 .status-icons {
     display: flex;
     gap: 13px;

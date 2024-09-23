@@ -65,30 +65,32 @@ interface ErrorResponse {
 
 // DIP switch configuration.
 class Configuration {
-    public constructor(public readonly name: string) {}
+    public constructor(public readonly name: string,
+                       public readonly isPtrs: boolean) {}
 }
 
 // Controlled by the DIP switches and given to us in the "config" status field.
 const CONFIGURATIONS: Configuration[] = [
-    new Configuration("TRS-IO (Model 1)"),
-    new Configuration("PocketTRS (Model 1, internal TRS-IO)"),
-    new Configuration("Reserved"),
-    new Configuration("PocketTRS (Model III, internal TRS-IO)"),
-    new Configuration("PocketTRS (Model 4, internal TRS-IO)"),
-    new Configuration("PocketTRS (Model 4P, internal TRS-IO)"),
-    new Configuration("Custom 1"),
-    new Configuration("Custom 2"),
-    new Configuration("TRS-IO (Model III)"),
-    new Configuration("PocketTRS (Model 1, external TRS-IO)"),
-    new Configuration("Reserved"),
-    new Configuration("PocketTRS (Model III, external TRS-IO)"),
-    new Configuration("PocketTRS (Model 4, external TRS-IO)"),
-    new Configuration("PocketTRS (Model 4P, external TRS-IO)"),
-    new Configuration("Custom 1"),
-    new Configuration("Custom 2"),
+    new Configuration("TRS-IO (Model 1)", false),
+    new Configuration("PocketTRS (Model 1, internal TRS-IO)", true),
+    new Configuration("Reserved", false),
+    new Configuration("PocketTRS (Model III, internal TRS-IO)", true),
+    new Configuration("PocketTRS (Model 4, internal TRS-IO)", true),
+    new Configuration("PocketTRS (Model 4P, internal TRS-IO)", true),
+    new Configuration("Custom 1", false),
+    new Configuration("Custom 2", false),
+    new Configuration("TRS-IO (Model III)", false),
+    new Configuration("PocketTRS (Model 1, external TRS-IO)", true),
+    new Configuration("Reserved", false),
+    new Configuration("PocketTRS (Model III, external TRS-IO)", true),
+    new Configuration("PocketTRS (Model 4, external TRS-IO)", true),
+    new Configuration("PocketTRS (Model 4P, external TRS-IO)", true),
+    new Configuration("Custom 1", false),
+    new Configuration("Custom 2", false),
 ];
 // Missing "config" status field, indicating TRS-IO board.
-const TRS_IO_CONFIGURATION = new Configuration("TRS-IO");
+const TRS_IO_M1_CONFIGURATION = new Configuration("TRS-IO (Model 1)", false);
+const TRS_IO_M3_CONFIGURATION = new Configuration("TRS-IO (Model III)", false);
 
 const WIFI_STATUS_TO_STRING = new Map<number,string>([
     [1, "Connecting"],
@@ -99,7 +101,7 @@ const WIFI_STATUS_TO_STRING = new Map<number,string>([
 
 const BOARD_TYPE_TO_STRING = new Map<number,string>([
     [BoardType.TRS_IO_MODEL_1, "TRS-IO for Model 1"],
-    [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model 3"],
+    [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model III"],
     [BoardType.TRS_IO_PP, "TRS-IO++"],
 ]);
 
@@ -177,9 +179,9 @@ function cleanUpGitCommit(gitTag: string, gitCommit: string): string {
 function getDeviceName(status: Status | undefined): string {
     return status === undefined
         ? "device"
-        : status.config === undefined
-            ? "TRS-IO"
-            : "TRS-IO++";
+        : status.board === BoardType.TRS_IO_PP
+            ? "TRS-IO++"
+            : "TRS-IO";
 }
 
 function updateStatusField(id: string, value: number | string): void {
@@ -261,7 +263,12 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     gMostRecentStatus = status;
 
     const wifiStatusText = WIFI_STATUS_TO_STRING.get(status.wifi_status) ?? "Unknown";
-    const configuration = status.config === undefined ? TRS_IO_CONFIGURATION : CONFIGURATIONS[status.config];
+    const configuration = status.board === BoardType.TRS_IO_PP
+        ? CONFIGURATIONS[status.config ?? 0]
+        : status.board === BoardType.TRS_IO_MODEL_1
+            ? TRS_IO_M1_CONFIGURATION
+            : TRS_IO_M3_CONFIGURATION
+    document.body.classList.toggle("ptrs-mode", configuration.isPtrs);
 
     const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
     const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";

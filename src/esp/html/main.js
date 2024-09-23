@@ -8,31 +8,33 @@ var BoardType;
 })(BoardType || (BoardType = {}));
 // DIP switch configuration.
 class Configuration {
-    constructor(name) {
+    constructor(name, isPtrs) {
         this.name = name;
+        this.isPtrs = isPtrs;
     }
 }
 // Controlled by the DIP switches and given to us in the "config" status field.
 const CONFIGURATIONS = [
-    new Configuration("TRS-IO (Model 1)"),
-    new Configuration("PocketTRS (Model 1, internal TRS-IO)"),
-    new Configuration("Reserved"),
-    new Configuration("PocketTRS (Model III, internal TRS-IO)"),
-    new Configuration("PocketTRS (Model 4, internal TRS-IO)"),
-    new Configuration("PocketTRS (Model 4P, internal TRS-IO)"),
-    new Configuration("Custom 1"),
-    new Configuration("Custom 2"),
-    new Configuration("TRS-IO (Model III)"),
-    new Configuration("PocketTRS (Model 1, external TRS-IO)"),
-    new Configuration("Reserved"),
-    new Configuration("PocketTRS (Model III, external TRS-IO)"),
-    new Configuration("PocketTRS (Model 4, external TRS-IO)"),
-    new Configuration("PocketTRS (Model 4P, external TRS-IO)"),
-    new Configuration("Custom 1"),
-    new Configuration("Custom 2"),
+    new Configuration("TRS-IO (Model 1)", false),
+    new Configuration("PocketTRS (Model 1, internal TRS-IO)", true),
+    new Configuration("Reserved", false),
+    new Configuration("PocketTRS (Model III, internal TRS-IO)", true),
+    new Configuration("PocketTRS (Model 4, internal TRS-IO)", true),
+    new Configuration("PocketTRS (Model 4P, internal TRS-IO)", true),
+    new Configuration("Custom 1", false),
+    new Configuration("Custom 2", false),
+    new Configuration("TRS-IO (Model III)", false),
+    new Configuration("PocketTRS (Model 1, external TRS-IO)", true),
+    new Configuration("Reserved", false),
+    new Configuration("PocketTRS (Model III, external TRS-IO)", true),
+    new Configuration("PocketTRS (Model 4, external TRS-IO)", true),
+    new Configuration("PocketTRS (Model 4P, external TRS-IO)", true),
+    new Configuration("Custom 1", false),
+    new Configuration("Custom 2", false),
 ];
 // Missing "config" status field, indicating TRS-IO board.
-const TRS_IO_CONFIGURATION = new Configuration("TRS-IO");
+const TRS_IO_M1_CONFIGURATION = new Configuration("TRS-IO (Model 1)", false);
+const TRS_IO_M3_CONFIGURATION = new Configuration("TRS-IO (Model III)", false);
 const WIFI_STATUS_TO_STRING = new Map([
     [1, "Connecting"],
     [2, "Connected"],
@@ -41,7 +43,7 @@ const WIFI_STATUS_TO_STRING = new Map([
 ]);
 const BOARD_TYPE_TO_STRING = new Map([
     [BoardType.TRS_IO_MODEL_1, "TRS-IO for Model 1"],
-    [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model 3"],
+    [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model III"],
     [BoardType.TRS_IO_PP, "TRS-IO++"],
 ]);
 // Message displayed to the user (usually an error).
@@ -107,9 +109,9 @@ function cleanUpGitCommit(gitTag, gitCommit) {
 function getDeviceName(status) {
     return status === undefined
         ? "device"
-        : status.config === undefined
-            ? "TRS-IO"
-            : "TRS-IO++";
+        : status.board === BoardType.TRS_IO_PP
+            ? "TRS-IO++"
+            : "TRS-IO";
 }
 function updateStatusField(id, value) {
     if (typeof (value) === "number") {
@@ -173,10 +175,15 @@ function updateSettingsForm(status) {
     keyboardSelect.selectedIndex = status.keyboard_layout;
 }
 function updateStatus(status, initialFetch) {
-    var _a, _b;
+    var _a, _b, _c;
     gMostRecentStatus = status;
     const wifiStatusText = (_a = WIFI_STATUS_TO_STRING.get(status.wifi_status)) !== null && _a !== void 0 ? _a : "Unknown";
-    const configuration = status.config === undefined ? TRS_IO_CONFIGURATION : CONFIGURATIONS[status.config];
+    const configuration = status.board === BoardType.TRS_IO_PP
+        ? CONFIGURATIONS[(_b = status.config) !== null && _b !== void 0 ? _b : 0]
+        : status.board === BoardType.TRS_IO_MODEL_1
+            ? TRS_IO_M1_CONFIGURATION
+            : TRS_IO_M3_CONFIGURATION;
+    document.body.classList.toggle("ptrs-mode", configuration.isPtrs);
     const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
     const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";
     const smbConnected = status.smb_err === undefined || status.smb_err === "";
@@ -194,7 +201,7 @@ function updateStatus(status, initialFetch) {
         updateStatusField("fpga_vers_major", status.fpga_vers_major);
         updateStatusField("fpga_vers_minor", status.fpga_vers_minor);
     }
-    updateStatusField("board", (_b = BOARD_TYPE_TO_STRING.get(status.board)) !== null && _b !== void 0 ? _b : "Unknown");
+    updateStatusField("board", (_c = BOARD_TYPE_TO_STRING.get(status.board)) !== null && _c !== void 0 ? _c : "Unknown");
     updateStatusField("configuration", configuration.name);
     updateStatusField("git_commit", cleanUpGitCommit(status.git_tag, status.git_commit));
     updateStatusField("git_branch", status.git_branch);

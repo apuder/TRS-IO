@@ -99,6 +99,7 @@ function makeStatus() {
     const settings = readSettings();
 
     const now = new Date();
+    // const testMode = now.getTime() % 6000 < 3000;
     const status = {
         hardware_rev: 1,
         vers_major: 2,

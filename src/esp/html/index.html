@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="normalize.css"/>
         <link rel="stylesheet" href="main.css"/>
     </head>
-    <body>
+    <body class="ptrs-mode">
         <div class="page">
             <header>
                 <span class="status-icons">
@@ -21,7 +21,7 @@
                 <nav>
                     <ul>
                         <li><label for="dashboard_article"><img src="icons/globe.svg" alt="Dashboard" title="Dashboard"></label></li>
-                        <li><label for="roms_article"><img src="icons/roms.svg" alt="ROMS" title="ROMS"></label></li>
+                        <li class="ptrs-only"><label for="roms_article"><img src="icons/roms.svg" alt="ROMS" title="ROMS"></label></li>
 <!--                        <li><label for="fonts_article"><img src="icons/fonts.svg" alt="Fonts" title="Fonts"></label></li>-->
                         <li><label for="printer_article"><img src="icons/printer.svg" alt="Printer" title="Printer"></label></li>
 <!--                        <li><label for="plotter_article"><img src="icons/plotter.svg" alt="Plotter" title="Plotter"></label></li>-->
@@ -33,7 +33,7 @@
                         <input type="radio" name="active-article" id="dashboard_article">
                         <ul>
                             <li><span class="dashboard-label">Board</span>: <span id="board"></span></li>
-                            <li><span class="dashboard-label">Configuration</span>: <span id="configuration"></span></li>
+                            <li class="ptrs-only"><span class="dashboard-label">Configuration</span>: <span id="configuration"></span></li>
                             <li><span class="dashboard-label">Git commit</span>: <span id="git_commit"></span></li>
                             <li><span class="dashboard-label">Git branch</span>: <span id="git_branch"></span></li>
                             <li><span class="dashboard-label">TRS-IO version</span>: <span id="vers_major"></span>.<span id="vers_minor"></span></li>
@@ -47,7 +47,7 @@
                             <li><span class="dashboard-label">FreHD status</span>: <span id="frehd_loaded"></span></li>
                         </ul>
                     </article>
-                    <article class="roms">
+                    <article class="roms ptrs-only">
                         <input type="radio" name="active-article" id="roms_article">
                         <table class="rom-table">
                             <thead>
@@ -84,7 +84,7 @@
                         <section>
                             <h2>General</h2>
 
-                            <div class="form-row">
+                            <div class="form-row ptrs-only">
                                 <label>Phosphor:</label>
                                 <div class="form-inputs">
                                     <label class="pill"><input type="radio" name="color" value="0">White</label>
@@ -99,7 +99,7 @@
                                     <button class="small" id="timezoneDetectButton">Detect</button>
                                 </div>
                             </div>
-                            <div class="form-row">
+                            <div class="form-row ptrs-only">
                                 <label for="keyboard_layout">Keyboard:</label>
                                 <div class="form-inputs">
                                     <select id="keyboard_layout">
