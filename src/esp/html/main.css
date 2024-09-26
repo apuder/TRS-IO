@@ -79,6 +79,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
     font-family: "eurostile-bold-extended", sans-serif;
     font-size: 60px;
     padding-inline: var(--page-large-margin) var(--page-small-margin);
@@ -322,4 +323,5 @@ article:has(input[name=active-article]:not(:checked)) {
 
 footer {
     height: var(--page-small-margin);
+    flex-shrink: 0;
 }
