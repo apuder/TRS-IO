@@ -21,7 +21,8 @@
                 <nav>
                     <ul>
                         <li><label for="dashboard_article"><img src="icons/globe.svg" alt="Dashboard" title="Dashboard"></label></li>
-                        <li class="ptrs-only"><label for="roms_article"><img src="icons/roms.svg" alt="ROMS" title="ROMS"></label></li>
+                        <li class="ptrs-only"><label for="roms_article"><img src="icons/roms.svg" alt="ROMs" title="ROMs"></label></li>
+                        <li><label for="files_article"><img src="icons/files.svg" alt="Files" title="Files"></label></li>
 <!--                        <li><label for="fonts_article"><img src="icons/fonts.svg" alt="Fonts" title="Fonts"></label></li>-->
                         <li><label for="printer_article"><img src="icons/printer.svg" alt="Printer" title="Printer"></label></li>
 <!--                        <li><label for="plotter_article"><img src="icons/plotter.svg" alt="Plotter" title="Plotter"></label></li>-->
@@ -52,15 +53,15 @@
                         <table class="rom-table">
                             <thead>
                                 <tr>
-                                    <th>Filename</th>
-                                    <th></th>
-                                    <th>Size</th>
-                                    <th>Uploaded</th>
-                                    <th>1</th>
-                                    <th>3</th>
-                                    <th>4</th>
-                                    <th>4P</th>
-                                    <th></th>
+                                    <th class="file-name">Filename</th>
+                                    <th class="file-edit"></th>
+                                    <th class="file-delete"></th>
+                                    <th class="file-size">Size</th>
+                                    <th class="file-date">Date</th>
+                                    <th class="file-select">1</th>
+                                    <th class="file-select">3</th>
+                                    <th class="file-select">4</th>
+                                    <th class="file-select">4P</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -71,6 +72,27 @@
                             <label id="uploadRomButton" for="uploadRomInput" class="button">Upload ROM</label>
                         </div>
                     </article>
+                    <article class="files">
+                        <input type="radio" name="active-article" id="files_article" checked>
+                        <table class="files-table">
+                            <thead>
+                            <tr>
+                                <th class="file-name">Filename</th>
+                                <th class="file-edit"></th>
+                                <th class="file-download"></th>
+                                <th class="file-delete"></th>
+                                <th class="file-size">Size</th>
+                                <th class="file-date">Date</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                        <div class="button-set">
+                            <input id="uploadFilesInput" type="file"multiple>
+                            <label id="uploadFilesButton" for="uploadFilesInput" class="button">Upload File</label>
+                        </div>
+                    </article>
                     <article class="printer">
                         <input type="radio" name="active-article" id="printer_article">
                         <div>
@@ -79,7 +101,7 @@
                         <div class="printer-output"></div>
                     </article>
                     <article class="settings">
-                        <input type="radio" name="active-article" id="settings_article" checked>
+                        <input type="radio" name="active-article" id="settings_article">
 
                         <section>
                             <h2>General</h2>

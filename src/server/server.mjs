@@ -8,6 +8,7 @@ import express from 'express';
 
 const STATE_DIR = "state";
 const ROMS_DIR = "state/roms";
+const FILES_DIR = "state/files";
 const DEFAULT_SETTINGS = {
     color: 1,
     tz: "GMT-8",
@@ -59,6 +60,12 @@ function isValidRomFilename(filename) {
     return filename !== "" && !filename.startsWith(".") && filename.indexOf("/") === -1;
 }
 
+// Make sure the filename isn't trying to reach outside the ROM directory.
+function isValidFilename(filename) {
+    // Currently the same.
+    return isValidRomFilename(filename);
+}
+
 function sendJsonError(res, message) {
     console.log("Responding with error message: " + message);
     res.setHeader('Content-Type', 'application/json');
@@ -73,6 +80,9 @@ function createStateDirsIfNecessary() {
     }
     if (!fs.existsSync(ROMS_DIR)){
         fs.mkdirSync(ROMS_DIR);
+    }
+    if (!fs.existsSync(FILES_DIR)){
+        fs.mkdirSync(FILES_DIR);
     }
 }
 
@@ -150,6 +160,22 @@ function makeGetRoms() {
     };
 }
 
+function makeGetFiles() {
+    createStateDirsIfNecessary();
+    const filesPathnames = globSync(path.join(FILES_DIR, "*"));
+    const settings = readSettings();
+    return {
+        "files": filesPathnames.map(pathname => {
+            const stats = fs.statSync(pathname);
+            return {
+                "filename": path.basename(pathname),
+                "size": stats.size,
+                "createdAt": stats.mtime.getTime()/1000,
+            };
+        }),
+    };
+}
+
 const PORT = 8080;
 const app = express();
 
@@ -165,6 +191,10 @@ app.get('/status', (req, res) => {
 app.get('/roms', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(makeGetRoms()));
+});
+app.get('/files', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(makeGetFiles()));
 });
 app.post("/config", (req, res) => {
     const newSettings = { ...readSettings(), ...req.body };
@@ -256,6 +286,64 @@ app.post("/roms", (req, res) => {
 
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(makeGetRoms()));
+});
+app.post("/files", (req, res) => {
+    const data = req.body;
+    const command = data.command;
+
+    switch (command) {
+        case "delete": {
+            const filename = data.filename;
+            if (!isValidFilename(filename)) {
+                return sendJsonError(res, `Invalid filename "${filename}"`);
+            }
+            const pathname = path.join(FILES_DIR, filename);
+            if (!fs.existsSync(pathname)) {
+                return sendJsonError(res, `File "${filename}" does not exist`);
+            }
+            fs.unlinkSync(pathname);
+            break;
+        }
+
+        case "rename": {
+            const oldFilename = data.oldFilename;
+            const newFilename = data.newFilename;
+            if (!isValidFilename(oldFilename)) {
+                return sendJsonError(res, `Invalid filename "${oldFilename}"`);
+            }
+            if (!isValidFilename(newFilename)) {
+                return sendJsonError(res, `Invalid filename "${newFilename}"`);
+            }
+            const oldPathname = path.join(FILES_DIR, oldFilename);
+            const newPathname = path.join(FILES_DIR, newFilename);
+            if (!fs.existsSync(oldPathname)) {
+                return sendJsonError(res, `File "${oldFilename}" does not exist`);
+            }
+            if (fs.existsSync(newPathname)) {
+                return sendJsonError(res, `File "${newFilename}" already exists`);
+            }
+            try {
+                fs.renameSync(oldPathname, newPathname);
+            } catch (error) {
+                return sendJsonError(res, `Error renaming "${oldFilename}" to "${newFilename}": ${e.message}`);
+            }
+            break;
+        }
+
+        case "upload": {
+            const filename = data.filename;
+            const contents = Buffer.from(data.contents, 'base64');
+            if (!isValidFilename(filename)) {
+                return sendJsonError(res, `Invalid filename "${filename}"`);
+            }
+            const pathname = path.join(FILES_DIR, filename);
+            fs.writeFileSync(pathname, contents);
+            break;
+        }
+    }
+
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(makeGetFiles()));
 });
 
 const httpServer = app.listen(PORT, () => {

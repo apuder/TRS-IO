@@ -21,6 +21,7 @@ typedef uint16_t USHORT;
 typedef uint32_t DWORD;
 typedef int16_t WORD;
 
+#define f_get_error _f_get_error
 #define f_open _f_open
 #define f_opendir _f_opendir
 #define f_write _f_write
@@ -95,6 +96,8 @@ typedef struct {
 void f_log(const char* format, ...);
 
 int trs_fs_mounted();
+
+const char* f_get_error(FRESULT error);
 
 FRESULT f_open (
         FIL* fp,           /* [OUT] Pointer to the file object structure */

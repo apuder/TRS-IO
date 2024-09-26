@@ -31,12 +31,15 @@
 #include "keyb.h"
 #include <string.h>
 #include "cJSON.h"
+#include "xfer.h"
+#include <algorithm>
 
 #define TAG "HTTP"
 #define MDNS_NAME "trs-io"
 #define PRINTER_QUEUE_SIZE 100
 
 static const char * const ROM_DIR = "/roms";
+static const char * const FILES_DIR = "/";
 static mg_queue prn_queue;
 static int num_printer_sockets = 0;
 
@@ -102,6 +105,21 @@ static uint8_t get_config()
 
 static string makeRomPathname(const char *filename) {
     return string(ROM_DIR) + "/" + filename;
+}
+
+static string makeFilesPathname(const char *filename) {
+    if (strcmp(FILES_DIR, "/") == 0) {
+        return string(FILES_DIR) + filename;
+    } else {
+        return string(FILES_DIR) + "/" + filename;
+    }
+}
+
+static string makeDosFilename(const char *filename) {
+    string dosFilename(filename);
+    // TODO also check length etc.
+    std::replace(dosFilename.begin(), dosFilename.end(), '.', '/');
+    return dosFilename;
 }
 
 static void mongoose_handle_get_roms(char** response,
@@ -246,6 +264,303 @@ static void mongoose_handle_roms(struct mg_http_message* message,
     mongoose_handle_get_roms(response, content_type);
 }
 #endif // CONFIG_TRS_IO_PP
+
+static void mongoose_handle_get_files(char** response,
+                                      const char** content_type)
+{
+  *response = NULL;
+  cJSON* files = cJSON_CreateArray();
+
+#if 0
+  DIR_ dir;
+  FRESULT result = f_opendir(&dir, FILES_DIR);
+  if (result != FR_OK) {
+      ESP_LOGW(TAG, "can't open files dir %s (%d)", FILES_DIR, (int) result);
+      return;
+  }
+  FILINFO fileinfo;
+  while ((result = f_readdir(&dir, &fileinfo)) == FR_OK && fileinfo.fname[0] != '\0') {
+      cJSON* file = cJSON_CreateObject();
+      cJSON_AddStringToObject(file, "filename", fileinfo.fname);
+      cJSON_AddNumberToObject(file, "size", fileinfo.fsize);
+      cJSON_AddNumberToObject(file, "createdAt", fileinfo.fdate);
+      cJSON_AddItemToArray(files, file);
+  }
+#else
+  dos_err_t err;
+  uint16_t n;
+  dir_buf_t* dir;
+
+  bool success = xferModule.dosDIR(0, err, n, dir);
+  if (!success) {
+      // TODO return error
+      printf("XFER not available\n");
+  } else if (err != NO_ERR) {
+      // TODO return error
+      printf("dosDIR err: %d\n", err);
+  } else {
+      for(int i = 0; i < n; i++) {
+          dir_t* d = &(*dir)[i];
+          uint16_t size = DIR_ENTRY_SIZE(d);
+
+          cJSON* file = cJSON_CreateObject();
+          string fname(d->fname, 15);
+          while (!fname.empty() && fname[fname.size() - 1] == ' ') {
+              fname.erase(fname.size() - 1, 1);
+          }
+          cJSON_AddStringToObject(file, "filename", fname.c_str());
+          cJSON_AddNumberToObject(file, "size", size);
+          cJSON_AddNumberToObject(file, "createdAt", 0);
+          cJSON_AddItemToArray(files, file);
+      }
+  }
+  xferModule.consumedResult();
+#endif
+
+  cJSON* data = cJSON_CreateObject();
+  AutoDeleteJson autoDeleteJson(data);
+  cJSON_AddItemToObject(data, "files", files);
+
+  *response = cJSON_PrintUnformatted(data);
+  *content_type = "application/json";
+}
+
+static void mongoose_handle_files(struct mg_http_message* message,
+                                  char** response,
+                                  const char** content_type)
+{
+    // Default to error.
+    *response = NULL;
+
+    if (mg_vcasecmp(&message->method, "POST") == 0) {
+        cJSON *json = cJSON_Parse(message->body.ptr);
+        if (json == NULL) {
+            ESP_LOGW(TAG, "Can't parse files JSON: %.*s", message->body.len, message->body.ptr);
+            return;
+        }
+        AutoDeleteJson autoDeleteJson(json);
+
+        // Fetch command.
+        cJSON *command = cJSON_GetObjectItemCaseSensitive(json, "command");
+        if (!cJSON_IsString(command) || command->valuestring == NULL) {
+            // Command is missing, ignore request.
+            ESP_LOGW(TAG, "Missing files command");
+            return;
+        }
+
+        if (strcmp(command->valuestring, "upload") == 0) {
+            cJSON *filename = cJSON_GetObjectItemCaseSensitive(json, "filename");
+            cJSON *contents64 = cJSON_GetObjectItemCaseSensitive(json, "contents");
+            if (!cJSON_IsString(filename) || filename->valuestring == NULL ||
+                    !cJSON_IsString(contents64) || contents64->valuestring == NULL) {
+
+                ESP_LOGW(TAG, "Missing files upload filename or contents");
+                return;
+            }
+            // Decode base64.
+            int len64 = strlen(contents64->valuestring);
+            int maxLen = len64/4*3;
+            vector<uint8_t> contents(maxLen + 1); // Decode function adds a nul byte (?!).
+            int actualLen = mg_base64_decode(contents64->valuestring, len64, (char *) &contents.front());
+            string pathname = makeFilesPathname(filename->valuestring);
+#if 0
+            FIL fp;
+            FRESULT result = f_open(&fp, pathname.c_str(), FA_WRITE | FA_CREATE_ALWAYS);
+            if (result != FR_OK) {
+                ESP_LOGW(TAG, "Can't write to file \"%s\" (%s)",
+                        pathname.c_str(), f_get_error(result));
+                return;
+            }
+            uint8_t *buf = &contents.front();
+            int bytesLeftToWrite = actualLen;
+            while (bytesLeftToWrite > 0) {
+                UINT bytesWritten;
+                result = f_write(&fp, buf, bytesLeftToWrite, &bytesWritten);
+                if (result != FR_OK) {
+                    ESP_LOGW(TAG, "Can't write to file \"%s\" (%s)",
+                            pathname.c_str(), f_get_error(result));
+                    return;
+                }
+                buf += bytesWritten;
+                bytesLeftToWrite -= bytesWritten;
+            }
+            result = f_close(&fp);
+            if (result != FR_OK) {
+                ESP_LOGW(TAG, "Can't close file \"%s\" (%s)",
+                        pathname.c_str(), f_get_error(result));
+                return;
+            }
+#else
+            dos_err_t err;
+            sector_t sector;
+            string dosFilename = makeDosFilename(filename->valuestring);
+            bool success = xferModule.dosINIT(err, dosFilename.c_str());
+            if (!success) {
+                // TODO return error.
+                printf("XFER not available\n");
+                return;
+            }
+            if (err != NO_ERR) {
+                // TODO return error.
+                printf("dosINIT err: %d\n", err);
+                xferModule.consumedResult();
+                return;
+            }
+            xferModule.consumedResult();
+
+            // Write bytes to the file.
+            uint8_t *buf = &contents.front();
+            uint8_t sectorIndex = 0;
+            for (int i = 0; i < actualLen; i++) {
+                sector[sectorIndex++] = *buf++;
+                if (sectorIndex == 0) {
+                    // Sector is full
+                    success = xferModule.dosWRITE(err, sizeof(sector_t), &sector);
+                    if (!success) {
+                        // TODO return error.
+                        printf("XFER not available\n");
+                        return;
+                    }
+                    if (err != NO_ERR) {
+                        // TODO return error.
+                        printf("dosWRITE err: %d\n", err);
+                        xferModule.consumedResult();
+                        return;
+                    }
+                    xferModule.consumedResult();
+                }
+            }
+            success = xferModule.dosWRITE(err, sectorIndex, &sector);
+            if (!success) {
+                // TODO return error.
+                printf("XFER not available\n");
+                return;
+            }
+            if (err != NO_ERR) {
+                // TODO return error.
+                printf("dosWRITE err: %d\n", err);
+                xferModule.consumedResult();
+                return;
+            }
+            xferModule.consumedResult();
+            success = xferModule.dosCLOSE(err);
+            if (!success) {
+                // TODO return error.
+                printf("XFER not available\n");
+                return;
+            }
+            xferModule.consumedResult();
+#endif
+        } else if (strcmp(command->valuestring, "delete") == 0) {
+            cJSON *filename = cJSON_GetObjectItemCaseSensitive(json, "filename");
+            if (!cJSON_IsString(filename) || filename->valuestring == NULL) {
+                ESP_LOGW(TAG, "Missing delete filename");
+                return;
+            }
+#if 0
+            string pathname = makeFilesPathname(filename->valuestring);
+            FRESULT result = f_unlink(pathname.c_str());
+            if (result != FR_OK) {
+                ESP_LOGW(TAG, "can't delete file %s (%s)",
+                        pathname.c_str(), f_get_error(result));
+                return;
+            }
+#else
+            string dosFilename = makeDosFilename(filename->valuestring);
+            dos_err_t err;
+            bool success = xferModule.dosREMOVE(err, dosFilename.c_str());
+            if (!success) {
+                // TODO return error.
+                printf("XFER not available\n");
+                return;
+            }
+            if (err != NO_ERR) {
+                // TODO return error.
+                printf("dosREMOVE err: %d\n", err);
+                xferModule.consumedResult();
+                return;
+            }
+            xferModule.consumedResult();
+#endif
+        } else if (strcmp(command->valuestring, "rename") == 0) {
+            cJSON *oldFilename = cJSON_GetObjectItemCaseSensitive(json, "oldFilename");
+            cJSON *newFilename = cJSON_GetObjectItemCaseSensitive(json, "newFilename");
+            if (!cJSON_IsString(oldFilename) || oldFilename->valuestring == NULL ||
+                    !cJSON_IsString(newFilename) || newFilename->valuestring == NULL) {
+
+                ESP_LOGW(TAG, "Missing rename filenames");
+                return;
+            }
+            string oldPathname = makeFilesPathname(oldFilename->valuestring);
+            string newPathname = makeFilesPathname(newFilename->valuestring);
+            // Rename is not yet supported.
+            // FRESULT result = f_rename(oldPathname.c_str(), newPathname.c_str());
+            FRESULT result = FR_INT_ERR;
+            if (result != FR_OK) {
+                ESP_LOGW(TAG, "can't rename %s to %s (%s)",
+                        oldPathname.c_str(), newPathname.c_str(), f_get_error(result));
+                return;
+            }
+        } else {
+            ESP_LOGW(TAG, "Unknown files command: %s", command->valuestring);
+            return;
+        }
+
+        // JSON is auto-deleted.
+    }
+
+    // For both GET and POST:
+    mongoose_handle_get_files(response, content_type);
+}
+
+static void download_file(struct mg_connection *c, string const &filename)
+{
+#if 0
+    // f_read...
+#else
+    dos_err_t err;
+    string dosFilename = makeDosFilename(filename.c_str());
+    bool success = xferModule.dosOPEN(err, dosFilename.c_str());
+    if (!success) {
+        // TODO return error.
+        printf("XFER not available\n");
+        return;
+    }
+    if (err != NO_ERR) {
+        // TODO return error.
+        printf("dosOPEN err: %d\n", err);
+        xferModule.consumedResult();
+        return;
+    }
+    xferModule.consumedResult();
+
+    mg_printf(c,
+            "HTTP/1.1 200 OK\r\n"
+            "Transfer-Encoding: chunked\r\n"
+            "Content-Type: application/octet-stream\r\n\r\n");
+
+    uint16_t count;
+    sector_t* sector_in;
+    do {
+        success = xferModule.dosREAD(err, count, sector_in);
+        if (!success) {
+            // TODO return error.
+            printf("XFER not available\n");
+            return;
+        }
+        xferModule.consumedResult();
+        mg_http_write_chunk(c, (char *) *sector_in, count);
+    } while(count != 0);
+
+    success = xferModule.dosCLOSE(err);
+    if (!success) {
+        // TODO return error.
+        printf("XFER not available\n");
+        return;
+    }
+    xferModule.consumedResult();
+#endif
+}
 
 // Return whether the setting changed.
 static bool extract_post_param(cJSON *json,
@@ -443,6 +758,20 @@ static void mongoose_event_handler(struct mg_connection *c,
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
         return;
+      } else if (mg_http_match_uri(message, "/files/#")) {
+        string pathFilename(message->uri.ptr + 7, message->uri.len - 7);
+        if (mg_vcasecmp(&message->method, "GET") == 0 && !pathFilename.empty()) {
+            // Download a file.
+            download_file(c, pathFilename);
+            return;
+        } else {
+            // Fetch directory or modify something.
+            mongoose_handle_files(message, &response, &content_type);
+            if (response == NULL) {
+                mg_printf(c, "HTTP/1.1 500 OK\r\nConnection: close\r\n\r\n");
+                return;
+            }
+        }
 #ifdef CONFIG_TRS_IO_PP
       } else if (mg_http_match_uri(message, "/roms")) {
         mongoose_handle_roms(message, &response, &content_type);

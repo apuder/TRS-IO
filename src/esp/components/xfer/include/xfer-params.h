@@ -7,7 +7,7 @@
 #define __PACKED__
 #endif
 
-#include <dos.h>
+#include "dos.h"
 
 #define XFER_MODULE_ID 5
 #define XFER_START 0

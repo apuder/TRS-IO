@@ -359,9 +359,11 @@ function updateRomInfo(romInfo) {
         const tr = document.createElement("tr");
         let td;
         let filenameTd = document.createElement("td");
+        filenameTd.classList.add("file-name");
         filenameTd.textContent = rom.filename;
         tr.append(filenameTd);
         td = document.createElement("td");
+        td.classList.add("file-edit");
         const renameIcon = document.createElement("img");
         renameIcon.src = "/icons/edit.svg";
         const renameLink = document.createElement("a");
@@ -374,12 +376,28 @@ function updateRomInfo(romInfo) {
         td.append(renameLink);
         tr.append(td);
         td = document.createElement("td");
+        td.classList.add("file-delete");
+        const deleteIcon = document.createElement("img");
+        deleteIcon.src = "/icons/delete.svg";
+        const deleteLink = document.createElement("a");
+        deleteLink.append(deleteIcon);
+        deleteLink.href = "#";
+        deleteLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+            const success = await deleteRomFile(rom.filename);
+        });
+        td.append(deleteLink);
+        tr.append(td);
+        td = document.createElement("td");
+        td.classList.add("file-size");
         td.textContent = rom.size.toLocaleString(undefined, {
             useGrouping: true,
         });
         tr.append(td);
         td = document.createElement("td");
+        td.classList.add("file-date");
         if (rom.createdAt === 0) {
+            td.classList.add("file-no-date");
             td.textContent = "—"; // em dash for missing date.
         }
         else {
@@ -460,6 +478,7 @@ function updateRomInfo(romInfo) {
         filenameTd.addEventListener("click", () => startRename());
         for (let model of [0, 2, 3, 4]) {
             td = document.createElement("td");
+            td.classList.add("file-select");
             const input = document.createElement("input");
             input.type = "radio";
             input.name = "modelRom" + model;
@@ -472,18 +491,6 @@ function updateRomInfo(romInfo) {
             td.append(input);
             tr.append(td);
         }
-        td = document.createElement("td");
-        const deleteIcon = document.createElement("img");
-        deleteIcon.src = "/icons/delete.svg";
-        const deleteLink = document.createElement("a");
-        deleteLink.append(deleteIcon);
-        deleteLink.href = "#";
-        deleteLink.addEventListener("click", async (e) => {
-            e.preventDefault();
-            const success = await deleteRomFile(rom.filename);
-        });
-        td.append(deleteLink);
-        tr.append(td);
         tbody.append(tr);
     }
 }
@@ -495,6 +502,232 @@ async function fetchRomInfo() {
     }
     else {
         console.log("Error fetching ROM info", response);
+    }
+}
+// Returns whether successful
+async function downloadFile(filename) {
+    let downloadFilename = filename.replace("/", ".");
+    const i = downloadFilename.indexOf(":");
+    if (i > 0) {
+        downloadFilename = downloadFilename.substring(0, i);
+    }
+    const a = document.createElement("a");
+    a.href = "/files/" + filename;
+    a.download = downloadFilename;
+    a.click();
+    return true;
+}
+// Returns whether successful
+async function deleteFile(filename) {
+    const response = await fetch("/files/", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            command: "delete",
+            filename,
+        }),
+    });
+    if (response.status === 200) {
+        const filesInfo = await response.json();
+        if ("error" in filesInfo) {
+            displayError(filesInfo.error);
+        }
+        else {
+            updateFilesInfo(filesInfo);
+            return true;
+        }
+    }
+    else {
+        displayError("Error deleting file");
+    }
+    return false;
+}
+// Returns whether successful
+async function renameFile(oldFilename, newFilename) {
+    const response = await fetch("/files/", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            command: "rename",
+            oldFilename,
+            newFilename,
+        }),
+    });
+    if (response.status === 200) {
+        const filesInfo = await response.json();
+        if ("error" in filesInfo) {
+            displayError(filesInfo.error);
+        }
+        else {
+            updateFilesInfo(filesInfo);
+            return true;
+        }
+    }
+    else {
+        displayError("Error renaming files");
+    }
+    return false;
+}
+function updateFilesInfo(filesInfo) {
+    filesInfo.files.sort((a, b) => {
+        return a.filename.localeCompare(b.filename, undefined, {
+            numeric: true,
+        });
+    });
+    const tbody = document.querySelector(".files-table tbody");
+    tbody.replaceChildren();
+    for (let romIndex = 0; romIndex < filesInfo.files.length; romIndex++) {
+        const file = filesInfo.files[romIndex];
+        const tr = document.createElement("tr");
+        let td;
+        let filenameTd = document.createElement("td");
+        filenameTd.classList.add("file-name");
+        filenameTd.textContent = file.filename;
+        tr.append(filenameTd);
+        td = document.createElement("td");
+        td.classList.add("file-edit");
+        const renameIcon = document.createElement("img");
+        renameIcon.src = "/icons/edit.svg";
+        const renameLink = document.createElement("a");
+        renameLink.append(renameIcon);
+        renameLink.href = "#";
+        renameLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+            startRename();
+        });
+        td.append(renameLink);
+        tr.append(td);
+        td = document.createElement("td");
+        td.classList.add("file-download");
+        const downloadIcon = document.createElement("img");
+        downloadIcon.src = "/icons/download.svg";
+        const downloadLink = document.createElement("a");
+        downloadLink.append(downloadIcon);
+        downloadLink.href = "#";
+        downloadLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+            const success = await downloadFile(file.filename);
+        });
+        td.append(downloadLink);
+        tr.append(td);
+        td = document.createElement("td");
+        td.classList.add("file-delete");
+        const deleteIcon = document.createElement("img");
+        deleteIcon.src = "/icons/delete.svg";
+        const deleteLink = document.createElement("a");
+        deleteLink.append(deleteIcon);
+        deleteLink.href = "#";
+        deleteLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+            const success = await deleteFile(file.filename);
+        });
+        td.append(deleteLink);
+        tr.append(td);
+        td = document.createElement("td");
+        td.classList.add("file-size");
+        td.textContent = file.size.toLocaleString(undefined, {
+            useGrouping: true,
+        });
+        tr.append(td);
+        td = document.createElement("td");
+        td.classList.add("file-date");
+        if (file.createdAt === 0) {
+            td.classList.add("file-no-date");
+            td.textContent = "—"; // em dash for missing date.
+        }
+        else {
+            td.textContent = new Date(file.createdAt * 1000).toLocaleString(undefined, {
+                dateStyle: "short",
+            }); // "any" needed because TS doesn't know about "dateStyle" option.
+        }
+        tr.append(td);
+        const startRename = () => {
+            const areRenaming = () => tbody.classList.contains("renaming");
+            if (areRenaming()) {
+                return;
+            }
+            tbody.classList.add("renaming");
+            filenameTd.contentEditable = "true";
+            filenameTd.focus();
+            // Select entire filename.
+            const textNode = filenameTd.childNodes[0];
+            if (textNode.textContent !== null) {
+                const filename = textNode.textContent;
+                const dot = filename.lastIndexOf(".");
+                const range = document.createRange();
+                range.setStart(textNode, 0);
+                range.setEnd(textNode, dot === -1 ? textNode.textContent.length : dot);
+                const s = window.getSelection();
+                if (s !== null) {
+                    s.removeAllRanges();
+                    s.addRange(range);
+                }
+            }
+            const finish = () => {
+                var _a;
+                filenameTd.removeEventListener("blur", blurListener);
+                filenameTd.removeEventListener("keydown", keyListener);
+                filenameTd.contentEditable = "false";
+                (_a = window.getSelection()) === null || _a === void 0 ? void 0 : _a.removeAllRanges();
+                tbody.classList.remove("renaming");
+            };
+            const rollback = () => {
+                // Abort and return to old name.
+                finish();
+                filenameTd.textContent = file.filename;
+            };
+            const commit = async () => {
+                if (!areRenaming()) {
+                    return;
+                }
+                finish();
+                const newFilename = filenameTd.textContent;
+                if (newFilename === null || newFilename === "" || newFilename === file.filename) {
+                    rollback();
+                }
+                else {
+                    const success = await renameFile(file.filename, newFilename);
+                    if (!success) {
+                        rollback();
+                    }
+                }
+            };
+            const blurListener = () => {
+                commit();
+            };
+            const keyListener = (e) => {
+                switch (e.key) {
+                    case "Enter":
+                        e.preventDefault();
+                        commit();
+                        break;
+                    case "Escape":
+                        e.preventDefault();
+                        rollback();
+                        break;
+                }
+            };
+            filenameTd.addEventListener("blur", blurListener);
+            filenameTd.addEventListener("keydown", keyListener);
+        };
+        filenameTd.addEventListener("click", () => startRename());
+        tbody.append(tr);
+    }
+}
+async function fetchFilesInfo() {
+    const response = await fetch("/files/");
+    if (response.status === 200) {
+        const filesInfo = await response.json();
+        updateFilesInfo(filesInfo);
+    }
+    else {
+        console.log("Error fetching files info", response);
     }
 }
 async function sleep(ms) {
@@ -679,6 +912,87 @@ function configureRomUpload() {
     });
     romsSection.addEventListener("dragleave", () => romsSection.classList.remove("hover"));
 }
+async function handleFilesUpload(file) {
+    const contents = new Uint8Array(await file.arrayBuffer());
+    const contentsString = Array.from(contents, byte => String.fromCodePoint(byte)).join("");
+    const response = await fetch("/files/", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            command: "upload",
+            filename: file.name,
+            contents: window.btoa(contentsString),
+        }),
+    });
+    if (response.status !== 200) {
+        displayError("Error uploading file");
+    }
+    else {
+        const filesInfo = await response.json();
+        if ("error" in filesInfo) {
+            displayError(filesInfo.error);
+        }
+        else {
+            updateFilesInfo(filesInfo);
+            return true;
+        }
+    }
+}
+async function handleFilesDrop(e) {
+    // Prevent default behavior (prevent file from being opened)
+    e.preventDefault();
+    if (e.dataTransfer) {
+        const files = [];
+        if (e.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the files.
+            for (const item of e.dataTransfer.items) {
+                // If dropped items aren't files, reject them.
+                if (item.kind === "file") {
+                    const file = item.getAsFile();
+                    if (file !== null) {
+                        files.push(file);
+                    }
+                }
+            }
+        }
+        else {
+            // Use DataTransfer interface to access the files.
+            for (const file of e.dataTransfer.files) {
+                files.push(file);
+            }
+        }
+        // Do this in a separate pass because the lists above will get blanked out
+        // while these await calls block.
+        for (const file of files) {
+            await handleFilesUpload(file);
+        }
+    }
+}
+function configureFilesUpload() {
+    const uploadFileInput = document.getElementById("uploadFilesInput");
+    uploadFileInput.addEventListener("change", async () => {
+        if (uploadFileInput.files !== null) {
+            for (const file of uploadFileInput.files) {
+                await handleFilesUpload(file);
+            }
+            uploadFileInput.value = "";
+        }
+    });
+    const filesSection = document.querySelector(".files");
+    filesSection.addEventListener("drop", async (e) => {
+        filesSection.classList.remove("hover");
+        await handleFilesDrop(e);
+    });
+    filesSection.addEventListener("dragover", e => {
+        filesSection.classList.add("hover");
+        // Prevent default behavior (prevent file from being opened).
+        e.preventDefault();
+    });
+    filesSection.addEventListener("dragleave", () => filesSection.classList.remove("hover"));
+}
 function configurePrinter() {
     const printerNode = document.querySelector(".printer-output");
     const printer = new Printer(printerNode);
@@ -703,8 +1017,10 @@ function configurePrinter() {
 export function main() {
     configureButtons();
     configureRomUpload();
+    configureFilesUpload();
     fetchStatus(true);
     fetchRomInfo();
+    fetchFilesInfo();
     configureDots();
     configurePrinter();
     scheduleFetchStatus();

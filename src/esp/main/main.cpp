@@ -68,6 +68,10 @@ void app_main(void)
   ESP_LOGI(TAG, "TRS-IO branch=%s, rev=%s", GIT_BRANCH, GIT_REV);
   ESP_LOGI(TAG, "Configured for %s", CONFIG);
 
+  // Silence "spi_master: device5 locked the bus" debug messages when
+  // accessing the SD card.
+  esp_log_level_set("spi_master", ESP_LOG_INFO);
+
   check();
 
   init_events();

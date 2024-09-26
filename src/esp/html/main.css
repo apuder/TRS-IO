@@ -5,10 +5,10 @@
 }
 
 :root {
-    --yellow-top: #F0C93C;
-    --yellow-bottom: #DEA939;
+    --yellow-top: #dea80a;
+    --yellow-bottom: #dea00a;
     --yellow: var(--yellow-top);
-    --brown: #675254;
+    --brown: #5b3f2e; /* #675254; */
     --brown-highlight: color-mix(in srgb, var(--brown) 95%, white);
     --brown-select: color-mix(in srgb, var(--brown) 90%, white);
 
@@ -170,6 +170,7 @@ article:has(input[name=active-article]:not(:checked)) {
 
 .page:has(#dashboard_article:checked) label[for=dashboard_article],
 .page:has(#roms_article:checked) label[for=roms_article],
+.page:has(#files_article:checked) label[for=files_article],
 .page:has(#printer_article:checked) label[for=printer_article],
 .page:has(#settings_article:checked) label[for=settings_article] {
 
@@ -180,51 +181,53 @@ article:has(input[name=active-article]:not(:checked)) {
     font-weight: bold;
 }
 
-.roms {
+.roms, .files {
     display: flex;
     flex-direction: column;
     gap: 40px;
     align-items: start;
 
-    #uploadRomInput {
+    #uploadRomInput, #uploadFilesInput {
         display: none;
     }
 }
 
-.rom-table {
+.rom-table, .files-table {
     border-collapse: collapse;
+
+    th {
+        text-transform: uppercase;
+        font-size: 16px;
+        padding-bottom: 4px;
+    }
 
     :is(th, td) {
         text-align: center;
     }
 
-    tbody:not(.renaming) td:nth-child(1):hover,
-    tbody:not(.renaming) td:nth-child(1):has(+ :hover) {
+    tbody:not(.renaming) td.file-name:hover,
+    tbody:not(.renaming) td.file-name:has(+ :hover) {
         /* copy chrome */
         outline: 1px auto rgb(0 95 204);
     }
 
-    :is(th, td):nth-child(1) {
+    :is(th, td).file-name {
         text-align: left;
     }
 
-    :is(th, td):nth-child(3),
-    :is(th, td):nth-child(4) {
+    :is(th, td).file-size,
+    :is(th, td).file-date {
         text-align: right;
     }
 
-    :is(th, td):nth-child(5),
-    :is(th, td):nth-child(6),
-    :is(th, td):nth-child(7),
-    :is(th, td):nth-child(8) {
+    :is(th, td).file-select {
         width: 1.3em;
         box-sizing: content-box;
     }
 
-    :is(th, td):nth-child(3),
-    :is(th, td):nth-child(4),
-    :is(th, td):nth-child(5),
-    :is(th, td):nth-child(9) {
+    :is(th, td).file-edit,
+    :is(th, td).file-size,
+    :is(th, td).file-date {
         padding-left: 1em;
     }
 }
