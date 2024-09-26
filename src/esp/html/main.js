@@ -1000,6 +1000,8 @@ function configureFilesUpload() {
 function configurePrinter() {
     const printerNode = document.querySelector(".printer-output");
     const printer = new Printer(printerNode);
+    const savePrinterButton = document.getElementById("savePrinterButton");
+    savePrinterButton.addEventListener("click", () => printer.savePrintout());
     const clearPrinterButton = document.getElementById("clearPrinterButton");
     clearPrinterButton.addEventListener("click", () => printer.clearPrintout());
     const attemptConnection = () => {

@@ -1159,6 +1159,9 @@ function configurePrinter() {
     const printerNode = document.querySelector(".printer-output") as HTMLDivElement;
     const printer = new Printer(printerNode);
 
+    const savePrinterButton = document.getElementById("savePrinterButton") as HTMLButtonElement;
+    savePrinterButton.addEventListener("click", () => printer.savePrintout());
+
     const clearPrinterButton = document.getElementById("clearPrinterButton") as HTMLButtonElement;
     clearPrinterButton.addEventListener("click", () => printer.clearPrintout());
 

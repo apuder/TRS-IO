@@ -10,6 +10,7 @@ const BACKGROUND_RIGHT_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4A
 export class Printer {
     private readonly node: HTMLElement;
     private readonly linePrinterPaper: HTMLElement;
+    private readonly lines: string[] = [];
     private line = "";
 
     constructor(parentNode: HTMLElement) {
@@ -57,11 +58,23 @@ export class Printer {
         }
     }
 
+    public savePrintout() {
+        const a = document.createElement("a");
+        const contents = this.lines.join("\n") + "\n";
+        const blob = new Blob([contents], {type: "text/plain"});
+        a.href = window.URL.createObjectURL(blob);
+        a.download = "printout.txt";
+        a.click();
+    }
+
     public clearPrintout() {
         this.linePrinterPaper.replaceChildren();
+        this.lines.splice(0, this.lines.length);
     }
 
     private printLine(line: string): void {
+        this.lines.push(line);
+
         // Figure out scroll space at the bottom:
         const bottomSpace = Math.abs(this.linePrinterPaper.scrollHeight - this.linePrinterPaper.scrollTop - this.linePrinterPaper.clientHeight);
         // There's some rounding, be sloppy:
