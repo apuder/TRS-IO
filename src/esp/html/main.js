@@ -206,6 +206,7 @@ function updateStatus(status, initialFetch) {
     updateStatusField("git_commit", cleanUpGitCommit(status.git_tag, status.git_commit));
     updateStatusField("git_branch", status.git_branch);
     updateStatusField("time", status.time);
+    updateStatusField("time_zone", status.tz || "Not set");
     updateStatusField("wifi_ssid", status.ssid || "Not configured");
     updateStatusField("wifi_status", wifiStatusText);
     updateStatusField("ip", status.ip);

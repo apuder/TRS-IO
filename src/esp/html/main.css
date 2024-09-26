@@ -4,6 +4,11 @@
     src: url("fonts/eurostile-bold-extended.otf") format("opentype");
 }
 
+@font-face {
+    font-family: "souvenir-bold";
+    src: url("fonts/OPTISouvenir-Bold.otf") format("opentype");
+}
+
 :root {
     --yellow-top: #dea80a;
     --yellow-bottom: #dea00a;
@@ -187,6 +192,55 @@ article:has(input[name=active-article]:not(:checked)) {
     font-weight: bold;
 }
 
+.dashboard-cards {
+    display: grid;
+    /*grid-template-columns: repeat(auto-fill, minmax(200px, 1fr) ) ;*/
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+/*
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--brown);
+    border-radius: 10px;
+    overflow: hidden;
+
+}
+
+.dashboard-title {
+    color: var(--yellow);
+    background: var(--brown);
+    padding: 4px 10px;
+    text-transform: uppercase;
+    font-size: 16px;
+    text-align: center;
+}*/
+
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--brown);
+    border-radius: 20px;
+    padding: 20px;
+}
+
+.dashboard-card ul {
+    list-style-type: none;
+    padding-inline-start: 0;
+}
+
+.dashboard-title {
+    font-family: souvenir-bold, sans-serif;
+    font-size: 30px;
+}
+
+.dashboard-label {
+    font-family: souvenir-bold, sans-serif;
+    font-size: 18px;
+}
+
 .roms, .files {
     display: flex;
     flex-direction: column;
@@ -233,7 +287,8 @@ article:has(input[name=active-article]:not(:checked)) {
 
     :is(th, td).file-edit,
     :is(th, td).file-size,
-    :is(th, td).file-date {
+    :is(th, td).file-date,
+    :is(th, td):nth-child(1 of .file-select) {
         padding-left: 1em;
     }
 }
