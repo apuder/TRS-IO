@@ -977,6 +977,12 @@ function configureButtons() {
             updateSettingsForm(gMostRecentStatus);
         }
     });
+
+    const refreshRomsButton = document.getElementById("refreshRomsButton") as HTMLButtonElement;
+    refreshRomsButton.addEventListener("click", () => fetchRomInfo());
+
+    const refreshFilesButton = document.getElementById("refreshFilesButton") as HTMLButtonElement;
+    refreshFilesButton.addEventListener("click", () => fetchFilesInfo());
 }
 
 async function handleRomUpload(file: File) {

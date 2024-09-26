@@ -830,6 +830,10 @@ function configureButtons() {
             updateSettingsForm(gMostRecentStatus);
         }
     });
+    const refreshRomsButton = document.getElementById("refreshRomsButton");
+    refreshRomsButton.addEventListener("click", () => fetchRomInfo());
+    const refreshFilesButton = document.getElementById("refreshFilesButton");
+    refreshFilesButton.addEventListener("click", () => fetchFilesInfo());
 }
 async function handleRomUpload(file) {
     const contents = new Uint8Array(await file.arrayBuffer());

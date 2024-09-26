@@ -42,7 +42,7 @@ button, label.pill, .button {
     user-select: none;
 }
 
-button.small, label.pill {
+button.small, .button.small, label.pill {
     font-size: 12px;
     padding: 4px 16px 2px;
 }
@@ -52,10 +52,15 @@ button:hover {
 }
 
 .button-set {
+    display: flex;
+    gap: 12px;
+}
+
+.button-set-equal-sizes {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 12px;
     width: fit-content;
+    grid-template-columns: 1fr 1fr;
 }
 
 input, select {
@@ -185,7 +190,7 @@ article:has(input[name=active-article]:not(:checked)) {
 .roms, .files {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 20px;
     align-items: start;
 
     #uploadRomInput, #uploadFilesInput {
