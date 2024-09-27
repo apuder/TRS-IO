@@ -7,7 +7,7 @@ phy_init, data, phy,     ,        0x1000,
 factory,  app,  factory, ,        0x180000,
 
 # Our webapp:
-html,     data, spiffs,  ,        400K,
+html,     data, spiffs,  ,        1M,
 
 # Also disabled in components/trs-io/CMakeLists.txt:
 #elFinder, data, spiffs,  ,        6M,

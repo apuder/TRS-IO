@@ -199,25 +199,6 @@ article:has(input[name=active-article]:not(:checked)) {
     gap: 10px;
 }
 
-/*
-.dashboard-card {
-    display: flex;
-    flex-direction: column;
-    border: 2px solid var(--brown);
-    border-radius: 10px;
-    overflow: hidden;
-
-}
-
-.dashboard-title {
-    color: var(--yellow);
-    background: var(--brown);
-    padding: 4px 10px;
-    text-transform: uppercase;
-    font-size: 16px;
-    text-align: center;
-}*/
-
 .dashboard-card {
     display: flex;
     flex-direction: column;
@@ -239,6 +220,18 @@ article:has(input[name=active-article]:not(:checked)) {
 .dashboard-label {
     font-family: souvenir-bold, sans-serif;
     font-size: 18px;
+    margin-right: 0.5em;
+}
+
+.dashboard-image {
+    position: relative;
+
+    img {
+        width: 100%;
+        position: absolute;
+        transform: scale(120%);
+        transform-origin: top right;
+    }
 }
 
 .roms, .files {
