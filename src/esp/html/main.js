@@ -263,58 +263,70 @@ function scheduleFetchStatus() {
 }
 // Returns whether successful
 async function deleteRomFile(filename) {
-    const response = await fetch("/roms", {
-        method: "POST",
-        cache: "no-cache",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            command: "deleteRom",
-            filename,
-        }),
-    });
-    if (response.status === 200) {
-        const romInfo = await response.json();
-        if ("error" in romInfo) {
-            displayError(romInfo.error);
+    startProgressIndicator();
+    try {
+        const response = await fetch("/roms", {
+            method: "POST",
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                command: "deleteRom",
+                filename,
+            }),
+        });
+        if (response.status === 200) {
+            const romInfo = await response.json();
+            if ("error" in romInfo) {
+                displayError(romInfo.error);
+            }
+            else {
+                updateRomInfo(romInfo);
+                return true;
+            }
         }
         else {
-            updateRomInfo(romInfo);
-            return true;
+            displayError("Error deleting ROM");
         }
     }
-    else {
-        displayError("Error deleting ROM");
+    finally {
+        stopProgressIndicator();
     }
     return false;
 }
 // Returns whether successful
 async function renameRomFile(oldFilename, newFilename) {
-    const response = await fetch("/roms", {
-        method: "POST",
-        cache: "no-cache",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            command: "renameRom",
-            oldFilename,
-            newFilename,
-        }),
-    });
-    if (response.status === 200) {
-        const romInfo = await response.json();
-        if ("error" in romInfo) {
-            displayError(romInfo.error);
+    startProgressIndicator();
+    try {
+        const response = await fetch("/roms", {
+            method: "POST",
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                command: "renameRom",
+                oldFilename,
+                newFilename,
+            }),
+        });
+        if (response.status === 200) {
+            const romInfo = await response.json();
+            if ("error" in romInfo) {
+                displayError(romInfo.error);
+            }
+            else {
+                updateRomInfo(romInfo);
+                return true;
+            }
         }
         else {
-            updateRomInfo(romInfo);
-            return true;
+            displayError("Error renaming ROM");
         }
     }
-    else {
-        displayError("Error renaming ROM");
+    finally {
+        stopProgressIndicator();
     }
     return false;
 }
@@ -496,13 +508,19 @@ function updateRomInfo(romInfo) {
     }
 }
 async function fetchRomInfo() {
-    const response = await fetch("/roms");
-    if (response.status === 200) {
-        const romInfo = await response.json();
-        updateRomInfo(romInfo);
+    startProgressIndicator();
+    try {
+        const response = await fetch("/roms");
+        if (response.status === 200) {
+            const romInfo = await response.json();
+            updateRomInfo(romInfo);
+        }
+        else {
+            console.log("Error fetching ROM info", response);
+        }
     }
-    else {
-        console.log("Error fetching ROM info", response);
+    finally {
+        stopProgressIndicator();
     }
 }
 // Returns whether successful
@@ -520,58 +538,70 @@ async function downloadFile(filename) {
 }
 // Returns whether successful
 async function deleteFile(filename) {
-    const response = await fetch("/files/", {
-        method: "POST",
-        cache: "no-cache",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            command: "delete",
-            filename,
-        }),
-    });
-    if (response.status === 200) {
-        const filesInfo = await response.json();
-        if ("error" in filesInfo) {
-            displayError(filesInfo.error);
+    startProgressIndicator();
+    try {
+        const response = await fetch("/files/", {
+            method: "POST",
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                command: "delete",
+                filename,
+            }),
+        });
+        if (response.status === 200) {
+            const filesInfo = await response.json();
+            if ("error" in filesInfo) {
+                displayError(filesInfo.error);
+            }
+            else {
+                updateFilesInfo(filesInfo);
+                return true;
+            }
         }
         else {
-            updateFilesInfo(filesInfo);
-            return true;
+            displayError("Error deleting file");
         }
     }
-    else {
-        displayError("Error deleting file");
+    finally {
+        stopProgressIndicator();
     }
     return false;
 }
 // Returns whether successful
 async function renameFile(oldFilename, newFilename) {
-    const response = await fetch("/files/", {
-        method: "POST",
-        cache: "no-cache",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            command: "rename",
-            oldFilename,
-            newFilename,
-        }),
-    });
-    if (response.status === 200) {
-        const filesInfo = await response.json();
-        if ("error" in filesInfo) {
-            displayError(filesInfo.error);
+    startProgressIndicator();
+    try {
+        const response = await fetch("/files/", {
+            method: "POST",
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                command: "rename",
+                oldFilename,
+                newFilename,
+            }),
+        });
+        if (response.status === 200) {
+            const filesInfo = await response.json();
+            if ("error" in filesInfo) {
+                displayError(filesInfo.error);
+            }
+            else {
+                updateFilesInfo(filesInfo);
+                return true;
+            }
         }
         else {
-            updateFilesInfo(filesInfo);
-            return true;
+            displayError("Error renaming files");
         }
     }
-    else {
-        displayError("Error renaming files");
+    finally {
+        stopProgressIndicator();
     }
     return false;
 }
@@ -722,13 +752,19 @@ function updateFilesInfo(filesInfo) {
     }
 }
 async function fetchFilesInfo() {
-    const response = await fetch("/files/");
-    if (response.status === 200) {
-        const filesInfo = await response.json();
-        updateFilesInfo(filesInfo);
+    startProgressIndicator();
+    try {
+        const response = await fetch("/files/");
+        if (response.status === 200) {
+            const filesInfo = await response.json();
+            updateFilesInfo(filesInfo);
+        }
+        else {
+            console.log("Error fetching files info", response);
+        }
     }
-    else {
-        console.log("Error fetching files info", response);
+    finally {
+        stopProgressIndicator();
     }
 }
 async function sleep(ms) {
@@ -736,16 +772,51 @@ async function sleep(ms) {
         setTimeout(() => accept(), ms);
     });
 }
-async function startSaveIndicator() {
-    const stars = document.createElement("span");
-    stars.classList.add("stars");
-    const container = document.querySelector(".article-container");
-    container.append(stars);
-    for (let i = 0; i < 5; i++) {
-        stars.textContent = "*" + (i % 2 === 0 ? "*" : "\u00A0"); // nbsp
-        await sleep(200);
+let gProgressIndicatorCount = 0;
+let gProgressIndicatorNode = undefined;
+let gProgressIndicatorTimer = undefined;
+function cancelProgressIndicatorTimer() {
+    if (gProgressIndicatorTimer !== undefined) {
+        clearTimeout(gProgressIndicatorTimer);
+        gProgressIndicatorTimer = undefined;
     }
-    stars.remove();
+}
+function updateProgressIndicator(blinkOn) {
+    if (gProgressIndicatorNode !== undefined) {
+        gProgressIndicatorNode.textContent = "*" + (blinkOn ? "*" : "\u00A0"); // nbsp
+    }
+    cancelProgressIndicatorTimer();
+    gProgressIndicatorTimer = setTimeout(() => {
+        gProgressIndicatorTimer = undefined;
+        updateProgressIndicator(!blinkOn);
+    }, 200);
+}
+function startProgressIndicator() {
+    gProgressIndicatorCount += 1;
+    if (gProgressIndicatorCount === 1) {
+        if (gProgressIndicatorNode !== undefined) {
+            throw new Error("progress indicator is still active");
+        }
+        gProgressIndicatorNode = document.createElement("span");
+        gProgressIndicatorNode.classList.add("stars");
+        const container = document.querySelector(".article-container");
+        container.append(gProgressIndicatorNode);
+        updateProgressIndicator(true);
+    }
+}
+function stopProgressIndicator() {
+    gProgressIndicatorCount -= 1;
+    if (gProgressIndicatorCount < 0) {
+        throw new Error("progress indicator count went negative");
+    }
+    if (gProgressIndicatorCount === 0) {
+        if (gProgressIndicatorNode === undefined) {
+            throw new Error("progress indicator is not active");
+        }
+        gProgressIndicatorNode.remove();
+        gProgressIndicatorNode = undefined;
+        cancelProgressIndicatorTimer();
+    }
 }
 async function saveSettings() {
     const keyboardSelect = document.getElementById("keyboard_layout");
@@ -759,7 +830,9 @@ async function saveSettings() {
         smb_passwd: getSettingsField("smb_passwd"),
         keyboard_layout: keyboardSelect.selectedIndex,
     };
-    const responsePromise = fetch("/config", {
+    startProgressIndicator();
+    setTimeout(() => stopProgressIndicator(), 1000);
+    const response = await fetch("/config", {
         method: "POST",
         cache: "no-cache",
         headers: {
@@ -767,8 +840,6 @@ async function saveSettings() {
         },
         body: JSON.stringify(settings),
     });
-    const saveIndicatorPromise = startSaveIndicator();
-    const [response, _] = await Promise.all([responsePromise, saveIndicatorPromise]);
     if (response.status !== 200) {
         console.log("Failed to save settings", response);
         displayError("Cannot save settings");
@@ -839,30 +910,36 @@ function configureButtons() {
 async function handleRomUpload(file) {
     const contents = new Uint8Array(await file.arrayBuffer());
     const contentsString = Array.from(contents, byte => String.fromCodePoint(byte)).join("");
-    const response = await fetch("/roms", {
-        method: "POST",
-        cache: "no-cache",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            command: "uploadRom",
-            filename: file.name,
-            contents: window.btoa(contentsString),
-        }),
-    });
-    if (response.status !== 200) {
-        displayError("Error uploading ROM");
-    }
-    else {
-        const romInfo = await response.json();
-        if ("error" in romInfo) {
-            displayError(romInfo.error);
+    startProgressIndicator();
+    try {
+        const response = await fetch("/roms", {
+            method: "POST",
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                command: "uploadRom",
+                filename: file.name,
+                contents: window.btoa(contentsString),
+            }),
+        });
+        if (response.status !== 200) {
+            displayError("Error uploading ROM");
         }
         else {
-            updateRomInfo(romInfo);
-            return true;
+            const romInfo = await response.json();
+            if ("error" in romInfo) {
+                displayError(romInfo.error);
+            }
+            else {
+                updateRomInfo(romInfo);
+                return true;
+            }
         }
+    }
+    finally {
+        stopProgressIndicator();
     }
 }
 async function handleRomDrop(e) {
@@ -920,30 +997,36 @@ function configureRomUpload() {
 async function handleFilesUpload(file) {
     const contents = new Uint8Array(await file.arrayBuffer());
     const contentsString = Array.from(contents, byte => String.fromCodePoint(byte)).join("");
-    const response = await fetch("/files/", {
-        method: "POST",
-        cache: "no-cache",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            command: "upload",
-            filename: file.name,
-            contents: window.btoa(contentsString),
-        }),
-    });
-    if (response.status !== 200) {
-        displayError("Error uploading file");
-    }
-    else {
-        const filesInfo = await response.json();
-        if ("error" in filesInfo) {
-            displayError(filesInfo.error);
+    startProgressIndicator();
+    try {
+        const response = await fetch("/files/", {
+            method: "POST",
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                command: "upload",
+                filename: file.name,
+                contents: window.btoa(contentsString),
+            }),
+        });
+        if (response.status !== 200) {
+            displayError("Error uploading file");
         }
         else {
-            updateFilesInfo(filesInfo);
-            return true;
+            const filesInfo = await response.json();
+            if ("error" in filesInfo) {
+                displayError(filesInfo.error);
+            }
+            else {
+                updateFilesInfo(filesInfo);
+                return true;
+            }
         }
+    }
+    finally {
+        stopProgressIndicator();
     }
 }
 async function handleFilesDrop(e) {
