@@ -205,11 +205,12 @@ article:has(input[name=active-article]:not(:checked)) {
     border: 2px solid var(--brown);
     border-radius: 20px;
     padding: 20px;
-}
 
-.dashboard-card ul {
-    list-style-type: none;
-    padding-inline-start: 0;
+    ul {
+        list-style-type: none;
+        padding-inline-start: 0;
+        margin-bottom: 0;
+    }
 }
 
 .dashboard-title {
@@ -245,7 +246,19 @@ article:has(input[name=active-article]:not(:checked)) {
     }
 }
 
+.files-list {
+    position: relative;
+    flex-grow: 1;
+    align-self: stretch;
+    overflow-y: scroll;
+}
+
 .rom-table, .files-table {
+    position: absolute;
+    inset: 0;
+    /* so that the "outline" shows, otherwise it's clipped on the left because our containers scrolls */
+    margin-left: 3px;
+
     border-collapse: collapse;
 
     th {
