@@ -819,10 +819,12 @@ function updateFilesInfo(filesInfo: FilesInfo | ErrorResponse) {
             const textNode = filenameTd.childNodes[0];
             if (textNode.textContent !== null) {
                 const filename = textNode.textContent;
-                const dot = filename.lastIndexOf(".");
+                const dot = filename.lastIndexOf("."); // Unix/DOS filename
+                const slash = filename.lastIndexOf("/"); // TRSDOS filename
+                const extension = dot > 0 ? dot : slash;
                 const range = document.createRange();
                 range.setStart(textNode, 0);
-                range.setEnd(textNode, dot === -1 ? textNode.textContent.length : dot);
+                range.setEnd(textNode, extension === -1 ? textNode.textContent.length : extension);
 
                 const s = window.getSelection();
                 if (s !== null) {

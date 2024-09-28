@@ -175,7 +175,7 @@ function makeGetFiles() {
         "files": filesPathnames.map(pathname => {
             const stats = fs.statSync(pathname);
             return {
-                "filename": path.basename(pathname),
+                "filename": path.basename(pathname).replace(".", "/") + ":0",
                 "size": stats.size,
                 "createdAt": stats.mtime.getTime()/1000,
             };
