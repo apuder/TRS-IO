@@ -7,7 +7,9 @@
 #define __PACKED__
 #endif
 
+#ifdef ESP_PLATFORM
 #include "dos.h"
+#endif
 
 #define XFER_MODULE_ID 5
 #define XFER_START 0
@@ -22,6 +24,9 @@
 #define XFER_CMD_WRITE 4
 #define XFER_CMD_CLOSE 5
 #define XFER_CMD_REMOVE 6
+#define XFER_CMD_RENAME 7
+
+#define MAX_FNAME_LEN 15
 
 
 typedef struct __PACKED__ _cmd_in_dir_t {
@@ -35,7 +40,7 @@ typedef struct __PACKED__ _cmd_out_dir_t {
 } cmd_out_dir_t;
 
 typedef struct __PACKED__ _cmd_in_open_t {
-  char fn[15];
+  char fn[MAX_FNAME_LEN + 1];
 } cmd_in_open_t;
 
 typedef struct __PACKED__ _cmd_out_open_t {
@@ -43,7 +48,7 @@ typedef struct __PACKED__ _cmd_out_open_t {
 } cmd_out_open_t;
 
 typedef struct __PACKED__ _cmd_in_init_t {
-  char fn[15];
+  char fn[MAX_FNAME_LEN + 1];
 } cmd_in_init_t;
 
 typedef struct __PACKED__ _cmd_out_init_t {
@@ -74,12 +79,21 @@ typedef struct __PACKED__ _cmd_out_close_t {
 } cmd_out_close_t;
 
 typedef struct __PACKED__ _cmd_in_remove_t {
-  char fn[15];
+  char fn[MAX_FNAME_LEN + 1];
 } cmd_in_remove_t;
 
 typedef struct __PACKED__ _cmd_out_remove_t {
   dos_err_t err;
 } cmd_out_remove_t;
+
+typedef struct __PACKED__ _cmd_in_rename_t {
+  char from[MAX_FNAME_LEN + 1];
+  char to[MAX_FNAME_LEN + 1];
+} cmd_in_rename_t;
+
+typedef struct __PACKED__ _cmd_out_rename_t {
+  dos_err_t err;
+} cmd_out_rename_t;
 
 typedef union __PACKED__ _params_t {
   cmd_in_dir_t dir;
@@ -89,6 +103,7 @@ typedef union __PACKED__ _params_t {
   cmd_in_read_t read;
   cmd_in_close_t close;
   cmd_in_remove_t remove;
+  cmd_in_rename_t rename;
 } params_t;
 
 typedef struct __PACKED__ _xfer_in_t {
@@ -110,6 +125,7 @@ typedef union __PACKED__ _xfer_out_t {
   cmd_out_read_t read;
   cmd_out_close_t close;
   cmd_out_remove_t remove;
+  cmd_out_rename_t rename;
 } xfer_out_t;
 
 #endif

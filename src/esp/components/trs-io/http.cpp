@@ -492,9 +492,9 @@ static void mongoose_handle_files(struct mg_http_message* message,
                 ESP_LOGW(TAG, "Missing rename filenames");
                 return;
             }
+#if 0
             string oldPathname = makeFilesPathname(oldFilename->valuestring);
             string newPathname = makeFilesPathname(newFilename->valuestring);
-#if 0
             // Rename is not yet supported.
             // FRESULT result = f_rename(oldPathname.c_str(), newPathname.c_str());
             FRESULT result = FR_INT_ERR;
@@ -504,6 +504,23 @@ static void mongoose_handle_files(struct mg_http_message* message,
                 return;
             }
 #else
+            string dosOldFilename = makeDosFilename(oldFilename->valuestring);
+            string dosNewFilename = makeDosFilename(newFilename->valuestring);
+            dos_err_t err;
+            bool success = xferModule.dosRENAME(err, 
+              dosOldFilename.c_str(), dosNewFilename.c_str());
+            if (!success) {
+                // TODO return error.
+                printf("XFER not available\n");
+                return;
+            }
+            if (err != NO_ERR) {
+                // TODO return error.
+                printf("dosRENAME err: %d\n", err);
+                xferModule.consumedResult();
+                return;
+            }
+            xferModule.consumedResult();
 #endif
         } else {
             ESP_LOGW(TAG, "Unknown files command: %s", command->valuestring);

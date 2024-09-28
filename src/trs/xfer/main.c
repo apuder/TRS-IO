@@ -15,7 +15,8 @@ static const char* commands[] = {
   "READ",
   "WRITE",
   "CLOSE",
-  "REMOVE"
+  "REMOVE",
+  "RENAME"
 };
 
 
@@ -172,6 +173,12 @@ static uint16_t process_cmd_remove(cmd_in_remove_t* in, cmd_out_remove_t* out)
   return 1;
 }
 
+static uint16_t process_cmd_rename(cmd_in_rename_t* in, cmd_out_rename_t* out)
+{
+  out->err = dos_rename(&in->from[0], &in->to[0]);
+  return 1;
+}
+
 static void process_cmd()
 {
   uint16_t len = 0;
@@ -182,6 +189,9 @@ static void process_cmd()
   }
   if (in.cmd == XFER_CMD_INIT) {
     log(": %.15s", in.params.init.fn);
+  }
+  if (in.cmd == XFER_CMD_RENAME) {
+    log(": %.15s -> %.15s", in.params.rename.from, in.params.rename.to);
   }
   log("\n");
 
@@ -209,6 +219,9 @@ static void process_cmd()
       break;
     case XFER_CMD_REMOVE:
       len = process_cmd_remove(&in.params.remove, &out.remove);
+      break;
+    case XFER_CMD_RENAME:
+      len = process_cmd_rename(&in.params.rename, &out.rename);
       break;
   }
   // Send result to ESP

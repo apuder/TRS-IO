@@ -7,8 +7,6 @@
 
 #define XFER_MODULE_ID 5
 
-#define MAX_FNAME_LEN 15
-
 
 class XFERModule : public TrsIO {
 private:
@@ -34,6 +32,7 @@ public:
   bool dosWRITE(dos_err_t& err, uint16_t count, sector_t* sector);
   bool dosCLOSE(dos_err_t& err);
   bool dosREMOVE(dos_err_t& err, const char* fn);
+  bool dosRENAME(dos_err_t& err, const char* from, const char* to);
 };
 
 extern XFERModule xferModule;

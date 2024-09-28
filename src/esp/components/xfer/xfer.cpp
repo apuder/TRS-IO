@@ -207,6 +207,30 @@ bool XFERModule::dosREMOVE(dos_err_t& err, const char* fn) {
   return true;
 }
 
+bool XFERModule::dosRENAME(dos_err_t& err, const char* from, const char* to) {
+  uint16_t len = 0;
+
+  in.cmd = XFER_CMD_RENAME;
+
+  if (strlen(from) > MAX_FNAME_LEN || strlen(to) > MAX_FNAME_LEN) {
+    err = ERR_ILLEGAL_FILENAME;
+    return true;
+  }
+  strcpy(in.params.rename.from, from);
+  strcpy(in.params.rename.to, to);
+  if (!xferModule.sendCMD(sizeof(cmd_in_rename_t) + 1, &in)) {
+    return false;
+  }
+  if (!xferModule.getResult(len, (const void*&) out)) {
+    return false;
+  }
+  if (len != 1) {
+    return false;
+  }
+  err = out->rename.err;
+  return true;
+}
+
 
 #define CHECK_XFER(svc) if (!(svc)) {printf("XFER not available"); return; }
 
@@ -292,8 +316,17 @@ void test_xfer()
   CHECK_XFER(xferModule.dosCLOSE(err));
   xferModule.consumedResult();
 
-  // Remove file XFER/TXT
-  CHECK_XFER(xferModule.dosREMOVE(err, "XFER/TXT"));
+  // Rename file XFER/TXT to XFER2/TXT
+  CHECK_XFER(xferModule.dosRENAME(err, "XFER/TXT", "XFER2/TXT"));
+  if (err != NO_ERR) {
+    printf("dosRENAME err: %d\n", err);
+    xferModule.consumedResult();
+    return;
+  }
+  xferModule.consumedResult();
+
+  // Remove file XFER2/TXT
+  CHECK_XFER(xferModule.dosREMOVE(err, "XFER2/TXT"));
   if (err != NO_ERR) {
     printf("dosREMOVE err: %d\n", err);
     xferModule.consumedResult();
