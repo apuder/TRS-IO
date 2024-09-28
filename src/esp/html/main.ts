@@ -713,15 +713,25 @@ async function renameFile(oldFilename: string, newFilename: string): Promise<boo
     return false;
 }
 
-function updateFilesInfo(filesInfo: FilesInfo) {
+function updateFilesInfo(filesInfo: FilesInfo | ErrorResponse) {
+    const filesListNode = document.querySelector(".files .files-list") as HTMLElement;
+    const filesErrorNode = document.querySelector(".files .files-error") as HTMLElement;
+    const tbody = document.querySelector(".files-table tbody") as HTMLElement;
+    tbody.replaceChildren();
+
+    const isError = "error" in filesInfo;
+    filesListNode.hidden = isError;
+    filesErrorNode.hidden = !isError;
+    if (isError) {
+        filesErrorNode.textContent = filesInfo.error;
+        return;
+    }
+
     filesInfo.files.sort((a, b) => {
         return a.filename.localeCompare(b.filename, undefined, {
             numeric: true,
         });
     });
-
-    const tbody = document.querySelector(".files-table tbody") as HTMLElement;
-    tbody.replaceChildren();
 
     for (let romIndex = 0; romIndex < filesInfo.files.length; romIndex++) {
         const file = filesInfo.files[romIndex];
@@ -883,7 +893,7 @@ async function fetchFilesInfo() {
     try {
         const response = await fetch("/files/");
         if (response.status === 200) {
-            const filesInfo = await response.json() as FilesInfo;
+            const filesInfo = await response.json() as FilesInfo | ErrorResponse;
             updateFilesInfo(filesInfo);
         } else {
             console.log("Error fetching files info", response);

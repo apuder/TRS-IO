@@ -164,6 +164,13 @@ function makeGetFiles() {
     createStateDirsIfNecessary();
     const filesPathnames = globSync(path.join(FILES_DIR, "*"));
     const settings = readSettings();
+    if (false) {
+        // For testing.
+        return {
+            "error": "XFER/CMD is not running",
+            "files": [],
+        };
+    }
     return {
         "files": filesPathnames.map(pathname => {
             const stats = fs.statSync(pathname);

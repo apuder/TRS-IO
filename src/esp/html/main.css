@@ -253,6 +253,12 @@ article:has(input[name=active-article]:not(:checked)) {
     overflow-y: scroll;
 }
 
+.files-error {
+    font-weight: bold;
+    font-size: 20px;
+    margin-top: 2em;
+}
+
 .rom-table, .files-table {
     position: absolute;
     inset: 0;

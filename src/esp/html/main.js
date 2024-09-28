@@ -606,13 +606,22 @@ async function renameFile(oldFilename, newFilename) {
     return false;
 }
 function updateFilesInfo(filesInfo) {
+    const filesListNode = document.querySelector(".files .files-list");
+    const filesErrorNode = document.querySelector(".files .files-error");
+    const tbody = document.querySelector(".files-table tbody");
+    tbody.replaceChildren();
+    const isError = "error" in filesInfo;
+    filesListNode.hidden = isError;
+    filesErrorNode.hidden = !isError;
+    if (isError) {
+        filesErrorNode.textContent = filesInfo.error;
+        return;
+    }
     filesInfo.files.sort((a, b) => {
         return a.filename.localeCompare(b.filename, undefined, {
             numeric: true,
         });
     });
-    const tbody = document.querySelector(".files-table tbody");
-    tbody.replaceChildren();
     for (let romIndex = 0; romIndex < filesInfo.files.length; romIndex++) {
         const file = filesInfo.files[romIndex];
         const tr = document.createElement("tr");

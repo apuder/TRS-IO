@@ -269,6 +269,10 @@ static void mongoose_handle_get_files(char** response,
                                       const char** content_type)
 {
   *response = NULL;
+
+  cJSON* data = cJSON_CreateObject();
+  AutoDeleteJson autoDeleteJson(data);
+
   cJSON* files = cJSON_CreateArray();
 
 #if 0
@@ -293,8 +297,7 @@ static void mongoose_handle_get_files(char** response,
 
   bool success = xferModule.dosDIR(0, err, n, dir);
   if (!success) {
-      // TODO return error
-      printf("XFER not available\n");
+      cJSON_AddStringToObject(data, "error", "XFER/CMD is not running");
   } else if (err != NO_ERR) {
       // TODO return error
       printf("dosDIR err: %d\n", err);
@@ -317,8 +320,6 @@ static void mongoose_handle_get_files(char** response,
   xferModule.consumedResult();
 #endif
 
-  cJSON* data = cJSON_CreateObject();
-  AutoDeleteJson autoDeleteJson(data);
   cJSON_AddItemToObject(data, "files", files);
 
   *response = cJSON_PrintUnformatted(data);
@@ -493,6 +494,7 @@ static void mongoose_handle_files(struct mg_http_message* message,
             }
             string oldPathname = makeFilesPathname(oldFilename->valuestring);
             string newPathname = makeFilesPathname(newFilename->valuestring);
+#if 0
             // Rename is not yet supported.
             // FRESULT result = f_rename(oldPathname.c_str(), newPathname.c_str());
             FRESULT result = FR_INT_ERR;
@@ -501,6 +503,8 @@ static void mongoose_handle_files(struct mg_http_message* message,
                         oldPathname.c_str(), newPathname.c_str(), f_get_error(result));
                 return;
             }
+#else
+#endif
         } else {
             ESP_LOGW(TAG, "Unknown files command: %s", command->valuestring);
             return;
