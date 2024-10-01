@@ -2,13 +2,22 @@
 
 #include <trs-lib.h>
 #include "spi.h"
+#include "ptrs.h"
 #include "fabgl.h"
 #include <esp_log.h>
 
 
 bool is_m3()
 {
-  return true;
+  static bool init = false;
+  static bool is_m1;
+
+  if (!init) {
+    int conf = spi_get_config() & PTRS_CONFIG_MODEL_MASK;
+    is_m1 = conf == PTRS_CONFIG_MODEL_1;
+    init = true;
+  }
+  return !is_m1;
 }
 
 void panic(uint8_t err)
