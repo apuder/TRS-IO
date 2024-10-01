@@ -904,7 +904,5 @@ static void mg_task(void* p)
 
 void init_http()
 {
-  ESP_ERROR_CHECK(init_spiffs());
-
   xTaskCreatePinnedToCore(mg_task, "mg", 6000, NULL, 1, NULL, 0);
 }

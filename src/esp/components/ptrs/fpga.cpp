@@ -114,6 +114,13 @@ static const int ptrs_model[] = {
 };
 
 
+static bool is_custom_firmware_selected()
+{
+  int conf = spi_get_config() & 0x0f;
+  int target_bs = conf_to_bs[conf];
+  return is_custom[target_bs];
+}
+
 static void check_firmware()
 {
   BitstreamSource* bs;
@@ -229,10 +236,18 @@ static void fpga_task(void* args)
     init_ptrs(model);
   }
 
-  vTaskDelete(NULL);
+  if (args != NULL) {
+    vTaskDelete(NULL);
+  }
 }
 
 void init_fpga()
 {
-  xTaskCreatePinnedToCore(fpga_task, "fpga", 6000, NULL, 1, NULL, 0);
+  if (is_custom_firmware_selected()) {
+    // Custom firmware is loaded via TRS-FS. Need to wait until FS is mounted
+    xTaskCreatePinnedToCore(fpga_task, "fpga", 6000, (void*) 1, 1, NULL, 0);
+  } else {
+    // Otherwise load correct firmware synchonously
+    fpga_task(NULL);
+  }
 }

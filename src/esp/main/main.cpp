@@ -19,6 +19,7 @@
 #include "keyb.h"
 #include "ptrs.h"
 #include "xflash.h"
+#include "spiffs.h"
 
 #include "esp_idf_version.h"
 
@@ -90,17 +91,15 @@ void app_main(void)
   init_ota();
   init_spi();
   init_led();
-  init_http();
+  init_trs_fs_posix();
+  init_spiffs();
 #ifdef CONFIG_TRS_IO_PP
   init_keyb();
-#endif
-  init_trs_fs_posix();
-  init_wifi();
-  init_io();
-
-#ifdef CONFIG_TRS_IO_PP
   init_fpga();
 #endif
+  init_wifi();
+  init_io();
+  init_http();
 
   vTaskDelete(NULL);
 }
