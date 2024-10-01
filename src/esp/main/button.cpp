@@ -93,7 +93,7 @@ static void IRAM_ATTR isr_button(void* arg)
       // Bounce
       return;
     }
-    if (delta_ms < 1000) {
+    if (delta_ms < 500) {
       button->button_status |= BUTTON_SHORT_PRESS;
     }
     if (delta_ms > 3000) {
