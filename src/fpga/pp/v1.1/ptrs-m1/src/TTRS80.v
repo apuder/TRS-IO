@@ -330,7 +330,7 @@ begin
                    ({8{z80_addr[4]}} & keyb_matrix[4]) |
                    ({8{z80_addr[5]}} & keyb_matrix[5]) |
                    ({8{z80_addr[6]}} & keyb_matrix[6]) |
-                   ({8{z80_addr[7]}} & keyb_matrix[7]);
+                   ({8{z80_addr[7]}} &{keyb_matrix[7][7:2], 1'b0, |keyb_matrix[7][1:0]});
 end
 
 
@@ -353,8 +353,8 @@ wire trs_disk_in_sel    = ~z80_mreq_n & (z80_addr[15:2] == 14'b00110111111011); 
 wire trs_fdc_cmnd_sel  = trs_disk_out_sel & (z80_addr[1:0] == 2'b00); // 37ec output
 wire trs_fdc_stat_sel  = trs_disk_in_sel  & (z80_addr[1:0] == 2'b00); // 37ec input
 wire trs_fdc_track_sel = trs_disk_in_sel  & (z80_addr[1:0] == 2'b01); // 37ed input/output
-//wire [7:0] trs_fdc_stat = 8'hff; // no fdc
-wire [7:0] trs_fdc_stat = 8'h34; // seek error
+wire [7:0] trs_fdc_stat = 8'hff; // no fdc
+//wire [7:0] trs_fdc_stat = 8'h34; // seek error
 wire [7:0] trs_fdc_track = 8'h00;
 wire fdc_int = 1'b0;
 
