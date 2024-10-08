@@ -324,8 +324,8 @@ wire trs_cass_in_sel    = ~z80_iorq_n & (z80_addr[7:1] == 7'b1111111);// fe-ff
 wire trs_fdc_cmnd_sel  = trs_disk_out_sel & (z80_addr[1:0] == 2'b00); // f0 output
 wire trs_fdc_stat_sel  = trs_disk_in_sel  & (z80_addr[1:0] == 2'b00); // f0 input
 wire trs_fdc_track_sel = trs_disk_in_sel  & (z80_addr[1:0] == 2'b01); // f1 input/output
-//wire [7:0] trs_fdc_stat = 8'hff; // no fdc
-wire [7:0] trs_fdc_stat = 8'h34; // seek error
+wire [7:0] trs_fdc_stat = 8'hff; // no fdc
+//wire [7:0] trs_fdc_stat = 8'h34; // seek error
 wire [7:0] trs_fdc_track = 8'h00;
 
 // Hi-res board
