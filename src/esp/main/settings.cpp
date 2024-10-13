@@ -161,11 +161,11 @@ static void init_smb_credentials()
 static vector<string> roms;
 
 static const char* default_roms[] = {
-  "level2.bin",
+  "level2-frehd.bin",
   "",
-  "model3.bin",
-  "model3.bin",
-  "model3.bin"
+  "model3-frehd.bin",
+  "model3-frehd.bin",
+  "model3-frehd.bin"
 };
 
 vector<string>& settings_get_roms()
