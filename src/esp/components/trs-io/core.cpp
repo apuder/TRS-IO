@@ -5,6 +5,7 @@
 #include "spi.h"
 #include "led.h"
 #include "settings.h"
+#include "rst.h"
 
 #ifndef CONFIG_TRS_IO_MODEL_3
 #include "retrostore-defs.h"
@@ -55,7 +56,7 @@ public:
     const char* passwd = S(1);
     settings_set_wifi_ssid(ssid);
     settings_set_wifi_passwd(passwd);
-    esp_restart();
+    reboot_trs_io();
   }
 
   void sendWifiSSID() {

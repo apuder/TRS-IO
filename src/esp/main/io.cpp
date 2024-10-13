@@ -26,6 +26,7 @@
 #include "keyb.h"
 #include "jtag.h"
 #include "spi.h"
+#include "rst.h"
 
 #define ESP_REQ GPIO_NUM_34
 #ifdef CONFIG_TRS_IO_PP
@@ -406,7 +407,8 @@ static void action_task(void* p)
 
     if (is_status_button_long_press()) {
       settings_reset_all();
-      esp_restart();
+
+      reboot_trs_io();
     }
 
 #ifdef CONFIG_TRS_IO_PP

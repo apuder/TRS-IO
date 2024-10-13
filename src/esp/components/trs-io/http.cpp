@@ -32,6 +32,7 @@
 #include <string.h>
 #include "cJSON.h"
 #include "xfer.h"
+#include "rst.h"
 #include <algorithm>
 
 #define TAG "HTTP"
@@ -831,7 +832,7 @@ static void mongoose_event_handler(struct mg_connection *c,
   case MG_EV_POLL:
     {
       if (reboot) {
-        esp_restart();
+        reboot_trs_io();
       }
 
       char *ptr;

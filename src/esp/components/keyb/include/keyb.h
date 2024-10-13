@@ -6,4 +6,5 @@
 
 void check_keyb();
 void set_keyb_layout();
+void reset_keyb();
 void init_keyb();

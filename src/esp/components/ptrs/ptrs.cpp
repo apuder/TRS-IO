@@ -5,6 +5,7 @@
 #include "roms.h"
 #include "spi.h"
 #include "settings.h"
+#include "rst.h"
 #include <trs-lib.h>
 #include <fabgl.h>
 #include <esp_log.h>
@@ -70,7 +71,7 @@ void configure_pocket_trs(bool is_80_cols)
   exit_trs_lib();
 
   if (reboot) {
-    esp_restart();
+    reboot_trs_io();
   }
 }
 

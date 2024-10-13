@@ -419,6 +419,35 @@ void set_keyb_layout()
   }
 }
 
+
+// https://www.esp32.com/viewtopic.php?t=25626
+#include "soc/rtc_cntl_struct.h"
+#include "hal/wdt_types.h"
+#include "hal/rwdt_ll.h"
+
+static void __attribute__((noreturn)) esp_rtc_reset(void)
+{
+    rwdt_ll_write_protect_disable(&RTCCNTL);
+    rwdt_ll_disable(&RTCCNTL);
+    rwdt_ll_config_stage(&RTCCNTL, WDT_STAGE0, 0, WDT_STAGE_ACTION_RESET_RTC);
+    rwdt_ll_disable_stage(&RTCCNTL, WDT_STAGE1);
+    rwdt_ll_disable_stage(&RTCCNTL, WDT_STAGE2);
+    rwdt_ll_disable_stage(&RTCCNTL, WDT_STAGE3);
+    rwdt_ll_set_sys_reset_length(&RTCCNTL, WDT_RESET_SIG_LENGTH_3_2us);
+    rwdt_ll_feed(&RTCCNTL);
+    rwdt_ll_enable(&RTCCNTL);
+    rwdt_ll_write_protect_enable(&RTCCNTL);
+    for(;;);
+}
+
+void reset_keyb()
+{
+  if (PS2Controller.keyboard() != nullptr && !PS2Controller.keyboard()->isKeyboardAvailable()) {
+    PS2Controller.end();
+  }
+  esp_rtc_reset();
+}
+
 void init_keyb()
 {
   PS2Controller.begin(PS2Preset::KeyboardPort0, KbdMode::CreateVirtualKeysQueue);

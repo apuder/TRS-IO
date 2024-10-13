@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "io.h"
 #include "wifi.h"
+#include "rst.h"
 #include "event.h"
 #include "version.h"
 #include "esp_log.h"
@@ -116,7 +117,7 @@ static void perform_ota(int32_t remote_version)
   CHECK_OTA(esp_ota_set_boot_partition(update_partition));
   storage_set_i32(KEY_VERSION, remote_version);
   ESP_LOGI(TAG, "Restart system");
-  esp_restart();
+  reboot_trs_io();
 }
 
 static void check_ota()
@@ -190,7 +191,7 @@ void switch_to_factory()
     const esp_partition_t* factory = esp_partition_get(pi);
     esp_partition_iterator_release(pi);
     ESP_ERROR_CHECK(esp_ota_set_boot_partition(factory));
-    esp_restart();
+    reboot_trs_io();
   }
 }
 
