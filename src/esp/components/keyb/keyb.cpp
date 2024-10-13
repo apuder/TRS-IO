@@ -442,9 +442,7 @@ static void __attribute__((noreturn)) esp_rtc_reset(void)
 
 void reset_keyb()
 {
-  if (PS2Controller.keyboard() != nullptr && !PS2Controller.keyboard()->isKeyboardAvailable()) {
-    PS2Controller.end();
-  }
+  PS2Controller.end();
   esp_rtc_reset();
 }
 
