@@ -74,9 +74,19 @@ void configure_pocket_trs(bool is_80_cols)
   }
 }
 
+static void ptrs_reset_task(void* args)
+{
+  // Give TRS-FS some time to initialize if present
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
+  // Reset and resume Z80
+  ESP_LOGI("PTRS", "Resetting Z80");
+  spi_ptrs_rst();
+  vTaskDelete(NULL);
+}
+
 void ptrs_load_rom()
 {
-  if (current_model == -1) {
+  if (current_model < 0) {
     return;
   }
 
@@ -103,10 +113,7 @@ void ptrs_load_rom()
   } else {
     ESP_LOGE("PTRS", "ROM '%s' not found!", rom_file.c_str());
   }
-
-  // Reset and resume Z80
-  ESP_LOGI("PTRS", "Resetting Z80");
-  spi_ptrs_rst();
+  xTaskCreatePinnedToCore(ptrs_reset_task, "ptrs_rst", 3000, NULL, 1, NULL, 0);
 }
 
 void init_ptrs(int model)

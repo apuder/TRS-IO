@@ -19,7 +19,7 @@
 static const char* configurations[] = {
   "TRS-IO (Model 1)",
   "PocketTRS (Model 1, internal TRS-IO)",
-  "Reserved",
+  "Rescue",
   "PocketTRS (Model III, internal TRS-IO)",
   "PocketTRS (Model 4, internal TRS-IO)",
   "PocketTRS (Model 4P, internal TRS-IO)",
@@ -27,7 +27,7 @@ static const char* configurations[] = {
   "Custom 2",
   "TRS-IO (Model III)",
   "PocketTRS (Model 1, external TRS-IO)",
-  "Reserved",
+  "Rescue",
   "PocketTRS (Model III, external TRS-IO)",
   "PocketTRS (Model 4, external TRS-IO)",
   "PocketTRS (Model 4P, external TRS-IO)",
@@ -35,7 +35,6 @@ static const char* configurations[] = {
   "Custom 2"
 };
 
-#define RESERVED  -1
 #define TRS_IO_M1 0
 #define TRS_IO_M3 1
 #define PTRS_M1   2
@@ -44,6 +43,7 @@ static const char* configurations[] = {
 #define PTRS_M4P  5
 #define CUSTOM_1  6
 #define CUSTOM_2  7
+#define RESCUE    8
 
 static const char* bitstreams[] = {
   "trs_io_m1.bin",
@@ -53,13 +53,14 @@ static const char* bitstreams[] = {
   "ptrs_m4.bin",
   "ptrs_m4p.bin",
   "custom_1.bin",
-  "custom_2.bin"
+  "custom_2.bin",
+  "rescue.bin"
 };
 
 static const int conf_to_bs[] = {
   TRS_IO_M1,
   PTRS_M1,
-  RESERVED,
+  RESCUE,
   PTRS_M3,
   PTRS_M4,
   PTRS_M4P,
@@ -67,7 +68,7 @@ static const int conf_to_bs[] = {
   CUSTOM_2,
   TRS_IO_M3,
   PTRS_M1,
-  RESERVED,
+  RESCUE,
   PTRS_M3,
   PTRS_M4,
   PTRS_M4P,
@@ -97,7 +98,7 @@ static const bool is_custom[] = {
 static const int ptrs_model[] = {
   -1,
   SETTINGS_ROM_M1,
-  -1,
+  -2, // Rescue
   SETTINGS_ROM_M3,
   SETTINGS_ROM_M4,
   SETTINGS_ROM_M4P,
@@ -105,7 +106,7 @@ static const int ptrs_model[] = {
   -1,
   -1,
   SETTINGS_ROM_M1,
-  -1,
+  -2, // Rescue
   SETTINGS_ROM_M3,
   SETTINGS_ROM_M4,
   SETTINGS_ROM_M4P,
@@ -113,12 +114,42 @@ static const int ptrs_model[] = {
   -1
 };
 
-
 static bool is_custom_firmware_selected()
 {
   int conf = spi_get_config() & 0x0f;
   int target_bs = conf_to_bs[conf];
   return is_custom[target_bs];
+}
+
+static void wait_for_fpga()
+{
+  while(spi_get_cookie() != FPGA_COOKIE) {
+    ESP_LOGE(TAG, "Waiting for FPGA");
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+  }
+  ESP_LOGI(TAG, "FPGA ready");
+}
+
+static bool fpga_upload_rescue_firmware(bool wait)
+{
+  ESP_LOGI(TAG, "Upload rescue firmware");
+
+  BitstreamSource* bs = new BitstreamSourceFlash(bitstreams[RESCUE]);
+  JTAGAdapterTrsIO* jtag = new JTAGAdapterTrsIO();
+  bool success = jtag->doProgramToSRAM(bs);
+  delete bs;
+  delete jtag;
+
+  if (!success) {
+    ESP_LOGE(TAG, "Upload failed");
+    return false;
+  }
+
+  if (wait) {
+    wait_for_fpga();
+  }
+
+  return true;
 }
 
 static void check_firmware()
@@ -132,17 +163,22 @@ static void check_firmware()
   unsigned long addr = 0;
   int cnt;
   uint32_t id;
-  
+
+  id = flashReadMfdDevId();
+  ESP_LOGI(TAG, "Flash ID: 0x%x", id);
+  if (id == 0) {
+    ESP_LOGE(TAG, "Bad flash ID");
+    if (!fpga_upload_rescue_firmware(true)) {
+      return;
+    }
+  }
+
   int conf = spi_get_config() & 0x0f;
   int mode = spi_get_mode();
   ESP_LOGI(TAG, "Current firmware: %s", configurations[mode]);
   ESP_LOGI(TAG, "Target firmware: %s", configurations[conf]);
   int curr_bs = conf_to_bs[mode];
   int target_bs = conf_to_bs[conf];
-  if (target_bs == RESERVED) {
-    ESP_LOGE(TAG, "Selected RESERVED. Not changing FPGA firmware");
-    return;
-  }
   if (curr_bs == target_bs) {
     ESP_LOGI(TAG, "FPGA already running correct firmware");
     return;
@@ -166,9 +202,6 @@ static void check_firmware()
 
   // Set LED to solid blue
   set_led(false, false, true, false, false);
-
-  id = flashReadMfdDevId();
-  ESP_LOGI(TAG, "Flash ID: %x", id);
 
   do {
     // if the address is the start of a sector then erase the sector
@@ -214,11 +247,7 @@ static void check_firmware()
   jtag->setIR(NOOP);
   delete jtag;
 
-  while(spi_get_cookie() != FPGA_COOKIE) {
-    ESP_LOGE(TAG, "Waiting for FPGA");
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-  }
-  ESP_LOGI(TAG, "FPGA ready");
+  wait_for_fpga();
 
 err:
   set_led(false, false, false, false, false);
@@ -230,8 +259,8 @@ static void fpga_task(void* args)
   check_firmware();
   int mode = spi_get_mode();
   int model = ptrs_model[mode];
-  ESP_LOGI(TAG, "TRS-IO++ running in %s mode", (model == -1) ? "TRS-IO" : "PocketTRS");
-  if (model != -1) {
+  ESP_LOGI(TAG, "TRS-IO++ running in %s mode", (model == -1) ? "TRS-IO" : ((model == -2) ? "Rescue" : "PocketTRS"));
+  if (model >= 0) {
     // TRS-IO++ running in PocketTRS mode
     init_ptrs(model);
   }
@@ -243,6 +272,22 @@ static void fpga_task(void* args)
 
 void init_fpga()
 {
+  uint8_t count = 0;
+
+  while(spi_get_cookie() != FPGA_COOKIE) {
+#ifdef CONFIG_TRS_IO_PP
+    if (count++ == 5) {
+      fpga_upload_rescue_firmware(false);
+      count = 0;
+      continue;
+    }
+#endif
+    ESP_LOGE("SPI", "FPGA not found");
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+  }
+  ESP_LOGI("SPI", "Found FPGA");
+
+#ifdef CONFIG_TRS_IO_PP
   if (is_custom_firmware_selected()) {
     // Custom firmware is loaded via TRS-FS. Need to wait until FS is mounted
     xTaskCreatePinnedToCore(fpga_task, "fpga", 6000, (void*) 1, 1, NULL, 0);
@@ -250,4 +295,10 @@ void init_fpga()
     // Otherwise load correct firmware synchonously
     fpga_task(NULL);
   }
+#endif
+
+  uint8_t color = settings_get_screen_color();
+  spi_set_screen_color(color);
+
+  spi_set_esp_status(0);
 }

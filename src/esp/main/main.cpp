@@ -95,8 +95,8 @@ void app_main(void)
   init_spiffs();
 #ifdef CONFIG_TRS_IO_PP
   init_keyb();
-  init_fpga();
 #endif
+  init_fpga();
   init_wifi();
   init_io();
   init_http();

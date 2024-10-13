@@ -16,6 +16,6 @@ html,     data, spiffs,  ,        1M,
 roms,     data, spiffs,  ,        200K,
 
 # FPGA bits:
-fpga,     data, spiffs,  ,        6M,
+fpga,     data, spiffs,  ,        7M,
 
 # End

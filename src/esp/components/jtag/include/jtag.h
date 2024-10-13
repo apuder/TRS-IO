@@ -235,7 +235,7 @@ class JTAGAdapterTrsIO : public JTAGAdapter {
 public:
   void setup();
   void testBoundaryScan();
-  void doProgramToSRAM(const char* path);
+  bool doProgramToSRAM(BitstreamSource* bs);
   void testProgramToFLASH();
 };
 

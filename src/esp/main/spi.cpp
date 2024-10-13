@@ -7,7 +7,6 @@
 #include "esp_task.h"
 #include "esp_event_loop.h"
 #include "spi.h"
-#include "settings.h"
 
 static spi_device_interface_config_t spi_cmod;
 spi_device_handle_t spi_cmod_h;
@@ -649,15 +648,4 @@ void init_spi()
   spi_cmod.post_cb = NULL;
   ret = spi_bus_add_device(HSPI_HOST, &spi_cmod, &spi_cmod_h);
   ESP_ERROR_CHECK(ret);
-
-  while(spi_get_cookie() != FPGA_COOKIE) {
-    ESP_LOGE("SPI", "FPGA not found");
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-  }
-  ESP_LOGI("SPI", "Found FPGA");
-
-  uint8_t color = settings_get_screen_color();
-  spi_set_screen_color(color);
-
-  spi_set_esp_status(0);
 }

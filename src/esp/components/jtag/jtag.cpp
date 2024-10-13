@@ -256,7 +256,7 @@ void JTAGAdapterTrsIO::testBoundaryScan()
   // Never reached
 }
 
-void JTAGAdapterTrsIO::doProgramToSRAM(const char* path)
+bool JTAGAdapterTrsIO::doProgramToSRAM(BitstreamSource* bs)
 {
   setup();
   reset();
@@ -264,26 +264,25 @@ void JTAGAdapterTrsIO::doProgramToSRAM(const char* path)
   int err = scan(8, 1, 0x0000081B);
   if (err != 0) {
     ESP_LOGE("JTAG", "Unexpected scan result: %d", err);
-    return;
+    return false;
   }
 
-  ESP_LOGI("JTAG", "Opening bitstream '%s'", path);
-  BitstreamSourceFile* bs = new BitstreamSourceFile(path);
+  ESP_LOGI("JTAG", "Opening bitstream '%s'", bs->getFileName());
   if (!bs->open()) {
     ESP_LOGE("JTAG", "Open failed");
-  } else {
-    ESP_LOGI("JTAG", "Programming to SRAM");
-    if (!programToSRAM(bs, true)) {
-      ESP_LOGE("JTAG", "Program failed");
-      return;
-    }
-    if (!bs->close()) {
-      ESP_LOGE("JTAG", "Close failed");
-      return;
-    }
-    ESP_LOGI("JTAG", "Programming SRAM succeeded");
-    delete bs;
+    return false;
   }
+  ESP_LOGI("JTAG", "Programming to SRAM");
+  if (!programToSRAM(bs, true)) {
+    ESP_LOGE("JTAG", "Program failed");
+    return false;
+  }
+  if (!bs->close()) {
+    ESP_LOGE("JTAG", "Close failed");
+    return false;
+  }
+  ESP_LOGI("JTAG", "Programming SRAM succeeded");
+  return true;
 }
 
 void JTAGAdapterTrsIO::testProgramToFLASH()

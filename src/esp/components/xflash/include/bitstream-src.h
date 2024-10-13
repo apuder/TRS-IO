@@ -4,8 +4,14 @@
 #include "trs-fs.h"
 
 class BitstreamSource {
+protected:
+  const char* fn;
+
 public:
   virtual ~BitstreamSource() {}
+  const char* getFileName() {
+    return fn;
+  }
   virtual bool open() = 0;
   virtual bool read(void* buf, int n, int* br) = 0;
   virtual bool close() = 0;
@@ -13,7 +19,6 @@ public:
 
 class BitstreamSourceFile : public BitstreamSource {
 private:
-  const char* fn;
   FIL f;
 
 public:
@@ -51,7 +56,6 @@ public:
 
 class BitstreamSourceFlash : public BitstreamSource {
 private:
-  const char* fn;
   FILE* f;
 
 public:
@@ -74,7 +78,8 @@ public:
     size_t _br;
 
     if (feof(f)) {
-      return false;
+      *br = 0;
+      return true;
     }
     _br = fread(buf, 1, n, f);
     *br = (int) _br;
