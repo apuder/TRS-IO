@@ -356,6 +356,7 @@ static void action_task(void* p)
         // gpio_get_level(SD_CARD) == true -> SD card ejected
         init_trs_fs_posix();
         evt_signal((get_posix_err_msg() == NULL) ? EVT_SD_MOUNTED : EVT_SD_UNMOUNTED);
+        ESP_LOGI("ACTION", "SD card %s", get_posix_err_msg() == NULL ? "inserted" : "ejected");
       }
     }
 

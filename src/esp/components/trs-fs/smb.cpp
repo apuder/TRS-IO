@@ -142,6 +142,11 @@ FRESULT TRS_FS_SMB::f_opendir (
   return (dp->dir != NULL) ? FR_OK : FR_DISK_ERR;
 }
 
+FRESULT TRS_FS_SMB::f_closedir(DIR_* dp) {      /* [OUT] Pointer to the directory object structure */
+  smb2_closedir(smb2, (struct smb2dir*) dp->dir);
+  return FR_OK;
+}
+
 FRESULT TRS_FS_SMB::f_write (
                              FIL* fp,          /* [IN] Pointer to the file object structure */
                              const void* buff, /* [IN] Pointer to the data to be written */

@@ -1,16 +1,16 @@
 # Name,   Type, SubType, Offset,  Size, Flags
 # Note: if you have increased the bootloader size, make sure to update the offsets to avoid overlap
 nvs,      data, nvs,     ,        0x6000,
+otadata,  data, ota,     ,        0x2000,
 phy_init, data, phy,     ,        0x1000,
 
 # Our own C++ code:
 factory,  app,  factory, ,        0x180000,
+ota_0,    app,  ota_0,   ,        0x180000,
+ota_1,    app,  ota_1,   ,        0x180000,
 
 # Our webapp:
 html,     data, spiffs,  ,        1M,
-
-# Also disabled in components/trs-io/CMakeLists.txt:
-#elFinder, data, spiffs,  ,        6M,
 
 # Boost this back up to 1M later to allow users to upload their own ROMs:
 roms,     data, spiffs,  ,        200K,

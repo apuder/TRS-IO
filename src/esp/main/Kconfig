@@ -14,14 +14,6 @@ config TRS_IO_PP
     bool "TRS-IO++"
 endchoice
 
-config TRS_IO_ENABLE_OTA
-    bool "Enable OTA for TRS-IO"
-    default n
-    help
-        Select this if the OTA mechanism should be enabled.
-        This might immediately overwrite the flashed firmware.
-        Should be disabled during development.
-
 config TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
     bool "Use compile-time credentials for WiFi"
     default n

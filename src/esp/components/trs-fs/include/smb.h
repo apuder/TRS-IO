@@ -27,6 +27,7 @@ public:
                      DIR_* dp,           /* [OUT] Pointer to the directory object structure */
                      const TCHAR* path  /* [IN] Directory name */
                      );
+  FRESULT f_closedir(DIR_* dp);      /* [OUT] Pointer to the directory object structure */
   FRESULT f_write (
                    FIL* fp,          /* [IN] Pointer to the file object structure */
                    const void* buff, /* [IN] Pointer to the data to be written */
