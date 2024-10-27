@@ -91,13 +91,15 @@ void app_main(void)
   init_trs_io();
   init_button();
   init_settings();
+  init_spi();
+  init_led();
 
+#ifdef CONFIG_TRS_IO_PP
   if (is_status_button_pressed()) {
     switch_to_factory();
   }
-  
-  init_spi();
-  init_led();
+#endif
+
   init_trs_fs_posix();
   init_spiffs();
 #ifdef CONFIG_TRS_IO_PP
