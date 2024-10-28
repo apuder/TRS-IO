@@ -165,7 +165,7 @@ static const char* default_roms[] = {
   "",
   "model3-frehd.bin",
   "model3-frehd.bin",
-  "model3-frehd.bin"
+  "model4p-frehd.bin"
 };
 
 vector<string>& settings_get_roms()
