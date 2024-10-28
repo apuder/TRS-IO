@@ -7,7 +7,7 @@ ADD_CUSTOM_COMMAND(
            ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake)
 endif()
 
-set(src button.cpp led.cpp main.cpp settings.cpp spi.cpp io.cpp rst.cpp ota.cpp ${CMAKE_CURRENT_BINARY_DIR}/version.cpp)
+set(src button.cpp led.cpp main.cpp settings.cpp spi.cpp io.cpp rst.cpp ${CMAKE_CURRENT_BINARY_DIR}/version.cpp)
 
 idf_component_register(SRCS ${src}
                        INCLUDE_DIRS "include"

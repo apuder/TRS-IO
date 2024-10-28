@@ -91,7 +91,7 @@ static bool tar_copy_file(const char* filename, size_t file_size)
 static bool tar_copy_firmware(size_t file_size)
 {
   ESP_LOGI(TAG, "Performing OTA");
-  wnd_print(&wnd, "Updating ESP firmware\n");
+  wnd_print(&wnd, "Updating: ESP firmware\n");
 
   esp_ota_handle_t update_handle = 0 ;
   const esp_partition_t* update_partition = esp_ota_get_next_update_partition(NULL);
@@ -216,7 +216,12 @@ void update_firmware()
   header("Update");
   screen_show(false);
 
-  wnd_print(&wnd, "\n");
+  wnd_print(&wnd, "\nPress any key to continue, <ESC> to abort.");
+  if (get_key() == KEY_BREAK) {
+    return;
+  }
+
+  wnd_print(&wnd, "\n\n");
 
   if (trs_fs == NULL) {
     wnd_print(&wnd, "Neither SMB nor SD card are mounted. Cannot perform update.");
