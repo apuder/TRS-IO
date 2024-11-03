@@ -9,12 +9,12 @@ ota_0,    app,  ota_0,   ,        0x180000,
 ota_1,    app,  ota_1,   ,        0x180000,
 
 # Webapp:
-html,     data, spiffs,  ,        1M,
+html,     data, spiffs,  ,        2M,
 
-# Boost this back up to 1M later to allow users to upload their own ROMs:
-roms,     data, spiffs,  ,        200K,
+# ROMs:
+roms,     data, spiffs,  ,        1M,
 
 # FPGA bits:
-fpga,     data, spiffs,  ,        7M,
+fpga,     data, spiffs,  ,        9M,
 
 # End
