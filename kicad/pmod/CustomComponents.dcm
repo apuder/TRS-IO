@@ -1,0 +1,54 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 74HC595N
+D 8 bits serial in // out Shift Register 3 State Out
+K HCMOS SR 3State
+F 74xx/74HC595.pdf
+$ENDCMP
+#
+$CMP 788BS
+D Mini 8x8 LED Matrix
+K LED, Matrix
+F datasheets/TOP-CA-788BS.pdf
+$ENDCMP
+#
+$CMP ArduinoNano
+D Arduino Nano
+K Arduino Nano
+F datasheets/ArduinoNano.pdf
+$ENDCMP
+#
+$CMP BoxHeader_02x05
+D Box header connector, double row, 02x05
+K box header connector
+F ~
+$ENDCMP
+#
+$CMP CC690XSO-XA
+D Cross Chip CC690XSO-XA current measuring chip
+K current
+$ENDCMP
+#
+$CMP IN-12B
+D Nixie tube IN-12B
+K USSR IN-12B
+F datasheets/IN-12B.pdf
+$ENDCMP
+#
+$CMP K155NA1
+D Nixie tube driver // BCD to decimal
+K USSR K155ID1 K155NA1
+F datasheets/k155na1.pdf
+$ENDCMP
+#
+$CMP PC817X2CSP9F
+D DC Optocoupler, SMD-4
+K NPN DC Optocoupler
+$ENDCMP
+#
+$CMP PCA9557PW
+D IO expander 8 GPIO, I2C, TSSOP-16
+K I2C TWI IO expander
+$ENDCMP
+#
+#End Doc Library
