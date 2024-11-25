@@ -108,6 +108,11 @@ const BOARD_TYPE_TO_STRING = new Map<number,string>([
     [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model III"],
     [BoardType.TRS_IO_PP, "TRS-IO++"],
 ]);
+const BOARD_TYPE_TO_BODY_DATASET = new Map<number,string>([
+    [BoardType.TRS_IO_MODEL_1, "trs-io-m1"],
+    [BoardType.TRS_IO_MODEL_3, "trs-io-m3"],
+    [BoardType.TRS_IO_PP, "trs-io-pp"],
+]);
 
 // Message displayed to the user (usually an error).
 class UserMessage {
@@ -271,8 +276,9 @@ function updateStatus(status: Status, initialFetch: boolean): void {
         ? CONFIGURATIONS[status.config ?? 0]
         : status.board === BoardType.TRS_IO_MODEL_1
             ? TRS_IO_M1_CONFIGURATION
-            : TRS_IO_M3_CONFIGURATION
+            : TRS_IO_M3_CONFIGURATION;
     document.body.classList.toggle("ptrs-mode", configuration.isPtrs);
+    document.body.dataset.boardType = BOARD_TYPE_TO_BODY_DATASET.get(status.board) ?? "unknown";
 
     const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
     const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";

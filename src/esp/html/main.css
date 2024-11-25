@@ -131,7 +131,9 @@ nav ul {
     }
 }
 
-body:not(.ptrs-mode) .ptrs-only {
+body:not(.ptrs-mode) .ptrs-only,
+body:not([data-board-type=trs-io-pp]) .trs-io-pp-only {
+
     display: none !important;
 }
 

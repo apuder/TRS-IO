@@ -46,6 +46,11 @@ const BOARD_TYPE_TO_STRING = new Map([
     [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model III"],
     [BoardType.TRS_IO_PP, "TRS-IO++"],
 ]);
+const BOARD_TYPE_TO_BODY_DATASET = new Map([
+    [BoardType.TRS_IO_MODEL_1, "trs-io-m1"],
+    [BoardType.TRS_IO_MODEL_3, "trs-io-m3"],
+    [BoardType.TRS_IO_PP, "trs-io-pp"],
+]);
 // Message displayed to the user (usually an error).
 class UserMessage {
     constructor(message, autohide) {
@@ -175,7 +180,7 @@ function updateSettingsForm(status) {
     keyboardSelect.selectedIndex = status.keyboard_layout;
 }
 function updateStatus(status, initialFetch) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     gMostRecentStatus = status;
     const wifiStatusText = (_a = WIFI_STATUS_TO_STRING.get(status.wifi_status)) !== null && _a !== void 0 ? _a : "Unknown";
     const configuration = status.board === BoardType.TRS_IO_PP
@@ -184,6 +189,7 @@ function updateStatus(status, initialFetch) {
             ? TRS_IO_M1_CONFIGURATION
             : TRS_IO_M3_CONFIGURATION;
     document.body.classList.toggle("ptrs-mode", configuration.isPtrs);
+    document.body.dataset.boardType = (_c = BOARD_TYPE_TO_BODY_DATASET.get(status.board)) !== null && _c !== void 0 ? _c : "unknown";
     const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
     const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";
     const smbConnected = status.smb_err === undefined || status.smb_err === "";
@@ -201,7 +207,7 @@ function updateStatus(status, initialFetch) {
         updateStatusField("fpga_vers_major", status.fpga_vers_major);
         updateStatusField("fpga_vers_minor", status.fpga_vers_minor);
     }
-    updateStatusField("board", (_c = BOARD_TYPE_TO_STRING.get(status.board)) !== null && _c !== void 0 ? _c : "Unknown");
+    updateStatusField("board", (_d = BOARD_TYPE_TO_STRING.get(status.board)) !== null && _d !== void 0 ? _d : "Unknown");
     updateStatusField("configuration", configuration.name);
     updateStatusField("git_commit", cleanUpGitCommit(status.git_tag, status.git_commit));
     updateStatusField("git_branch", status.git_branch);

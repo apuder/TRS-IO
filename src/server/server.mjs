@@ -6,6 +6,27 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import express from 'express';
 
+// Physical board type.
+const BOARD_TYPE_TRS_IO_MODEL_1 = 0;
+const BOARD_TYPE_TRS_IO_MODEL_3 = 1;
+const BOARD_TYPE_TRS_IO_PP = 2;
+
+// Switch 4 to switch 1.
+const DIP_TRS_IO_M1 = 0b0000;
+const DIP_TRS_IO_M3 = 0b1000;
+const DIP_PTRS_M1_INT_IO = 0b0001;
+const DIP_PTRS_M1_EXT_IO = 0b1001;
+const DIP_PTRS_M3_INT_IO = 0b0011;
+const DIP_PTRS_M3_EXT_IO = 0b1011;
+const DIP_PTRS_M4_INT_IO = 0b0100;
+const DIP_PTRS_M4_EXT_IO = 0b1100;
+const DIP_PTRS_M4P_INT_IO = 0b0101;
+const DIP_PTRS_M4P_EXT_IO = 0b1101;
+
+// Update these to change the hardware configuration.
+const BOARD_TYPE = BOARD_TYPE_TRS_IO_PP;
+const DIP_SWITCHES = DIP_PTRS_M3_INT_IO;
+
 const STATE_DIR = "state";
 const ROMS_DIR = "state/roms";
 const FILES_DIR = "state/files";
@@ -118,8 +139,7 @@ function makeStatus() {
         fpga_vers_minor: 9,
         wifi_status: 2,
         ip: "192.168.1.188",
-        config: 3, // only for TRS-IO++
-        board: 2, // TRS-IO++
+        board: BOARD_TYPE,
         git_commit: "e1e27ab+",
         git_tag: "",
         git_branch: "master",
@@ -139,6 +159,11 @@ function makeStatus() {
         smb_user: settings.smb_user,
         smb_passwd: settings.smb_passwd,
     };
+
+    // Only present for TRS-IO++.
+    if (BOARD_TYPE === BOARD_TYPE_TRS_IO_PP) {
+        status.config = DIP_SWITCHES;
+    }
 
     return status;
 }
