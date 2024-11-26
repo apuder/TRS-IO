@@ -130,6 +130,24 @@ bool JTAGAdapter::programToSRAM(BitstreamSource* bs, bool log)
     return false;
   }
 
+  /* The following instructions are not documented. The documented process
+   * of programming SRAM does not work when the content of the flash is
+   * corrupted (e.g., a CRC error). The following instructions were
+   * reverse-engineered by capturing the JTAG protocol observing the
+   * Gowin programmer program the SRAM.
+   */
+  setIR(CONFIG_DISABLE);
+  setIR(0);
+  ESP_LOGI("JTAG", "Status reg: %04x", readStatusReg());
+  setIR(READ_IDCODE);
+  setIR(CONFIG_ENABLE);
+  setIR(RELOAD);
+  setIR(NOOP);
+  setIR(CONFIG_DISABLE);
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  setIR(READ_IDCODE);
+  setIR(NOOP);
+
   /* erase SRAM */
   if (!enableCfg()) {
     return false;
@@ -146,6 +164,7 @@ bool JTAGAdapter::programToSRAM(BitstreamSource* bs, bool log)
     return false;
   }
 
+  setIR(INIT_ADDR);
   setIR(XFER_WRITE);  // Transfer Configuration Data
   enterShiftDR();
 
@@ -178,9 +197,10 @@ bool JTAGAdapter::programToSRAM(BitstreamSource* bs, bool log)
   setIR(XFER_DONE);  // XFER_DONE
   if (!pollFlag(STATUS_DONE_FINAL, STATUS_DONE_FINAL)) {
     return false;
-  }
-      
-  return disableCfg();
+  }    
+  bool ok = disableCfg();
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  return ok;
 }
 
 void JTAGAdapterTrsIO::setup()
