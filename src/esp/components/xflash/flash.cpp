@@ -104,7 +104,7 @@ unsigned long flashReadMfdDevId(void)
 char *flashMfdDevIdStr(unsigned long mfg_dev_id)
 {
    unsigned char mfg_id = mfg_dev_id >> 16;
-   unsigned int  dev_id = mfg_dev_id;
+   unsigned short dev_id = mfg_dev_id;
 
    if(mfg_id == 0xc2)
    {
@@ -119,6 +119,15 @@ char *flashMfdDevIdStr(unsigned long mfg_dev_id)
          return "Micron N25Q032A";
       else
          return "Micron ?";
+   }
+   else if(mfg_id == 0x0b)
+   {
+      if(dev_id == 0x4016)
+         return "XTX XT25F32B";
+      else if(dev_id == 0x4017)
+         return "XTX XT25F64";
+      else
+         return "XTX ?";
    }
    else
       return (char *)0;
