@@ -816,9 +816,8 @@ always @ (posedge clk)
    heartbeat <= heartbeat + 26'b1;
 
 
-assign LED[0] = WAIT;
-assign LED[1] = esp_sel;
-assign LED[2] = lock;
-assign LED[3] = esp_status_esp_ready;
-
+assign LED[0] = esp_sel;
+assign LED[1] = WAIT;
+assign LED[2] = INT;
+assign LED[3] = heartbeat[25] | spi_error;
 endmodule
