@@ -81,7 +81,7 @@ private:
 
   inline bool inport() {
     //return GPIO.in >> 13;
-    return GPIO.in1.data & TDO;
+    return (GPIO.in1.data & TDO) != 0;
   }
 
 public:
@@ -91,11 +91,11 @@ public:
   int scan(int expected_ir_len, int expected_devices, uint32_t expected_idcode);
 
   inline bool pulse(uint32_t d) {
-	  bool tdo;
+    bool tdo;
 
     outport(d);
-    tdo = inport();
     outport(d | TCK);
+    tdo = inport();
     outport(d);
 
     return tdo;

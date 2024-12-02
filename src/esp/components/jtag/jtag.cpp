@@ -244,6 +244,7 @@ void JTAGAdapterTrsIO::testBoundaryScan()
   reset();
 
   uint32_t LED = 0;
+  bool dip1 = false;
 
   while (1) {
     LED ^= TDI;
@@ -254,7 +255,13 @@ void JTAGAdapterTrsIO::testBoundaryScan()
 
     for (int i = 0; i < 760 - 1; i++) {
       switch (i) {
+        case 323: // DIP1 == A12
+          dip1 = pulse(0);
+          break;
         case 337: // LED[3] == D10
+          // If DIP1 is on, turn on LED[3]
+          pulse(dip1 ? 0 : TDI);
+          break;
         case 339: // LED[2] == E10
         case 687: // LED[1] == R7
         case 685: // LED[0] == P7
