@@ -226,6 +226,13 @@ function updateStatus(status, initialFetch) {
     deviceTypeSpan.textContent = getDeviceName(status);
     if (initialFetch) {
         updateSettingsForm(status);
+        // Select the settings tab on start-up if Wi-Fi hasn't yet been configured.
+        if (!status.ssid) {
+            const radio = document.getElementById("settings_article");
+            if (radio !== null) {
+                radio.checked = true;
+            }
+        }
     }
 }
 async function fetchStatus(initialFetch) {
