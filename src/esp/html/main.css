@@ -132,7 +132,13 @@ nav ul {
 }
 
 body:not(.ptrs-mode) .ptrs-only,
-body:not([data-board-type=trs-io-pp]) .trs-io-pp-only {
+body:not([data-board-type=trs-io-pp]) .trs-io-pp-only,
+body:not([data-emulated-model=trs-80-model-1]) .emulated-model-trs-80-model-1-only,
+body:not([data-emulated-model=trs-80-model-3]) .emulated-model-trs-80-model-3-only,
+body:not([data-emulated-model=trs-80-model-4]) .emulated-model-trs-80-model-4-only,
+body:not([data-emulated-model=trs-80-model-4p]) .emulated-model-trs-80-model-4p-only,
+body:not([data-emulated-model=trs-80-model-4]):not([data-emulated-model=trs-80-model-4p]) .emulated-model-trs-80-model-4-and-4p-only,
+body:not([data-emulated-model=none]) .emulated-model-none-only {
 
     display: none !important;
 }
@@ -195,10 +201,16 @@ article:has(input[name=active-article]:not(:checked)) {
 }
 
 .dashboard-cards {
+    --column-count: 2;
     display: grid;
-    /*grid-template-columns: repeat(auto-fill, minmax(200px, 1fr) ) ;*/
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(var(--column-count), 1fr);
     gap: 10px;
+}
+
+@media (width < 950px) {
+    .dashboard-cards {
+        --column-count: 1;
+    }
 }
 
 .dashboard-card {

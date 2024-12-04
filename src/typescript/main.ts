@@ -8,6 +8,14 @@ enum BoardType {
     TRS_IO_PP,
 }
 
+// Type of computer we're emulating in PocketTRS mode.
+enum ModelType {
+    MODEL_1,
+    MODEL_3,
+    MODEL_4,
+    MODEL_4P,
+}
+
 interface Status {
     hardware_rev: number,
     vers_major: number,
@@ -70,25 +78,26 @@ interface ErrorResponse {
 // DIP switch configuration.
 class Configuration {
     public constructor(public readonly name: string,
-                       public readonly isPtrs: boolean) {}
+                       public readonly isPtrs: boolean,
+                       public readonly model?: ModelType) {}
 }
 
 // Controlled by the DIP switches and given to us in the "config" status field.
 const CONFIGURATIONS: Configuration[] = [
     new Configuration("TRS-IO (Model 1)", false),
-    new Configuration("PocketTRS (Model 1, internal TRS-IO)", true),
+    new Configuration("PocketTRS (Model 1, internal TRS-IO)", true, ModelType.MODEL_1),
     new Configuration("Reserved", false),
-    new Configuration("PocketTRS (Model III, internal TRS-IO)", true),
-    new Configuration("PocketTRS (Model 4, internal TRS-IO)", true),
-    new Configuration("PocketTRS (Model 4P, internal TRS-IO)", true),
+    new Configuration("PocketTRS (Model III, internal TRS-IO)", true, ModelType.MODEL_3),
+    new Configuration("PocketTRS (Model 4, internal TRS-IO)", true, ModelType.MODEL_4),
+    new Configuration("PocketTRS (Model 4P, internal TRS-IO)", true, ModelType.MODEL_4P),
     new Configuration("Custom 1", false),
     new Configuration("Custom 2", false),
     new Configuration("TRS-IO (Model III)", false),
-    new Configuration("PocketTRS (Model 1, external TRS-IO)", true),
+    new Configuration("PocketTRS (Model 1, external TRS-IO)", true, ModelType.MODEL_1),
     new Configuration("Reserved", false),
-    new Configuration("PocketTRS (Model III, external TRS-IO)", true),
-    new Configuration("PocketTRS (Model 4, external TRS-IO)", true),
-    new Configuration("PocketTRS (Model 4P, external TRS-IO)", true),
+    new Configuration("PocketTRS (Model III, external TRS-IO)", true, ModelType.MODEL_3),
+    new Configuration("PocketTRS (Model 4, external TRS-IO)", true, ModelType.MODEL_4),
+    new Configuration("PocketTRS (Model 4P, external TRS-IO)", true, ModelType.MODEL_4P),
     new Configuration("Custom 1", false),
     new Configuration("Custom 2", false),
 ];
@@ -103,15 +112,22 @@ const WIFI_STATUS_TO_STRING = new Map<number,string>([
     [4, "Not configured"],
 ]);
 
-const BOARD_TYPE_TO_STRING = new Map<number,string>([
+const BOARD_TYPE_TO_STRING = new Map<BoardType,string>([
     [BoardType.TRS_IO_MODEL_1, "TRS-IO for Model 1"],
     [BoardType.TRS_IO_MODEL_3, "TRS-IO for Model III"],
     [BoardType.TRS_IO_PP, "TRS-IO++"],
 ]);
-const BOARD_TYPE_TO_BODY_DATASET = new Map<number,string>([
+const BOARD_TYPE_TO_BODY_DATASET = new Map<BoardType,string>([
     [BoardType.TRS_IO_MODEL_1, "trs-io-m1"],
     [BoardType.TRS_IO_MODEL_3, "trs-io-m3"],
     [BoardType.TRS_IO_PP, "trs-io-pp"],
+]);
+const MODEL_TYPE_TO_BODY_DATASET = new Map<ModelType | undefined,string>([
+    [undefined, "none"],
+    [ModelType.MODEL_1, "trs-80-model-1"],
+    [ModelType.MODEL_3, "trs-80-model-3"],
+    [ModelType.MODEL_4, "trs-80-model-4"],
+    [ModelType.MODEL_4P, "trs-80-model-4p"],
 ]);
 
 // Message displayed to the user (usually an error).
@@ -279,6 +295,7 @@ function updateStatus(status: Status, initialFetch: boolean): void {
             : TRS_IO_M3_CONFIGURATION;
     document.body.classList.toggle("ptrs-mode", configuration.isPtrs);
     document.body.dataset.boardType = BOARD_TYPE_TO_BODY_DATASET.get(status.board) ?? "unknown";
+    document.body.dataset.emulatedModel = MODEL_TYPE_TO_BODY_DATASET.get(configuration.model) ?? "unknown";
 
     const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
     const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";

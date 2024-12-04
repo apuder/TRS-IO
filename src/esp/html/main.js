@@ -6,29 +6,38 @@ var BoardType;
     BoardType[BoardType["TRS_IO_MODEL_3"] = 1] = "TRS_IO_MODEL_3";
     BoardType[BoardType["TRS_IO_PP"] = 2] = "TRS_IO_PP";
 })(BoardType || (BoardType = {}));
+// Type of computer we're emulating in PocketTRS mode.
+var ModelType;
+(function (ModelType) {
+    ModelType[ModelType["MODEL_1"] = 0] = "MODEL_1";
+    ModelType[ModelType["MODEL_3"] = 1] = "MODEL_3";
+    ModelType[ModelType["MODEL_4"] = 2] = "MODEL_4";
+    ModelType[ModelType["MODEL_4P"] = 3] = "MODEL_4P";
+})(ModelType || (ModelType = {}));
 // DIP switch configuration.
 class Configuration {
-    constructor(name, isPtrs) {
+    constructor(name, isPtrs, model) {
         this.name = name;
         this.isPtrs = isPtrs;
+        this.model = model;
     }
 }
 // Controlled by the DIP switches and given to us in the "config" status field.
 const CONFIGURATIONS = [
     new Configuration("TRS-IO (Model 1)", false),
-    new Configuration("PocketTRS (Model 1, internal TRS-IO)", true),
+    new Configuration("PocketTRS (Model 1, internal TRS-IO)", true, ModelType.MODEL_1),
     new Configuration("Reserved", false),
-    new Configuration("PocketTRS (Model III, internal TRS-IO)", true),
-    new Configuration("PocketTRS (Model 4, internal TRS-IO)", true),
-    new Configuration("PocketTRS (Model 4P, internal TRS-IO)", true),
+    new Configuration("PocketTRS (Model III, internal TRS-IO)", true, ModelType.MODEL_3),
+    new Configuration("PocketTRS (Model 4, internal TRS-IO)", true, ModelType.MODEL_4),
+    new Configuration("PocketTRS (Model 4P, internal TRS-IO)", true, ModelType.MODEL_4P),
     new Configuration("Custom 1", false),
     new Configuration("Custom 2", false),
     new Configuration("TRS-IO (Model III)", false),
-    new Configuration("PocketTRS (Model 1, external TRS-IO)", true),
+    new Configuration("PocketTRS (Model 1, external TRS-IO)", true, ModelType.MODEL_1),
     new Configuration("Reserved", false),
-    new Configuration("PocketTRS (Model III, external TRS-IO)", true),
-    new Configuration("PocketTRS (Model 4, external TRS-IO)", true),
-    new Configuration("PocketTRS (Model 4P, external TRS-IO)", true),
+    new Configuration("PocketTRS (Model III, external TRS-IO)", true, ModelType.MODEL_3),
+    new Configuration("PocketTRS (Model 4, external TRS-IO)", true, ModelType.MODEL_4),
+    new Configuration("PocketTRS (Model 4P, external TRS-IO)", true, ModelType.MODEL_4P),
     new Configuration("Custom 1", false),
     new Configuration("Custom 2", false),
 ];
@@ -50,6 +59,13 @@ const BOARD_TYPE_TO_BODY_DATASET = new Map([
     [BoardType.TRS_IO_MODEL_1, "trs-io-m1"],
     [BoardType.TRS_IO_MODEL_3, "trs-io-m3"],
     [BoardType.TRS_IO_PP, "trs-io-pp"],
+]);
+const MODEL_TYPE_TO_BODY_DATASET = new Map([
+    [undefined, "none"],
+    [ModelType.MODEL_1, "trs-80-model-1"],
+    [ModelType.MODEL_3, "trs-80-model-3"],
+    [ModelType.MODEL_4, "trs-80-model-4"],
+    [ModelType.MODEL_4P, "trs-80-model-4p"],
 ]);
 // Message displayed to the user (usually an error).
 class UserMessage {
@@ -180,7 +196,7 @@ function updateSettingsForm(status) {
     keyboardSelect.selectedIndex = status.keyboard_layout;
 }
 function updateStatus(status, initialFetch) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     gMostRecentStatus = status;
     const wifiStatusText = (_a = WIFI_STATUS_TO_STRING.get(status.wifi_status)) !== null && _a !== void 0 ? _a : "Unknown";
     const configuration = status.board === BoardType.TRS_IO_PP
@@ -190,6 +206,7 @@ function updateStatus(status, initialFetch) {
             : TRS_IO_M3_CONFIGURATION;
     document.body.classList.toggle("ptrs-mode", configuration.isPtrs);
     document.body.dataset.boardType = (_c = BOARD_TYPE_TO_BODY_DATASET.get(status.board)) !== null && _c !== void 0 ? _c : "unknown";
+    document.body.dataset.emulatedModel = (_d = MODEL_TYPE_TO_BODY_DATASET.get(configuration.model)) !== null && _d !== void 0 ? _d : "unknown";
     const sdCardMounted = status.has_sd_card && (status.posix_err === undefined || status.posix_err === "");
     const frehdLoaded = status.frehd_loaded === undefined || status.frehd_loaded === "";
     const smbConnected = status.smb_err === undefined || status.smb_err === "";
@@ -207,7 +224,7 @@ function updateStatus(status, initialFetch) {
         updateStatusField("fpga_vers_major", status.fpga_vers_major);
         updateStatusField("fpga_vers_minor", status.fpga_vers_minor);
     }
-    updateStatusField("board", (_d = BOARD_TYPE_TO_STRING.get(status.board)) !== null && _d !== void 0 ? _d : "Unknown");
+    updateStatusField("board", (_e = BOARD_TYPE_TO_STRING.get(status.board)) !== null && _e !== void 0 ? _e : "Unknown");
     updateStatusField("configuration", configuration.name);
     updateStatusField("git_commit", cleanUpGitCommit(status.git_tag, status.git_commit));
     updateStatusField("git_branch", status.git_branch);
