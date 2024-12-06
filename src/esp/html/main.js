@@ -1145,6 +1145,29 @@ function configurePrinter() {
     };
     attemptConnection();
 }
+function configureDashboardImages() {
+    function gotErrorLoadingImage(img) {
+        // Just remove the image. We could have a local fallback, but it's not worth it, this will
+        // really only happen in the brief time before Wi-Fi is set up, and the user won't be
+        // on the dashboard page anyway.
+        img.remove();
+    }
+    // We source large images from the network to save on SPIFFS space, but these will fail to load if
+    // Wi-Fi hasn't yet been configured. Hide the broken-image icon.
+    const images = document.querySelectorAll(".dashboard-image > img");
+    for (const image of images) {
+        if (image.complete) {
+            // Already loaded, see if it worked.
+            if (image.naturalWidth === 0 && image.naturalHeight === 0) {
+                gotErrorLoadingImage(image);
+            }
+        }
+        else {
+            // Not yet loaded, set a listener.
+            image.addEventListener("error", e => gotErrorLoadingImage(e.target));
+        }
+    }
+}
 export function main() {
     configureButtons();
     configureRomUpload();
@@ -1155,4 +1178,5 @@ export function main() {
     configureDots();
     configurePrinter();
     scheduleFetchStatus();
+    configureDashboardImages();
 }

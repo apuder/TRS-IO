@@ -398,7 +398,7 @@ printerWs.on('connection', ws => {
         setTimeout(sendByte, 20);
     };
 
-    sendByte();
+    // sendByte();
 });
 
 httpServer.on('upgrade', function upgrade(request, socket, head) {
