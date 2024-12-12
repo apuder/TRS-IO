@@ -1,10 +1,10 @@
 SHELL = /bin/bash
 
-.PHONY: app
-app: build pause app-flash monitor
-
 .PHONY: all
 all: build pause flash monitor
+
+.PHONY: app
+app: build pause app-flash monitor
 
 .PHONY: build
 build:
@@ -33,4 +33,5 @@ menuconfig:
 
 .PHONY: pause
 pause:
+	@echo "Hold down PTRS RST and press ESP RST, then hold PTRS RST another few seconds."
 	@read -p "Press Enter when ready to flash . . . "
