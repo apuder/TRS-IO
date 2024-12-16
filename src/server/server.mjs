@@ -2,9 +2,9 @@
 import fs from "fs";
 import path from "path";
 import { globSync } from 'glob'
-import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import express from 'express';
+import expressStaticGzip from "express-static-gzip";
 
 // Physical board type.
 const BOARD_TYPE_TRS_IO_MODEL_1 = 0;
@@ -211,7 +211,7 @@ function makeGetFiles() {
 const PORT = 8080;
 const app = express();
 
-app.use('/', express.static('../esp/html'));
+app.use('/', expressStaticGzip('../esp/html'));
 
 // Automatically decode JSON on POST.
 app.use(express.json());
@@ -379,7 +379,7 @@ app.post("/files", (req, res) => {
 });
 
 const httpServer = app.listen(PORT, () => {
-  console.log(`Example app listening on http://localhost:${PORT}/`);
+  console.log(`Fake TRS-IO++ server listening on http://localhost:${PORT}/`);
 });
 
 const printerWs = new WebSocketServer({ noServer: true });

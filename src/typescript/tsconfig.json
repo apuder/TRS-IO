@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2019",
     "module": "esnext",
-    "outDir": "../esp/html",
+    "outDir": "../html",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
