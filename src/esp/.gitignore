@@ -2,5 +2,3 @@ build/
 sdkconfig.old
 log.*.txt
 tags
-/html
-

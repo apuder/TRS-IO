@@ -52,14 +52,17 @@ pause:
 	@echo "Hold down PTRS RST and press ESP RST, then hold PTRS RST another few seconds."
 	@read -p "Press Enter when ready to flash . . . "
 
+BUILD=build
+BUILD_HTML=$(BUILD)/html
 .PHONY: html
 html:
-	if [ -d html ]; then rm -r html; fi
-	cp -r ../html .
-	find html -name README -delete
-	find html -name .DS_Store -delete
-	if [ -d html/.idea ]; then rm -r html/.idea; fi
-	find html -name "*.iml" -delete
-	find html -type f -exec gzip --best "{}" ";"
-	du -sh html
+	mkdir -p $(BUILD)
+	if [ -d $(BUILD_HTML) ]; then rm -r $(BUILD_HTML); fi
+	cp -r ../html $(BUILD_HTML)
+	find $(BUILD_HTML) -name README -delete
+	find $(BUILD_HTML) -name .DS_Store -delete
+	if [ -d $(BUILD_HTML)/.idea ]; then rm -r $(BUILD_HTML)/.idea; fi
+	find $(BUILD_HTML) -name "*.iml" -delete
+	find $(BUILD_HTML) -type f -exec gzip --best "{}" ";"
+	du -sh $(BUILD_HTML)
 
