@@ -58,11 +58,12 @@ BUILD_HTML=$(BUILD)/html
 html:
 	mkdir -p $(BUILD)
 	if [ -d $(BUILD_HTML) ]; then rm -r $(BUILD_HTML); fi
-	cp -r ../html $(BUILD_HTML)
+	cp -r html $(BUILD_HTML)
 	find $(BUILD_HTML) -name README -delete
 	find $(BUILD_HTML) -name .DS_Store -delete
 	if [ -d $(BUILD_HTML)/.idea ]; then rm -r $(BUILD_HTML)/.idea; fi
 	find $(BUILD_HTML) -name "*.iml" -delete
+	find $(BUILD_HTML) -name "*.ts" -delete
 	find $(BUILD_HTML) -type f -exec gzip --best "{}" ";"
 	du -sh $(BUILD_HTML)
 

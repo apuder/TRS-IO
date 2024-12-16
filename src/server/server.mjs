@@ -211,7 +211,7 @@ function makeGetFiles() {
 const PORT = 8080;
 const app = express();
 
-app.use('/', expressStaticGzip('../esp/html'));
+app.use('/', expressStaticGzip('../esp/build/html'));
 
 // Automatically decode JSON on POST.
 app.use(express.json());

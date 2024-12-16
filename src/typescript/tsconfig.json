@@ -2,13 +2,12 @@
   "compilerOptions": {
     "target": "es2019",
     "module": "esnext",
-    "outDir": "../html",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true
   },
   "include": [
-      "./**/*.ts"
+      "../esp/html/**/*.ts"
   ]
 }
