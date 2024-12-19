@@ -90,6 +90,13 @@ static string& get_keyboard_layout()
   return keyboard_layout;
 }
 
+static string makeDosFilename(const char *filename) {
+    string dosFilename(filename);
+    // TODO also check length etc.
+    std::replace(dosFilename.begin(), dosFilename.end(), '.', '/');
+    return dosFilename;
+}
+
 #ifdef CONFIG_TRS_IO_PP
 static uint8_t get_config()
 {
@@ -114,13 +121,6 @@ static string makeFilesPathname(const char *filename) {
     } else {
         return string(FILES_DIR) + "/" + filename;
     }
-}
-
-static string makeDosFilename(const char *filename) {
-    string dosFilename(filename);
-    // TODO also check length etc.
-    std::replace(dosFilename.begin(), dosFilename.end(), '.', '/');
-    return dosFilename;
 }
 
 static void mongoose_handle_get_roms(char** response,
@@ -364,8 +364,8 @@ static void mongoose_handle_files(struct mg_http_message* message,
             int maxLen = len64/4*3;
             vector<uint8_t> contents(maxLen + 1); // Decode function adds a nul byte (?!).
             int actualLen = mg_base64_decode(contents64->valuestring, len64, (char *) &contents.front());
-            string pathname = makeFilesPathname(filename->valuestring);
 #if 0
+            string pathname = makeFilesPathname(filename->valuestring);
             FIL fp;
             FRESULT result = f_open(&fp, pathname.c_str(), FA_WRITE | FA_CREATE_ALWAYS);
             if (result != FR_OK) {
