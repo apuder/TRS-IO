@@ -1,0 +1,13 @@
+{
+    // vim: filetype=json5
+
+    "extends": "@parcel/config-default",
+
+    // Inline these files:
+    "transformers": {
+        "*.{css,svg,otf}": ["...", "@parcel/transformer-inline-string"]
+    },
+    "optimizers": {
+        "*.{css,svg,otf}": ["...", "@parcel/optimizer-data-url"]
+    }
+}

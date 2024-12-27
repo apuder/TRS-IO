@@ -23,7 +23,7 @@ all: build pause flash monitor
 app: build pause app-flash monitor
 
 .PHONY: build
-build: html
+build: copy-html
 	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" build
 
 .PHONY: flash
@@ -52,18 +52,24 @@ pause:
 	@echo "Hold down PTRS RST and press ESP RST, then hold PTRS RST another few seconds."
 	@read -p "Press Enter when ready to flash . . . "
 
-BUILD=build
-BUILD_HTML=$(BUILD)/html
-.PHONY: html
-html:
-	mkdir -p $(BUILD)
-	if [ -d $(BUILD_HTML) ]; then rm -r $(BUILD_HTML); fi
-	cp -r html $(BUILD_HTML)
-	find $(BUILD_HTML) -name README -delete
-	find $(BUILD_HTML) -name .DS_Store -delete
-	if [ -d $(BUILD_HTML)/.idea ]; then rm -r $(BUILD_HTML)/.idea; fi
-	find $(BUILD_HTML) -name "*.iml" -delete
-	find $(BUILD_HTML) -name "*.ts" -delete
-	find $(BUILD_HTML) -type f -exec gzip --best "{}" ";"
-	du -sh $(BUILD_HTML)
+# Run this after changing static web files. Check the resulting file
+# into git.
+HTML_BUILT_DIR=html/built
+.PHONY: build-html
+build-html:
+	if [ -d $(HTML_BUILT_DIR) ]; then rm -r $(HTML_BUILT_DIR); fi
+	npm run build
+	cp html/favicon* $(HTML_BUILT_DIR)
+	ls -lh $(HTML_BUILT_DIR)
+
+# Run this before every ESP build.
+BUILD_DIR=build
+BUILD_HTML_DIR=$(BUILD_DIR)/html
+.PHONY: copy-html
+copy-html:
+	mkdir -p $(BUILD_DIR)
+	if [ -d $(BUILD_HTML_DIR) ]; then rm -r $(BUILD_HTML_DIR); fi
+	cp -r $(HTML_BUILT_DIR) build/html
+	find $(BUILD_HTML_DIR) -type f -exec gzip --best "{}" ";"
+	ls -lh $(BUILD_HTML_DIR)
 
