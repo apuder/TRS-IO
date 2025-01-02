@@ -1,5 +1,8 @@
 
 import {Printer} from "./printer.js";
+import editSvg from "./icons/edit.svg";
+import deleteSvg from "./icons/delete.svg";
+import downloadSvg from "./icons/download.svg";
 
 // Hardware board type.
 enum BoardType {
@@ -506,7 +509,7 @@ function updateRomInfo(romInfo: RomInfo) {
         td = document.createElement("td");
         td.classList.add("file-edit");
         const renameIcon = document.createElement("img");
-        renameIcon.src = "/icons/edit.svg";
+        renameIcon.src = editSvg;
         const renameLink = document.createElement("a");
         renameLink.append(renameIcon);
         renameLink.href = "#";
@@ -520,7 +523,7 @@ function updateRomInfo(romInfo: RomInfo) {
         td = document.createElement("td");
         td.classList.add("file-delete");
         const deleteIcon = document.createElement("img");
-        deleteIcon.src = "/icons/delete.svg";
+        deleteIcon.src = deleteSvg;
         const deleteLink = document.createElement("a");
         deleteLink.append(deleteIcon);
         deleteLink.href = "#";
@@ -778,7 +781,7 @@ function updateFilesInfo(filesInfo: FilesInfo | ErrorResponse) {
         td = document.createElement("td");
         td.classList.add("file-edit");
         const renameIcon = document.createElement("img");
-        renameIcon.src = "/icons/edit.svg";
+        renameIcon.src = editSvg;
         const renameLink = document.createElement("a");
         renameLink.append(renameIcon);
         renameLink.href = "#";
@@ -792,7 +795,7 @@ function updateFilesInfo(filesInfo: FilesInfo | ErrorResponse) {
         td = document.createElement("td");
         td.classList.add("file-download");
         const downloadIcon = document.createElement("img");
-        downloadIcon.src = "/icons/download.svg";
+        downloadIcon.src = downloadSvg;
         const downloadLink = document.createElement("a");
         downloadLink.append(downloadIcon);
         downloadLink.href = "#";
@@ -806,7 +809,7 @@ function updateFilesInfo(filesInfo: FilesInfo | ErrorResponse) {
         td = document.createElement("td");
         td.classList.add("file-delete");
         const deleteIcon = document.createElement("img");
-        deleteIcon.src = "/icons/delete.svg";
+        deleteIcon.src = deleteSvg;
         const deleteLink = document.createElement("a");
         deleteLink.append(deleteIcon);
         deleteLink.href = "#";
