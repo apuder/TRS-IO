@@ -77,6 +77,20 @@ static string& get_screen_color()
   return color;
 }
 
+static void set_printer_en(const string& printer_en)
+{
+  bool enable = (printer_en == "1");
+  settings_set_printer_en(enable);
+  spi_set_printer_en(enable);
+}
+
+static string& get_printer_en()
+{
+  static string printer_en;
+  printer_en = settings_get_printer_en() ? "1" : "0";
+  return printer_en;
+}
+
 static void set_keyboard_layout(const string& keyboard_layout)
 {
   uint8_t new_keyboard_layout = stoi(keyboard_layout);
@@ -641,6 +655,7 @@ static bool mongoose_handle_config(struct mg_http_message* message,
   smb_connect |= extract_post_param(json, "smb_passwd", settings_set_smb_passwd, settings_get_smb_passwd);
 
   extract_post_param(json, "color", set_screen_color, get_screen_color);
+  extract_post_param(json, "printer_en", set_printer_en, get_printer_en);
   bool keyboard = extract_post_param(json, "keyboard_layout", set_keyboard_layout, get_keyboard_layout);
 
   settings_commit();
@@ -714,6 +729,7 @@ static void mongoose_handle_status(char** response,
     cJSON_AddStringToObject(s, "smb_passwd", smb_passwd.c_str());
   }
   cJSON_AddNumberToObject(s, "keyboard_layout", settings_get_keyb_layout());
+  cJSON_AddNumberToObject(s, "printer_en", settings_get_printer_en() ? 1 : 0);
 
   time_t now;
   struct tm timeinfo;

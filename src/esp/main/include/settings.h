@@ -61,6 +61,11 @@ void settings_set_screen_color(uint8_t color);
 uint8_t settings_get_screen_color();
 
 
+//-----Printer enable-----------------------------------------------
+void settings_set_printer_en(bool enable);
+bool settings_get_printer_en();
+
+
 //-----Keyboard Layout------------------------------------------------------
 
 void settings_set_keyb_layout(uint8_t layout);

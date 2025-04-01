@@ -349,6 +349,24 @@ void spi_set_screen_color(uint8_t color)
   ESP_ERROR_CHECK(ret);
 }
 
+void spi_set_printer_en(bool enable)
+{
+  spi_transaction_ext_t trans;
+
+  memset(&trans, 0, sizeof(spi_transaction_ext_t));
+  trans.base.flags = SPI_TRANS_VARIABLE_ADDR;
+  trans.base.cmd = FPGA_CMD_SET_PRINTER_EN;
+  trans.address_bits = 1 * 8;
+  trans.base.addr = enable ? 1 : 0;
+  trans.base.length = 0 * 8;
+  trans.base.rxlength = 0 * 8;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  esp_err_t ret = spi_device_transmit(spi_cmod_h, &trans.base);
+  xSemaphoreGive(mutex);
+  ESP_ERROR_CHECK(ret);
+}
+
 void spi_send_keyb(uint8_t idx, uint8_t mask)
 {
   spi_transaction_ext_t trans;

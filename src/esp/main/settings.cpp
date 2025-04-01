@@ -254,6 +254,32 @@ static void init_screen_color()
   }
 }
 
+
+//-----Printer enable--------------------------------------------------------
+
+#define KEY_PRINTER_EN "printer_en"
+
+static int8_t printer_en;
+
+void settings_set_printer_en(bool enable)
+{
+  printer_en = enable ? 1 : 0;
+  nvs_set_i8(storage, KEY_PRINTER_EN, printer_en);
+}
+
+bool settings_get_printer_en()
+{
+  return printer_en != 0;
+}
+
+
+static void init_printer_en()
+{
+  if (nvs_get_i8(storage, KEY_PRINTER_EN, &printer_en) != ESP_OK) {
+    printer_en = 1;
+  }
+}
+
 //-----Keyboard Layout------------------------------------------------------
 
 #define KEY_KEYB_LAYOUT "keyb"
@@ -314,5 +340,6 @@ void init_settings()
   init_smb_credentials();
   init_rom();
   init_screen_color();
+  init_printer_en();
   init_keyb_layout();
 }
