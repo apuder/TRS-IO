@@ -57,6 +57,8 @@ interface Status {
     tz: string,
     // Keyboard layout (see esp/components/FabGL/src/devdrivers/kbdlayouts.h):
     keyboard_layout: number,
+    // Printer (0 = physical, 1 = emulated):
+    printer_en: number,
 }
 
 interface Rom {
@@ -276,6 +278,7 @@ function updateStatusIcon(id: string, enabled: boolean, message: string): void {
 
 function updateSettingsForm(status: Status): void {
     updateSettingsEnumField("color", status.color.toString());
+    updateSettingsEnumField("printer_en", status.printer_en.toString());
     updateSettingsField("tz", status.tz);
     updateSettingsField("ssid", status.ssid);
     updateSettingsField("passwd", status.passwd);
@@ -1004,6 +1007,7 @@ async function saveSettings(): Promise<void> {
     const keyboardSelect = document.getElementById("keyboard_layout") as HTMLSelectElement;
     const settings = {
         color: parseInt(getSettingsEnumField("color")),
+        printer_en: parseInt(getSettingsEnumField("printer_en")),
         tz: getSettingsField("tz"),
         ssid: getSettingsField("ssid"),
         passwd: getSettingsField("passwd"),

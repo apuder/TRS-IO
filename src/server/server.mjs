@@ -32,6 +32,7 @@ const ROMS_DIR = "state/roms";
 const FILES_DIR = "state/files";
 const DEFAULT_SETTINGS = {
     color: 1,
+    printer_en: 1,
     tz: "GMT-8",
     ssid: "fandango",
     passwd: "22PineCreekSLO",
@@ -152,6 +153,7 @@ function makeStatus() {
         keyboard_layout: settings.keyboard_layout,
 
         color: settings.color,
+        printer_en: settings.printer_en ?? 1,
         tz: settings.tz,
         ssid: settings.ssid,
         passwd: settings.passwd,
