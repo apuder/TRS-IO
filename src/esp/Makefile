@@ -28,12 +28,12 @@ build: copy-html
 
 .PHONY: flash
 flash:
-	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" flash
+	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 flash
 
 # Just the C++ code, not the spiffs partitions.
 .PHONY: app-flash
 app-flash:
-	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" app-flash
+	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 app-flash
 
 .PHONY: monitor
 monitor:
@@ -73,3 +73,10 @@ copy-html:
 	find $(BUILD_HTML_DIR) -type f -exec gzip --best "{}" ";"
 	ls -lh $(BUILD_HTML_DIR)
 
+UPDATE_TAR=update.tar
+.PHONY: dist
+dist: build
+	rm -rf $(UPDATE_TAR)
+	cd build;tar cvf ../$(UPDATE_TAR) html/*
+	tar rvf $(UPDATE_TAR) fpga/*
+	tar rvf $(UPDATE_TAR) build/trs-io.bin

@@ -308,6 +308,32 @@ static void init_keyb_layout()
   }
 }
 
+
+//-----Firmware updated-------------------------------------------------------
+
+#define KEY_UPDATE "update"
+
+static int8_t update;
+
+void settings_set_update_flag(bool yes)
+{
+  update = yes ? 1 : 0;
+  nvs_set_i8(storage, KEY_UPDATE, update);
+}
+
+bool settings_get_update_flag()
+{
+  return update != 0;
+}
+
+
+static void init_update_flag()
+{
+  if (nvs_get_i8(storage, KEY_UPDATE, &update) != ESP_OK) {
+    update = 0;
+  }
+}
+
 //-------------------------------------------------------------------------
 
 void settings_reset_all()
@@ -342,4 +368,5 @@ void init_settings()
   init_screen_color();
   init_printer_en();
   init_keyb_layout();
+  init_update_flag();
 }

@@ -3,6 +3,7 @@
 #include "trs-lib.h"
 #include "ota.h"
 #include "led.h"
+#include "settings.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include <stdio.h>
@@ -62,7 +63,10 @@ static uint8_t get_next()
 
 static bool tar_copy_file(const char* filename, size_t file_size)
 {
-  wnd_print(&wnd, "Updating: %s\n", filename);
+  wnd_print(&wnd, "Updating: %s ", filename);
+  uint8_t x = wnd_get_x(&wnd);
+  uint8_t y = wnd_get_y(&wnd);
+  wnd_print(&wnd, "(0%%)");
 
   char* abs_path;
   asprintf(&abs_path, "/%s", filename);
@@ -78,6 +82,8 @@ static bool tar_copy_file(const char* filename, size_t file_size)
     if (idx == BUFFER_SIZE) {
       fwrite(buf, 1, BUFFER_SIZE, f);
       idx = 0;
+      wnd_goto(&wnd, x, y);
+      wnd_print(&wnd, "(%d%%)", (i * 100) / file_size);
     }
   }
   if (idx != 0) {
@@ -85,6 +91,8 @@ static bool tar_copy_file(const char* filename, size_t file_size)
   }
   fclose(f);
   free(buf);
+  wnd_goto(&wnd, x, y);
+  wnd_print(&wnd, "(100%%)\n");
   return true;
 }
 
@@ -208,9 +216,6 @@ static void end_update()
 
 void update_firmware()
 {
-  // Set LED to blue
-  set_led(false, false, true, false, false);
-
   set_screen_to_background();
   init_window(&wnd, 0, 3, 0, 0);
   header("Update");
@@ -220,6 +225,9 @@ void update_firmware()
   if (get_key() == KEY_BREAK) {
     return;
   }
+
+  // Set LED to blue
+  set_led(false, false, true, false, false);
 
   wnd_print(&wnd, "\n\n");
 
@@ -257,6 +265,8 @@ void update_firmware()
   }
 
   set_led(false, false, false, false, false);
+  settings_set_update_flag(true);
+  settings_commit();
   wnd_print(&wnd, "Update complete. Changes will be effective after next reboot.\nPress any key to exit...");
   get_key();
 }

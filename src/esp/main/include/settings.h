@@ -71,6 +71,11 @@ bool settings_get_printer_en();
 void settings_set_keyb_layout(uint8_t layout);
 uint8_t settings_get_keyb_layout();
 
+//-----Firmware updated-------------------------------------------------------
+
+void settings_set_update_flag(bool yes);
+bool settings_get_update_flag();
+
 
 void settings_reset_all();
 void settings_commit();
