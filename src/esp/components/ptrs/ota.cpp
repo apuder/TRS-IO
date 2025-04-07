@@ -4,6 +4,7 @@
 #include "ota.h"
 #include "led.h"
 #include "settings.h"
+#include "rst.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include <stdio.h>
@@ -99,7 +100,10 @@ static bool tar_copy_file(const char* filename, size_t file_size)
 static bool tar_copy_firmware(size_t file_size)
 {
   ESP_LOGI(TAG, "Performing OTA");
-  wnd_print(&wnd, "Updating: ESP firmware\n");
+  wnd_print(&wnd, "Updating: ESP firmware ");
+  uint8_t x = wnd_get_x(&wnd);
+  uint8_t y = wnd_get_y(&wnd);
+  wnd_print(&wnd, "(0%%)");
 
   esp_ota_handle_t update_handle = 0 ;
   const esp_partition_t* update_partition = esp_ota_get_next_update_partition(NULL);
@@ -120,6 +124,8 @@ static bool tar_copy_firmware(size_t file_size)
     if (idx == BUFFER_SIZE) {
       CHECK_OTA(esp_ota_write(update_handle, (const void*) buf, BUFFER_SIZE));
       idx = 0;
+      wnd_goto(&wnd, x, y);
+      wnd_print(&wnd, "(%d%%)", (i * 100) / file_size);
     }
   }
   if (idx != 0) {
@@ -131,6 +137,8 @@ static bool tar_copy_firmware(size_t file_size)
   CHECK_OTA(esp_ota_set_boot_partition(update_partition));
 
   ESP_LOGI(TAG, "Wrote %d bytes", file_size);
+  wnd_goto(&wnd, x, y);
+  wnd_print(&wnd, "(100%%)\n");
   return true;
 }
 
@@ -267,6 +275,9 @@ void update_firmware()
   set_led(false, false, false, false, false);
   settings_set_update_flag(true);
   settings_commit();
-  wnd_print(&wnd, "Update complete. Changes will be effective after next reboot.\nPress any key to exit...");
+  wnd_print(&wnd, "Update complete. FPGA will be updated after reboot.\n");
+  wnd_print(&wnd, "Press any key to reboot ESP...");
   get_key();
+  wnd_print(&wnd, "\n\nRebooting...");
+  reboot_trs_io();
 }
