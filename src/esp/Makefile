@@ -62,6 +62,14 @@ build-html:
 	cp html/favicon* $(HTML_BUILT_DIR)
 	ls -lh $(HTML_BUILT_DIR)
 
+# Run this to watch changes in static web files. Does not watch favicons.
+.PHONY: watch-html
+watch-html:
+	if [ -d $(HTML_BUILT_DIR) ]; then rm -r $(HTML_BUILT_DIR); fi
+	mkdir $(HTML_BUILT_DIR)
+	cp html/favicon* $(HTML_BUILT_DIR)
+	npm run watch
+
 # Run this before every ESP build.
 BUILD_DIR=build
 BUILD_HTML_DIR=$(BUILD_DIR)/html

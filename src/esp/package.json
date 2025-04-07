@@ -2,7 +2,8 @@
     "name": "esp",
     "version": "1.0.0",
     "scripts": {
-        "build": "parcel build --no-cache"
+        "build": "parcel build --no-cache",
+        "watch": "parcel watch --no-cache"
     },
     "devDependencies": {
         "@parcel/optimizer-blob-url": "^2.13.3",

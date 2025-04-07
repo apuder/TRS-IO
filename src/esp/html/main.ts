@@ -170,6 +170,16 @@ let gStatusFetchAbortController: AbortController | undefined = undefined;
 const gUserMessages: UserMessage[] = [];
 let gOfflineUserMessage: UserMessage | undefined = undefined;
 
+/**
+ * Switch the view to the Settings tab.
+ */
+function goToSettings() {
+    const radio = document.getElementById("settings_article") as (HTMLInputElement | null);
+    if (radio !== null) {
+        radio.checked = true;
+    }
+}
+
 function updateUserMessages() {
     // Remove dead messages.
     for (let i = gUserMessages.length - 1; i >= 0; i--) {
@@ -338,18 +348,18 @@ function updateStatus(status: Status, initialFetch: boolean): void {
     updateStatusIcon("smb_share_status_icon", smbConnected, smbStatus);
     updateStatusIcon("sd_card_status_icon", sdCardMounted, sdCardStatus);
 
-    const deviceTypeSpan = document.getElementById("device_type") as HTMLSpanElement;
+    const deviceTypeSpan = document.getElementById("device_type")!;
     deviceTypeSpan.textContent = getDeviceName(status);
+
+    const printerEmulationWarning = document.getElementById("printerEmulationWarning")!;
+    printerEmulationWarning.style.display = status.printer_en === 1 ? "none" : "block";
 
     if (initialFetch) {
         updateSettingsForm(status);
 
         // Select the settings tab on start-up if Wi-Fi hasn't yet been configured.
         if (!status.ssid) {
-            const radio = document.getElementById("settings_article") as (HTMLInputElement | null);
-            if (radio !== null) {
-                radio.checked = true;
-            }
+            goToSettings();
         }
     }
 }
@@ -1339,6 +1349,14 @@ function configureDashboardImages() {
     }
 }
 
+function configurePrinterEmulationWarning() {
+    const settingsLink = document.querySelector("#printerEmulationWarning a")!;
+    settingsLink.addEventListener("click", e => {
+        goToSettings();
+        e.preventDefault();
+    });
+}
+
 export function main() {
     configureButtons();
     configureRomUpload();
@@ -1350,4 +1368,5 @@ export function main() {
     configurePrinter();
     scheduleFetchStatus();
     configureDashboardImages();
+    configurePrinterEmulationWarning();
 }
