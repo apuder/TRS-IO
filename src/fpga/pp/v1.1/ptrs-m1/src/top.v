@@ -121,6 +121,9 @@ wire use_internal_trs_io = CONF[3];
 // external expansion connector enable
 wire xio_enab;
 
+// Virtual printer
+reg vprinter_en = 1'b1;
+
 
 //----Address Decoder------------------------------------------------------------
 
@@ -155,13 +158,12 @@ filter ras(
 //----TRS-IO---------------------------------------------------------------------
 
 // m1: printer @ 37E8h-37EBh (mem)
-reg printer_en = 1'b1;
-wire printer_sel_m1 = use_internal_trs_io & (TRS_A[15:2] == (16'h37E8 >> 2));
+wire printer_sel_m1 = vprinter_en & (TRS_A[15:2] == (16'h37E8 >> 2));
 wire printer_sel_m1_rd  = printer_sel_m1 & ~TRS_RD;
 wire printer_sel_m1_wr  = printer_sel_m1 & ~TRS_WR;
 wire printer_mem_trigger = printer_sel_m1 & ras_access;
-wire printer_sel_rd = printer_sel_m1_rd & printer_en;
-wire printer_sel_wr = printer_sel_m1_wr & printer_en;
+wire printer_sel_rd = printer_sel_m1_rd;
+wire printer_sel_wr = printer_sel_m1_wr;
 
 // trs-io @ 1Fh
 wire trs_io_sel_in  = use_internal_trs_io & (TRS_A[7:0] == 8'd31) & ~TRS_IN;
@@ -185,7 +187,7 @@ wire spi_data_sel_out = (TRS_A[7:0] == 8'hFD) & ~TRS_OUT;
 wire trs_xio_sel = (~TRS_IOREQ & ~((use_internal_trs_io & (TRS_A == 8'd31))     | // 1f     trs-io
                                    (use_internal_trs_io & (TRS_A[7:4] == 4'hC)) | // c0-cf  frehd
                                    (TRS_A[7:1] == (8'hFC >> 1)) )               | // fc-fd  flash spi
-                    ~TRS_MREQ  & ~((use_internal_trs_io & (TRS_A[15:2] == (16'h37E8 >> 2)))) ); // 37e8-37eb  printer
+                    ~TRS_MREQ  & ~((~vprinter_en & (TRS_A[15:2] == (16'h37E8 >> 2)))) ); // 37e8-37eb  printer
 
 wire esp_sel_in  = trs_io_sel_in  | frehd_sel_in  | printer_sel_rd;
 wire esp_sel_out = trs_io_sel_out | frehd_sel_out | printer_sel_wr;
@@ -292,7 +294,7 @@ localparam [7:0]
   set_spi_data        = 8'd30,
   get_spi_data        = 8'd31,
   set_esp_status      = 8'd32,
-  set_printer_en      = 8'd33;
+  set_vprinter_en     = 8'd33;
 
 
 reg [7:0] byte_in, byte_out;
@@ -430,7 +432,7 @@ always @(posedge clk) begin
           set_esp_status: begin
             bytes_to_read <= 3'd1;
           end
-          set_printer_en: begin
+          set_vprinter_en: begin
             bytes_to_read <= 3'd1;
           end
           default:
@@ -531,8 +533,8 @@ end
 //---Printer enable----------------------------------------------------------------------------
 
 always @(posedge clk) begin
-  if (trigger_action && cmd == set_printer_en)
-    printer_en <= params[0];
+  if (trigger_action && cmd == set_vprinter_en)
+    vprinter_en <= params[0][0];
 end
 
 

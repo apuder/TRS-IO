@@ -278,6 +278,7 @@ void update_firmware()
   wnd_print(&wnd, "Update complete. FPGA will be updated after reboot.\n");
   wnd_print(&wnd, "Press any key to reboot ESP...");
   get_key();
-  wnd_print(&wnd, "\n\nRebooting...");
+  wnd_cls(&wnd);
+  wnd_print(&wnd, "\n\nRebooting. Do not turn off power while status LED is blue...");
   reboot_trs_io();
 }

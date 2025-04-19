@@ -144,13 +144,15 @@ filter io(
 
 //----TRS-IO---------------------------------------------------------------------
 
+// Virtual printer enable flag
+reg vprinter_en = 1'b1;
+
 // m3: printer @ F8h-F9h (io)
-reg printer_en = 1'b1;
-wire printer_sel_m3 = (TRS_A[7:2]  == (8'hF8 >> 2));
+wire printer_sel_m3 = vprinter_en & (TRS_A[7:2]  == (8'hF8 >> 2));
 wire printer_sel_m3_in  = printer_sel_m3 & ~TRS_IN;
 wire printer_sel_m3_out = printer_sel_m3 & ~TRS_OUT;
-wire printer_sel_rd = printer_sel_m3_in & printer_en;
-wire printer_sel_wr = printer_sel_m3_out & printer_en;
+wire printer_sel_rd = printer_sel_m3_in;
+wire printer_sel_wr = printer_sel_m3_out;
 
 // trs-io @ 1Fh
 wire trs_io_sel_in  = (TRS_A == 8'd31) & ~TRS_IN;
@@ -270,7 +272,7 @@ localparam [7:0]
   set_spi_data        = 8'd30,
   get_spi_data        = 8'd31,
   set_esp_status      = 8'd32,
-  set_printer_en      = 8'd33;
+  set_vprinter_en     = 8'd33;
 
 
 reg [7:0] byte_in, byte_out;
@@ -384,7 +386,7 @@ always @(posedge clk) begin
           set_esp_status: begin
             bytes_to_read <= 3'd1;
           end
-          set_printer_en: begin
+          set_vprinter_en: begin
             bytes_to_read <= 3'd1;
           end
           default:
@@ -485,8 +487,8 @@ end
 //---Printer enable----------------------------------------------------------------------------
 
 always @(posedge clk) begin
-  if (trigger_action && cmd == set_printer_en)
-    printer_en <= params[0];
+  if (trigger_action && cmd == set_vprinter_en)
+    vprinter_en <= params[0][0];
 end
 
 
