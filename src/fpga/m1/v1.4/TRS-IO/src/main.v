@@ -753,7 +753,7 @@ hdmi #(.VIDEO_ID_CODE(5), .VIDEO_REFRESH_RATE(60), .AUDIO_RATE(48000), .AUDIO_BI
   .clk_pixel_x5(clk_pixel_x5),
   .clk_pixel(clk_pixel),
   .clk_audio(clk_audio),
-  .reset(1'b0),
+  .reset(~sw[1]),
   .rgb(rgb),
   .audio_sample_word(audio_sample_word),
   .tmds(tmds_x),
