@@ -61,7 +61,7 @@ static volatile bool io_task_started = false;
 static volatile uint8_t DRAM_ATTR intr_event = 0;
 
 
-#ifndef CONFIG_TRS_IO_MODEL_3
+#ifdef ENABLE_XRAY
 /***********************************************************************************
  * XRay
  ***********************************************************************************/
@@ -268,7 +268,7 @@ static void IRAM_ATTR sd_card_eject_isr_handler(void* arg)
 
 static void IRAM_ATTR io_task(void* p)
 {
-#ifndef CONFIG_TRS_IO_MODEL_3
+#ifdef ENABLE_XRAY
   init_xray();
 #endif
 
@@ -313,7 +313,7 @@ static void IRAM_ATTR io_task(void* p)
     case 0x50:
       printer_write();
       break;
-#ifndef CONFIG_TRS_IO_MODEL_3
+#ifdef ENABLE_XRAY
     case 0x60:
       xray_status = XRAY_STATUS_BREAKPOINT;
       break;
@@ -375,7 +375,7 @@ static void action_task(void* p)
       }
     }
 
-#ifndef CONFIG_TRS_IO_MODEL_3
+#ifdef ENABLE_XRAY
     if ((trs_state.regions.size() != 0) && (xray_status != XRAY_STATUS_RUN)) {
       // Load memory regions
       for (int i = 0; i < trs_state.regions.size(); i++) {
