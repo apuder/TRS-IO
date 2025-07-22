@@ -1,4 +1,6 @@
 
+// vim: shiftwidth=2
+
 #include <dirent.h>
 #include <sys/stat.h>
 #include "retrostore.h"
@@ -29,6 +31,7 @@
 #include "mongoose.h"
 #include "web_debugger.h"
 #include "keyb.h"
+#include "ota_stateful.h"
 #include <string.h>
 #include "cJSON.h"
 #include "xfer.h"
@@ -38,6 +41,7 @@
 #define TAG "HTTP"
 #define MDNS_NAME "trs-io"
 #define PRINTER_QUEUE_SIZE 100
+#define POSIX_REST_API 0
 
 static const char * const ROM_DIR = "/roms";
 static const char * const FILES_DIR = "/";
@@ -51,6 +55,15 @@ typedef string& (*settings_get_t)();
 extern const char* GIT_REV;
 extern const char* GIT_TAG;
 extern const char* GIT_BRANCH;
+
+/**
+ * We store this in the mg_connection->data object, which only has about 32 bytes.
+ */
+struct connection_data {
+  size_t expected;
+  size_t received;
+  struct extract_tar_context *ctx;
+};
 
 // Utility class to auto-delete the JSON pointer when it goes out of scope.
 class AutoDeleteJson {
@@ -129,6 +142,7 @@ static string makeRomPathname(const char *filename) {
     return string(ROM_DIR) + "/" + filename;
 }
 
+#if POSIX_REST_API
 static string makeFilesPathname(const char *filename) {
     if (strcmp(FILES_DIR, "/") == 0) {
         return string(FILES_DIR) + filename;
@@ -136,6 +150,7 @@ static string makeFilesPathname(const char *filename) {
         return string(FILES_DIR) + "/" + filename;
     }
 }
+#endif
 
 static void mongoose_handle_get_roms(char** response,
                                      const char** content_type)
@@ -188,10 +203,10 @@ static void mongoose_handle_roms(struct mg_http_message* message,
     // Default to error.
     *response = NULL;
 
-    if (mg_vcasecmp(&message->method, "POST") == 0) {
-        cJSON *json = cJSON_Parse(message->body.ptr);
+    if (mg_strcasecmp(message->method, mg_str("POST")) == 0) {
+        cJSON *json = cJSON_Parse(message->body.buf);
         if (json == NULL) {
-            ESP_LOGW(TAG, "Can't parse ROM JSON: %.*s", message->body.len, message->body.ptr);
+            ESP_LOGW(TAG, "Can't parse ROM JSON: %.*s", message->body.len, message->body.buf);
             return;
         }
         AutoDeleteJson autoDeleteJson(json);
@@ -215,9 +230,9 @@ static void mongoose_handle_roms(struct mg_http_message* message,
             }
             // Decode base64.
             int len64 = strlen(contents64->valuestring);
-            int maxLen = len64/4*3;
-            vector<unsigned char> contents(maxLen + 1); // Decode function adds a nul byte (?!).
-            int actualLen = mg_base64_decode(contents64->valuestring, len64, (char *) &contents.front());
+            int maxLen = len64/4*3 + 1;
+            vector<unsigned char> contents(maxLen);
+            int actualLen = mg_base64_decode(contents64->valuestring, len64, (char *) &contents.front(), maxLen);
             string pathname = makeRomPathname(filename->valuestring);
             FILE *f = fopen(pathname.c_str(), "wb");
             if (f == NULL) {
@@ -290,7 +305,7 @@ static void mongoose_handle_get_files(char** response,
 
   cJSON* files = cJSON_CreateArray();
 
-#if 0
+#if POSIX_REST_API
   DIR_ dir;
   FRESULT result = f_opendir(&dir, FILES_DIR);
   if (result != FR_OK) {
@@ -348,10 +363,10 @@ static void mongoose_handle_files(struct mg_http_message* message,
     // Default to error.
     *response = NULL;
 
-    if (mg_vcasecmp(&message->method, "POST") == 0) {
-        cJSON *json = cJSON_Parse(message->body.ptr);
+    if (mg_strcasecmp(message->method, mg_str("POST")) == 0) {
+        cJSON *json = cJSON_Parse(message->body.buf);
         if (json == NULL) {
-            ESP_LOGW(TAG, "Can't parse files JSON: %.*s", message->body.len, message->body.ptr);
+            ESP_LOGW(TAG, "Can't parse files JSON: %.*s", message->body.len, message->body.buf);
             return;
         }
         AutoDeleteJson autoDeleteJson(json);
@@ -375,10 +390,10 @@ static void mongoose_handle_files(struct mg_http_message* message,
             }
             // Decode base64.
             int len64 = strlen(contents64->valuestring);
-            int maxLen = len64/4*3;
-            vector<uint8_t> contents(maxLen + 1); // Decode function adds a nul byte (?!).
-            int actualLen = mg_base64_decode(contents64->valuestring, len64, (char *) &contents.front());
-#if 0
+            int maxLen = len64/4*3 + 1;
+            vector<uint8_t> contents(maxLen);
+            int actualLen = mg_base64_decode(contents64->valuestring, len64, (char *) &contents.front(), maxLen);
+#if POSIX_REST_API
             string pathname = makeFilesPathname(filename->valuestring);
             FIL fp;
             FRESULT result = f_open(&fp, pathname.c_str(), FA_WRITE | FA_CREATE_ALWAYS);
@@ -473,7 +488,7 @@ static void mongoose_handle_files(struct mg_http_message* message,
                 ESP_LOGW(TAG, "Missing delete filename");
                 return;
             }
-#if 0
+#if POSIX_REST_API
             string pathname = makeFilesPathname(filename->valuestring);
             FRESULT result = f_unlink(pathname.c_str());
             if (result != FR_OK) {
@@ -507,7 +522,7 @@ static void mongoose_handle_files(struct mg_http_message* message,
                 ESP_LOGW(TAG, "Missing rename filenames");
                 return;
             }
-#if 0
+#if POSIX_REST_API
             string oldPathname = makeFilesPathname(oldFilename->valuestring);
             string newPathname = makeFilesPathname(newFilename->valuestring);
             // Rename is not yet supported.
@@ -551,7 +566,7 @@ static void mongoose_handle_files(struct mg_http_message* message,
 
 static void download_file(struct mg_connection *c, string const &filename)
 {
-#if 0
+#if POSIX_REST_API
     // f_read...
 #else
     dos_err_t err;
@@ -638,9 +653,9 @@ static bool mongoose_handle_config(struct mg_http_message* message,
 
   *response = NULL;
 
-  cJSON *json = cJSON_Parse(message->body.ptr);
+  cJSON *json = cJSON_Parse(message->body.buf);
   if (json == NULL) {
-      ESP_LOGW(TAG, "Can't parse config JSON: %.*s", message->body.len, message->body.ptr);
+      ESP_LOGW(TAG, "Can't parse config JSON: %.*s", message->body.len, message->body.buf);
       return false;
   }
   AutoDeleteJson autoDeleteJson(json);
@@ -761,14 +776,73 @@ static void mongoose_handle_status(char** response,
   *content_type = "application/json";
 }
 
-static void mongoose_event_handler(struct mg_connection *c,
-                                   int event, void *eventData, void *fn_data)
+/**
+ * Handle part of an uploaded firmware file.
+ */
+static void handle_firmware_data(struct mg_connection *c, struct connection_data *cd)
+{
+  // See if this is a streaming upload.
+  if (cd->expected > 0 && c->recv.len > 0) {
+    // Process more of body.
+    cd->received += c->recv.len;
+    for (int i = 0; i < c->recv.len; i++) {
+      extract_tar_error error = extract_tar_handle_byte(cd->ctx, c->recv.buf[i]);
+      // TODO look at error.
+    }
+
+    // Delete received data.
+    c->recv.len = 0;
+
+    if (cd->received >= cd->expected) {
+      // Uploaded everything. Send response back.
+      MG_INFO(("Uploaded %lu bytes", cd->received));
+      mg_http_reply(c, 200, NULL, "%lu ok\n", cd->received);
+
+      // Cleanup connection data.
+      extract_tar_end(cd->ctx);
+      memset(cd, 0, sizeof(*cd));
+
+      // Close connection when response gets sent.
+      c->is_draining = 1;
+    }
+  }
+}
+
+static void mongoose_event_handler(struct mg_connection *c, int event, void *eventData)
 {
   static bool reboot = false;
+  struct connection_data *cd = (struct connection_data *) c->data;
 
   // Return if the web debugger is handling the request.
-  if (trx_handle_http_request(c, event, eventData, fn_data)) {
+  if (trx_handle_http_request(c, event, eventData)) {
     return;
+  }
+
+  // Selectively handle HTTP headers.
+  if (event == MG_EV_HTTP_HDRS) {
+    struct mg_http_message *hm = (struct mg_http_message *) eventData;
+
+    // This upload is too large to fit in memory (over 7 GB), so we intercept it
+    // when getting the headers, and use MG_EV_READ to stream it later.
+    if (mg_strcasecmp(hm->method, mg_str("POST")) == 0 && mg_match(hm->uri, mg_str("/firmware"), NULL)) {
+      // Store number of bytes we expect:
+      cd->expected = hm->body.len;
+      cd->received = 0;
+
+      // Initialize the context.
+      cd->ctx = (struct extract_tar_context *) malloc(sizeof(*cd->ctx));
+      extract_tar_begin(cd->ctx);
+
+      // Delete HTTP headers:
+      mg_iobuf_del(&c->recv, 0, hm->head.len);
+
+      // Silence HTTP protocol handler, we'll use MG_EV_READ:
+      c->pfn = NULL;
+
+      // Handle any data that we received after the headers.
+      handle_firmware_data(c, cd);
+      return;
+    }
   }
 
   switch (event) {
@@ -777,28 +851,29 @@ static void mongoose_event_handler(struct mg_connection *c,
       struct mg_http_message* message = (struct mg_http_message*) eventData;
       ESP_LOGI(TAG, "request %.*s %.*s",
               message->method.len,
-              message->method.ptr,
+              message->method.buf,
               message->uri.len,
-              message->uri.ptr);
+              message->uri.buf);
       char* response = NULL; // Always allocated.
       const char* content_type = "text/html"; // Never allocated.
+      mg_str params[2];
 
-      if (mg_http_match_uri(message, "/config")) {
+      if (mg_match(message->uri, mg_str("/config"), NULL)) {
         reboot = mongoose_handle_config(message, &response, &content_type);
         if (response == NULL) {
             mg_printf(c, "HTTP/1.1 400 OK\r\nConnection: close\r\n\r\n");
             return;
         }
 
-      } else if (mg_http_match_uri(message, "/status")) {
+      } else if (mg_match(message->uri, mg_str("/status"), NULL)) {
         mongoose_handle_status(&response, &content_type);
-      } else if (mg_http_match_uri(message, "/printer")) {
+      } else if (mg_match(message->uri, mg_str("/printer"), NULL)) {
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
         return;
-      } else if (mg_http_match_uri(message, "/files/#")) {
-        string pathFilename(message->uri.ptr + 7, message->uri.len - 7);
-        if (mg_vcasecmp(&message->method, "GET") == 0 && !pathFilename.empty()) {
+      } else if (mg_match(message->uri, mg_str("/files/#"), params)) {
+        string pathFilename(params[0].buf, params[0].len);
+        if (mg_strcasecmp(message->method, mg_str("GET")) == 0 && !pathFilename.empty()) {
             // Download a file.
             download_file(c, pathFilename);
             return;
@@ -811,7 +886,7 @@ static void mongoose_event_handler(struct mg_connection *c,
             }
         }
 #ifdef CONFIG_TRS_IO_PP
-      } else if (mg_http_match_uri(message, "/roms")) {
+      } else if (mg_match(message->uri, mg_str("/roms"), NULL)) {
         mongoose_handle_roms(message, &response, &content_type);
         if (response == NULL) {
             mg_printf(c, "HTTP/1.1 500 OK\r\nConnection: close\r\n\r\n");
@@ -826,9 +901,9 @@ static void mongoose_event_handler(struct mg_connection *c,
         mg_send(c, response, response_len);
         free(response);
 #ifdef CONFIG_TRS_IO_PP
-      } else if (mg_http_match_uri(message, "/roms/php/connector.minimal.php")) {
+      } else if (mg_match(message->uri, mg_str("/roms/php/connector.minimal.php"), NULL)) {
         process_file_browser_req(c, message);
-      } else if (strncmp(message->uri.ptr, "/roms", 5) == 0) {
+      } else if (strncmp(message->uri.buf, "/roms", 5) == 0) {
         static const struct mg_http_serve_opts opts = {.root_dir = "/elFinder"};
         mg_http_serve_dir(c, (struct mg_http_message*) eventData, &opts);
 #endif
@@ -862,6 +937,12 @@ static void mongoose_event_handler(struct mg_connection *c,
         }
         mg_queue_del(&prn_queue, 1);
       }
+    }
+    break;
+  case MG_EV_READ:
+    {
+      // Handle streaming upload if appropriate.
+      handle_firmware_data(c, cd);
     }
     break;
   }

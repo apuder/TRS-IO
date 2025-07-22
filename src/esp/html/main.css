@@ -65,11 +65,19 @@ button:hover {
     gap: 12px;
 }
 
+.button-set-full-width {
+    width: 100%;
+}
+
 .button-set-equal-sizes {
     display: grid;
     gap: 12px;
     width: fit-content;
     grid-template-columns: 1fr 1fr;
+}
+
+.flex-spacer {
+    flex-grow: 1;
 }
 
 input, select {
@@ -179,8 +187,9 @@ article {
     height: 100%;
 }
 
-article.hover {
+article.dragover {
     border-style: dashed;
+    cursor: copy;
 }
 
 article input[name=active-article] {
@@ -259,7 +268,7 @@ article:has(input[name=active-article]:not(:checked)) {
     gap: 20px;
     align-items: start;
 
-    #uploadRomInput, #uploadFilesInput {
+    #uploadRomInput, #uploadFilesInput, #uploadFirmwareInput {
         display: none;
     }
 }

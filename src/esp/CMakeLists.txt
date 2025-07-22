@@ -4,5 +4,8 @@ cmake_minimum_required(VERSION 3.5)
 
 set(SDKCONFIG "${CMAKE_BINARY_DIR}/sdkconfig")
 
+add_definitions(-DMG_ARCH=MG_ARCH_ESP32 -DMG_ENABLE_POSIX_FS=1)
+add_compile_options(-Wno-missing-field-initializers)
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(trs-io)

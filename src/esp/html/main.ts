@@ -171,6 +171,35 @@ const gUserMessages: UserMessage[] = [];
 let gOfflineUserMessage: UserMessage | undefined = undefined;
 
 /**
+ * Get all the File objects from a drag-and-drop event.
+ */
+function getFilesFromDrop(e: DragEvent): File[] {
+    const files: File[] = [];
+
+    if (e.dataTransfer) {
+        if (e.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the files.
+            for (const item of e.dataTransfer.items) {
+                // If dropped items aren't files, reject them.
+                if (item.kind === "file") {
+                    const file = item.getAsFile();
+                    if (file !== null) {
+                        files.push(file);
+                    }
+                }
+            }
+        } else {
+            // Use DataTransfer interface to access the files.
+            for (const file of e.dataTransfer.files) {
+                files.push(file);
+            }
+        }
+    }
+
+    return files;
+}
+
+/**
  * Switch the view to the Settings tab.
  */
 function goToSettings() {
@@ -1150,32 +1179,49 @@ async function handleRomUpload(file: File) {
     }
 }
 
+async function handleFirmwareUpload(file: File) {
+    console.log("handleFirmwareUpload", file.name, file);
+    const uploadFirmwareButton = document.getElementById("uploadFirmwareButton") as HTMLButtonElement;
+    const originalText = uploadFirmwareButton.textContent ?? "";
+    uploadFirmwareButton.innerText = "Uploading ...";
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/firmware", true);
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    if (xhr.upload) {
+        xhr.upload.addEventListener("progress", e => {
+            if (e.lengthComputable) {
+                const percent = Math.round(e.loaded / e.total * 100);
+                uploadFirmwareButton.innerText = `Uploading (${percent}%)`;
+            }
+        }, false);
+    }
+    xhr.onload = function () {
+        uploadFirmwareButton.innerText = originalText;
+
+        if (xhr.status === 200) {
+            // Success! Handle the server's response
+            console.log('Upload successful:', xhr.responseText);
+        } else {
+            // Handle errors
+            console.error('Upload failed:', xhr.status, xhr.statusText);
+        }
+    };
+    xhr.onerror = function () {
+        uploadFirmwareButton.innerText = originalText;
+    };
+    xhr.send(file);
+}
+
 async function handleRomDrop(e: DragEvent) {
     // Prevent default behavior (prevent file from being opened)
     e.preventDefault();
 
-    if (e.dataTransfer) {
-        const files: File[] = [];
-        if (e.dataTransfer.items) {
-            // Use DataTransferItemList interface to access the files.
-            for (const item of e.dataTransfer.items) {
-                // If dropped items aren't files, reject them.
-                if (item.kind === "file") {
-                    const file = item.getAsFile();
-                    if (file !== null) {
-                        files.push(file);
-                    }
-                }
-            }
+    const files = getFilesFromDrop(e);
+    for (const file of files) {
+        if (file.name.endsWith(".tar")) {
+            await handleFirmwareUpload(file);
         } else {
-            // Use DataTransfer interface to access the files.
-            for (const file of e.dataTransfer.files) {
-                files.push(file);
-            }
-        }
-        // Do this in a separate pass because the lists above will get blanked out
-        // while these await calls block.
-        for (const file of files) {
             await handleRomUpload(file);
         }
     }
@@ -1194,16 +1240,28 @@ function configureRomUpload() {
 
     const romsSection = document.querySelector(".roms") as HTMLElement;
     romsSection.addEventListener("drop", async e => {
-        romsSection.classList.remove("hover");
+        romsSection.classList.remove("dragover");
         await handleRomDrop(e);
     });
     romsSection.addEventListener("dragover", e => {
-        romsSection.classList.add("hover");
+        romsSection.classList.add("dragover");
 
         // Prevent default behavior (prevent file from being opened).
         e.preventDefault();
     });
-    romsSection.addEventListener("dragleave",  () => romsSection.classList.remove("hover"));
+    romsSection.addEventListener("dragleave",  () => romsSection.classList.remove("dragover"));
+}
+
+function configureFirmwareUpload() {
+    const uploadFirmwareInput = document.getElementById("uploadFirmwareInput") as HTMLInputElement;
+    uploadFirmwareInput.addEventListener("change", async () => {
+        if (uploadFirmwareInput.files !== null) {
+            for (const file of uploadFirmwareInput.files) {
+                await handleFirmwareUpload(file);
+            }
+            uploadFirmwareInput.value = "";
+        }
+    });
 }
 
 async function handleFilesUpload(file: File) {
@@ -1244,30 +1302,9 @@ async function handleFilesDrop(e: DragEvent) {
     // Prevent default behavior (prevent file from being opened)
     e.preventDefault();
 
-    if (e.dataTransfer) {
-        const files: File[] = [];
-        if (e.dataTransfer.items) {
-            // Use DataTransferItemList interface to access the files.
-            for (const item of e.dataTransfer.items) {
-                // If dropped items aren't files, reject them.
-                if (item.kind === "file") {
-                    const file = item.getAsFile();
-                    if (file !== null) {
-                        files.push(file);
-                    }
-                }
-            }
-        } else {
-            // Use DataTransfer interface to access the files.
-            for (const file of e.dataTransfer.files) {
-                files.push(file);
-            }
-        }
-        // Do this in a separate pass because the lists above will get blanked out
-        // while these await calls block.
-        for (const file of files) {
-            await handleFilesUpload(file);
-        }
+    const files = getFilesFromDrop(e);
+    for (const file of files) {
+        await handleFilesUpload(file);
     }
 }
 
@@ -1284,16 +1321,16 @@ function configureFilesUpload() {
 
     const filesSection = document.querySelector(".files") as HTMLElement;
     filesSection.addEventListener("drop", async e => {
-        filesSection.classList.remove("hover");
+        filesSection.classList.remove("dragover");
         await handleFilesDrop(e);
     });
     filesSection.addEventListener("dragover", e => {
-        filesSection.classList.add("hover");
+        filesSection.classList.add("dragover");
 
         // Prevent default behavior (prevent file from being opened).
         e.preventDefault();
     });
-    filesSection.addEventListener("dragleave",  () => filesSection.classList.remove("hover"));
+    filesSection.addEventListener("dragleave",  () => filesSection.classList.remove("dragover"));
 }
 
 function configurePrinter() {
@@ -1360,6 +1397,7 @@ function configurePrinterEmulationWarning() {
 export function main() {
     configureButtons();
     configureRomUpload();
+    configureFirmwareUpload();
     configureFilesUpload();
     fetchStatus(true);
     fetchRomInfo();

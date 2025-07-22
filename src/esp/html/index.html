@@ -82,10 +82,15 @@
                     </article>
                     <article class="roms ptrs-only">
                         <input type="radio" name="active-article" id="roms_article">
-                        <div class="button-set">
+                        <div class="button-set button-set-full-width">
                             <input id="uploadRomInput" type="file" accept=".rom, .bin" multiple>
                             <label id="uploadRomButton" for="uploadRomInput" class="button small">Upload ROM</label>
                             <button class="small" id="refreshRomsButton">Refresh</button>
+
+                            <div class="flex-spacer"></div>
+
+                            <input id="uploadFirmwareInput" type="file" accept=".tar">
+                            <label id="uploadFirmwareButton" for="uploadFirmwareInput" class="button small">Upload Firmware</label>
                         </div>
                         <div class="files-list">
                             <table class="rom-table">
