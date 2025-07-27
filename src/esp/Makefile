@@ -88,9 +88,11 @@ copy-html:
 UPDATE_TAR=update.tar
 # Specify ustar format explicitly to avoid metadata files that we don't handle anyway.
 TAR_OPTS=--verbose --format ustar
-.PHONY: dist
-dist: build
+.PHONY: update-tar
+update-tar: build
 	rm -f $(UPDATE_TAR)
 	cd build; tar -c -f ../$(UPDATE_TAR) $(TAR_OPTS) html/*
+ifneq ($(SKIP_FPGA),1)
 	tar -r -f $(UPDATE_TAR) $(TAR_OPTS) fpga/*
+endif
 	tar -r -f $(UPDATE_TAR) $(TAR_OPTS) build/trs-io.bin
