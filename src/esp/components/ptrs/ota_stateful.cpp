@@ -1,4 +1,5 @@
 
+#include "mongoose.h"
 #include "esp_log.h"
 #include "ota_stateful.h"
 #include "tar_util.h"
@@ -32,6 +33,7 @@ static void extract_tar_skip(struct extract_tar_context *ctx, size_t count) {
 // Clean up the file-copying process and advance the state.
 // Returns whether successful.
 static bool extract_tar_copy_file_end(struct extract_tar_context *ctx) {
+  MG_INFO(("OTA: End of file"));
   free(ctx->buf);
   ctx->buf = NULL;
 
@@ -47,6 +49,7 @@ static bool extract_tar_copy_file_end(struct extract_tar_context *ctx) {
     if (esp_err != ESP_OK) {
       return false;
     }
+    MG_INFO(("OTA: Switched boot partition"));
   } else {
     fclose(ctx->f);
     ctx->f = NULL;
@@ -62,6 +65,8 @@ static bool extract_tar_copy_file_end(struct extract_tar_context *ctx) {
 // writes to the firmware update partition. Returns whether it was successful in setting
 // up the file for writing.
 static bool extract_tar_copy_file_begin(struct extract_tar_context *ctx, char *filename, size_t file_size) {
+  MG_INFO(("OTA: Starting file %s", filename == NULL ? "firmware" : filename));
+
   // Do this even if the size is zero, we need to blank out the file.
   ctx->state = ets_copy_file;
   ctx->index = 0;
@@ -109,6 +114,8 @@ static bool extract_tar_copy_file_byte(struct extract_tar_context *ctx, uint8_t 
 
   // Write full block.
   if (ctx->index % BUFFER_SIZE == 0) {
+    // Too noisy:
+    // MG_INFO(("OTA: Writing block"));
     if (ctx->f == NULL) {
       esp_err_t esp_err = esp_ota_write(ctx->update_handle, (const void *) ctx->buf, BUFFER_SIZE);
       if (esp_err != ESP_OK) {
@@ -143,24 +150,28 @@ extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8
   switch (ctx->state) {
     case ets_read_header:
       ctx->header->buffer[ctx->index++] = byte;
-      if (ctx->index == sizeof(ctx->header)) {
+      if (ctx->index == sizeof(*ctx->header)) {
         // If the filename is empty, we've reached the end of the tar file.
         if (ctx->header->header.filename[0] == '\0') {
           ctx->state = ets_done;
           return ete_ok;
         }
+        MG_INFO(("OTA: Filename: %s", ctx->header->header.filename));
 
         // Abort if the magic value does not match.
         if (strncmp(ctx->header->header.magic, TAR_MAGIC, 5) != 0) {
+          MG_INFO(("OTA: Bad tar magic \"%s\"", ctx->header->header.magic));
           ctx->state = ets_done;
           return ete_corrupt_tar;
         }
 
         // Get the file size from the header (stored as an octal string).
         size_t file_size = octal_to_decimal(ctx->header->header.size);
+        MG_INFO(("OTA: File size: %u", file_size));
 
         // Skip non-regular files (typeflag '0' or '\0' is for regular files)
         if (ctx->header->header.typeflag != '0' && ctx->header->header.typeflag != '\0') {
+          MG_INFO(("OTA: Skipping non-regular file"));
           extract_tar_skip(ctx, file_size + compute_padding_for_tar_file_size(file_size));
           return ete_ok;
         }
@@ -180,6 +191,7 @@ extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8
           }
         } else {
           // Read and discard the file contents.
+          MG_INFO(("OTA: Skipping unknown file"));
           extract_tar_skip(ctx, file_size + compute_padding_for_tar_file_size(file_size));
         }
       }

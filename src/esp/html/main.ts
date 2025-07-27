@@ -1180,7 +1180,6 @@ async function handleRomUpload(file: File) {
 }
 
 async function handleFirmwareUpload(file: File) {
-    console.log("handleFirmwareUpload", file.name, file);
     const uploadFirmwareButton = document.getElementById("uploadFirmwareButton") as HTMLButtonElement;
     const originalText = uploadFirmwareButton.textContent ?? "";
     uploadFirmwareButton.innerText = "Uploading ...";
@@ -1193,6 +1192,8 @@ async function handleFirmwareUpload(file: File) {
             if (e.lengthComputable) {
                 const percent = Math.round(e.loaded / e.total * 100);
                 uploadFirmwareButton.innerText = `Uploading (${percent}%)`;
+            } else {
+                uploadFirmwareButton.innerText = "Uploading ...";
             }
         }, false);
     }

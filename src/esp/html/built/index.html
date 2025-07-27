@@ -34,7 +34,7 @@
                         <input type="radio" name="active-article" id="dashboard_article" checked="">
                         <div class="dashboard-cards">
                             <div class="dashboard-card">
-                                <span class="dashboard-title">Hardware</span>
+                                <span class="dashboard-title">Hardware4</span>
                                 <ul>
                                     <li><span class="dashboard-label">Board</span> <span id="board"></span></li>
                                     <li class="trs-io-pp-only"><span class="dashboard-label">Configuration</span> <span id="configuration"></span></li>
@@ -1800,7 +1800,6 @@ async function handleRomUpload(file) {
     }
 }
 async function handleFirmwareUpload(file) {
-    console.log("handleFirmwareUpload", file.name, file);
     const uploadFirmwareButton = document.getElementById("uploadFirmwareButton");
     const originalText = uploadFirmwareButton.textContent ?? "";
     uploadFirmwareButton.innerText = "Uploading ...";
@@ -1811,7 +1810,7 @@ async function handleFirmwareUpload(file) {
         if (e.lengthComputable) {
             const percent = Math.round(e.loaded / e.total * 100);
             uploadFirmwareButton.innerText = `Uploading (${percent}%)`;
-        }
+        } else uploadFirmwareButton.innerText = "Uploading ...";
     }, false);
     xhr.onload = function() {
         uploadFirmwareButton.innerText = originalText;

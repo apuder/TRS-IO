@@ -35,6 +35,10 @@ flash:
 app-flash:
 	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 app-flash
 
+.PHONY: erase-flash
+erase-flash: pause
+	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 erase-flash
+
 .PHONY: monitor
 monitor:
 	@echo "Quit with Ctrl-]."
@@ -50,7 +54,7 @@ menuconfig:
 .PHONY: pause
 pause:
 	@echo "Hold down PTRS RST and press ESP RST, then hold PTRS RST another few seconds."
-	@read -p "Press Enter when ready to flash . . . "
+	@read -p "Press Enter when ready . . . "
 
 # Run this after changing static web files. Check the resulting file
 # into git.
@@ -82,9 +86,11 @@ copy-html:
 	ls -lh $(BUILD_HTML_DIR)
 
 UPDATE_TAR=update.tar
+# Specify ustar format explicitly to avoid metadata files that we don't handle anyway.
+TAR_OPTS=--verbose --format ustar
 .PHONY: dist
 dist: build
-	rm -rf $(UPDATE_TAR)
-	cd build;tar cvf ../$(UPDATE_TAR) html/*
-	tar rvf $(UPDATE_TAR) fpga/*
-	tar rvf $(UPDATE_TAR) build/trs-io.bin
+	rm -f $(UPDATE_TAR)
+	cd build; tar -c -f ../$(UPDATE_TAR) $(TAR_OPTS) html/*
+	tar -r -f $(UPDATE_TAR) $(TAR_OPTS) fpga/*
+	tar -r -f $(UPDATE_TAR) $(TAR_OPTS) build/trs-io.bin
