@@ -226,24 +226,3 @@ void extract_tar_end(struct extract_tar_context *ctx) {
   ctx->header = NULL;
 }
 
-extract_tar_error extract_tar_stateful(FIL *f) {
-  uint8_t *buf = (uint8_t *) malloc(BUFFER_SIZE);
-  extract_tar_error error = ete_ok;
-
-  struct extract_tar_context ctx;
-  extract_tar_begin(&ctx);
-  UINT bytes_read;
-  do {
-    trs_fs->f_read(f, buf, BUFFER_SIZE, &bytes_read);
-
-    for (UINT i = 0; i < bytes_read && error == ete_ok && ctx.state != ets_done; i++) {
-      error = extract_tar_handle_byte(&ctx, buf[i]);
-    }
-  } while (bytes_read > 0 && error == ete_ok && ctx.state != ets_done);
-  extract_tar_end(&ctx);
-
-  // TODO check error and state
-
-  free(buf);
-  return error;
-}

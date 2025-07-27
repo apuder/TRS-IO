@@ -2,7 +2,6 @@
 #pragma once
 
 #include <esp_ota_ops.h>
-#include "trs-fs.h"
 #include "tar_util.h"
 
 // Error code from the untarring process.
@@ -67,5 +66,3 @@ extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8
 // Clean up. Call this even in the case of error.
 void extract_tar_end(struct extract_tar_context *ctx);
 
-// Extracts the tar file using the stateful routines.
-extract_tar_error extract_tar_stateful(FIL *f);

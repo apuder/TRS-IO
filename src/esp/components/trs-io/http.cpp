@@ -804,6 +804,12 @@ static void handle_firmware_data(struct mg_connection *c, struct connection_data
 
       // Close connection when response gets sent.
       c->is_draining = 1;
+
+      // Reboot. TODO not if there was an error.
+      set_led(false, false, false, false, false);
+      settings_set_update_flag(true);
+      settings_commit();
+      reboot_trs_io();
     }
   }
 }
