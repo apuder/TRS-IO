@@ -970,6 +970,9 @@ const MODEL_TYPE_TO_BODY_DATASET = new Map([
         "trs-80-model-4p"
     ]
 ]);
+// Frequent enough to show interesting updates, but infrequent enough to cause
+// spurious error messages when the ESP is busy doing something.
+const FETCH_STATUS_INTERVAL_MS = 5000;
 // Message displayed to the user (usually an error).
 class UserMessage {
     constructor(message, autohide){
@@ -1184,7 +1187,7 @@ async function fetchStatus(initialFetch) {
     } else console.log("Error fetching status", response);
 }
 function scheduleFetchStatus() {
-    setInterval(async ()=>await fetchStatus(false), 2000);
+    setInterval(async ()=>await fetchStatus(false), FETCH_STATUS_INTERVAL_MS);
 }
 // Returns whether successful
 async function deleteRomFile(filename) {
@@ -1643,7 +1646,9 @@ async function fetchFilesInfo() {
         stopProgressIndicator();
     }
 }
-async function sleep(ms) {
+/**
+ * Sleep for the specified number of milliseconds.
+ */ async function sleep(ms) {
     return new Promise((accept)=>{
         setTimeout(()=>accept(), ms);
     });
@@ -1751,6 +1756,28 @@ function configureDots() {
         }
     }, "image/png");
 }
+/**
+ * Ask the ESP to reboot, wait a bit, then reload this page.
+ *
+ * @param afterUpdate whether this reboot is after an OTA update.
+ */ async function rebootEsp(afterUpdate) {
+    let message = "Rebooting ESP";
+    if (afterUpdate) message += " and flashing FPGA";
+    displayError(message, false);
+    const response = await fetch("/reboot", {
+        method: "POST",
+        cache: "no-cache"
+    });
+    if (response.status === 200) {
+        // Wait a bit, then reload page. After an OTA this takes a while because the FPGA must be flashed.
+        const seconds = afterUpdate ? 60 : 5;
+        await sleep(seconds * 1000);
+        location.reload();
+    } else {
+        displayError("Could not reboot ESP");
+        console.log("Failed to reboot ESP:" + response.status + " " + await response.text());
+    }
+}
 function configureButtons() {
     const timezoneDetectButton = document.getElementById("timezoneDetectButton");
     const timezoneField = document.getElementById("tz");
@@ -1812,11 +1839,13 @@ async function handleFirmwareUpload(file) {
             uploadFirmwareButton.innerText = `Uploading (${percent}%)`;
         } else uploadFirmwareButton.innerText = "Uploading ...";
     }, false);
-    xhr.onload = function() {
+    xhr.onload = async function() {
         uploadFirmwareButton.innerText = originalText;
-        if (xhr.status === 200) // Success! Handle the server's response
-        console.log('Upload successful:', xhr.responseText);
-        else // Handle errors
+        if (xhr.status === 200) {
+            // Success! Handle the server's response
+            console.log('Upload successful:', xhr.responseText);
+            await rebootEsp(true);
+        } else // TODO Handle errors.
         console.error('Upload failed:', xhr.status, xhr.statusText);
     };
     xhr.onerror = function() {

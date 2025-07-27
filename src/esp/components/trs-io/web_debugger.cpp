@@ -414,19 +414,16 @@ static bool www_handler(struct mg_connection *conn, int ev, void *ev_data) {
       strncpy(message, wm->data.buf, wm->data.len);
       message[wm->data.len] = '\0';
       on_frontend_message(message);
-      break;
+      return true;
     }
-    case MG_EV_CLOSE: {
+    case MG_EV_CLOSE:
       if (conn == status_conn) {
         status_conn = NULL;
+        return true;
       }
       break;
-    }
-    default: {
-      return false;
-    }
-	}
-  return true;
+  }
+  return false;
 }
 
 // FIXME

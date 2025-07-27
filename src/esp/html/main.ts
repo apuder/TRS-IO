@@ -135,6 +135,10 @@ const MODEL_TYPE_TO_BODY_DATASET = new Map<ModelType | undefined,string>([
     [ModelType.MODEL_4P, "trs-80-model-4p"],
 ]);
 
+// Frequent enough to show interesting updates, but infrequent enough to cause
+// spurious error messages when the ESP is busy doing something.
+const FETCH_STATUS_INTERVAL_MS = 5000;
+
 // Message displayed to the user (usually an error).
 class UserMessage {
     public readonly messageBox: HTMLSpanElement;
@@ -431,7 +435,7 @@ async function fetchStatus(initialFetch: boolean) {
 }
 
 function scheduleFetchStatus() {
-    setInterval(async () => await fetchStatus(false), 2000);
+    setInterval(async () => await fetchStatus(false), FETCH_STATUS_INTERVAL_MS);
 }
 
 // Returns whether successful
@@ -981,6 +985,9 @@ async function fetchFilesInfo() {
     }
 }
 
+/**
+ * Sleep for the specified number of milliseconds.
+ */
 async function sleep(ms: number): Promise<void> {
     return new Promise<void>(accept => {
         setTimeout(() => accept(), ms);
@@ -1116,6 +1123,33 @@ function configureDots() {
     }, "image/png");
 }
 
+/**
+ * Ask the ESP to reboot, wait a bit, then reload this page.
+ *
+ * @param afterUpdate whether this reboot is after an OTA update.
+ */
+async function rebootEsp(afterUpdate: boolean) {
+    let message = "Rebooting ESP";
+    if (afterUpdate) {
+        message += " and flashing FPGA";
+    }
+    displayError(message, false);
+
+    const response = await fetch("/reboot", {
+        method: "POST",
+        cache: "no-cache",
+    });
+    if (response.status === 200) {
+        // Wait a bit, then reload page. After an OTA this takes a while because the FPGA must be flashed.
+        const seconds = afterUpdate ? 60 : 5;
+        await sleep(seconds*1000);
+        location.reload();
+    } else {
+        displayError("Could not reboot ESP");
+        console.log("Failed to reboot ESP:" + response.status + " " + await response.text());
+    }
+}
+
 function configureButtons() {
     const timezoneDetectButton = document.getElementById("timezoneDetectButton");
     const timezoneField = document.getElementById("tz") as HTMLInputElement | null;
@@ -1197,14 +1231,15 @@ async function handleFirmwareUpload(file: File) {
             }
         }, false);
     }
-    xhr.onload = function () {
+    xhr.onload = async function () {
         uploadFirmwareButton.innerText = originalText;
 
         if (xhr.status === 200) {
             // Success! Handle the server's response
             console.log('Upload successful:', xhr.responseText);
+            await rebootEsp(true);
         } else {
-            // Handle errors
+            // TODO Handle errors.
             console.error('Upload failed:', xhr.status, xhr.statusText);
         }
     };

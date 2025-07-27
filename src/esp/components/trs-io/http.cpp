@@ -1,6 +1,7 @@
 
 // vim: shiftwidth=2
 
+#include <assert.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include "retrostore.h"
@@ -57,12 +58,17 @@ extern const char* GIT_TAG;
 extern const char* GIT_BRANCH;
 
 /**
- * We store this in the mg_connection->data object, which only has about 32 bytes.
+ * We store this in the mg_connection->data object, which only has 32 bytes.
  */
 struct connection_data {
+  // Number of bytes expected in the upload.
   size_t expected;
+  // Number of bytes received so far in the upload.
   size_t received;
+  // Context for extracting an OTA tar file.
   struct extract_tar_context *ctx;
+  // Whether to reboot when this connection closes.
+  bool reboot_on_close;
 };
 
 // Utility class to auto-delete the JSON pointer when it goes out of scope.
@@ -805,11 +811,12 @@ static void handle_firmware_data(struct mg_connection *c, struct connection_data
       // Close connection when response gets sent.
       c->is_draining = 1;
 
-      // Reboot. TODO not if there was an error.
-      set_led(false, false, false, false, false);
+      // Mark the system as having been updated. This will force an FPGA
+      // flash on the next reboot. We could omit this if we detect that the
+      // tar file didn't contain the FPGA files.
+      // TODO not if there was an error.
       settings_set_update_flag(true);
       settings_commit();
-      reboot_trs_io();
     }
   }
 }
@@ -818,6 +825,7 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
 {
   static bool reboot = false;
   struct connection_data *cd = (struct connection_data *) c->data;
+  static_assert(sizeof(connection_data) <= MG_DATA_SIZE, "Connection data is too large");
 
   // Return if the web debugger is handling the request.
   if (trx_handle_http_request(c, event, eventData)) {
@@ -870,13 +878,21 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
             mg_printf(c, "HTTP/1.1 400 OK\r\nConnection: close\r\n\r\n");
             return;
         }
-
       } else if (mg_match(message->uri, mg_str("/status"), NULL)) {
         mongoose_handle_status(&response, &content_type);
       } else if (mg_match(message->uri, mg_str("/printer"), NULL)) {
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
         return;
+      } else if (mg_match(message->uri, mg_str("/reboot"), NULL)) {
+        if (mg_strcasecmp(message->method, mg_str("POST")) == 0) {
+          // Don't reboot right away, the response won't be sent back.
+          // Mark connection as reboot-on-close and reboot then.
+          cd->reboot_on_close = true;
+          mg_http_reply(c, 200, NULL, "Rebooting\n");
+        } else {
+          mg_http_reply(c, 405, NULL, "Reboot only works with POST\n");
+        }
       } else if (mg_match(message->uri, mg_str("/files/#"), params)) {
         string pathFilename(params[0].buf, params[0].len);
         if (mg_strcasecmp(message->method, mg_str("GET")) == 0 && !pathFilename.empty()) {
@@ -923,6 +939,9 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
     {
       if (c->is_websocket) {
         num_printer_sockets--;
+      }
+      if (cd->reboot_on_close) {
+        reboot = true;
       }
     }
     break;
