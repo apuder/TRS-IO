@@ -32,7 +32,7 @@ static void extract_tar_skip(struct extract_tar_context *ctx, size_t count) {
 
 // Clean up the file-copying process and advance the state.
 // Returns whether successful.
-static bool extract_tar_copy_file_end(struct extract_tar_context *ctx) {
+static extract_tar_error extract_tar_copy_file_end(struct extract_tar_context *ctx) {
   MG_INFO(("OTA: End of file"));
   free(ctx->buf);
   ctx->buf = NULL;
@@ -41,30 +41,33 @@ static bool extract_tar_copy_file_end(struct extract_tar_context *ctx) {
     esp_err_t esp_err = esp_ota_end(ctx->update_handle);
     ctx->update_handle = 0;
     if (esp_err != ESP_OK) {
-      return false;
+      return ete_firmware_update_failed;
     }
 
     esp_err = esp_ota_set_boot_partition(ctx->update_partition);
     ctx->update_partition = NULL;
     if (esp_err != ESP_OK) {
-      return false;
+      return ete_firmware_update_failed;
     }
     MG_INFO(("OTA: Switched boot partition"));
   } else {
-    fclose(ctx->f);
+    int result = fclose(ctx->f);
     ctx->f = NULL;
+    if (result == EOF) {
+      return ete_bad_esp_flash;
+    }
   }
 
   // Skip padding bytes (to align to 512-byte blocks).
   extract_tar_skip(ctx, compute_padding_for_tar_file_size(ctx->file_size));
 
-  return true;
+  return ete_ok;
 }
 
 // Configures writing the tar file to the specified filename. If the filename is NULL,
 // writes to the firmware update partition. Returns whether it was successful in setting
 // up the file for writing.
-static bool extract_tar_copy_file_begin(struct extract_tar_context *ctx, char *filename, size_t file_size) {
+static extract_tar_error extract_tar_copy_file_begin(struct extract_tar_context *ctx, char *filename, size_t file_size) {
   MG_INFO(("OTA: Starting file %s", filename == NULL ? "firmware" : filename));
 
   // Do this even if the size is zero, we need to blank out the file.
@@ -77,7 +80,7 @@ static bool extract_tar_copy_file_begin(struct extract_tar_context *ctx, char *f
     ctx->update_partition = esp_ota_get_next_update_partition(NULL);
     if (ctx->update_partition == NULL) {
       ESP_LOGE(TAG, "Found no update partition");
-      return false;
+      return ete_firmware_update_failed;
     }
     ESP_LOGI(TAG, "Writing to partition %s subtype %d at offset 0x%x",
              ctx->update_partition->label,
@@ -87,7 +90,7 @@ static bool extract_tar_copy_file_begin(struct extract_tar_context *ctx, char *f
     esp_err_t esp_err = esp_ota_begin(ctx->update_partition,
         OTA_SIZE_UNKNOWN, &ctx->update_handle);
     if (esp_err != ESP_OK) {
-      return false;
+      return ete_firmware_update_failed;
     }
   } else {
     char* abs_path;
@@ -95,7 +98,7 @@ static bool extract_tar_copy_file_begin(struct extract_tar_context *ctx, char *f
     ctx->f = fopen(abs_path, "wb");
     free(abs_path);
     if (ctx->f == NULL) {
-      return false;
+      return ete_bad_esp_flash;
     }
   }
 
@@ -105,11 +108,11 @@ static bool extract_tar_copy_file_begin(struct extract_tar_context *ctx, char *f
     return extract_tar_copy_file_end(ctx);
   }
 
-  return true;
+  return ete_ok;
 }
 
 // Write a byte to the file. Returns whether successful.
-static bool extract_tar_copy_file_byte(struct extract_tar_context *ctx, uint8_t byte) {
+static extract_tar_error extract_tar_copy_file_byte(struct extract_tar_context *ctx, uint8_t byte) {
   ctx->buf[ctx->index++ % BUFFER_SIZE] = byte;
 
   // Write full block.
@@ -119,10 +122,13 @@ static bool extract_tar_copy_file_byte(struct extract_tar_context *ctx, uint8_t 
     if (ctx->f == NULL) {
       esp_err_t esp_err = esp_ota_write(ctx->update_handle, (const void *) ctx->buf, BUFFER_SIZE);
       if (esp_err != ESP_OK) {
-        return false;
+        return ete_firmware_update_failed;
       }
     } else {
-      fwrite(ctx->buf, 1, BUFFER_SIZE, ctx->f);
+      size_t written = fwrite(ctx->buf, 1, BUFFER_SIZE, ctx->f);
+      if (written < BUFFER_SIZE) {
+          return ete_bad_esp_flash;
+      }
     }
   }
 
@@ -133,17 +139,20 @@ static bool extract_tar_copy_file_byte(struct extract_tar_context *ctx, uint8_t 
       if (ctx->f == NULL) {
         esp_err_t esp_err = esp_ota_write(ctx->update_handle, (const void *) ctx->buf, partial_block);
         if (esp_err != ESP_OK) {
-          return false;
+          return ete_firmware_update_failed;
         }
       } else {
-        fwrite(ctx->buf, 1, partial_block, ctx->f);
+        size_t written = fwrite(ctx->buf, 1, partial_block, ctx->f);
+        if (written < partial_block) {
+          return ete_bad_esp_flash;
+        }
       }
     }
 
     return extract_tar_copy_file_end(ctx);
   }
 
-  return true;
+  return ete_ok;
 }
 
 extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8_t byte) {
@@ -180,15 +189,9 @@ extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8
         if (strncmp("html/", ctx->header->header.filename, 5) == 0 ||
             strncmp("fpga/", ctx->header->header.filename, 5) == 0) {
 
-          bool success = extract_tar_copy_file_begin(ctx, ctx->header->header.filename, file_size);
-          if (!success) {
-            return ete_bad_esp_flash;
-          }
+          return extract_tar_copy_file_begin(ctx, ctx->header->header.filename, file_size);
         } else if (strcmp("build/trs-io.bin", ctx->header->header.filename) == 0) {
-          bool success = extract_tar_copy_file_begin(ctx, NULL, file_size);
-          if (!success) {
-            return ete_firmware_update_failed;
-          }
+          return extract_tar_copy_file_begin(ctx, NULL, file_size);
         } else {
           // Read and discard the file contents.
           MG_INFO(("OTA: Skipping unknown file"));
@@ -205,13 +208,8 @@ extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8
       }
       break;
 
-    case ets_copy_file: {
-      bool success = extract_tar_copy_file_byte(ctx, byte);
-      if (!success) {
-        return ctx->f == NULL ? ete_firmware_update_failed : ete_bad_esp_flash;
-      }
-      break;
-    }
+    case ets_copy_file:
+      return extract_tar_copy_file_byte(ctx, byte);
 
     case ets_done:
       // Nothing to do, throw away the byte.
