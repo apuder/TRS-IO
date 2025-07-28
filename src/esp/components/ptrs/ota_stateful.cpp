@@ -219,8 +219,11 @@ extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8
   return ete_ok;
 }
 
-void extract_tar_end(struct extract_tar_context *ctx) {
+extract_tar_error extract_tar_end(struct extract_tar_context *ctx) {
   free(ctx->header);
   ctx->header = NULL;
+
+  // See if we properly finished parsing the tar file.
+  return ctx->state == ets_done ? ete_ok : ete_corrupt_tar;
 }
 

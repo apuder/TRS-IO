@@ -60,9 +60,9 @@ struct extract_tar_context {
 // Initialize the context structure.
 void extract_tar_begin(struct extract_tar_context *ctx);
 
-// Handle a byte from the tar file. Returns 
+// Handle a byte from the tar file.
 extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8_t byte);
 
 // Clean up. Call this even in the case of error.
-void extract_tar_end(struct extract_tar_context *ctx);
+extract_tar_error extract_tar_end(struct extract_tar_context *ctx);
 

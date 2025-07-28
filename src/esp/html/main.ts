@@ -1234,13 +1234,26 @@ async function handleFirmwareUpload(file: File) {
     xhr.onload = async function () {
         uploadFirmwareButton.innerText = originalText;
 
-        if (xhr.status === 200) {
-            // Success! Handle the server's response
-            console.log('Upload successful:', xhr.responseText);
-            await rebootEsp(true);
-        } else {
-            // TODO Handle errors.
-            console.error('Upload failed:', xhr.status, xhr.statusText);
+        switch (xhr.status) {
+            case 200:
+                // Success! Handle the server's response
+                console.log('Upload successful:', xhr.responseText);
+                await rebootEsp(true);
+                break;
+
+            case 400:
+                displayError("TAR file is corrupted");
+                break;
+
+            case 500:
+                // Can't tell if it's flash or update partition.
+                displayError("Problem writing TAR file to flash");
+                break;
+
+            default:
+                console.log('Upload failed:', xhr.status, xhr.statusText);
+                displayError("Unknown error with update");
+                break;
         }
     };
     xhr.onerror = function () {

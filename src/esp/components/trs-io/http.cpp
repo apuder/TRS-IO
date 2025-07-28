@@ -789,34 +789,60 @@ static void handle_firmware_data(struct mg_connection *c, struct connection_data
 {
   // See if this is a streaming upload.
   if (cd->expected > 0 && c->recv.len > 0) {
-    // Process more of body.
+    // Record what we've received.
     cd->received += c->recv.len;
-    for (int i = 0; i < c->recv.len; i++) {
-      extract_tar_error error = extract_tar_handle_byte(cd->ctx, c->recv.buf[i]);
-      // TODO look at error.
+
+    // Process more of body.
+    extract_tar_error error = ete_ok;
+    for (int i = 0; i < c->recv.len && error == ete_ok; i++) {
+      error = extract_tar_handle_byte(cd->ctx, c->recv.buf[i]);
     }
 
     // Delete received data.
     c->recv.len = 0;
 
+    // See if we've gotten the whole file.
     if (cd->received >= cd->expected) {
-      // Uploaded everything. Send response back.
-      MG_INFO(("Uploaded %lu bytes", cd->received));
-      mg_http_reply(c, 200, NULL, "%lu ok\n", cd->received);
-
       // Cleanup connection data.
-      extract_tar_end(cd->ctx);
+      extract_tar_error end_error = extract_tar_end(cd->ctx);
+      if (error == ete_ok && end_error != ete_ok) {
+        error = end_error;
+      }
       memset(cd, 0, sizeof(*cd));
+
+      // Send response back.
+      switch (error) {
+        case ete_ok:
+          mg_http_reply(c, 200, NULL, "OK\n");
+          break;
+
+        case ete_corrupt_tar:
+          mg_http_reply(c, 400, NULL, "Corrupted TAR file\n");
+          break;
+
+        case ete_bad_esp_flash:
+          mg_http_reply(c, 500, NULL, "Error writing files to flash\n");
+          break;
+
+        case ete_firmware_update_failed:
+          mg_http_reply(c, 500, NULL, "Error writing to update partition\n");
+          break;
+
+        default:
+          mg_http_reply(c, 500, NULL, "Unknown error\n");
+          break;
+      }
 
       // Close connection when response gets sent.
       c->is_draining = 1;
 
-      // Mark the system as having been updated. This will force an FPGA
-      // flash on the next reboot. We could omit this if we detect that the
-      // tar file didn't contain the FPGA files.
-      // TODO not if there was an error.
-      settings_set_update_flag(true);
-      settings_commit();
+      if (error == ete_ok) {
+        // Mark the system as having been updated. This will force an FPGA
+        // flash on the next reboot. We could omit this if we detect that the
+        // tar file didn't contain the FPGA files.
+        settings_set_update_flag(true);
+        settings_commit();
+      }
     }
   }
 }
