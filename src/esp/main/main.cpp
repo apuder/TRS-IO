@@ -1,4 +1,5 @@
 
+#include "sdkconfig.h"
 #include "io.h"
 #include "led.h"
 #include "button.h"
@@ -13,7 +14,8 @@
 #include "esp_spi_flash.h"
 #include "esp32/spiram.h"
 #include "esp_ota_ops.h"
-
+#include "esp_efuse.h"
+#include "esp_efuse_table.h"
 #include "trs-io.h"
 #include "trs-fs.h"
 #include "spi.h"
@@ -46,7 +48,19 @@ extern const char* GIT_BRANCH;
 
 static void check()
 {
-#ifdef CONFIG_TRS_IO_PP
+#ifdef CONFIG_TRS_IO_PP  
+  bool force = esp_efuse_read_field_bit(ESP_EFUSE_SDIO_FORCE);
+  bool reg   = esp_efuse_read_field_bit(ESP_EFUSE_XPD_SDIO_REG);
+  bool tieh  = esp_efuse_read_field_bit(ESP_EFUSE_SDIO_TIEH);
+
+  ESP_LOGI(TAG, "Checking hardware configuration...");
+
+  if (force && reg && tieh) {
+    ESP_LOGI(TAG, "Flash regulator forced to 3.3V");
+  } else {
+    ESP_LOGE(TAG, "Flash regulator NOT forced to 3.3V");
+  }
+
   size_t flash_size = spi_flash_get_chip_size() / (1024 * 1024);
   size_t psram_size = esp_spiram_get_size() / (1024 * 1024);
 

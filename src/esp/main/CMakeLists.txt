@@ -15,6 +15,7 @@ idf_component_register(SRCS ${src}
                        REQUIRES app_update
                                 main
                                 nvs_flash
+                                efuse
                                 sdmmc
                                 fatfs
                                 vfs
