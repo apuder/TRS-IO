@@ -13,6 +13,7 @@ SHELL = /bin/bash
 #
 #
 BOARD ?= trs-io-pp
+PORT ?= /dev/ttyUSB0
 
 SDKCONFIG_DEFAULTS := sdkconfig.defaults;sdkconfig.trs-io;sdkconfig.$(BOARD)
 
@@ -28,12 +29,12 @@ build: copy-html
 
 .PHONY: flash
 flash:
-	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 flash
+	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 -p $(PORT) flash
 
 # Just the C++ code, not the spiffs partitions.
 .PHONY: app-flash
 app-flash:
-	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 app-flash
+	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 -p $(PORT) app-flash
 
 .PHONY: monitor
 monitor:
@@ -41,7 +42,7 @@ monitor:
 	@echo "Toggle logging to file with Ctrl-T Ctrl-L."
 	@echo "Help with Ctrl-T Ctrl-H."
 	@echo "Now reset ESP."
-	idf.py -p /dev/cu.usbserial-0001 monitor
+	idf.py -p $(PORT) monitor
 
 .PHONY: menuconfig
 menuconfig:
