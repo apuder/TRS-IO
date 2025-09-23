@@ -24,7 +24,7 @@ SHELL = /bin/bash
 #     	  Add the SKIP_FPGA=1 command-line flag to skip the FPGA files
 #
 BOARD ?= trs-io-pp
-PORT ?= /dev/ttyUSB0
+PORT ?= /dev/tty.usbserial-0001
 
 SDKCONFIG_DEFAULTS := sdkconfig.defaults;sdkconfig.trs-io;sdkconfig.$(BOARD)
 
