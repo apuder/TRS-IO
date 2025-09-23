@@ -11,6 +11,17 @@ SHELL = /bin/bash
 #
 #     make BOARD=trs-io-m1 build
 #
+# Targets:
+#
+#     all: does a build and flashes all partitions
+#     app: does a build and flashes only the app partition
+#     erase-flash: erases the flash partitions
+#     monitor: monitors the serial debug output
+#     menuconfig: runs the ESP config program
+#     build-html: packages up the HTML files
+#     watch-html: watches HTML files and package them when they change
+#     update-tar: builds a tar file for firmware updates
+#     	  Add the SKIP_FPGA=1 command-line flag to skip the FPGA files
 #
 BOARD ?= trs-io-pp
 
