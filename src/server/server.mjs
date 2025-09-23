@@ -217,6 +217,8 @@ app.use('/', expressStaticGzip('../esp/html/built'));
 
 // Automatically decode JSON on POST.
 app.use(express.json());
+app.use(express.text());
+// app.use(express.raw());
 
 app.get('/status', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
@@ -378,6 +380,23 @@ app.post("/files", (req, res) => {
 
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(makeGetFiles()));
+});
+app.post("/firmware", (req, res) => {
+    req.on("data", foo => {
+        console.log("data", foo.byteLength);
+    });
+    req.on("end", foo => {
+        console.log("end", foo);
+    });
+    if (false) {
+        const data = req.body;
+        console.log("Firmware data: " + data);
+        for (let x in Object.getOwnPropertyNames(data)) {
+            //console.log("Firmware data", x, data[x]);
+        }
+    }
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({}));
 });
 
 const httpServer = app.listen(PORT, () => {

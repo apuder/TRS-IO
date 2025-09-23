@@ -70,7 +70,7 @@ static const char* tree_resp =
 void print_mg_str(struct mg_str s)
 {
   for (int i = 0; i < s.len; i++) {
-    printf("%c", s.ptr[i]);
+    printf("%c", s.buf[i]);
   }
 }
 
@@ -130,10 +130,10 @@ static int process_ls(struct mg_connection *c, struct mg_http_message* hm)
 
   struct mg_str name = mg_str("intersect\%5B\%5D");
   struct mg_str k, v;
-  while (mg_split(&hm->query, &k, &v, '&')) {
-    if (name.len == k.len && mg_ncasecmp(name.ptr, k.ptr, k.len) == 0) {
+  while (mg_span(hm->query, &k, &v, '&')) {
+    if (mg_strcasecmp(name, k) == 0) {
       char dst[v.len];
-      int len = mg_url_decode(v.ptr, v.len, dst, v.len, 1);
+      int len = mg_url_decode(v.buf, v.len, dst, v.len, 1);
       if (len < 0) continue;
       string val(dst, len);
       intersect.push_back(val);
@@ -165,10 +165,10 @@ static int process_rm(struct mg_connection *c, struct mg_http_message* hm)
 
   struct mg_str name = mg_str("targets\%5B\%5D");
   struct mg_str k, v;
-  while (mg_split(&hm->query, &k, &v, '&')) {
-    if (name.len == k.len && mg_ncasecmp(name.ptr, k.ptr, k.len) == 0) {
+  while (mg_span(hm->query, &k, &v, '&')) {
+    if (mg_strcasecmp(name, k) == 0) {
       char dst[v.len + 1];
-      int len = mg_url_decode(v.ptr, v.len, dst, v.len + 1, 1);
+      int len = mg_url_decode(v.buf, v.len, dst, v.len + 1, 1);
       if (len < 0) continue;
       string val(dst, len);
       targets.push_back(val);
@@ -195,43 +195,42 @@ static int process_upload(struct mg_connection *c, struct mg_http_message* hm)
 {
   struct mg_http_part part;
   size_t ofs = 0;
-  int err = 0;
   mg_str filename;
   mg_str content;
   vector<FSFile> new_files;
   
-  filename.ptr = NULL;
+  filename.buf = NULL;
   while ((ofs = mg_http_next_multipart(hm->body, ofs, &part)) > 0) {
-    if (strncmp(part.name.ptr, "cmd", 3) == 0) {
-      if (strncmp(part.body.ptr, "upload", 6) != 0) {
+    if (strncmp(part.name.buf, "cmd", 3) == 0) {
+      if (strncmp(part.body.buf, "upload", 6) != 0) {
         break;
       }
       continue;
     }
-    if (strncmp(part.name.ptr, "target", 6) == 0) {
-      if (strncmp(part.body.ptr, "l0_Root", 7) != 0) {
+    if (strncmp(part.name.buf, "target", 6) == 0) {
+      if (strncmp(part.body.buf, "l0_Root", 7) != 0) {
         break;
       }
       continue;
     }
-    if (strncmp(part.name.ptr, "upload[]", 8) == 0) {
-      if (filename.ptr != NULL) {
+    if (strncmp(part.name.buf, "upload[]", 8) == 0) {
+      if (filename.buf != NULL) {
         break;
       }
       filename = part.filename;
       content = part.body;
       continue;
     }
-    if (strncmp(part.name.ptr, "mtime[]", 7) == 0) {
-      if (filename.ptr == NULL) {
+    if (strncmp(part.name.buf, "mtime[]", 7) == 0) {
+      if (filename.buf == NULL) {
         break;
       }
-      long ts = strtol(part.body.ptr, NULL, 10);
-      string path(filename.ptr, filename.len);
-      FSFile new_file(path, content.ptr, content.len, ts);
+      long ts = strtol(part.body.buf, NULL, 10);
+      string path(filename.buf, filename.len);
+      FSFile new_file(path, content.buf, content.len, ts);
       the_fs->create(new_file);
       new_files.push_back(new_file);
-      filename.ptr = NULL;
+      filename.buf = NULL;
     }
   }
 
@@ -246,7 +245,7 @@ int process_file_browser_req(struct mg_connection* c, struct mg_http_message* hm
 {
   char cmd[20];
 
-  if (strncmp(hm->method.ptr, "POST", 4) == 0) {
+  if (strncmp(hm->method.buf, "POST", 4) == 0) {
     // Assume upload
     return process_upload(c, hm);
   }

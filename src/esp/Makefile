@@ -11,6 +11,17 @@ SHELL = /bin/bash
 #
 #     make BOARD=trs-io-m1 build
 #
+# Targets:
+#
+#     all: does a build and flashes all partitions
+#     app: does a build and flashes only the app partition
+#     erase-flash: erases the flash partitions
+#     monitor: monitors the serial debug output
+#     menuconfig: runs the ESP config program
+#     build-html: packages up the HTML files
+#     watch-html: watches HTML files and package them when they change
+#     update-tar: builds a tar file for firmware updates
+#     	  Add the SKIP_FPGA=1 command-line flag to skip the FPGA files
 #
 BOARD ?= trs-io-pp
 PORT ?= /dev/ttyUSB0
@@ -36,6 +47,10 @@ flash:
 app-flash:
 	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 -p $(PORT) app-flash
 
+.PHONY: erase-flash
+erase-flash: pause
+	idf.py -D SDKCONFIG_DEFAULTS="$(SDKCONFIG_DEFAULTS)" -b 921600 erase-flash
+
 .PHONY: monitor
 monitor:
 	@echo "Quit with Ctrl-]."
@@ -51,7 +66,7 @@ menuconfig:
 .PHONY: pause
 pause:
 	@echo "Hold down PTRS RST and press ESP RST, then hold PTRS RST another few seconds."
-	@read -p "Press Enter when ready to flash . . . "
+	@read -p "Press Enter when ready . . . "
 
 # Run this after changing static web files. Check the resulting file
 # into git.
@@ -83,9 +98,13 @@ copy-html:
 	ls -lh $(BUILD_HTML_DIR)
 
 UPDATE_TAR=update.tar
-.PHONY: dist
-dist: build
-	rm -rf $(UPDATE_TAR)
-	cd build;tar cvf ../$(UPDATE_TAR) html/*
-	tar rvf $(UPDATE_TAR) fpga/*
-	tar rvf $(UPDATE_TAR) build/trs-io.bin
+# Specify ustar format explicitly to avoid metadata files that we don't handle anyway.
+TAR_OPTS=--verbose --format ustar
+.PHONY: update-tar
+update-tar: build
+	rm -f $(UPDATE_TAR)
+	cd build; tar -c -f ../$(UPDATE_TAR) $(TAR_OPTS) html/*
+ifneq ($(SKIP_FPGA),1)
+	tar -r -f $(UPDATE_TAR) $(TAR_OPTS) fpga/*
+endif
+	tar -r -f $(UPDATE_TAR) $(TAR_OPTS) build/trs-io.bin

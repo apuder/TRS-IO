@@ -3,3 +3,4 @@ sdkconfig.old
 log.*.txt
 tags
 .parcel-cache
+*.tar

@@ -135,6 +135,10 @@ const MODEL_TYPE_TO_BODY_DATASET = new Map<ModelType | undefined,string>([
     [ModelType.MODEL_4P, "trs-80-model-4p"],
 ]);
 
+// Frequent enough to show interesting updates, but infrequent enough to cause
+// spurious error messages when the ESP is busy doing something.
+const FETCH_STATUS_INTERVAL_MS = 5000;
+
 // Message displayed to the user (usually an error).
 class UserMessage {
     public readonly messageBox: HTMLSpanElement;
@@ -169,6 +173,35 @@ let gMostRecentStatus: Status | undefined = undefined;
 let gStatusFetchAbortController: AbortController | undefined = undefined;
 const gUserMessages: UserMessage[] = [];
 let gOfflineUserMessage: UserMessage | undefined = undefined;
+
+/**
+ * Get all the File objects from a drag-and-drop event.
+ */
+function getFilesFromDrop(e: DragEvent): File[] {
+    const files: File[] = [];
+
+    if (e.dataTransfer) {
+        if (e.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the files.
+            for (const item of e.dataTransfer.items) {
+                // If dropped items aren't files, reject them.
+                if (item.kind === "file") {
+                    const file = item.getAsFile();
+                    if (file !== null) {
+                        files.push(file);
+                    }
+                }
+            }
+        } else {
+            // Use DataTransfer interface to access the files.
+            for (const file of e.dataTransfer.files) {
+                files.push(file);
+            }
+        }
+    }
+
+    return files;
+}
 
 /**
  * Switch the view to the Settings tab.
@@ -402,7 +435,7 @@ async function fetchStatus(initialFetch: boolean) {
 }
 
 function scheduleFetchStatus() {
-    setInterval(async () => await fetchStatus(false), 2000);
+    setInterval(async () => await fetchStatus(false), FETCH_STATUS_INTERVAL_MS);
 }
 
 // Returns whether successful
@@ -952,6 +985,9 @@ async function fetchFilesInfo() {
     }
 }
 
+/**
+ * Sleep for the specified number of milliseconds.
+ */
 async function sleep(ms: number): Promise<void> {
     return new Promise<void>(accept => {
         setTimeout(() => accept(), ms);
@@ -1087,6 +1123,33 @@ function configureDots() {
     }, "image/png");
 }
 
+/**
+ * Ask the ESP to reboot, wait a bit, then reload this page.
+ *
+ * @param afterUpdate whether this reboot is after an OTA update.
+ */
+async function rebootEsp(afterUpdate: boolean) {
+    let message = "Rebooting ESP";
+    if (afterUpdate) {
+        message += " and flashing FPGA";
+    }
+    displayError(message, false);
+
+    const response = await fetch("/reboot", {
+        method: "POST",
+        cache: "no-cache",
+    });
+    if (response.status === 200) {
+        // Wait a bit, then reload page. After an OTA this takes a while because the FPGA must be flashed.
+        const seconds = afterUpdate ? 60 : 5;
+        await sleep(seconds*1000);
+        location.reload();
+    } else {
+        displayError("Could not reboot ESP");
+        console.log("Failed to reboot ESP:" + response.status + " " + await response.text());
+    }
+}
+
 function configureButtons() {
     const timezoneDetectButton = document.getElementById("timezoneDetectButton");
     const timezoneField = document.getElementById("tz") as HTMLInputElement | null;
@@ -1150,32 +1213,64 @@ async function handleRomUpload(file: File) {
     }
 }
 
+async function handleFirmwareUpload(file: File) {
+    const uploadFirmwareButton = document.getElementById("uploadFirmwareButton") as HTMLButtonElement;
+    const originalText = uploadFirmwareButton.textContent ?? "";
+    uploadFirmwareButton.innerText = "Uploading ...";
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/firmware", true);
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    if (xhr.upload) {
+        xhr.upload.addEventListener("progress", e => {
+            if (e.lengthComputable) {
+                const percent = Math.round(e.loaded / e.total * 100);
+                uploadFirmwareButton.innerText = `Uploading (${percent}%)`;
+            } else {
+                uploadFirmwareButton.innerText = "Uploading ...";
+            }
+        }, false);
+    }
+    xhr.onload = async function () {
+        uploadFirmwareButton.innerText = originalText;
+
+        switch (xhr.status) {
+            case 200:
+                // Success! Handle the server's response
+                console.log('Upload successful:', xhr.responseText);
+                await rebootEsp(true);
+                break;
+
+            case 400:
+                displayError("TAR file is corrupted");
+                break;
+
+            case 500:
+                // Can't tell if it's flash or update partition.
+                displayError("Problem writing TAR file to flash");
+                break;
+
+            default:
+                console.log('Upload failed:', xhr.status, xhr.statusText);
+                displayError("Unknown error with update");
+                break;
+        }
+    };
+    xhr.onerror = function () {
+        uploadFirmwareButton.innerText = originalText;
+    };
+    xhr.send(file);
+}
+
 async function handleRomDrop(e: DragEvent) {
     // Prevent default behavior (prevent file from being opened)
     e.preventDefault();
 
-    if (e.dataTransfer) {
-        const files: File[] = [];
-        if (e.dataTransfer.items) {
-            // Use DataTransferItemList interface to access the files.
-            for (const item of e.dataTransfer.items) {
-                // If dropped items aren't files, reject them.
-                if (item.kind === "file") {
-                    const file = item.getAsFile();
-                    if (file !== null) {
-                        files.push(file);
-                    }
-                }
-            }
+    const files = getFilesFromDrop(e);
+    for (const file of files) {
+        if (file.name.endsWith(".tar")) {
+            await handleFirmwareUpload(file);
         } else {
-            // Use DataTransfer interface to access the files.
-            for (const file of e.dataTransfer.files) {
-                files.push(file);
-            }
-        }
-        // Do this in a separate pass because the lists above will get blanked out
-        // while these await calls block.
-        for (const file of files) {
             await handleRomUpload(file);
         }
     }
@@ -1194,16 +1289,28 @@ function configureRomUpload() {
 
     const romsSection = document.querySelector(".roms") as HTMLElement;
     romsSection.addEventListener("drop", async e => {
-        romsSection.classList.remove("hover");
+        romsSection.classList.remove("dragover");
         await handleRomDrop(e);
     });
     romsSection.addEventListener("dragover", e => {
-        romsSection.classList.add("hover");
+        romsSection.classList.add("dragover");
 
         // Prevent default behavior (prevent file from being opened).
         e.preventDefault();
     });
-    romsSection.addEventListener("dragleave",  () => romsSection.classList.remove("hover"));
+    romsSection.addEventListener("dragleave",  () => romsSection.classList.remove("dragover"));
+}
+
+function configureFirmwareUpload() {
+    const uploadFirmwareInput = document.getElementById("uploadFirmwareInput") as HTMLInputElement;
+    uploadFirmwareInput.addEventListener("change", async () => {
+        if (uploadFirmwareInput.files !== null) {
+            for (const file of uploadFirmwareInput.files) {
+                await handleFirmwareUpload(file);
+            }
+            uploadFirmwareInput.value = "";
+        }
+    });
 }
 
 async function handleFilesUpload(file: File) {
@@ -1244,30 +1351,9 @@ async function handleFilesDrop(e: DragEvent) {
     // Prevent default behavior (prevent file from being opened)
     e.preventDefault();
 
-    if (e.dataTransfer) {
-        const files: File[] = [];
-        if (e.dataTransfer.items) {
-            // Use DataTransferItemList interface to access the files.
-            for (const item of e.dataTransfer.items) {
-                // If dropped items aren't files, reject them.
-                if (item.kind === "file") {
-                    const file = item.getAsFile();
-                    if (file !== null) {
-                        files.push(file);
-                    }
-                }
-            }
-        } else {
-            // Use DataTransfer interface to access the files.
-            for (const file of e.dataTransfer.files) {
-                files.push(file);
-            }
-        }
-        // Do this in a separate pass because the lists above will get blanked out
-        // while these await calls block.
-        for (const file of files) {
-            await handleFilesUpload(file);
-        }
+    const files = getFilesFromDrop(e);
+    for (const file of files) {
+        await handleFilesUpload(file);
     }
 }
 
@@ -1284,16 +1370,16 @@ function configureFilesUpload() {
 
     const filesSection = document.querySelector(".files") as HTMLElement;
     filesSection.addEventListener("drop", async e => {
-        filesSection.classList.remove("hover");
+        filesSection.classList.remove("dragover");
         await handleFilesDrop(e);
     });
     filesSection.addEventListener("dragover", e => {
-        filesSection.classList.add("hover");
+        filesSection.classList.add("dragover");
 
         // Prevent default behavior (prevent file from being opened).
         e.preventDefault();
     });
-    filesSection.addEventListener("dragleave",  () => filesSection.classList.remove("hover"));
+    filesSection.addEventListener("dragleave",  () => filesSection.classList.remove("dragover"));
 }
 
 function configurePrinter() {
@@ -1360,6 +1446,7 @@ function configurePrinterEmulationWarning() {
 export function main() {
     configureButtons();
     configureRomUpload();
+    configureFirmwareUpload();
     configureFilesUpload();
     fetchStatus(true);
     fetchRomInfo();

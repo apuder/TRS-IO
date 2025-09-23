@@ -14,8 +14,7 @@ static TRX_MemorySegment memory_query_cache;
 
 // static bool init_webserver(void);
 static char* get_registers_json(const TRX_StatusRegistersAndFlags* registers);
-static bool www_handler(struct mg_connection *conn,
-                        int ev, void *ev_data, void *fn_data);
+static bool www_handler(struct mg_connection *conn, int ev, void *ev_data);
 
 static void handleDynamicUpdate();
 static bool emulation_running = false;
@@ -85,9 +84,8 @@ bool init_trs_xray(TRX_Context* ctx_param) {
 }
 
 // public
-bool trx_handle_http_request(struct mg_connection *c,
-                             int event, void *eventData, void *fn_data) {
-  return www_handler(c, event, eventData, fn_data);
+bool trx_handle_http_request(struct mg_connection *c, int event, void *eventData) {
+  return www_handler(c, event, eventData);
 }
 
 // public
@@ -299,7 +297,7 @@ static bool handle_http_request(struct mg_connection *conn,
                                 struct mg_http_message* message) {
   // Note: We don't host the html/js/css files here as they are took big
   //       for the embedded RAM.
-  if (mg_http_match_uri(message, "/channel")) {
+  if (mg_match(message->uri, mg_str("/channel"), NULL)) {
 		mg_ws_upgrade(conn, message, NULL);
 		status_conn = conn;
   } else {
@@ -402,8 +400,7 @@ static void on_frontend_message(const char* msg) {
   }
 }
 
-static bool www_handler(struct mg_connection *conn,
-                        int ev, void *ev_data, void *fn_data) {
+static bool www_handler(struct mg_connection *conn, int ev, void *ev_data) {
   if (!trx_running) {
     return false;
   }
@@ -414,22 +411,19 @@ static bool www_handler(struct mg_connection *conn,
     case MG_EV_WS_MSG: {
       static char message[50];
       struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
-      strncpy(message, wm->data.ptr, wm->data.len);
+      strncpy(message, wm->data.buf, wm->data.len);
       message[wm->data.len] = '\0';
       on_frontend_message(message);
-      break;
+      return true;
     }
-    case MG_EV_CLOSE: {
+    case MG_EV_CLOSE:
       if (conn == status_conn) {
         status_conn = NULL;
+        return true;
       }
       break;
-    }
-    default: {
-      return false;
-    }
-	}
-  return true;
+  }
+  return false;
 }
 
 // FIXME
