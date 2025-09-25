@@ -76,6 +76,31 @@ const PRINTER_OUTPUT = `40 CLS
 910 FOR Z=1 TO T
 920 NEXT:RETURN
 `;
+const PLOTTER_OUTPUT = `
+H
+D2700,1860
+`;
+
+// Draw a fun pattern on the plotter.
+function makePlotterPattern() {
+    const lines = [];
+
+    const w = 2700;
+    const h = 1860;
+    const s = w*.3;
+    let c = "M";
+
+    lines.push(String.fromCodePoint(19) + "F0");
+
+    for (let t = 0; t <= 3.14159*2+0.02; t += 0.02) {
+        const x = Math.round(w/2 + Math.cos(t*5)*s);
+        const y = Math.round(h/2 + Math.sin(t*3)*s);
+        lines.push(c + x + "," + y);
+        c = "D";
+    }
+
+    return lines.join("\n");
+}
 
 // Make sure the filename isn't trying to reach outside the ROM directory.
 function isValidRomFilename(filename) {
@@ -408,17 +433,21 @@ printerWs.on('connection', ws => {
     console.log("ws connection")
     ws.on('error', console.error);
     let i = 0;
+    /// const output = PRINTER_OUTPUT;
+    /// const output = PLOTTER_OUTPUT;
+    const output = makePlotterPattern();
     const sendByte = () => {
-        const byte = PRINTER_OUTPUT.codePointAt(i);
+        const byte = output.codePointAt(i);
         const byteArray = new Uint8Array([byte === 10 ? 13 : byte]);
         ws.send(byteArray);
         i += 1;
-        if (i === PRINTER_OUTPUT.length) {
+        if (i === output.length) {
             i = 0;
         }
         setTimeout(sendByte, 20);
     };
 
+    // Kick it off.
     // sendByte();
 });
 

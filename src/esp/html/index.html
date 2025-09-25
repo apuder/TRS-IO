@@ -137,17 +137,26 @@
                         </div>
                         <div class="files-error"></div>
                     </article>
-                    <article class="printer">
+                    <article class="printer" data-model="printer" data-pen="black">
                         <input type="radio" name="active-article" id="printer_article">
                         <div class="button-set">
                             <button class="small" id="savePrinterButton">Save</button>
                             <button class="small" id="clearPrinterButton">Clear</button>
+                            <div class="button-spacer"></div>
+                            <button class="small selectable" id="selectPrinterButton">Epson MX-80</button>
+                            <button class="small selectable" id="selectPlotterButton">FP-215</button>
+                            <div class="button-spacer"></div>
+                            <button class="pen selectable" id="blackPen"></button>
+                            <button class="pen selectable" id="redPen"></button>
+                            <button class="pen selectable" id="bluePen"></button>
+                            <button class="pen selectable" id="greenPen"></button>
                             <div id="printerEmulationWarning">
                                 Printer emulation is currently disabled.
                                 See <a href="#">settings</a>.
                             </div>
                         </div>
                         <div class="printer-output"></div>
+                        <canvas class="plotter-output"></canvas>
                     </article>
                     <article class="settings">
                         <input type="radio" name="active-article" id="settings_article">

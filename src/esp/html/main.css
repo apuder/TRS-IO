@@ -16,6 +16,7 @@
     --brown: #5b3f2e; /* #675254; */
     --brown-highlight: color-mix(in srgb, var(--brown) 95%, white);
     --brown-select: color-mix(in srgb, var(--brown) 90%, white);
+    --selected-button-box-shadow: 0 0 30px 10px white;
 
     --page-small-margin: 20px;
     --page-large-margin: 120px;
@@ -56,6 +57,18 @@ button.small, .button.small, label.pill {
     padding: 4px 16px 2px;
 }
 
+button.pen {
+    border: 2px solid var(--brown);
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+button.selectable {
+    transition: box-shadow 200ms;
+}
+
 button:hover {
     background: var(--brown-highlight);
 }
@@ -63,6 +76,10 @@ button:hover {
 .button-set {
     display: flex;
     gap: 12px;
+
+    .button-spacer {
+        width: 20px;
+    }
 }
 
 .button-set-full-width {
@@ -335,15 +352,41 @@ article:has(input[name=active-article]:not(:checked)) {
 .printer {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-}
+    gap: 30px;
 
-.printer-output {
-    background: white;
-    color: black;
-    font-family: monospace;
-    white-space: pre;
-    height: 100%;
+    &[data-model="printer"] .plotter-output,
+    &[data-model="plotter"] .printer-output {
+        display: none;
+    }
+    &[data-model="printer"] #selectPrinterButton,
+    &[data-model="plotter"] #selectPlotterButton,
+    &[data-pen="black"] #blackPen,
+    &[data-pen="red"] #redPen,
+    &[data-pen="blue"] #bluePen,
+    &[data-pen="green"] #greenPen {
+        box-shadow: var(--selected-button-box-shadow);
+    }
+
+    #blackPen { background: rgb(0 0 0); }
+    #redPen { background: rgb(200 0 0); }
+    #bluePen { background: rgb(0 0 255); }
+    #greenPen { background: rgb(0 150 0); }
+
+    .printer-output {
+        background: white;
+        color: black;
+        font-family: monospace;
+        white-space: pre;
+        height: 100%;
+    }
+
+    .plotter-output {
+        max-width: 100%;
+    }
+
+    .printer-output, .plotter-output {
+        box-shadow: 0 0 10px 5px rgb(0 0 0 / 15%);
+    }
 }
 
 .settings {

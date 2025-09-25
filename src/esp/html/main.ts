@@ -3,6 +3,7 @@ import {Printer} from "./printer.js";
 import editSvg from "./icons/edit.svg";
 import deleteSvg from "./icons/delete.svg";
 import downloadSvg from "./icons/download.svg";
+import {BLACK_INK_COLOR, BLUE_INK_COLOR, Fp215, GREEN_INK_COLOR, PenColor, RED_INK_COLOR} from "./fp215";
 
 // Hardware board type.
 enum BoardType {
@@ -1383,14 +1384,46 @@ function configureFilesUpload() {
 }
 
 function configurePrinter() {
-    const printerNode = document.querySelector(".printer-output") as HTMLDivElement;
-    const printer = new Printer(printerNode);
+    const printerNode = document.querySelector(".printer") as HTMLElement;
+    const printerOutputNode = document.querySelector(".printer-output") as HTMLDivElement;
+    const plotterOutputNode = document.querySelector(".plotter-output") as HTMLCanvasElement;
+    const printer = new Printer(printerOutputNode);
+    const fp215 = new Fp215(plotterOutputNode);
 
     const savePrinterButton = document.getElementById("savePrinterButton") as HTMLButtonElement;
-    savePrinterButton.addEventListener("click", () => printer.savePrintout());
+    savePrinterButton.addEventListener("click", () => {
+        if (printerNode.dataset.model === "printer") {
+            printer.savePrintout();
+        } else {
+            fp215.savePlot();
+        }
+    });
 
     const clearPrinterButton = document.getElementById("clearPrinterButton") as HTMLButtonElement;
-    clearPrinterButton.addEventListener("click", () => printer.clearPrintout());
+    clearPrinterButton.addEventListener("click", () => {
+        if (printerNode.dataset.model === "printer") {
+            printer.clearPrintout();
+        } else {
+            fp215.newPaper();
+        }
+    });
+
+    const selectPrinterButton = document.getElementById("selectPrinterButton") as HTMLButtonElement;
+    selectPrinterButton.addEventListener("click", () => printerNode.dataset.model = "printer");
+
+    const selectPlotterButton = document.getElementById("selectPlotterButton") as HTMLButtonElement;
+    selectPlotterButton.addEventListener("click", () => printerNode.dataset.model = "plotter");
+
+    function setColor(rgb: PenColor, penName: string): void {
+        fp215.setPenColor(rgb);
+        printer.setInkColor(rgb);
+        printerNode.dataset.pen = penName;
+    }
+
+    document.querySelector("#blackPen")?.addEventListener("click", () => setColor(BLACK_INK_COLOR, "black"));
+    document.querySelector("#redPen")?.addEventListener("click", () => setColor(RED_INK_COLOR, "red"));
+    document.querySelector("#bluePen")?.addEventListener("click", () => setColor(BLUE_INK_COLOR, "blue"));
+    document.querySelector("#greenPen")?.addEventListener("click", () => setColor(GREEN_INK_COLOR, "green"));
 
     const attemptConnection = () => {
         const webSocket = new WebSocket("ws://" + window.location.host + "/printer");
@@ -1398,7 +1431,11 @@ function configurePrinter() {
             if (e.data instanceof Blob) {
                 const bytes = new Uint8Array(await e.data.arrayBuffer());
                 for (let i = 0; i < bytes.length; i++) {
-                    printer.printChar(bytes[i]);
+                    if (printerNode.dataset.model === "printer") {
+                        printer.printChar(bytes[i]);
+                    } else {
+                        fp215.processByte(String.fromCodePoint(bytes[i]));
+                    }
                 }
             }
         });
