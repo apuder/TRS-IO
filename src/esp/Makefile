@@ -6,6 +6,7 @@ SHELL = /bin/bash
 #     trs-io-m1
 #     trs-io-m3
 #     trs-io-pp (default value)
+#     mini-trs
 #
 # For example:
 #

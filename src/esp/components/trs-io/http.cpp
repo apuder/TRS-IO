@@ -717,6 +717,9 @@ static void mongoose_handle_status(char** response,
 #ifdef CONFIG_TRS_IO_PP
   cJSON_AddNumberToObject(s, "config", get_config()); // DIP switches
   cJSON_AddNumberToObject(s, "board", 2);
+#ifdef CONFIG_MINI_TRS
+  cJSON_AddNumberToObject(s, "mini_trs", 1);
+#endif
 #endif
   cJSON_AddStringToObject(s, "git_commit", GIT_REV);
   cJSON_AddStringToObject(s, "git_tag", GIT_TAG);

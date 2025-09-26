@@ -33,6 +33,7 @@ interface Status {
     board: BoardType,
     // Dip switches:
     config?: number, // only for TRS-IO++, see CONFIGURATIONS list.
+    mini_trs?: number, // only for TRS-IO++, and set to 1 for MiniTRS.
     git_commit: string,
     git_tag: string,
     git_branch: string,
@@ -110,6 +111,8 @@ const CONFIGURATIONS: Configuration[] = [
 // Missing "config" status field, indicating TRS-IO board.
 const TRS_IO_M1_CONFIGURATION = new Configuration("TRS-IO (Model 1)", false);
 const TRS_IO_M3_CONFIGURATION = new Configuration("TRS-IO (Model III)", false);
+// Has "mini_trs" status field.
+const MINI_TRS_CONFIGURATION = new Configuration("MiniTRS", true, ModelType.MODEL_3);
 
 const WIFI_STATUS_TO_STRING = new Map<number,string>([
     [1, "Connecting"],
@@ -254,7 +257,9 @@ function getDeviceName(status: Status | undefined): string {
     return status === undefined
         ? "device"
         : status.board === BoardType.TRS_IO_PP
-            ? "TRS-IO++"
+            ? status.mini_trs === 1
+                ? "MiniTRS"
+                : "TRS-IO++"
             : "TRS-IO";
 }
 
@@ -339,11 +344,14 @@ function updateStatus(status: Status, initialFetch: boolean): void {
 
     const wifiStatusText = WIFI_STATUS_TO_STRING.get(status.wifi_status) ?? "Unknown";
     const configuration = status.board === BoardType.TRS_IO_PP
-        ? CONFIGURATIONS[status.config ?? 0]
+        ? status.mini_trs === 1
+            ? MINI_TRS_CONFIGURATION
+            : CONFIGURATIONS[status.config ?? 0]
         : status.board === BoardType.TRS_IO_MODEL_1
             ? TRS_IO_M1_CONFIGURATION
             : TRS_IO_M3_CONFIGURATION;
     document.body.classList.toggle("ptrs-mode", configuration.isPtrs);
+    document.body.classList.toggle("mini-trs-mode", status.mini_trs === 1);
     document.body.dataset.boardType = BOARD_TYPE_TO_BODY_DATASET.get(status.board) ?? "unknown";
     document.body.dataset.emulatedModel = MODEL_TYPE_TO_BODY_DATASET.get(configuration.model) ?? "unknown";
 
@@ -682,6 +690,7 @@ function updateRomInfo(romInfo: RomInfo) {
         for (let model of [0, 2, 3, 4]) {
             td = document.createElement("td");
             td.classList.add("file-select");
+            td.classList.toggle("not-mini-trs", model !== 3);
             const input = document.createElement("input");
             input.type = "radio";
             input.name = "modelRom" + model;

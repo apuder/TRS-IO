@@ -14,6 +14,13 @@ config TRS_IO_PP
     bool "TRS-IO++"
 endchoice
 
+config MINI_TRS
+    bool "Compile for the MiniTRS"
+    default n
+    depends on TRS_IO_PP
+    help
+        Compiles specifically for the MiniTRS computer.
+
 config TRS_IO_USE_COMPILE_TIME_WIFI_CREDS
     bool "Use compile-time credentials for WiFi"
     default n

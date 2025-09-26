@@ -161,6 +161,8 @@ nav ul {
 }
 
 body:not(.ptrs-mode) .ptrs-only,
+body.mini-trs-mode .not-mini-trs,
+body:not(.mini-trs-mode) .mini-trs-only,
 body:not([data-board-type=trs-io-pp]) .trs-io-pp-only,
 body:not([data-emulated-model=trs-80-model-1]) .emulated-model-trs-80-model-1-only,
 body:not([data-emulated-model=trs-80-model-3]) .emulated-model-trs-80-model-3-only,
@@ -343,9 +345,12 @@ article:has(input[name=active-article]:not(:checked)) {
 
     :is(th, td).file-edit,
     :is(th, td).file-size,
-    :is(th, td).file-date,
-    :is(th, td):nth-child(1 of .file-select) {
+    :is(th, td).file-date {
         padding-left: 1em;
+    }
+
+    :is(th, td).file-date {
+        padding-right: 1em;
     }
 }
 

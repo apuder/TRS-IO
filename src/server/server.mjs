@@ -166,6 +166,7 @@ function makeStatus() {
         wifi_status: 2,
         ip: "192.168.1.188",
         board: BOARD_TYPE,
+        mini_trs: 1,
         git_commit: "e1e27ab+",
         git_tag: "",
         git_branch: "master",
