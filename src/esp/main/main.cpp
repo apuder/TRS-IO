@@ -39,7 +39,11 @@
 #define CONFIG "TRS-IO (Model III)"
 #endif
 #ifdef CONFIG_TRS_IO_PP
+#ifdef CONFIG_MINI_TRS
+#define CONFIG "MiniTRS"
+#else
 #define CONFIG "TRS-IO++"
+#endif
 #endif
 
 extern const char* GIT_REV;
@@ -109,7 +113,7 @@ void app_main(void)
   init_led();
   init_trs_fs_posix();
   init_spiffs();
-#ifdef CONFIG_TRS_IO_PP
+#if defined(CONFIG_TRS_IO_PP) && !defined(CONFIG_MINI_TRS)
   init_keyb();
 #endif
   init_fpga();
