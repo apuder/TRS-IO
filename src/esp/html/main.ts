@@ -1103,7 +1103,7 @@ function drawDots(canvas: HTMLCanvasElement): void {
     ctx.fillStyle = "rgb(0 0 0 / 0%)";
     ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = "#67525440"; // var(--brown)
+    ctx.fillStyle = "#5b3f2e40"; // var(--brown)
     for (let y = 0; y < height; y++) {
         const t = Math.min(Math.max((y - emptyY) / (fullY - emptyY), 0), 1);
         const dotCount = t*30;

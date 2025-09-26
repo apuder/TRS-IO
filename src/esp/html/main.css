@@ -13,7 +13,7 @@
     --yellow-top: #dea80a;
     --yellow-bottom: #dea00a;
     --yellow: var(--yellow-top);
-    --brown: #5b3f2e; /* #675254; */
+    --brown: #5b3f2e;
     --brown-highlight: color-mix(in srgb, var(--brown) 95%, white);
     --brown-select: color-mix(in srgb, var(--brown) 90%, white);
     --selected-button-box-shadow: 0 0 30px 10px white;
