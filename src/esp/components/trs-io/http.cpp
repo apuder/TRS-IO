@@ -951,13 +951,6 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
         mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n", content_type, response_len);
         mg_send(c, response, response_len);
         free(response);
-#ifdef CONFIG_TRS_IO_PP
-      } else if (mg_match(message->uri, mg_str("/roms/php/connector.minimal.php"), NULL)) {
-        process_file_browser_req(c, message);
-      } else if (strncmp(message->uri.buf, "/roms", 5) == 0) {
-        static const struct mg_http_serve_opts opts = {.root_dir = "/elFinder"};
-        mg_http_serve_dir(c, (struct mg_http_message*) eventData, &opts);
-#endif
       } else {
         static const struct mg_http_serve_opts opts = {.root_dir = "/html"};
         mg_http_serve_dir(c, (struct mg_http_message*) eventData, &opts);
