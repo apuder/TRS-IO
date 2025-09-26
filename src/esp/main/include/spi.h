@@ -101,6 +101,7 @@ void spi_z80_resume();
 void spi_z80_dsp_set_addr(uint16_t addr);
 void spi_z80_dsp_poke(uint8_t v);
 uint8_t spi_z80_dsp_peek();
+void spi_set_activity_led(bool bottom, bool top);
 void spi_set_led(bool r, bool g, bool b);
 uint8_t spi_get_config();
 void spi_set_cass_in();

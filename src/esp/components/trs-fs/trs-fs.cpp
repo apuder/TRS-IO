@@ -4,11 +4,13 @@
 #include <unordered_map>
 
 #ifdef ESP_PLATFORM
+#include <esp_log.h>
 #include "serial.h"
 #include "posix.h"
 #include "smb.h"
 #include "settings.h"
 #include "event.h"
+#include "spi.h"
 
 extern "C" {
 #include "trs_hard.h"
@@ -76,6 +78,12 @@ static void set_fs() {
     evt_signal(EVT_FS_MOUNTED);
   }
   check_frehd();
+  bool sd_present = trs_fs_posix != NULL && trs_fs_posix->get_err_msg() == NULL;
+  bool smb_present = trs_fs_smb != NULL && trs_fs_smb->get_err_msg() == NULL;
+  ESP_LOGI("TRS-FS", "SD: %s, SMB: %s", sd_present ? "yes" : "no", smb_present ? "yes" : "no");
+#ifdef CONFIG_MINI_TRS
+  spi_set_activity_led(smb_present, sd_present);
+#endif
 }
 
 const char* init_trs_fs_posix() {
