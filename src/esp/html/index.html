@@ -23,9 +23,8 @@
                         <li><label for="dashboard_article"><img src="icons/globe.svg" alt="Dashboard" title="Dashboard"></label></li>
                         <li class="ptrs-only"><label for="roms_article"><img src="icons/roms.svg" alt="ROMs" title="ROMs"></label></li>
                         <li><label for="files_article"><img src="icons/files.svg" alt="Files" title="Files"></label></li>
-<!--                        <li><label for="fonts_article"><img src="icons/fonts.svg" alt="Fonts" title="Fonts"></label></li>-->
                         <li><label for="printer_article"><img src="icons/printer.svg" alt="Printer" title="Printer"></label></li>
-<!--                        <li><label for="plotter_article"><img src="icons/plotter.svg" alt="Plotter" title="Plotter"></label></li>-->
+                        <li><label for="help_article">?</label></li>
                         <li><label for="settings_article"><img src="icons/settings.svg" alt="Settings" title="Settings"></label></li>
                     </ul>
                 </nav>
@@ -158,6 +157,114 @@
                         </div>
                         <div class="printer-output"></div>
                         <canvas class="plotter-output"></canvas>
+                    </article>
+                    <article class="settings">
+                        <input type="radio" name="active-article" id="help_article">
+                        <div class="dashboard-cards">
+                            <div class="dashboard-card">
+                                <span class="dashboard-title">DIP Switches</span>
+
+                                <table class="dip-switch-table">
+                                    <tr>
+                                        <th>1</th>
+                                        <th>2</th>
+                                        <th>3</th>
+                                        <th>4</th>
+                                        <th>Mode</th>
+                                    </tr>
+                                    <tr>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>TRS-IO for Model 1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>1</td>
+                                        <td>TRS-IO for Model III</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>E</td>
+                                        <td>PocketTRS (Model 1)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>0</td>
+                                        <td>1</td>
+                                        <td>0</td>
+                                        <td></td>
+                                        <td>Reserved</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>0</td>
+                                        <td>E</td>
+                                        <td>PocketTRS (Model III)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>1</td>
+                                        <td>E</td>
+                                        <td>PocketTRS (Model 4)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>0</td>
+                                        <td>1</td>
+                                        <td>E</td>
+                                        <td>PocketTRS (Model 4P)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>0</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td></td>
+                                        <td>Custom 1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td></td>
+                                        <td>Custom 2</td>
+                                    </tr>
+                                </table>
+
+                                <ul>
+                                    <li>E=0: Use internal TRS-IO</span></li>
+                                    <li>E=1: Use external TRS-IO</span></li>
+                                </ul>
+                            </div>
+                            <div class="dashboard-card">
+                                <span class="dashboard-title">Buttons</span>
+                                <ul>
+                                    <li><span class="dashboard-label">Status</span> A short press will activate the status LED and make it flash twice: the first time for the status of the Wifi connection (green: Wifi connected; red: Wifi not connected) and a second time for the status of the SMB connection (green: SMB share successfully mounted; red: SMB share could not be mounted). A long-press of the Status button will reset all settings of the TRS-IO++ board to their default.</li>
+                                    <li><span class="dashboard-label">PTRS RST</span> A short-press will reset the Z80 in PocketTRS mode. A long-press will first re-download the currently configured ROM and then reset the Z80. This button has no meaning in TRS-IO mode.</li>
+                                    <li><span class="dashboard-label">ESP RST</span> A short-press will reset the ESP microcontroller. A long-press is not defined for this button.</li>
+                                </ul>
+                            </div>
+                            <div class="dashboard-card">
+                                <span class="dashboard-title">Color LED</span>
+                                <ul>
+                                    <li><span class="dashboard-label">Blinking white/bluish</span> WiFi of the TRS-IO++ board is not configured. It will create an open WiFi access point named “TRS-IO”.</li>
+                                    <li><span class="dashboard-label">Green</span> When TRS-IO has been configured with WiFi credentials and TRS-IO++ was able to connect to the WiFi network, the status LED will light in solid green for several seconds.</li>
+                                    <li><span class="dashboard-label">Red</span> TRS-IO++ was configured with WiFi credentials but it was not possible to connect to the specified network. The reason could be wrong credentials or the specified network is itself offline. The Status button can be used to reset TRS-IO++ into setup mode in case different credentials need to be provided.</li>
+                                    <li><span class="dashboard-label">Blue</span> TRS-IO++ performs an OTA (Over-the-Air) update or an update of the FPGA firmware. Updating the FPGA takes about 45 seconds after which the status LED will automatically turn off.</li>
+                                    <li><span class="dashboard-label">Off</span> The status LED will be off during regular operations when TRS-IO++ is connected to the specified WiFi network.</li>
+                                </ul>
+                            </div>
+                            <div class="dashboard-image">
+                                <img src="https://raw.githubusercontent.com/apuder/TRS-IO/fa4b3d28a613cbbe4fdb1e1328173be76af73247/src/images/help-guy.png" alt="Help guy" class="help-guy">
+                            </div>
+
+                        </div>
                     </article>
                     <article class="settings">
                         <input type="radio" name="active-article" id="settings_article">

@@ -156,6 +156,10 @@ nav ul {
         cursor: pointer;
         transition: filter 0.25s;
         filter: opacity(30%);
+
+        &[for=help_article] {
+            font-size: 38pt;
+        }
     }
 
     li label:hover {
@@ -276,11 +280,16 @@ article:has(input[name=active-article]:not(:checked)) {
 .dashboard-image {
     position: relative;
 
-    img {
+    img:not(.help-guy) {
         width: 100%;
         position: absolute;
         transform: scale(120%);
         transform-origin: top right;
+
+    }
+
+    img.help-guy {
+        width: 100%;
     }
 }
 
@@ -474,4 +483,12 @@ article:has(input[name=active-article]:not(:checked)) {
 footer {
     height: var(--page-small-margin);
     flex-shrink: 0;
+}
+
+.dip-switch-table {
+    margin-top: 1em;
+
+    th {
+        text-align: left;
+    }
 }
