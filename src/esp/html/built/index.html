@@ -1734,6 +1734,7 @@ async function saveSettings() {
         displayError("Cannot save settings");
     } else {
         const status = await response.json();
+        displayError("Saved settings");
         updateStatus(status, false);
     }
 }

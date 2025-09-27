@@ -1088,6 +1088,7 @@ async function saveSettings(): Promise<void> {
         displayError("Cannot save settings");
     } else {
         const status = await response.json() as Status;
+        displayError("Saved settings");
         updateStatus(status, false);
     }
 }
