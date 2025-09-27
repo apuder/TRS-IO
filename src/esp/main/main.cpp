@@ -113,8 +113,13 @@ void app_main(void)
   init_led();
   init_trs_fs_posix();
   init_spiffs();
-#if defined(CONFIG_TRS_IO_PP) && !defined(CONFIG_MINI_TRS)
+#ifdef CONFIG_TRS_IO_PP
+#ifdef CONFIG_MINI_TRS
+  // For MiniTRS, wait 6 seconds to keep the splash screen
+  vTaskDelay(6000 / portTICK_PERIOD_MS);
+#else
   init_keyb();
+#endif
 #endif
   init_fpga();
   init_wifi();
