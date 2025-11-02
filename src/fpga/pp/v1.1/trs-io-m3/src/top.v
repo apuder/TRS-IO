@@ -655,7 +655,7 @@ vga3 vga3(
 
 always @(posedge clk3_pixel)
 begin
-  sync3 <= (cx3 == frame_width3 - 10) && (cy3 == frame_height3 - 1);
+  sync3 <= (cx3 == frame_width3 - 8) && (cy3 == frame_height3 - 1);
 end
 
 
@@ -835,4 +835,5 @@ assign LED[0] = esp_sel;
 assign LED[1] = WAIT;
 assign LED[2] = INT;
 assign LED[3] = heartbeat[25] | spi_error;
+
 endmodule

@@ -365,8 +365,8 @@ wire trs_cass_in_sel    = ~z80_iorq_n & (z80_addr[7:1] == 7'b1111111);// fe-ff
 wire trs_fdc_cmnd_sel  = trs_disk_out_sel & (z80_addr[1:0] == 2'b00); // f0 output
 wire trs_fdc_stat_sel  = trs_disk_in_sel  & (z80_addr[1:0] == 2'b00); // f0 input
 wire trs_fdc_track_sel = trs_disk_in_sel  & (z80_addr[1:0] == 2'b01); // f1 input/output
-wire [7:0] trs_fdc_stat = 8'hff; // no fdc
-//wire [7:0] trs_fdc_stat = 8'h34; // seek error
+//wire [7:0] trs_fdc_stat = 8'hff; // no fdc
+wire [7:0] trs_fdc_stat = 8'h34; // seek error
 wire [7:0] trs_fdc_track = 8'h00;
 
 // Hi-res board
@@ -520,7 +520,7 @@ blk_mem_gen_3 char_rom (
    .clka(vga_clk), // input
    .cea(dsp_act & col_act & (vga_yyyyy[4] == 1'b0) & (vga_xxx == 3'b010)), // input
    .ada({trs_dsp_data_b[7] & ~opreg_invvide,
-         trs_dsp_data_b[6] & ~(trs_dsp_data_b[7] & mod_enaltset),
+         trs_dsp_data_b[6] & ~(trs_dsp_data_b[7] & ~opreg_invvide & mod_enaltset),
          trs_dsp_data_b[5:0], vga_yyyyy[3:1]}), // input [11:0]
    .wrea(1'b0),
    .dina(8'b00000000), // input [7:0]

@@ -715,7 +715,7 @@ reg sync;
 
 always @(posedge clk_pixel)
 begin
-  sync <= (cx == frame_width - 10) && (cy == frame_height - 1);
+  sync <= (cx == frame_width - 8) && (cy == frame_height - 1);
 end
 
 

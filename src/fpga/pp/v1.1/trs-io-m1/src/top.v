@@ -957,7 +957,7 @@ vga1 vga1(
 
 always @(posedge clk1_pixel)
 begin
-  sync1 <= (cx1 == frame_width1 - 10) && (cy1 == frame_height1 - 1);
+  sync1 <= (cx1 == frame_width1 - 8) && (cy1 == frame_height1 - 1);
 end
 
 

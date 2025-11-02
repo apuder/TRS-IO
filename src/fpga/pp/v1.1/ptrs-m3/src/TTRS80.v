@@ -141,6 +141,16 @@ blk_mem_gen_0 trs_rom (
 );
 
 
+// Last memory read was from ROM.
+reg trs_rom_rd;
+
+always @ (posedge z80_clk)
+begin
+   if(~z80_mreq_n & ~z80_rd_n)
+      trs_rom_rd <= trs_rom_sel;
+end
+
+
 // Instantiate the RAM (48k).
 wire [7:0] trs_ram_data;
 wire [7:0] ram_dout;
@@ -324,8 +334,10 @@ wire trs_cass_in_sel    = ~z80_iorq_n & (z80_addr[7:1] == 7'b1111111);// fe-ff
 wire trs_fdc_cmnd_sel  = trs_disk_out_sel & (z80_addr[1:0] == 2'b00); // f0 output
 wire trs_fdc_stat_sel  = trs_disk_in_sel  & (z80_addr[1:0] == 2'b00); // f0 input
 wire trs_fdc_track_sel = trs_disk_in_sel  & (z80_addr[1:0] == 2'b01); // f1 input/output
-wire [7:0] trs_fdc_stat = 8'hff; // no fdc
+//wire [7:0] trs_fdc_stat = 8'hff; // no fdc
 //wire [7:0] trs_fdc_stat = 8'h34; // seek error
+// Hack to return no fdc if query from rom
+wire [7:0] trs_fdc_stat = trs_rom_rd ? 8'hff : 8'h34;
 wire [7:0] trs_fdc_track = 8'h00;
 
 // Hi-res board
