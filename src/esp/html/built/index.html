@@ -310,6 +310,13 @@
                                     <label class="pill"><input type="radio" name="printer_en" value="1">Emulated</label>
                                 </div>
                             </div>
+                            <div class="form-row">
+                                <label>Sound:</label>
+                                <div class="form-inputs">
+                                    <label class="pill"><input type="radio" name="audio_output" value="0">Off</label>
+                                    <label class="pill"><input type="radio" name="audio_output" value="1">On</label>
+                                </div>
+                            </div>
                         </section>
 
                         <section>
@@ -506,14 +513,14 @@
       this[globalName] = mainExports;
     }
   }
-})({"1J0yo":[function(require,module,exports,__globalThis) {
+})({"d4hbT":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = 1234;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
 var HMR_USE_SSE = false;
-module.bundle.HMR_BUNDLE_ID = "438d1599054ec1c7";
+module.bundle.HMR_BUNDLE_ID = "9ded134f268cb63b";
 "use strict";
 /* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, HMR_USE_SSE, chrome, browser, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
@@ -959,7 +966,7 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
     }
 }
 
-},{}],"hISho":[function(require,module,exports,__globalThis) {
+},{}],"eax4T":[function(require,module,exports,__globalThis) {
 var _mainTs = require("./main.ts");
 (0, _mainTs.main)();
 
@@ -1220,6 +1227,7 @@ function updateStatusIcon(id, enabled, message) {
 function updateSettingsForm(status) {
     updateSettingsEnumField("color", status.color.toString());
     updateSettingsEnumField("printer_en", status.printer_en.toString());
+    updateSettingsEnumField("audio_output", status.audio_output.toString());
     updateSettingsField("tz", status.tz);
     updateSettingsField("ssid", status.ssid);
     updateSettingsField("passwd", status.passwd);
@@ -1818,6 +1826,7 @@ async function saveSettings() {
     const settings = {
         color: parseInt(getSettingsEnumField("color")),
         printer_en: parseInt(getSettingsEnumField("printer_en")),
+        audio_output: parseInt(getSettingsEnumField("audio_output")),
         tz: getSettingsField("tz"),
         ssid: getSettingsField("ssid"),
         passwd: getSettingsField("passwd"),
@@ -2591,7 +2600,7 @@ module.exports = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org
 },{}],"7390C":[function(require,module,exports,__globalThis) {
 module.exports = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20height%3D%2224px%22%20viewBox%3D%220%20-960%20960%20960%22%20width%3D%2224px%22%20fill%3D%22%235b3f2e%22%3E%3Cpath%20d%3D%22M480-320%20280-520l56-58%20104%20104v-326h80v326l104-104%2056%2058-200%20200ZM240-160q-33%200-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0%2033-23.5%2056.5T720-160H240Z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E%0A";
 
-},{}]},["1J0yo","hISho"], "hISho", "parcelRequire94c2")
+},{}]},["d4hbT","eax4T"], "eax4T", "parcelRequire94c2")
 
 </script>
     </body>

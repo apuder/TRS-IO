@@ -308,6 +308,7 @@ void init_fpga()
   spi_set_screen_color(color);
 
   spi_set_printer_en(settings_get_printer_en());
+  spi_set_audio_output(settings_get_audio_output());
   
   spi_set_esp_status(0);
 }

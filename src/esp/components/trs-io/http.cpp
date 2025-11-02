@@ -110,6 +110,20 @@ static string& get_printer_en()
   return printer_en;
 }
 
+static void set_audio_output(const string& audio_output)
+{
+  uint8_t new_audio_output = stoi(audio_output);
+  settings_set_audio_output(new_audio_output);
+  spi_set_audio_output(new_audio_output);
+}
+
+static string& get_audio_output()
+{
+  static string audio_output;
+  audio_output = to_string(settings_get_audio_output());
+  return audio_output;
+}
+
 static void set_keyboard_layout(const string& keyboard_layout)
 {
   uint8_t new_keyboard_layout = stoi(keyboard_layout);
@@ -677,6 +691,7 @@ static bool mongoose_handle_config(struct mg_http_message* message,
 
   extract_post_param(json, "color", set_screen_color, get_screen_color);
   extract_post_param(json, "printer_en", set_printer_en, get_printer_en);
+  extract_post_param(json, "audio_output", set_audio_output, get_audio_output);
   bool keyboard = extract_post_param(json, "keyboard_layout", set_keyboard_layout, get_keyboard_layout);
 
   settings_commit();
@@ -754,6 +769,7 @@ static void mongoose_handle_status(char** response,
   }
   cJSON_AddNumberToObject(s, "keyboard_layout", settings_get_keyb_layout());
   cJSON_AddNumberToObject(s, "printer_en", settings_get_printer_en() ? 1 : 0);
+  cJSON_AddNumberToObject(s, "audio_output", settings_get_audio_output());
 
   time_t now;
   struct tm timeinfo;

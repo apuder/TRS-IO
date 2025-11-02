@@ -33,6 +33,7 @@ const FILES_DIR = "state/files";
 const DEFAULT_SETTINGS = {
     color: 1,
     printer_en: 1,
+    audio_output: 1,
     tz: "GMT-8",
     ssid: "fandango",
     passwd: "22PineCreekSLO",
@@ -180,6 +181,7 @@ function makeStatus() {
 
         color: settings.color,
         printer_en: settings.printer_en ?? 1,
+        audio_output: settings.audio_output ?? 1,
         tz: settings.tz,
         ssid: settings.ssid,
         passwd: settings.passwd,

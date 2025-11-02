@@ -66,6 +66,12 @@ void settings_set_printer_en(bool enable);
 bool settings_get_printer_en();
 
 
+//-----Audio output-----------------------------------------------
+// 0 = off, 1 = on
+void settings_set_audio_output(uint8_t audio_output);
+uint8_t settings_get_audio_output();
+
+
 //-----Keyboard Layout------------------------------------------------------
 
 void settings_set_keyb_layout(uint8_t layout);

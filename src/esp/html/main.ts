@@ -20,6 +20,7 @@ enum ModelType {
     MODEL_4P,
 }
 
+// Status object as received from the board.
 interface Status {
     hardware_rev: number,
     vers_major: number,
@@ -61,6 +62,8 @@ interface Status {
     keyboard_layout: number,
     // Printer (0 = physical, 1 = emulated):
     printer_en: number,
+    // Audio output (0 = off, 1 = on):
+    audio_output: number,
 }
 
 interface Rom {
@@ -328,6 +331,7 @@ function updateStatusIcon(id: string, enabled: boolean, message: string): void {
 function updateSettingsForm(status: Status): void {
     updateSettingsEnumField("color", status.color.toString());
     updateSettingsEnumField("printer_en", status.printer_en.toString());
+    updateSettingsEnumField("audio_output", status.audio_output.toString());
     updateSettingsField("tz", status.tz);
     updateSettingsField("ssid", status.ssid);
     updateSettingsField("passwd", status.passwd);
@@ -1064,6 +1068,7 @@ async function saveSettings(): Promise<void> {
     const settings = {
         color: parseInt(getSettingsEnumField("color")),
         printer_en: parseInt(getSettingsEnumField("printer_en")),
+        audio_output: parseInt(getSettingsEnumField("audio_output")),
         tz: getSettingsField("tz"),
         ssid: getSettingsField("ssid"),
         passwd: getSettingsField("passwd"),

@@ -66,6 +66,7 @@
 #define FPGA_CMD_GET_SPI_DATA 31
 #define FPGA_CMD_SET_ESP_STATUS 32
 #define FPGA_CMD_SET_PRINTER_EN 33
+#define FPGA_CMD_SET_AUDIO_OUTPUT 34
 
 
 #define PTRS_CONFIG_DIP_1   (1 << 0)
@@ -94,6 +95,7 @@ void spi_trs_io_done();
 void spi_set_full_addr(bool flag);
 void spi_set_screen_color(uint8_t color);
 void spi_set_printer_en(bool enable);
+void spi_set_audio_output(uint8_t audio_output);
 void spi_send_keyb(uint8_t idx, uint8_t mask);
 void spi_ptrs_rst();
 void spi_z80_pause();

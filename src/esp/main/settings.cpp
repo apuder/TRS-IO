@@ -280,6 +280,31 @@ static void init_printer_en()
   }
 }
 
+
+//-----Audio output--------------------------------------------------------
+
+#define KEY_AUDIO_OUTPUT "audio_output"
+
+static int8_t audio_output;
+
+void settings_set_audio_output(uint8_t new_audio_output)
+{
+  audio_output = new_audio_output;
+  nvs_set_i8(storage, KEY_AUDIO_OUTPUT, audio_output);
+}
+
+uint8_t settings_get_audio_output()
+{
+  return audio_output;
+}
+
+static void init_audio_output()
+{
+  if (nvs_get_i8(storage, KEY_AUDIO_OUTPUT, &audio_output) != ESP_OK) {
+    audio_output = 1;
+  }
+}
+
 //-----Keyboard Layout------------------------------------------------------
 
 #define KEY_KEYB_LAYOUT "keyb"
@@ -367,6 +392,7 @@ void init_settings()
   init_rom();
   init_screen_color();
   init_printer_en();
+  init_audio_output();
   init_keyb_layout();
   init_update_flag();
 }
