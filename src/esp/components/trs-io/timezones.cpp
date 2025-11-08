@@ -5,7 +5,7 @@
 // This map is too large to uncomment completely, it causes
 // the ESP to panic. Uncomment only the cities you think
 // people might use.
-static const std::map<std::string, char const * const> TIMEZONE_MAP = {
+static const std::map<const std::string, char const * const> TIMEZONE_MAP = {
     // { "Africa/Abidjan", "GMT0" },
     // { "Africa/Accra", "GMT0" },
     // { "Africa/Addis_Ababa", "EAT-3" },
