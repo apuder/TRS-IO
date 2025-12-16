@@ -294,7 +294,8 @@ localparam [7:0]
   set_spi_data        = 8'd30,
   get_spi_data        = 8'd31,
   set_esp_status      = 8'd32,
-  set_vprinter_en     = 8'd33;
+  set_vprinter_en     = 8'd33,
+  set_audio_output    = 8'd34;
 
 
 reg [7:0] byte_in, byte_out;
@@ -435,6 +436,9 @@ always @(posedge clk) begin
           set_vprinter_en: begin
             bytes_to_read <= 3'd1;
           end
+          set_audio_output: begin
+            bytes_to_read <= 3'd1;
+          end
           default:
             begin
               state <= idle;
@@ -535,6 +539,16 @@ end
 always @(posedge clk) begin
   if (trigger_action && cmd == set_vprinter_en)
     vprinter_en <= params[0][0];
+end
+
+
+//---Audio output----------------------------------------------------------------------------
+
+reg audio_output = 1'b1;
+
+always @(posedge clk) begin
+  if (trigger_action && cmd == set_audio_output)
+    audio_output <= params[0][0];
 end
 
 
@@ -793,13 +807,14 @@ end
 
 always @(posedge clk_audio)
 begin
-   audio_sample_word <= '{{cass_audr_reg, 7'b0000000},
-                          {cass_audl_reg, 7'b0000000}};
+   audio_sample_word <= audio_output ? '{{cass_outr_reg, 7'b0000000},
+                                         {cass_outl_reg, 7'b0000000}}
+                                     : '{16'd0, 16'd0};
 end
 
 
-assign CASS_OUT_L = cass_pdml_reg[9];
-assign CASS_OUT_R = cass_pdmr_reg[9];
+assign CASS_OUT_L = audio_output & cass_pdml_reg[9];
+assign CASS_OUT_R = audio_output & cass_pdmr_reg[9];
 
 
 //------------LiteBrite-80---------------------------------------------------------------

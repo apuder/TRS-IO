@@ -83,7 +83,10 @@ localparam [7:0]
   set_spi_ctrl_reg    = 8'd29,
   set_spi_data        = 8'd30,
   get_spi_data        = 8'd31,
-  set_esp_status      = 8'd32;
+  set_esp_status      = 8'd32,
+  set_vprinter_en     = 8'd33,
+  set_audio_output    = 8'd34;
+
 
 
 reg [7:0] byte_in, byte_out;
@@ -144,6 +147,12 @@ always @(posedge clk) begin
             state <= idle;
           end
           set_esp_status: begin
+            bytes_to_read <= 3'd1;
+          end
+          set_vprinter_en: begin
+            bytes_to_read <= 3'd1;
+          end
+          set_audio_output: begin
             bytes_to_read <= 3'd1;
           end
           default:
