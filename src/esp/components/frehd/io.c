@@ -6,7 +6,6 @@
 #include "trs_extra.h"
 #include "loader_xtrs.h"
 
-
 typedef uint8_t (*IO_READ_CB)();
 typedef void (*IO_WRITE_CB)(uint8_t);
 
