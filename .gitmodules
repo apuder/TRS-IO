@@ -6,4 +6,4 @@
 	url = https://github.com/apuder/TRS-LIB.git
 [submodule "src/esp/components/retrostore-c-sdk"]
 	path = src/esp/components/retrostore-c-sdk
-	url = https://github.com/shaeberling/retrostore-c-sdk.git
+	url = https://github.com/apuder/retrostore-c-sdk.git
