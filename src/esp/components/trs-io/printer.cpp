@@ -2,7 +2,7 @@
 #include "printer.h"
 
 //----------------------------------------------------------------
-static const char* m3toUnicode[] = {
+static const char8_t* m3toUnicode[] = {
   u8"\u0020", u8"\u00a3", u8"\u007c", u8"\u00e9", u8"\u00dc", u8"\u00c5", u8"\u00ac", u8"\u00f6", 
   u8"\u00d8", u8"\u00f9", u8"\u00f1", u8"\u0060", u8"\u0101", u8"\ue00d", u8"\u00c4", u8"\u00c3", 
   u8"\u00d1", u8"\u00d6", u8"\u00d8", u8"\u00d5", u8"\u00df", u8"\u00fc", u8"\u00f5", u8"\u00e6", 
@@ -38,9 +38,9 @@ static const char* m3toUnicode[] = {
 };
 
 
-const char* charToUTF8(const char ch)
+const char8_t* charToUTF8(const char ch)
 {
-  static const char* nl = "\n";
+  static const char8_t* nl = u8"\n";
 
   return (ch == '\r') ? nl : m3toUnicode[(unsigned int) ch];
 }

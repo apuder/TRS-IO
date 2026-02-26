@@ -18,6 +18,7 @@
 // SPDX-License-Identifier: GPL-2.0 or commercial
 
 #include "mongoose.h"
+#include "esp_timer.h"
 
 #ifdef MG_ENABLE_LINES
 #line 1 "src/base64.c"

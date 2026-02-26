@@ -1,4 +1,16 @@
 
+#include <string.h>
+#include <assert.h>
+
+#include <fcntl.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <driver/sdspi_host.h>
 
 namespace VFS {
@@ -13,29 +25,39 @@ namespace VFS {
 #include "io.h"
 
 #include <string.h>
-#include <assert.h>
-
-#include <fcntl.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <string.h>
+#include <sys/unistd.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include "esp_vfs_fat.h"
+#include "sdmmc_cmd.h"
+#include "driver/sdmmc_host.h"
+//#include "esp_log.h"
 
-#if defined(CONFIG_POCKET_TRS_TTGO_VGA32_SUPPORT)
-#define SPI_CS GPIO_NUM_13
-#elif defined(CONFIG_TRS_IO_MODEL_1)
-#define SPI_CS GPIO_NUM_23
-#elif defined(CONFIG_TRS_IO_MODEL_3)
-#define SPI_CS GPIO_NUM_13
-#else
-// PocketTRS
-#define SPI_CS GPIO_NUM_15
-#endif
+//#include "esp_flash.h"
 
+#include "EXIO/TCA9554PWR.h"        
+
+#define CONFIG_EXAMPLE_PIN_CLK  GPIO_NUM_2
+#define CONFIG_EXAMPLE_PIN_CMD  GPIO_NUM_1
+#define CONFIG_EXAMPLE_PIN_D0   GPIO_NUM_42
+#define CONFIG_EXAMPLE_PIN_D1   ((gpio_num_t) -1)
+#define CONFIG_EXAMPLE_PIN_D2   ((gpio_num_t) -1)
+#define CONFIG_EXAMPLE_PIN_D3   ((gpio_num_t) -1)  // Using EXIO
+
+#define SD_TAG "SD_CARD"
+
+static esp_err_t SD_Card_D3_EN(void)
+{
+    Set_EXIO(TCA9554_EXIO4,true);
+    vTaskDelay(pdMS_TO_TICKS(10));
+    return ESP_OK;
+}
+
+static esp_err_t SD_Card_D3_Dis(void)
+{
+    Set_EXIO(TCA9554_EXIO4,false);
+    vTaskDelay(pdMS_TO_TICKS(10));
+    return ESP_OK;
+}
 
 TRS_FS_POSIX::TRS_FS_POSIX() {
   err_msg = NULL;
@@ -45,26 +67,47 @@ TRS_FS_POSIX::TRS_FS_POSIX() {
     return;
   }
 
+  esp_err_t ret;
+
+  // Options for mounting the filesystem.
+  // If format_if_mount_failed is set to true, SD card will be partitioned and formatted in case when mounting fails.  false true
   VFS::esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-    .format_if_mount_failed = false,
-    .max_files = 5,
-    .allocation_unit_size = 16 * 1024
+      .format_if_mount_failed = true,           
+      .max_files = 5,
+      .allocation_unit_size = 16 * 1024
   };
 
-  sdmmc_host_t host = SDSPI_HOST_DEFAULT();
-  host.max_freq_khz = SDMMC_FREQ_PROBING;
-  sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-  slot_config.gpio_cs = SPI_CS;
-  slot_config.host_id = HSPI_HOST;
+  //ESP_LOGI(SD_TAG, "Initializing SD card");
+  sdmmc_host_t host = SDMMC_HOST_DEFAULT();
 
-  esp_err_t ret = VFS::esp_vfs_fat_sdspi_mount(mount, &host, &slot_config, &mount_config, &card);
+  SD_Card_D3_EN();
+
+  // This initializes the slot without card detect (CD) and write protect (WP) signals.
+  // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
+  sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+  slot_config.width = 1;          // 1-wire  / 4-wire   slot_config.width = 4;
+
+  slot_config.clk = CONFIG_EXAMPLE_PIN_CLK;
+  slot_config.cmd = CONFIG_EXAMPLE_PIN_CMD;
+  slot_config.d0 = CONFIG_EXAMPLE_PIN_D0;
+  slot_config.d1 = CONFIG_EXAMPLE_PIN_D1;
+  slot_config.d2 = CONFIG_EXAMPLE_PIN_D2;
+  slot_config.d3 = CONFIG_EXAMPLE_PIN_D3;
+  slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
+
+  //ESP_LOGI(SD_TAG, "Mounting filesystem");
+  ret = VFS::esp_vfs_fat_sdmmc_mount(mount, &host, &slot_config, &mount_config, &card);
 
   if (ret != ESP_OK) {
     if (ret == ESP_FAIL) {
       err_msg = "Failed to mount filesystem";
+      //ESP_LOGE(SD_TAG, "Failed to mount filesystem.");
     } else {
       err_msg = "Failed to initialize the SD card";
+      //ESP_LOGE(SD_TAG, "Failed to initialize the card (%s).", esp_err_to_name(ret));
     }
+  } else {
+    //ESP_LOGI(SD_TAG, "Filesystem mounted");
   }
 }
 
@@ -82,7 +125,7 @@ FS_TYPE TRS_FS_POSIX::type()
 
 bool TRS_FS_POSIX::has_sd_card_reader()
 {
-  return SPI_CS != GPIO_NUM_0;
+  return true;
 }
 
 void TRS_FS_POSIX::f_log(const char* msg) {

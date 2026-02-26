@@ -6,7 +6,7 @@
 #include "trs-fs.h"
 #include "smb.h"
 #include "ota.h"
-#include "led.h"
+//#include "led.h"
 #include "io.h"
 #include "storage.h"
 #include "event.h"
@@ -72,24 +72,23 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     ESP_LOGI(TAG,"connect to the AP fail");
     status = RS_STATUS_WIFI_NOT_CONNECTED;
     esp_wifi_connect();
-    set_led(true, false, false, false, false);
+    //set_led(true, false, false, false, false);
   } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
     ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
     snprintf(ip, sizeof(ip), IPSTR, IP2STR(&event->ip_info.ip));
     ESP_LOGI(TAG, "Got IP: %s", ip);
     status = RS_STATUS_WIFI_CONNECTED;
     evt_signal_wifi_up();
-    set_led(false, true, false, false, true);
-    init_trs_fs_smb();
+    //set_led(false, true, false, false, true);
   } else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
     wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-    ESP_LOGI(TAG, "Station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
+    //ESP_LOGI(TAG, "Station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
     evt_signal_wifi_up();
   } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
     wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-    ESP_LOGI(TAG, "Station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
+    //ESP_LOGI(TAG, "Station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
     status = RS_STATUS_WIFI_NOT_CONNECTED;
-    set_led(true, false, false, false, false);
+    //set_led(true, false, false, false, false);
     esp_wifi_connect();
   }
 }
@@ -332,12 +331,12 @@ static void pcb(struct mg_connection* c, int ev, void* ev_data, void *fn_data) {
   if (ev == MG_EV_READ) {
     char ch;
     while (xQueueReceive(prn_queue, &ch, 0)) {
-      const char* p = charToUTF8(ch);
+      const char8_t* p = charToUTF8(ch);
       struct mg_connection* t;
 
       for (t = c->mgr->conns; t != NULL; t = t->next) {
         if (t->label[0] != 'S') continue;  // Ignore non-websocket connections
-        mg_ws_send(t, p, strlen(p), WEBSOCKET_OP_TEXT);
+        mg_ws_send(t, (const char*)p, strlen((const char*)p), WEBSOCKET_OP_TEXT);
       }
     }
   }
@@ -375,6 +374,7 @@ static void mg_task(void* p)
   init_time();
   init_mdns();
   copy_config_from_nvs();
+  init_trs_fs_smb();
 
   prn_queue = xQueueCreate(PRINTER_QUEUE_SIZE, sizeof(char));
 
@@ -457,7 +457,7 @@ void init_wifi()
     wifi_init_sta();
   } else {
     status = RS_STATUS_WIFI_NOT_CONFIGURED;
-    set_led(false, true, true, true, false);
+    //set_led(false, true, true, true, false);
     wifi_init_ap();
   }
   ESP_ERROR_CHECK(esp_wifi_start());

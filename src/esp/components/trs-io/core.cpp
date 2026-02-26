@@ -2,13 +2,13 @@
 #include <trs-io.h>
 #include "esp_mock.h"
 #include "version.h"
-#include "led.h"
+//#include "led.h"
 
 #ifndef CONFIG_TRS_IO_MODEL_3
 #include "retrostore-defs.h"
-#include "xray.h"
+//#include "xray.h"
 //#include "io.h"
-#include "spi.h"
+//#include "spi.h"
 #include "fileio.h"
 
 retrostore::RsSystemState trs_state;
@@ -72,7 +72,7 @@ public:
   }
 
   void loadXRAYState() {
-#ifndef CONFIG_TRS_IO_MODEL_3
+#if 0
     uint8_t* buf = NULL;
     int token = atoi(S(0));
 
@@ -153,7 +153,7 @@ public:
     bool b = p & (1 << 2);
     bool blink = p & (1 << 3);
     bool auto_off = p & (1 << 4);
-    set_led(r, g, b, blink, auto_off);
+    //set_led(r, g, b, blink, auto_off);
   }
 
   void sendFPGAVersion() {
