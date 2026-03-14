@@ -230,6 +230,7 @@ article:has(input[name=active-article]:not(:checked)) {
 .page:has(#roms_article:checked) label[for=roms_article],
 .page:has(#files_article:checked) label[for=files_article],
 .page:has(#printer_article:checked) label[for=printer_article],
+.page:has(#help_article:checked) label[for=help_article],
 .page:has(#settings_article:checked) label[for=settings_article] {
 
     filter: drop-shadow(0px 0px 10px var(--yellow));
