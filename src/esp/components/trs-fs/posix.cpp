@@ -13,6 +13,17 @@
 
 #include <driver/sdspi_host.h>
 
+// esp_vfs_fat.h is included inside a namespace so that FatFs's `DIR` type
+// (from ff.h) does not collide with POSIX `DIR` from <dirent.h>. As of
+// ESP-IDF v6, esp_vfs_fat.h transitively pulls in FreeRTOS, esp_blockdev and
+// other system headers; include those at global scope first so their include
+// guards keep them out of the VFS namespace.
+#include "freertos/FreeRTOS.h"
+#include "esp_err.h"
+#include "sd_protocol_types.h"
+#include "esp_blockdev.h"
+#include "wear_levelling.h"
+
 namespace VFS {
   #include "esp_vfs_fat.h"
 }

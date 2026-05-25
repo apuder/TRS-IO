@@ -107,7 +107,7 @@ void set_wifi_credentials(const char* ssid, const char* passwd)
 
 #define PRINTER_QUEUE_SIZE 100
 
-static trs_io_wifi_config_t config EXT_RAM_ATTR = {};
+static trs_io_wifi_config_t config EXT_RAM_BSS_ATTR = {};
 static struct mg_connection* ws_pipe;
 static QueueHandle_t prn_queue = NULL;
 static int num_printer_sockets = 0;
@@ -146,8 +146,8 @@ static bool extract_post_param(struct mg_http_message* message,
                                size_t max_len)
 {
   // SMB URL is the longest parameter
-  static char buf[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
-  static char buf2[sizeof(buf)] EXT_RAM_ATTR;
+  static char buf[MAX_LEN_SMB_URL + 1] EXT_RAM_BSS_ATTR;
+  static char buf2[sizeof(buf)] EXT_RAM_BSS_ATTR;
 
   mg_http_get_var(&message->body, param, buf, sizeof(buf));
   // In case someone tries to force a buffer overflow
