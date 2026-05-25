@@ -316,7 +316,7 @@ typedef struct {
   } u;
 } DiskState;
 
-static DiskState disk[NDRIVES] EXT_RAM_ATTR;
+static DiskState disk[NDRIVES] EXT_RAM_BSS_ATTR;
 
 /* Emulate interleave in JV1 mode */
 static const Uint8 jv1_interleave[10] = {0, 5, 1, 6, 2, 7, 3, 8, 4, 9};
