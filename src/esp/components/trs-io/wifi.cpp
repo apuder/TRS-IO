@@ -17,6 +17,7 @@
 #include "event.h"
 #include "ntp_sync.h"
 #include "esp_wifi.h"
+#include "esp_mac.h"
 #include "esp_spiffs.h"
 #include "esp_mock.h"
 #include "version.h"
@@ -69,10 +70,10 @@ static void event_handler(void* arg, esp_event_base_t event_base,
   } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
     evt_signal(EVT_START_MG);
     wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-    ESP_LOGI(TAG, "Station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
+    ESP_LOGI(TAG, "Station " MACSTR " join, AID=%d", MAC2STR(event->mac), event->aid);
   } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
     wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-    ESP_LOGI(TAG, "Station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
+    ESP_LOGI(TAG, "Station " MACSTR " leave, AID=%d", MAC2STR(event->mac), event->aid);
     evt_signal(EVT_WIFI_DOWN);
     status = RS_STATUS_WIFI_NOT_CONNECTED;
     ip[0] = '-';

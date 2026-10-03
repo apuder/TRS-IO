@@ -70,7 +70,7 @@ TRS_FS_POSIX::TRS_FS_POSIX() {
   host.max_freq_khz = SDMMC_FREQ_PROBING;
   sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
   slot_config.gpio_cs = SPI_CS;
-  slot_config.host_id = HSPI_HOST;
+  slot_config.host_id = SPI2_HOST;  // HSPI_HOST on the ESP32, the only chip that has that name
 
   esp_err_t ret = VFS::esp_vfs_fat_sdspi_mount(mount, &host, &slot_config, &mount_config, &card);
 
