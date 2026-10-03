@@ -28,6 +28,7 @@ TRS_FS* trs_fs = NULL;
 static TRS_FS* current_trs_fs = NULL;
 static TRS_FS_POSIX* trs_fs_posix = NULL;
 static TRS_FS_SMB* trs_fs_smb = NULL;
+static TRS_FS* trs_fs_local = NULL;
 
 static const char* frehd_msg = NULL;
 
@@ -61,6 +62,10 @@ static void set_fs() {
   if (trs_fs_posix != NULL && trs_fs_posix->get_err_msg() == NULL) {
     // We have a mounted SD card. This has higher precedent
     trs_fs = trs_fs_posix;
+  } else if (trs_fs_local != NULL && trs_fs_local->get_err_msg() == NULL) {
+    // Storage supplied by the host firmware. Ahead of SMB, which comes and
+    // goes with Wi-Fi: drives opened here then stay with this backend.
+    trs_fs = trs_fs_local;
   } else {
     trs_fs = trs_fs_smb;
   }
@@ -80,10 +85,18 @@ static void set_fs() {
   check_frehd();
   bool sd_present = trs_fs_posix != NULL && trs_fs_posix->get_err_msg() == NULL;
   bool smb_present = trs_fs_smb != NULL && trs_fs_smb->get_err_msg() == NULL;
-  ESP_LOGI("TRS-FS", "SD: %s, SMB: %s", sd_present ? "yes" : "no", smb_present ? "yes" : "no");
+  bool local_present = trs_fs_local != NULL && trs_fs_local->get_err_msg() == NULL;
+  ESP_LOGI("TRS-FS", "SD: %s, local: %s, SMB: %s", sd_present ? "yes" : "no",
+           local_present ? "yes" : "no", smb_present ? "yes" : "no");
 #ifdef CONFIG_MINI_TRS
   spi_set_activity_led(smb_present, sd_present);
 #endif
+}
+
+const char* init_trs_fs_local(TRS_FS* fs) {
+  trs_fs_local = fs;
+  set_fs();
+  return (fs == NULL) ? "No local storage" : fs->get_err_msg();
 }
 
 const char* init_trs_fs_posix() {
