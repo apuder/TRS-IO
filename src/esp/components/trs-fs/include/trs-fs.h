@@ -21,10 +21,17 @@
 
 enum FS_TYPE {
   FS_SMB,
-  FS_POSIX
+  FS_POSIX,
+  FS_LOCAL
 };
 
+class TRS_FS;
+
 const char* init_trs_fs_posix();
+// Storage supplied by the firmware that embeds TRS-IO (e.g. disk images in
+// internal flash). Used when there is no SD card, ahead of SMB. The caller
+// keeps ownership of fs.
+const char* init_trs_fs_local(TRS_FS* fs);
 const char* init_trs_fs_smb();
 const char* init_trs_fs_smb(const char* url, const char* user, const char* passwd);
 const char* get_smb_err_msg();
