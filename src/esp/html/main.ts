@@ -66,6 +66,36 @@ interface Status {
     audio_output: number,
 }
 
+// Bluetooth keyboard status as received from the board. Only boards with
+// Bluetooth (PocketTRS) answer /bt/status.
+interface BluetoothStatus {
+    available: boolean,
+    paired: boolean,
+    connected: boolean,
+    // Name of the paired keyboard:
+    name: string,
+    // See BluetoothActivity:
+    activity: number,
+    // Code the keyboard wants typed while pairing, or 0:
+    passkey: number,
+    // Result of the last scan or pairing, or empty string:
+    message: string,
+    // Keyboards found by the last scan, strongest signal first:
+    found: BluetoothKeyboard[],
+}
+
+interface BluetoothKeyboard {
+    addr: string,
+    name: string,
+    rssi: number,
+}
+
+enum BluetoothActivity {
+    IDLE,
+    SCANNING,
+    PAIRING,
+}
+
 interface Rom {
     filename: string,
     size: number,
@@ -145,6 +175,8 @@ const MODEL_TYPE_TO_BODY_DATASET = new Map<ModelType | undefined,string>([
 // Frequent enough to show interesting updates, but infrequent enough to cause
 // spurious error messages when the ESP is busy doing something.
 const FETCH_STATUS_INTERVAL_MS = 5000;
+// While scanning or pairing.
+const FETCH_BLUETOOTH_STATUS_BUSY_INTERVAL_MS = 1000;
 
 // Message displayed to the user (usually an error).
 class UserMessage {
@@ -449,6 +481,105 @@ async function fetchStatus(initialFetch: boolean) {
 
 function scheduleFetchStatus() {
     setInterval(async () => await fetchStatus(false), FETCH_STATUS_INTERVAL_MS);
+}
+
+function updateBluetoothStatus(status: BluetoothStatus): void {
+    const busy = status.activity !== BluetoothActivity.IDLE;
+    document.body.classList.toggle("bt-mode", status.available);
+
+    const keyboard = document.getElementById("bt_keyboard") as HTMLElement;
+    keyboard.textContent = !status.paired
+        ? "None paired"
+        : status.name + (status.connected ? " (connected)" : " (not connected)");
+
+    const scanButton = document.getElementById("btScanButton") as HTMLButtonElement;
+    scanButton.hidden = status.paired;
+    scanButton.disabled = busy;
+    const unpairButton = document.getElementById("btUnpairButton") as HTMLButtonElement;
+    unpairButton.hidden = !status.paired;
+    unpairButton.disabled = busy;
+
+    const message = document.getElementById("bt_message") as HTMLElement;
+    if (status.passkey !== 0) {
+        const passkey = status.passkey.toString().padStart(6, "0");
+        message.textContent = "Type " + passkey + " on the keyboard, then press Enter";
+    } else if (status.activity === BluetoothActivity.SCANNING) {
+        message.textContent = status.paired ? "" : "Scanning: put the keyboard in pairing mode…";
+    } else if (status.activity === BluetoothActivity.PAIRING) {
+        message.textContent = "Pairing…";
+    } else {
+        message.textContent = status.message;
+    }
+
+    // One row for each keyboard that can be paired.
+    const found = document.getElementById("bt_found") as HTMLElement;
+    found.replaceChildren();
+    for (const kbd of status.paired ? [] : status.found) {
+        const row = document.createElement("div");
+        row.classList.add("form-row");
+        row.append(document.createElement("label"));
+
+        const inputs = document.createElement("div");
+        inputs.classList.add("form-inputs");
+        const name = document.createElement("span");
+        name.textContent = kbd.name;
+        const pairButton = document.createElement("button");
+        pairButton.classList.add("small");
+        pairButton.textContent = "Pair";
+        pairButton.disabled = busy;
+        pairButton.addEventListener("click", async () =>
+            await fetchBluetoothStatus("/bt/pair", {addr: kbd.addr}));
+        inputs.append(name, pairButton);
+        row.append(inputs);
+        found.append(row);
+    }
+}
+
+let gBluetoothTimer: number | undefined = undefined;
+
+// Fetches the Bluetooth status, optionally asking for something first
+// ("/bt/scan", "/bt/pair", "/bt/unpair"), and keeps fetching it: quickly
+// while the board is scanning or pairing. Boards without Bluetooth don't
+// know these URLs; the Bluetooth section then stays hidden.
+async function fetchBluetoothStatus(url: string = "/bt/status", body?: object) {
+    if (gBluetoothTimer !== undefined) {
+        clearTimeout(gBluetoothTimer);
+        gBluetoothTimer = undefined;
+    }
+
+    let status: BluetoothStatus;
+    try {
+        // The web server wants a body with every POST.
+        const post = url !== "/bt/status";
+        const response = await fetch(url, {
+            method: post ? "POST" : "GET",
+            cache: "no-store",
+            headers: post ? {"Content-Type": "application/json"} : undefined,
+            body: post ? JSON.stringify(body ?? {}) : undefined,
+        });
+        if (response.status !== 200) {
+            return;
+        }
+        status = await response.json() as BluetoothStatus;
+    } catch (error: any) {
+        // Not reachable, the status fetch reports that. Try again later.
+        gBluetoothTimer = setTimeout(async () => await fetchBluetoothStatus(), FETCH_STATUS_INTERVAL_MS);
+        return;
+    }
+
+    updateBluetoothStatus(status);
+    gBluetoothTimer = setTimeout(async () => await fetchBluetoothStatus(),
+        status.activity !== BluetoothActivity.IDLE
+            ? FETCH_BLUETOOTH_STATUS_BUSY_INTERVAL_MS
+            : FETCH_STATUS_INTERVAL_MS);
+}
+
+function configureBluetooth() {
+    const scanButton = document.getElementById("btScanButton") as HTMLButtonElement;
+    scanButton.addEventListener("click", async () => await fetchBluetoothStatus("/bt/scan"));
+    const unpairButton = document.getElementById("btUnpairButton") as HTMLButtonElement;
+    unpairButton.addEventListener("click", async () => await fetchBluetoothStatus("/bt/unpair"));
+    fetchBluetoothStatus();
 }
 
 // Returns whether successful
@@ -1508,4 +1639,5 @@ export function main() {
     scheduleFetchStatus();
     configureDashboardImages();
     configurePrinterEmulationWarning();
+    configureBluetooth();
 }
