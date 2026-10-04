@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include "retrostore.h"
+#include "http.h"
 #include "wifi.h"
 #include "spi.h"
 #include "printer.h"
@@ -866,6 +867,24 @@ static void handle_firmware_data(struct mg_connection *c, struct connection_data
   }
 }
 
+static http_host_handler_t host_handler = NULL;
+
+void http_set_host_handler(http_host_handler_t handler)
+{
+  host_handler = handler;
+}
+
+static char* call_host_handler(struct mg_http_message* message)
+{
+  if (host_handler == NULL) {
+    return NULL;
+  }
+  string method(message->method.buf, message->method.len);
+  string uri(message->uri.buf, message->uri.len);
+  string body(message->body.buf, message->body.len);
+  return host_handler(method.c_str(), uri.c_str(), body.c_str());
+}
+
 static void mongoose_event_handler(struct mg_connection *c, int event, void *eventData)
 {
   static bool reboot = false;
@@ -917,7 +936,9 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
       const char* content_type = "text/html"; // Never allocated.
       mg_str params[2];
 
-      if (mg_match(message->uri, mg_str("/config"), NULL)) {
+      if ((response = call_host_handler(message)) != NULL) {
+        content_type = "application/json";
+      } else if (mg_match(message->uri, mg_str("/config"), NULL)) {
         reboot = mongoose_handle_config(message, &response, &content_type);
         if (response == NULL) {
             mg_printf(c, "HTTP/1.1 400 OK\r\nConnection: close\r\n\r\n");
