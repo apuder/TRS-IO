@@ -64,7 +64,7 @@ static void set_fs() {
   } else {
     trs_fs = trs_fs_smb;
   }
-  if (trs_fs != current_trs_fs && trs_fs->get_err_msg() == NULL) {
+  if (trs_fs != NULL && trs_fs != current_trs_fs && trs_fs->get_err_msg() == NULL) {
     if (current_trs_fs != NULL) {
       TRS_FS* new_trs_fs = trs_fs;
       trs_fs = current_trs_fs;
