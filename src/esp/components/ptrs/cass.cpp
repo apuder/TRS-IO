@@ -3,21 +3,27 @@
 #include "cass.h"
 #include "spi.h"
 #include "event.h"
-#include "hal/timer_types.h"
-#include "driver/timer.h"
+#include "esp_adc/adc_continuous.h"
+#include "driver/gptimer.h"
 #include "esp_log.h"
 #include <cstring>
 
 #define TAG "CASS"
 
+// The cassette input is sampled by the ADC (ADC1 channel 0, GPIO36) in
+// continuous mode, which uses I2S0 on the ESP32 as the I2S driver's ADC mode
+// did before ESP-IDF 5. Each conversion result is 2 bytes.
 #define DMA_BUFFER_COUNT 2
-#define DMA_BUFFER_SIZE_IN_BYTES (DMA_BUFFER_SIZE * sizeof(uint16_t))
+#define DMA_BUFFER_SIZE_IN_BYTES (DMA_BUFFER_SIZE * sizeof(adc_digi_output_data_t))
 
-#define TIMER_DIVIDER 16
-#define TIMER_SCALE   (TIMER_BASE_CLK / TIMER_DIVIDER)
-#define TIMER_ALARM   (TIMER_SCALE / I2S_SAMPLING_FREQ)
+// Plays back the samples at the rate they were taken
+#define TIMER_RESOLUTION_HZ 1000000
+#define TIMER_ALARM   (TIMER_RESOLUTION_HZ / I2S_SAMPLING_FREQ)
 
 static TaskHandle_t s_task_handle;
+static adc_continuous_handle_t s_adc;
+static gptimer_handle_t s_timer;
+static volatile uint32_t s_adc_overflows;
 
 static float cassette_avg;
 static float cassette_env;
@@ -123,17 +129,34 @@ int TRSSamplesGenerator::getSample() {
 static TRSSamplesGenerator* trsSamplesGenerator = NULL;
 
 
-static void i2sRead(uint16_t* buf, int buf_size)
+// Conversion results read into buf; returns how many
+static uint32_t adc_read(adc_digi_output_data_t* buf, int buf_size)
 {
-  ESP_ERROR_CHECK(i2s_adc_enable(I2S_NUM_0));
+  uint32_t br = 0;
+  esp_err_t err = adc_continuous_read(s_adc, (uint8_t*) buf, buf_size, &br, 100);
+  if (err == ESP_ERR_TIMEOUT) {
+    return 0;
+  }
+  ESP_ERROR_CHECK(err);
+  return br / sizeof(adc_digi_output_data_t);
+}
+
+static void i2sRead(adc_digi_output_data_t* buf, int buf_size)
+{
+  uint32_t overflows = s_adc_overflows;
+
+  ESP_ERROR_CHECK(adc_continuous_start(s_adc));
 
   while (!evt_check(EVT_I2S_STOP)) {
-    size_t br;
-    ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void*) buf, buf_size, &br, portMAX_DELAY));
+    const uint32_t n = adc_read(buf, buf_size);
+    if (s_adc_overflows != overflows) {
+      overflows = s_adc_overflows;
+      ESP_LOGW(TAG, "ADC buffer overflow, data dropped [%u]", (unsigned) overflows);
+    }
 
-    for(int i = 0; i < br / 2; i++) {
-      uint16_t sample = buf[i];
-      sample >>= 4;
+    for(int i = 0; i < n; i++) {
+      // 8 bit samples, as before
+      uint16_t sample = buf[i].type1.data >> 4;
       trsSamplesGenerator->putSample(sample, cassette_noisefloor);
       /* Attempt to learn the correct noise cutoff adaptively.
        * This code is just a hack; it would be nice to know a
@@ -152,36 +175,33 @@ static void i2sRead(uint16_t* buf, int buf_size)
     }
   }
 
-  ESP_ERROR_CHECK(i2s_adc_disable(I2S_NUM_0));
+  ESP_ERROR_CHECK(adc_continuous_stop(s_adc));
 }
 
 
-static void determine_signal_center(uint16_t* buf, int buf_size)
+static void determine_signal_center(adc_digi_output_data_t* buf, int buf_size)
 {
   int center_cnt = 0;
-  size_t br;
 
-  ESP_ERROR_CHECK(i2s_adc_enable(I2S_NUM_0));
+  ESP_ERROR_CHECK(adc_continuous_start(s_adc));
 
   while (center_cnt < I2S_SAMPLING_FREQ) {
-    size_t br;
-    ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void*) buf, buf_size, &br, portMAX_DELAY));
-    for(int i = 0; i < br / 2; i++) {
-      uint16_t sample = buf[i];
-      sample >>= 4;
+    const uint32_t n = adc_read(buf, buf_size);
+    for(int i = 0; i < n; i++) {
+      uint16_t sample = buf[i].type1.data >> 4;
       signal_center = (signal_center * 99 + sample) / 100.0;
       center_cnt++;
     }
   }
 
-  ESP_ERROR_CHECK(i2s_adc_disable(I2S_NUM_0));
+  ESP_ERROR_CHECK(adc_continuous_stop(s_adc));
   ESP_LOGI(TAG, "Signal center: %f", signal_center);
 }
 
 
 static void i2sTask(void * arg)
 {
-  uint16_t* buf = (uint16_t*) malloc(DMA_BUFFER_SIZE_IN_BYTES * DMA_BUFFER_COUNT);
+  adc_digi_output_data_t* buf = (adc_digi_output_data_t*) malloc(DMA_BUFFER_SIZE_IN_BYTES * DMA_BUFFER_COUNT);
   determine_signal_center(buf, DMA_BUFFER_SIZE_IN_BYTES * DMA_BUFFER_COUNT);
 
   while (true) {
@@ -190,7 +210,7 @@ static void i2sTask(void * arg)
   }
 }
 
-static bool IRAM_ATTR timer_isr(void *args)
+static bool IRAM_ATTR timer_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* args)
 {
   BaseType_t mustYield = pdFALSE;
   vTaskNotifyGiveFromISR(s_task_handle, &mustYield);
@@ -199,33 +219,32 @@ static bool IRAM_ATTR timer_isr(void *args)
 
 static void init_timer()
 {
-  const timer_group_t group = TIMER_GROUP_0;
-  const timer_idx_t timer = TIMER_0;
+  gptimer_config_t config = {};
+  config.clk_src = GPTIMER_CLK_SRC_DEFAULT;
+  config.direction = GPTIMER_COUNT_UP;
+  config.resolution_hz = TIMER_RESOLUTION_HZ;
+  ESP_ERROR_CHECK(gptimer_new_timer(&config, &s_timer));
 
-  timer_config_t config;
-  memset(&config, 0, sizeof(timer_config_t));
-  config.divider = TIMER_DIVIDER;
-  config.counter_dir = TIMER_COUNT_UP;
-  config.counter_en = TIMER_PAUSE;
-  config.alarm_en = TIMER_ALARM_EN;
-  config.auto_reload = TIMER_AUTORELOAD_EN;
+  gptimer_event_callbacks_t callbacks = {};
+  callbacks.on_alarm = timer_isr;
+  ESP_ERROR_CHECK(gptimer_register_event_callbacks(s_timer, &callbacks, NULL));
 
-  timer_init(group, timer, &config);
-  timer_set_counter_value(group, timer, 0);
-  timer_set_alarm_value(group, timer, TIMER_ALARM);
-  timer_enable_intr(group, timer);
-  timer_isr_callback_add(group, timer, timer_isr, NULL, 0);
-  timer_start(group, timer);
+  gptimer_alarm_config_t alarm = {};
+  alarm.alarm_count = TIMER_ALARM;
+  alarm.reload_count = 0;
+  alarm.flags.auto_reload_on_alarm = true;
+  ESP_ERROR_CHECK(gptimer_set_alarm_action(s_timer, &alarm));
+
+  ESP_ERROR_CHECK(gptimer_enable(s_timer));
+  ESP_ERROR_CHECK(gptimer_start(s_timer));
 }
 
 static void deinit_timer()
 {
-  const timer_group_t group = TIMER_GROUP_0;
-  const timer_idx_t timer = TIMER_0;
-
-  timer_pause(group, timer);
-  timer_isr_callback_remove(group, timer);
-  timer_deinit(group, timer);
+  ESP_ERROR_CHECK(gptimer_stop(s_timer));
+  ESP_ERROR_CHECK(gptimer_disable(s_timer));
+  ESP_ERROR_CHECK(gptimer_del_timer(s_timer));
+  s_timer = NULL;
 }
 
 static void cassTask(void* arg)
@@ -331,49 +350,37 @@ static void sendCAS(void* arg)
 }
 #endif
 
-static QueueHandle_t evt_que;
-
-static void i2s_event(void *args)
+// The ADC's buffer filled up before the task read it
+static bool IRAM_ATTR adc_overflow(adc_continuous_handle_t handle, const adc_continuous_evt_data_t* edata, void* args)
 {
-  i2s_event_t evt;
-  uint32_t cnt = 0;
-  while (true) {
-    xQueueReceive(evt_que, &evt, portMAX_DELAY);
-    if (evt.type == I2S_EVENT_RX_Q_OVF) {
-      ESP_LOGW(TAG,"I2S queue overflow, data dropped [%d]", cnt++);
-    }
-  }
-  vTaskDelete(NULL);
+  s_adc_overflows++;
+  return false;
 }
 
 void init_cass()
 {
-  esp_err_t ret;
-  i2s_config_t i2s_config = {
-    .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN),
-    .sample_rate          = I2S_SAMPLING_FREQ,
-    .bits_per_sample      = I2S_BITS_PER_SAMPLE_16BIT,
-    .channel_format       = I2S_CHANNEL_FMT_ONLY_RIGHT,
-    .communication_format = I2S_COMM_FORMAT_I2S_MSB,
-    .intr_alloc_flags     = 0,
-    .dma_buf_count        = DMA_BUFFER_COUNT,
-    .dma_buf_len          = DMA_BUFFER_SIZE * sizeof(uint16_t),
-    .use_apll             = false,
-    .tx_desc_auto_clear   = 0,
-    .fixed_mclk           = 0
-  };
+  adc_continuous_handle_cfg_t handle_config = {};
+  handle_config.max_store_buf_size = 4 * DMA_BUFFER_SIZE_IN_BYTES;
+  handle_config.conv_frame_size = DMA_BUFFER_SIZE_IN_BYTES;
+  ESP_ERROR_CHECK(adc_continuous_new_handle(&handle_config, &s_adc));
 
-  ret = i2s_driver_install(I2S_NUM_0, &i2s_config, 10, &evt_que);// NULL);
-  ESP_ERROR_CHECK(ret);
-  xTaskCreatePinnedToCore(i2s_event, "i2s_watch", 1024, NULL, tskIDLE_PRIORITY + 5, NULL, 1);
-  ret = i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0);
-  ESP_ERROR_CHECK(ret);
+  // As the I2S driver's ADC mode had it: 12 bits, 11 dB (now called 12 dB)
+  adc_digi_pattern_config_t pattern = {};
+  pattern.atten = ADC_ATTEN_DB_12;
+  pattern.channel = ADC_CHANNEL_0;
+  pattern.unit = ADC_UNIT_1;
+  pattern.bit_width = ADC_BITWIDTH_12;
 
-  i2s_set_clk(I2S_NUM_0, I2S_SAMPLING_FREQ,
-        I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
+  adc_continuous_config_t adc_config = {};
+  adc_config.pattern_num = 1;
+  adc_config.adc_pattern = &pattern;
+  adc_config.sample_freq_hz = I2S_SAMPLING_FREQ;
+  adc_config.conv_mode = ADC_CONV_SINGLE_UNIT_1;
+  ESP_ERROR_CHECK(adc_continuous_config(s_adc, &adc_config));
 
-  ret = i2s_start(I2S_NUM_0);
-  ESP_ERROR_CHECK(ret);
+  adc_continuous_evt_cbs_t callbacks = {};
+  callbacks.on_pool_ovf = adc_overflow;
+  ESP_ERROR_CHECK(adc_continuous_register_event_callbacks(s_adc, &callbacks, NULL));
 
   xTaskCreatePinnedToCore(cassTask, "cass", 3000, NULL, configMAX_PRIORITIES - 1, NULL, 1);
   xTaskCreatePinnedToCore(i2sTask, "i2s", 3000, NULL, configMAX_PRIORITIES - 2, NULL, 1);

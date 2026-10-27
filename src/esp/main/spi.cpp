@@ -685,7 +685,7 @@ void init_spi()
         .quadhd_io_num = -1,
         .max_transfer_sz = 4000,
   };
-  esp_err_t ret = spi_bus_initialize(HSPI_HOST, &spi_bus, 1);
+  esp_err_t ret = spi_bus_initialize(SPI2_HOST, &spi_bus, 1);
   ESP_ERROR_CHECK(ret);
 
   // Configure SPI device for the Cmod A7/Nano 9K
@@ -703,6 +703,6 @@ void init_spi()
   spi_cmod.queue_size = 1;
   spi_cmod.pre_cb = NULL;
   spi_cmod.post_cb = NULL;
-  ret = spi_bus_add_device(HSPI_HOST, &spi_cmod, &spi_cmod_h);
+  ret = spi_bus_add_device(SPI2_HOST, &spi_cmod, &spi_cmod_h);
   ESP_ERROR_CHECK(ret);
 }

@@ -11,8 +11,8 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_system.h"
-#include "esp_spi_flash.h"
-#include "esp32/spiram.h"
+#include "esp_flash.h"
+#include "esp_psram.h"
 #include "esp_ota_ops.h"
 #include "esp_efuse.h"
 #include "esp_efuse_table.h"
@@ -26,8 +26,8 @@
 
 #include "esp_idf_version.h"
 
-#if ESP_IDF_VERSION != ESP_IDF_VERSION_VAL(4, 4, 7)
-#error Please use ESP-IDF version 4.4.7
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
+#error Please use ESP-IDF version 6.0 or later (the master branch of TRS-IO is for 4.4.7)
 #endif
 
 #define TAG "TRS-IO"
@@ -65,8 +65,10 @@ static void check()
     ESP_LOGE(TAG, "Flash regulator NOT forced to 3.3V");
   }
 
-  size_t flash_size = spi_flash_get_chip_size() / (1024 * 1024);
-  size_t psram_size = esp_spiram_get_size() / (1024 * 1024);
+  uint32_t flash_bytes = 0;
+  esp_flash_get_size(NULL, &flash_bytes);
+  size_t flash_size = flash_bytes / (1024 * 1024);
+  size_t psram_size = esp_psram_get_size() / (1024 * 1024);
 
   if (flash_size == 16) {
     ESP_LOGI(TAG, "Found 16MB flash size");

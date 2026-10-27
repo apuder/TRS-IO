@@ -4,3 +4,4 @@ log.*.txt
 tags
 .parcel-cache
 *.tar
+managed_components/

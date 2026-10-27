@@ -8,6 +8,7 @@
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include <cstring>
+#include "soc/gpio_struct.h"
 
 #define NOOP				0x02
 #define ERASE_SRAM			0x05

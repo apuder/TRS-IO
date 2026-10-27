@@ -3,8 +3,6 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <driver/i2s.h>
-#include <driver/adc.h>
 
 
 #define NOISE_FLOOR 64

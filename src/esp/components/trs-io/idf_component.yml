@@ -1,0 +1,3 @@
+# mDNS has been a managed component since ESP-IDF 5
+dependencies:
+  espressif/mdns: "^1.8"

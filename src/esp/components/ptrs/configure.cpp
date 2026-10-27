@@ -25,17 +25,17 @@ static bool show_splash_screen = true;
 
 static bool enable_trs_io = true;
 
-static char tz[MAX_LEN_TZ + 1] EXT_RAM_ATTR;
+static char tz[MAX_LEN_TZ + 1] EXT_RAM_BSS_ATTR;
 static bool tz_dirty;
 
 static bool wifi_dirty;
-static char wifi_ssid[MAX_LEN_WIFI_SSID + 1] EXT_RAM_ATTR;
-static char wifi_passwd[MAX_LEN_WIFI_PASSWD + 1] EXT_RAM_ATTR;
+static char wifi_ssid[MAX_LEN_WIFI_SSID + 1] EXT_RAM_BSS_ATTR;
+static char wifi_passwd[MAX_LEN_WIFI_PASSWD + 1] EXT_RAM_BSS_ATTR;
 
 static bool smb_dirty;
-static char smb_url[MAX_LEN_SMB_URL + 1] EXT_RAM_ATTR;
-static char smb_user[MAX_LEN_SMB_USER + 1] EXT_RAM_ATTR;
-static char smb_passwd[MAX_LEN_SMB_PASSWD + 1] EXT_RAM_ATTR;
+static char smb_url[MAX_LEN_SMB_URL + 1] EXT_RAM_BSS_ATTR;
+static char smb_user[MAX_LEN_SMB_USER + 1] EXT_RAM_BSS_ATTR;
+static char smb_passwd[MAX_LEN_SMB_PASSWD + 1] EXT_RAM_BSS_ATTR;
 
 static bool keyb_layout_dirty;
 static uint8_t keyb_layout = 0;

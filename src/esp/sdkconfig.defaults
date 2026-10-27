@@ -1417,3 +1417,21 @@ CONFIG_SUPPRESS_SELECT_DEBUG_OUTPUT=y
 CONFIG_SUPPORT_TERMIOS=y
 CONFIG_SEMIHOSTFS_MAX_MOUNT_POINTS=1
 # End of deprecated options
+
+#
+# ESP-IDF 6
+#
+# What changed since 4.4.7 or is new there, for the same firmware:
+# newlib as with 4.4 (IDF 6 defaults to picolibc). FreeRTOS stays in flash,
+# IDF 6's default: with it in IRAM, as with 4.4, IRAM is 13K short, and no
+# interrupt handler here runs while the flash cache is off. FabGL drives the
+# PS/2 port with the ULP FSM coprocessor; its program and data need 4K of RTC
+# slow memory reserved, and FabGL's interrupts are allocated through the IPC
+# tasks (see FabGL's idf/README.md).
+# libsmb2 and TRS-LIB do not build warning-free with GCC 15.
+CONFIG_LIBC_NEWLIB=y
+CONFIG_ULP_COPROC_ENABLED=y
+CONFIG_ULP_COPROC_TYPE_FSM=y
+CONFIG_ULP_COPROC_RESERVE_MEM=4096
+CONFIG_ESP_IPC_TASK_STACK_SIZE=2048
+CONFIG_COMPILER_DISABLE_DEFAULT_ERRORS=y

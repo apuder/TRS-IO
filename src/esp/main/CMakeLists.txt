@@ -13,6 +13,8 @@ idf_component_register(SRCS ${src}
                        INCLUDE_DIRS "include"
                        EMBED_FILES loader_frehd.bin xray-stub.bin
                        REQUIRES app_update
+                                esp_psram
+                                spi_flash
                                 main
                                 nvs_flash
                                 efuse

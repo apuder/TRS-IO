@@ -8,6 +8,9 @@ idf_component_register(SRC_DIRS "."
                        EMBED_FILES xray-load.bin
                        REQUIRES retrostore-c-sdk retrostore trs-fs xfer)
 
+# The printer table is u8"" strings used as char strings, as before C++20
+target_compile_options(${COMPONENT_LIB} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fno-char8_t>)
+
 # Force static linking of this component
 set_property(TARGET ${COMPONENT_LIB} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-u theTrsIOCoreModule")
 

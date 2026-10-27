@@ -27,6 +27,7 @@
 #include "jtag.h"
 #include "spi.h"
 #include "rst.h"
+#include "soc/gpio_struct.h"
 
 #define ESP_REQ GPIO_NUM_34
 #ifdef CONFIG_TRS_IO_PP
@@ -456,15 +457,15 @@ void init_io()
 
 #if defined(CONFIG_TRS_IO_MODEL_1)
 // GPIO pins 12-18 (7 pins) are used for S0-S2 and A0-A4
-  gpioConfig.pin_bit_mask = GPIO_SEL_12 | GPIO_SEL_13 | GPIO_SEL_14 |
-    GPIO_SEL_15 | GPIO_SEL_16 |
-    GPIO_SEL_17 | GPIO_SEL_18;
+  gpioConfig.pin_bit_mask = (1ULL << GPIO_NUM_12) | (1ULL << GPIO_NUM_13) | (1ULL << GPIO_NUM_14) |
+    (1ULL << GPIO_NUM_15) | (1ULL << GPIO_NUM_16) |
+    (1ULL << GPIO_NUM_17) | (1ULL << GPIO_NUM_18);
 #elif defined(CONFIG_TRS_IO_PP)
   // GPIO pins 12-15 (4 pins) are used for S0-S3
-  gpioConfig.pin_bit_mask = GPIO_SEL_12 | GPIO_SEL_13 | GPIO_SEL_14 | GPIO_SEL_15;
+  gpioConfig.pin_bit_mask = (1ULL << GPIO_NUM_12) | (1ULL << GPIO_NUM_13) | (1ULL << GPIO_NUM_14) | (1ULL << GPIO_NUM_15);
 #else
   // GPIO pins 16-18 (3 pins) are used for S0-S2
-  gpioConfig.pin_bit_mask = GPIO_SEL_16 | GPIO_SEL_17 | GPIO_SEL_18;
+  gpioConfig.pin_bit_mask = (1ULL << GPIO_NUM_16) | (1ULL << GPIO_NUM_17) | (1ULL << GPIO_NUM_18);
 #endif
   gpioConfig.mode = GPIO_MODE_INPUT;
   gpioConfig.pull_up_en = GPIO_PULLUP_DISABLE;
@@ -483,7 +484,7 @@ void init_io()
 
 #ifdef CONFIG_TRS_IO_PP
   // Configure SD Card eject trigger
-  gpioConfig.pin_bit_mask = GPIO_SEL_4;
+  gpioConfig.pin_bit_mask = (1ULL << GPIO_NUM_4);
   gpioConfig.intr_type = GPIO_INTR_ANYEDGE;
   gpio_config(&gpioConfig);
   gpio_isr_handler_add(SD_CARD, sd_card_eject_isr_handler, NULL);
