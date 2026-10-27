@@ -1,0 +1,71 @@
+# The idf-v6 branch: TRS-IO's firmware builds with ESP-IDF 6 for each board,
+# through src/esp/Makefile as on a developer's machine. The images are kept as
+# artifacts of the run.
+#
+# Only for idf-v6 itself: master builds with ESP-IDF 4.4.7, and branches on
+# top of idf-v6 (trashboy) are for firmware that embeds TRS-IO's library
+# parts and need not build on their own.
+name: ESP-IDF 6
+
+on:
+  push:
+    branches: [idf-v6]
+  pull_request:
+    branches: [idf-v6]
+  workflow_dispatch:
+
+concurrency:
+  group: idf-v6-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.board }}
+    runs-on: ubuntu-latest
+    container: espressif/idf:v6.0.1
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [trs-io-m1, trs-io-m3, trs-io-pp, mini-trs]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      # What the ESP32 firmware compiles. src/trs/TRS-LIB is for the Z80 side.
+      - name: Submodules
+        run: |
+          git config --global --add safe.directory '*'
+          git submodule update --init --depth 1 \
+              src/esp/components/FabGL \
+              src/esp/components/TRS-LIB \
+              src/esp/components/libsmb2 \
+              src/esp/components/retrostore-c-sdk
+
+      - name: Build
+        working-directory: src/esp
+        run: |
+          . "$IDF_PATH/export.sh"
+          make BOARD=${{ matrix.board }} build
+
+      - name: Size
+        working-directory: src/esp
+        run: |
+          . "$IDF_PATH/export.sh"
+          {
+            echo "### ${{ matrix.board }}"
+            echo '```'
+            idf.py size
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: trs-io-${{ matrix.board }}
+          path: |
+            src/esp/build/flash_args
+            src/esp/build/*.bin
+            src/esp/build/bootloader/bootloader.bin
+            src/esp/build/partition_table/partition-table.bin
+          if-no-files-found: error
