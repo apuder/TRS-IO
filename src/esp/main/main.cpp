@@ -104,6 +104,10 @@ void app_main(void)
   // Silence "spi_master: device5 locked the bus" debug messages when
   // accessing the SD card.
   esp_log_level_set("spi_master", ESP_LOG_INFO);
+  // Same for the debug messages of every select(), which ESP-IDF 6 prints
+  // despite CONFIG_VFS_SUPPRESS_SELECT_DEBUG_OUTPUT. libsmb2 polls for each
+  // SMB request, and printing them makes SMB access slow.
+  esp_log_level_set("vfs_calls", ESP_LOG_INFO);
 
   check();
 
