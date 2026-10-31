@@ -13,7 +13,7 @@
   "dependencies": {
     "express": "^5.2.1",
     "express-static-gzip": "^2.2.0",
-    "glob": "^12.0.0",
+    "glob": "^14.0.3",
     "ws": "^8.21.0"
   }
 }
