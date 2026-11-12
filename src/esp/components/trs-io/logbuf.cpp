@@ -28,8 +28,8 @@
 #include "esp_attr.h"
 #include "esp_log.h"
 #include "esp_system.h"
-#include "esp_spi_flash.h"
-#include "esp32/spiram.h"
+#include "esp_private/cache_utils.h"
+#include "esp_private/esp_psram_extram.h"
 #include "esp_private/panic_internal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
@@ -40,7 +40,7 @@
 #error "logbuf needs CONFIG_SPIRAM_ALLOW_NOINIT_SEG_EXTERNAL_MEMORY=y"
 #endif
 #if !CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY
-// Without it, EXT_RAM_ATTR silently falls back to internal RAM.
+// Without it, EXT_RAM_BSS_ATTR silently falls back to internal RAM.
 #error "logbuf needs CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y"
 #endif
 
@@ -64,8 +64,8 @@ typedef struct {
 } logbuf_t;
 
 static EXT_RAM_NOINIT_ATTR logbuf_t s_log;
-static EXT_RAM_ATTR char s_line[LOGBUF_LINE_MAX];
-static EXT_RAM_ATTR char s_mg_line[LOGBUF_LINE_MAX];
+static EXT_RAM_BSS_ATTR char s_line[LOGBUF_LINE_MAX];
+static EXT_RAM_BSS_ATTR char s_mg_line[LOGBUF_LINE_MAX];
 static size_t s_mg_len;
 
 static SemaphoreHandle_t s_mutex;
@@ -120,7 +120,7 @@ void logbuf_write(const char* data, size_t len)
 void logbuf_flush(void)
 {
   if (spi_flash_cache_enabled()) {
-    esp_spiram_writeback_cache();
+    esp_psram_extram_writeback_cache();
   }
 }
 
@@ -273,7 +273,7 @@ void IRAM_ATTR __attribute__((noreturn)) __wrap_esp_restart_noos(void)
   // If the cache is off, PSRAM can't be written back (and a flash operation
   // may be in progress); skip rather than risk anything.
   if (spi_flash_cache_enabled()) {
-    esp_spiram_writeback_cache();
+    esp_psram_extram_writeback_cache();
   }
   __real_esp_restart_noos();
 }
