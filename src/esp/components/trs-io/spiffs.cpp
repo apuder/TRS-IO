@@ -15,13 +15,16 @@
 typedef struct {
   const char* partition;
   size_t max_files;
+  // Only for partitions whose entire content is restored by a firmware
+  // update tar (see ota_stateful.cpp). Never for user data such as ROMs.
+  bool format_if_mount_failed;
 } ESP_SPIFFS_PARTITION;
 
 static const ESP_SPIFFS_PARTITION partitions[] = {
-  {"html", 10},
+  {"html", 10, true},
 #ifdef CONFIG_TRS_IO_PP
-  {"roms", 5},
-  {"fpga", 1}
+  {"roms", 5, false},
+  {"fpga", 1, false}
 #endif
 };
 
@@ -76,13 +79,19 @@ esp_err_t init_spiffs()
       .base_path = path,
       .partition_label = p,
       .max_files = partitions[i].max_files,
-      .format_if_mount_failed = false
+      .format_if_mount_failed = partitions[i].format_if_mount_failed
     };
 
     ret = esp_vfs_spiffs_register(&conf);
 
     if (ret != ESP_OK) {
       ESP_LOGE(TAG, "Failed to initialize '%s' SPIFFS (%s)", p, esp_err_to_name(ret));
+    } else {
+      size_t total = 0, used = 0;
+      if (esp_spiffs_info(p, &total, &used) == ESP_OK) {
+        ESP_LOGI(TAG, "Mounted '%s' at %s: %u of %u bytes used", p, path,
+                 (unsigned) used, (unsigned) total);
+      }
     }
   }
 
