@@ -1,4 +1,6 @@
 
+#include <errno.h>
+#include <string.h>
 #include "mongoose.h"
 #include "esp_log.h"
 #include "ota_stateful.h"
@@ -10,6 +12,7 @@
 
 void extract_tar_begin(struct extract_tar_context *ctx) {
   ctx->state = ets_read_header;
+  ctx->error = ete_ok;
   ctx->header = static_cast<tar_header *>(calloc(sizeof(*ctx->header), 1));
   ctx->index = 0;
   ctx->file_size = 0;
@@ -96,10 +99,12 @@ static extract_tar_error extract_tar_copy_file_begin(struct extract_tar_context 
     char* abs_path;
     asprintf(&abs_path, "/%s", filename);
     ctx->f = fopen(abs_path, "wb");
-    free(abs_path);
     if (ctx->f == NULL) {
+      ESP_LOGE(TAG, "Cannot open %s for writing: %s", abs_path, strerror(errno));
+      free(abs_path);
       return ete_bad_esp_flash;
     }
+    free(abs_path);
   }
 
   ctx->buf = (uint8_t *) malloc(BUFFER_SIZE);
@@ -155,7 +160,23 @@ static extract_tar_error extract_tar_copy_file_byte(struct extract_tar_context *
   return ete_ok;
 }
 
-extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8_t byte) {
+// Release everything held for the file currently being copied. Used when
+// aborting; the regular end-of-file path is extract_tar_copy_file_end().
+static void extract_tar_release(struct extract_tar_context *ctx) {
+  free(ctx->buf);
+  ctx->buf = NULL;
+  if (ctx->f != NULL) {
+    fclose(ctx->f);
+    ctx->f = NULL;
+  }
+  if (ctx->update_handle != 0) {
+    esp_ota_abort(ctx->update_handle);
+    ctx->update_handle = 0;
+  }
+  ctx->update_partition = NULL;
+}
+
+static extract_tar_error extract_tar_handle_byte_in_state(struct extract_tar_context *ctx, uint8_t byte) {
   switch (ctx->state) {
     case ets_read_header:
       ctx->header->buffer[ctx->index++] = byte;
@@ -169,8 +190,7 @@ extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8
 
         // Abort if the magic value does not match.
         if (strncmp(ctx->header->header.magic, TAR_MAGIC, 5) != 0) {
-          MG_INFO(("OTA: Bad tar magic \"%s\"", ctx->header->header.magic));
-          ctx->state = ets_done;
+          MG_INFO(("OTA: Bad tar magic \"%.6s\"", ctx->header->header.magic));
           return ete_corrupt_tar;
         }
 
@@ -214,14 +234,40 @@ extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8
     case ets_done:
       // Nothing to do, throw away the byte.
       break;
+
+    case ets_error:
+      return ctx->error;
   }
 
   return ete_ok;
 }
 
+extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8_t byte) {
+  if (ctx->state == ets_error) {
+    return ctx->error;
+  }
+
+  extract_tar_error error = extract_tar_handle_byte_in_state(ctx, byte);
+  if (error != ete_ok) {
+    // Latch the error. Without this, the next byte would be handled in
+    // whatever state the failed step left behind (e.g. ets_copy_file with
+    // no buffer allocated).
+    ESP_LOGE(TAG, "Aborting extraction, error %d", error);
+    extract_tar_release(ctx);
+    ctx->error = error;
+    ctx->state = ets_error;
+  }
+  return error;
+}
+
 extract_tar_error extract_tar_end(struct extract_tar_context *ctx) {
   free(ctx->header);
   ctx->header = NULL;
+  extract_tar_release(ctx);
+
+  if (ctx->state == ets_error) {
+    return ctx->error;
+  }
 
   // See if we properly finished parsing the tar file.
   return ctx->state == ets_done ? ete_ok : ete_corrupt_tar;

@@ -32,12 +32,19 @@ enum extract_tar_state {
 
   // All done with the extraction.
   ets_done,
+
+  // An error occurred. All remaining bytes are discarded and the error
+  // (in extract_tar_context::error) is reported by every later call.
+  ets_error,
 };
 
 // Context of the extraction.
 struct extract_tar_context {
   // Current state.
   extract_tar_state state;
+
+  // First error that occurred, or ete_ok.
+  extract_tar_error error;
 
   // Buffer for the tar file header (allocated).
   tar_header *header;
@@ -60,9 +67,12 @@ struct extract_tar_context {
 // Initialize the context structure.
 void extract_tar_begin(struct extract_tar_context *ctx);
 
-// Handle a byte from the tar file.
+// Handle a byte from the tar file. Once an error has been returned, every
+// later call returns the same error and the byte is discarded.
 extract_tar_error extract_tar_handle_byte(struct extract_tar_context *ctx, uint8_t byte);
 
-// Clean up. Call this even in the case of error.
+// Clean up (closes files, aborts an unfinished firmware update). Call this
+// even in the case of error, including when the upload was cut short. Does
+// not free the context itself.
 extract_tar_error extract_tar_end(struct extract_tar_context *ctx);
 

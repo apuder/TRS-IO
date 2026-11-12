@@ -828,6 +828,7 @@ static void handle_firmware_data(struct mg_connection *c, struct connection_data
       if (error == ete_ok && end_error != ete_ok) {
         error = end_error;
       }
+      free(cd->ctx);
       memset(cd, 0, sizeof(*cd));
 
       // Send response back.
@@ -909,6 +910,11 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
 
       // Initialize the context.
       cd->ctx = (struct extract_tar_context *) malloc(sizeof(*cd->ctx));
+      if (cd->ctx == NULL) {
+        mg_http_reply(c, 500, NULL, "Out of memory\n");
+        c->is_draining = 1;
+        return;
+      }
       extract_tar_begin(cd->ctx);
 
       // Delete HTTP headers:
@@ -998,6 +1004,14 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
     {
       if (c->is_websocket) {
         num_printer_sockets--;
+      }
+      if (cd->ctx != NULL) {
+        // Firmware upload was cut short: close files and abort the OTA.
+        ESP_LOGE(TAG, "Firmware upload aborted after %u of %u bytes",
+                 (unsigned) cd->received, (unsigned) cd->expected);
+        extract_tar_end(cd->ctx);
+        free(cd->ctx);
+        cd->ctx = NULL;
       }
       if (cd->reboot_on_close) {
         reboot = true;
