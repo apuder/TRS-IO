@@ -1626,7 +1626,216 @@ function configurePrinterEmulationWarning() {
     });
 }
 
+// ---------------------------------------------------------------------------
+// Log viewer. Polls GET /log?since=N (see components/trs-io/logbuf.h) while
+// the Log tab is visible.
+
+const LOG_POLL_INTERVAL_MS = 2000;
+// Bound the view; the device buffer itself is 128 KB.
+const LOG_MAX_VIEW_CHARS = 1024 * 1024;
+
+function stripAnsi(s: string): string {
+    // ESP_LOGx colors lines with ESC [ ... m sequences.
+    return s.replace(/\x1b\[[0-9;]*m/g, "");
+}
+
+function logLineClass(line: string): string | undefined {
+    if (/^(=====|-----|\*\*\*\*\*)/.test(line) || line.startsWith("[...")) {
+        return "log-marker";
+    }
+    if (line.startsWith("E (") || line.startsWith("Backtrace:")) {
+        return "log-error";
+    }
+    if (line.startsWith("W (")) {
+        return "log-warning";
+    }
+    return undefined;
+}
+
+class LogViewer {
+    private readonly article = document.querySelector("article.log") as HTMLElement;
+    private readonly output = document.getElementById("logOutput") as HTMLPreElement;
+    private readonly status = document.getElementById("logStatus") as HTMLElement;
+    private readonly tabInput = document.getElementById("log_article") as HTMLInputElement;
+    // Text shown in the view (ANSI codes stripped).
+    private text = "";
+    // Incomplete last line, shown as a plain text node until it is completed.
+    private partialLine = "";
+    private partialNode: Text | undefined = undefined;
+    // Stream position to ask for next; undefined means "everything".
+    private next: number | undefined = undefined;
+    private timer: number | undefined = undefined;
+    private fetching = false;
+
+    public configure(): void {
+        document.querySelectorAll("input[name=active-article]").forEach(input =>
+            input.addEventListener("change", () => this.updatePolling()));
+
+        const followButton = document.getElementById("followLogButton") as HTMLButtonElement;
+        followButton.addEventListener("click", () => {
+            const follow = !this.isFollowing();
+            this.article.dataset.follow = follow.toString();
+            if (follow) {
+                this.scrollToBottom();
+            }
+        });
+
+        const downloadButton = document.getElementById("downloadLogButton") as HTMLButtonElement;
+        downloadButton.addEventListener("click", () => this.download());
+
+        const clearButton = document.getElementById("clearLogButton") as HTMLButtonElement;
+        clearButton.addEventListener("click", () => this.clearView());
+
+        this.updatePolling();
+    }
+
+    private isFollowing(): boolean {
+        return this.article.dataset.follow === "true";
+    }
+
+    private scrollToBottom(): void {
+        this.output.scrollTop = this.output.scrollHeight;
+    }
+
+    private setStatus(message: string): void {
+        this.status.textContent = message;
+    }
+
+    // Poll only while the Log tab is shown.
+    private updatePolling(): void {
+        if (this.tabInput.checked) {
+            if (this.timer === undefined) {
+                this.timer = window.setInterval(() => this.poll(), LOG_POLL_INTERVAL_MS);
+                this.poll();
+            }
+        } else if (this.timer !== undefined) {
+            window.clearInterval(this.timer);
+            this.timer = undefined;
+        }
+    }
+
+    private poll(): void {
+        // The tab can also be switched in code without a change event.
+        if (!this.tabInput.checked) {
+            this.updatePolling();
+            return;
+        }
+        this.fetchLog();
+    }
+
+    private clearView(): void {
+        this.text = "";
+        this.partialLine = "";
+        this.partialNode = undefined;
+        this.output.textContent = "";
+    }
+
+    private appendText(chunk: string): void {
+        chunk = stripAnsi(chunk);
+        this.text += chunk;
+        if (this.text.length > LOG_MAX_VIEW_CHARS) {
+            // Drop the oldest half and re-render.
+            const keep = this.text.slice(this.text.length - LOG_MAX_VIEW_CHARS / 2);
+            this.clearView();
+            chunk = keep.slice(keep.indexOf("\n") + 1);
+            this.text = chunk;
+        }
+
+        this.partialNode?.remove();
+        this.partialNode = undefined;
+        const lines = (this.partialLine + chunk).split("\n");
+        this.partialLine = lines.pop() ?? "";
+
+        const fragment = document.createDocumentFragment();
+        for (const line of lines) {
+            const cls = logLineClass(line);
+            if (cls === undefined) {
+                fragment.append(line + "\n");
+            } else {
+                const span = document.createElement("span");
+                span.classList.add(cls);
+                span.textContent = line + "\n";
+                fragment.append(span);
+            }
+        }
+        if (this.partialLine !== "") {
+            this.partialNode = document.createTextNode(this.partialLine);
+            fragment.append(this.partialNode);
+        }
+        this.output.append(fragment);
+    }
+
+    private async fetchLog(): Promise<void> {
+        if (this.fetching) {
+            return;
+        }
+        this.fetching = true;
+        try {
+            const url = this.next === undefined ? "/log" : `/log?since=${this.next}`;
+            const response = await fetch(url, { cache: "no-store" });
+            if (response.status === 404) {
+                this.setStatus("This firmware has no log endpoint");
+                return;
+            }
+            if (!response.ok) {
+                this.setStatus(`Error fetching log (${response.status})`);
+                return;
+            }
+            const start = Number(response.headers.get("X-Log-Start"));
+            const next = Number(response.headers.get("X-Log-Next"));
+            const boot = Number(response.headers.get("X-Log-Boot"));
+            const body = await response.text();
+
+            if (this.next !== undefined && start !== this.next) {
+                if (start > this.next) {
+                    this.appendText(`[... ${start - this.next} bytes were overwritten before they could be fetched ...]\n`);
+                } else {
+                    // Position went backwards: the device's buffer was reset (power cycle).
+                    this.clearView();
+                }
+            }
+            this.next = next;
+
+            if (body.length > 0) {
+                this.appendText(body);
+                if (this.isFollowing()) {
+                    this.scrollToBottom();
+                }
+            }
+            this.setStatus(`Boot #${boot}, updated ${new Date().toLocaleTimeString()}`);
+        } catch (e) {
+            this.setStatus("Device not reachable (rebooting?)");
+        } finally {
+            this.fetching = false;
+        }
+    }
+
+    // Save the device's whole buffer (not just what's in the view).
+    private async download(): Promise<void> {
+        let text = this.text + this.partialLine;
+        try {
+            const response = await fetch("/log", { cache: "no-store" });
+            if (response.ok) {
+                text = stripAnsi(await response.text());
+            }
+        } catch (e) {
+            // Fall back to what's in the view.
+        }
+        const now = new Date();
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-` +
+            `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+        a.download = `trs-io-log-${stamp}.txt`;
+        a.click();
+        // Revoking right away can cancel the download in some browsers.
+        window.setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    }
+}
+
 export function main() {
+    new LogViewer().configure();
     configureButtons();
     configureRomUpload();
     configureFirmwareUpload();

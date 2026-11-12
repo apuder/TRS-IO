@@ -231,6 +231,7 @@ article:has(input[name=active-article]:not(:checked)) {
 .page:has(#roms_article:checked) label[for=roms_article],
 .page:has(#files_article:checked) label[for=files_article],
 .page:has(#printer_article:checked) label[for=printer_article],
+.page:has(#log_article:checked) label[for=log_article],
 .page:has(#help_article:checked) label[for=help_article],
 .page:has(#settings_article:checked) label[for=settings_article] {
 
@@ -365,6 +366,48 @@ article:has(input[name=active-article]:not(:checked)) {
 
     :is(th, td).file-date {
         padding-right: 1em;
+    }
+}
+
+.log {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    /* Let the output area scroll instead of the page. */
+    min-height: 0;
+    box-sizing: border-box;
+
+    &[data-follow="true"] #followLogButton {
+        box-shadow: var(--selected-button-box-shadow);
+    }
+
+    .flex-spacer {
+        background: none;
+    }
+
+    .log-status {
+        font-size: 0.9em;
+        opacity: 0.8;
+    }
+
+    .log-output {
+        flex: 1 1 0;
+        min-height: 300px;
+        margin: 0;
+        padding: 12px;
+        overflow: auto;
+        background: white;
+        color: black;
+        font-family: monospace;
+        font-size: 12px;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        box-shadow: 0 0 10px 5px rgb(0 0 0 / 15%);
+
+        .log-error { color: #b00020; font-weight: bold; }
+        .log-warning { color: #8a5a00; }
+        .log-marker { color: #1a4fa0; font-weight: bold; }
     }
 }
 

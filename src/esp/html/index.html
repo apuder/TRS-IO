@@ -24,6 +24,7 @@
                         <li class="ptrs-only"><label for="roms_article"><img src="icons/roms.svg" alt="ROMs" title="ROMs"></label></li>
                         <li><label for="files_article"><img src="icons/files.svg" alt="Files" title="Files"></label></li>
                         <li><label for="printer_article"><img src="icons/printer.svg" alt="Printer" title="Printer"></label></li>
+                        <li><label for="log_article"><img src="icons/log.svg" alt="Log" title="Log"></label></li>
                         <li><label for="help_article">?</label></li>
                         <li><label for="settings_article"><img src="icons/settings.svg" alt="Settings" title="Settings"></label></li>
                     </ul>
@@ -157,6 +158,17 @@
                         </div>
                         <div class="printer-output"></div>
                         <canvas class="plotter-output"></canvas>
+                    </article>
+                    <article class="log" data-follow="true">
+                        <input type="radio" name="active-article" id="log_article">
+                        <div class="button-set">
+                            <button class="small selectable" id="followLogButton">Follow</button>
+                            <button class="small" id="downloadLogButton">Download</button>
+                            <button class="small" id="clearLogButton">Clear view</button>
+                            <div class="flex-spacer"></div>
+                            <span class="log-status" id="logStatus"></span>
+                        </div>
+                        <pre class="log-output" id="logOutput"></pre>
                     </article>
                     <article class="settings">
                         <input type="radio" name="active-article" id="help_article">
