@@ -117,6 +117,13 @@ void logbuf_write(const char* data, size_t len)
   }
 }
 
+void logbuf_flush(void)
+{
+  if (spi_flash_cache_enabled()) {
+    esp_spiram_writeback_cache();
+  }
+}
+
 static int log_vprintf(const char* fmt, va_list ap)
 {
   va_list copy;

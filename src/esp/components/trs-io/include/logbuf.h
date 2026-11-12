@@ -30,6 +30,11 @@ void init_logbuf(void);
 // Append raw text. Safe to call from any task (not from an ISR).
 void logbuf_write(const char* data, size_t len);
 
+// Write the PSRAM cache back so the buffer survives a reset. esp_restart()
+// and the panic handler do this automatically; call it before resetting the
+// chip any other way.
+void logbuf_flush(void);
+
 // Returns how many bytes logbuf_read() would return right now for "since".
 size_t logbuf_available(uint32_t since, bool has_since);
 
