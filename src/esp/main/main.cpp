@@ -23,6 +23,7 @@
 #include "ptrs.h"
 #include "xflash.h"
 #include "spiffs.h"
+#include "esp_partition.h"
 
 #include "esp_idf_version.h"
 
@@ -92,6 +93,16 @@ static void check()
   }
   ESP_LOGI(TAG, "Running partition: %s", running->label);
 #endif
+
+  // Dump the partition table actually on the device; it may differ from the
+  // CSV in the repo if the device was last flashed from another branch.
+  esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_ANY, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  for (; it != NULL; it = esp_partition_next(it)) {
+    const esp_partition_t* p = esp_partition_get(it);
+    ESP_LOGI(TAG, "Partition %-8s type %d subtype 0x%02x offset 0x%06x size 0x%06x",
+             p->label, p->type, p->subtype, p->address, p->size);
+  }
+  esp_partition_iterator_release(it);
 }
 
 extern "C" {
