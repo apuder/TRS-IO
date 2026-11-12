@@ -45,6 +45,17 @@ config TRS_IO_PASSWD
         Set a compile-time password that TRS-IO will use
         to connect to a given WiFi.
 
+config TRS_IO_TRIAL_BOOT
+    bool "Trial boot (never mark an OTA image valid)"
+    default n
+    help
+        For trying out a firmware over OTA on a device without a serial
+        connection. The image does not mark itself valid, so with the
+        bootloader's app rollback enabled, the next reset of any kind
+        (crash, watchdog, reboot, power cycle) returns to the previous
+        firmware. It also skips the forced FPGA update after an OTA.
+        Build with: make TRIAL=1 ...
+
 config TRS_IO_TEST_LED
     bool "Test LED"
     default n

@@ -179,7 +179,15 @@ static void check_firmware()
   ESP_LOGI(TAG, "Target firmware: %s", configurations[conf]);
   int curr_bs = conf_to_bs[mode];
   int target_bs = conf_to_bs[conf];
+#ifdef CONFIG_TRS_IO_TRIAL_BOOT
   if (settings_get_update_flag()) {
+    // Leave the flag for the firmware we roll back to.
+    ESP_LOGW(TAG, "Trial boot: skipping the forced FPGA firmware update after OTA");
+  }
+  if (false) {
+#else
+  if (settings_get_update_flag()) {
+#endif
     // Firmware was updated since last boot. Force an update of the FPGA firmware.
     ESP_LOGI(TAG, "Forcing FPGA firmware update after OTA");
     curr_bs = -1;

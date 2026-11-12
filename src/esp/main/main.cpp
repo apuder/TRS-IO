@@ -87,9 +87,13 @@ static void check()
   esp_ota_img_states_t ota_state;
   if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
       if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+#ifdef CONFIG_TRS_IO_TRIAL_BOOT
+        ESP_LOGW(TAG, "Trial boot: NOT marking this OTA image valid; the next reset of any kind returns to the previous firmware");
+#else
         // Assume everything is peachy just because we made it here
         ESP_LOGI(TAG, "Marking OTA update as valid");
         esp_ota_mark_app_valid_cancel_rollback();
+#endif
       }
   }
   ESP_LOGI(TAG, "Running partition: %s", running->label);
@@ -100,8 +104,8 @@ static void check()
   esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_ANY, ESP_PARTITION_SUBTYPE_ANY, NULL);
   for (; it != NULL; it = esp_partition_next(it)) {
     const esp_partition_t* p = esp_partition_get(it);
-    ESP_LOGI(TAG, "Partition %-8s type %d subtype 0x%02x offset 0x%06x size 0x%06x",
-             p->label, p->type, p->subtype, p->address, p->size);
+    ESP_LOGI(TAG, "Partition %-8s type %d subtype 0x%02x offset 0x%06lx size 0x%06lx",
+             p->label, p->type, p->subtype, (unsigned long) p->address, (unsigned long) p->size);
   }
   esp_partition_iterator_release(it);
 }

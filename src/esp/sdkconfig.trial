@@ -1,0 +1,2 @@
+# See TRS_IO_TRIAL_BOOT in main/Kconfig. Used by "make TRIAL=1 ...".
+CONFIG_TRS_IO_TRIAL_BOOT=y

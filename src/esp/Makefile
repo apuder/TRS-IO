@@ -37,6 +37,10 @@ PORT ?= /dev/tty.usbserial-0001
 export COPYFILE_DISABLE=1
 
 SDKCONFIG_DEFAULTS := sdkconfig.defaults;sdkconfig.trs-io;sdkconfig.$(BOARD)
+# make TRIAL=1 ...: see TRS_IO_TRIAL_BOOT in main/Kconfig
+ifeq ($(TRIAL),1)
+SDKCONFIG_DEFAULTS := $(SDKCONFIG_DEFAULTS);sdkconfig.trial
+endif
 
 .PHONY: all
 all: build pause flash monitor
