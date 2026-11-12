@@ -14,6 +14,16 @@ target_compile_options(${COMPONENT_LIB} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fno-c
 # Force static linking of this component
 set_property(TARGET ${COMPONENT_LIB} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-u theTrsIOCoreModule")
 
+# logbuf.cpp hooks into the restart and panic paths so that the PSRAM log
+# buffer is written back before reset and captures crash dumps.
+set(LOGBUF_WRAPPED_FUNCTIONS esp_restart_noos panic_abort esp_panic_handler)
+if(NOT CONFIG_ESP_SYSTEM_PANIC_SILENT_REBOOT)
+    list(APPEND LOGBUF_WRAPPED_FUNCTIONS panic_print_char panic_print_str panic_print_hex panic_print_dec)
+endif()
+foreach(fn ${LOGBUF_WRAPPED_FUNCTIONS})
+    set_property(TARGET ${COMPONENT_LIB} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-Wl,--wrap=${fn}" "-u __wrap_${fn}")
+endforeach()
+
 spiffs_create_partition_image(html ../../build/html FLASH_IN_PROJECT)
 
 if (CONFIG_TRS_IO_PP)

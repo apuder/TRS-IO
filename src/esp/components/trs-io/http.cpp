@@ -38,6 +38,8 @@
 #include "cJSON.h"
 #include "xfer.h"
 #include "rst.h"
+#include "logbuf.h"
+#include "esp_heap_caps.h"
 #include <algorithm>
 
 #define TAG "HTTP"
@@ -886,6 +888,42 @@ static char* call_host_handler(struct mg_http_message* message)
   return host_handler(method.c_str(), uri.c_str(), body.c_str());
 }
 
+/**
+ * GET /log[?since=N]: plain-text log output (see logbuf.h). The response
+ * headers tell the client where to continue:
+ *   X-Log-Start: stream position of the first byte in the body
+ *   X-Log-Next:  pass as "since" in the next request
+ *   X-Log-Boot:  boot counter (changes after every reset)
+ */
+static void handle_log(struct mg_connection *c, struct mg_http_message *hm)
+{
+  char since_str[16];
+  bool has_since = mg_http_get_var(&hm->query, "since", since_str, sizeof(since_str)) > 0;
+  uint32_t since = has_since ? strtoul(since_str, NULL, 10) : 0;
+
+  // Allocate in PSRAM: internal RAM is scarce and this can be 128 KB.
+  size_t size = logbuf_available(since, has_since) + 1;
+  char* buf = (char*) heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+  if (buf == NULL) {
+    mg_http_reply(c, 500, NULL, "Out of memory\n");
+    return;
+  }
+  uint32_t start, next, boot;
+  size_t len = logbuf_read(since, has_since, buf, size, &start, &next, &boot);
+  mg_printf(c, "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain; charset=utf-8\r\n"
+            "Cache-Control: no-store\r\n"
+            "X-Log-Start: %lu\r\n"
+            "X-Log-Next: %lu\r\n"
+            "X-Log-Boot: %lu\r\n"
+            "Connection: close\r\n"
+            "Content-Length: %lu\r\n\r\n",
+            (unsigned long) start, (unsigned long) next, (unsigned long) boot,
+            (unsigned long) len);
+  mg_send(c, buf, len);
+  free(buf);
+}
+
 static void mongoose_event_handler(struct mg_connection *c, int event, void *eventData)
 {
   static bool reboot = false;
@@ -933,11 +971,19 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
   case MG_EV_HTTP_MSG:
     {
       struct mg_http_message* message = (struct mg_http_message*) eventData;
-      ESP_LOGI(TAG, "request %.*s %.*s",
-              message->method.len,
-              message->method.buf,
-              message->uri.len,
-              message->uri.buf);
+      // The web app polls these; logging them at INFO would flood the log
+      // buffer and push out everything interesting.
+      bool polled = mg_match(message->uri, mg_str("/status"), NULL) ||
+                    mg_match(message->uri, mg_str("/log"), NULL);
+      if (polled) {
+        ESP_LOGD(TAG, "request %.*s %.*s",
+                message->method.len, message->method.buf,
+                message->uri.len, message->uri.buf);
+      } else {
+        ESP_LOGI(TAG, "request %.*s %.*s",
+                message->method.len, message->method.buf,
+                message->uri.len, message->uri.buf);
+      }
       char* response = NULL; // Always allocated.
       const char* content_type = "text/html"; // Never allocated.
       mg_str params[2];
@@ -952,6 +998,9 @@ static void mongoose_event_handler(struct mg_connection *c, int event, void *eve
         }
       } else if (mg_match(message->uri, mg_str("/status"), NULL)) {
         mongoose_handle_status(&response, &content_type);
+      } else if (mg_match(message->uri, mg_str("/log"), NULL)) {
+        handle_log(c, message);
+        return;
       } else if (mg_match(message->uri, mg_str("/printer"), NULL)) {
         num_printer_sockets++;
         mg_ws_upgrade(c, message, NULL);
@@ -1086,6 +1135,7 @@ static void mg_task(void* p)
 
   // Start Mongoose
   // mg_log_set(MG_LL_DEBUG);
+  mg_log_set_fn(logbuf_mg_putchar, NULL);
   mg_mgr_init(&mgr);
   mg_queue_init(&prn_queue, printer_buf, sizeof(printer_buf));
   mg_http_listen(&mgr, "http://0.0.0.0:80", mongoose_event_handler, &mgr);

@@ -23,6 +23,7 @@
 #include "ptrs.h"
 #include "xflash.h"
 #include "spiffs.h"
+#include "logbuf.h"
 #include "esp_partition.h"
 
 #include "esp_idf_version.h"
@@ -109,6 +110,9 @@ extern "C" {
 
 void app_main(void)
 {
+  // First, so that everything below ends up in the web-accessible log.
+  init_logbuf();
+
   ESP_LOGI(TAG, "TRS-IO branch=%s, rev=%s", GIT_BRANCH, GIT_REV);
   ESP_LOGI(TAG, "Configured for %s", CONFIG);
 
