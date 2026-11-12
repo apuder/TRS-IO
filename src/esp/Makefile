@@ -23,9 +23,18 @@ SHELL = /bin/bash
 #     watch-html: watches HTML files and package them when they change
 #     update-tar: builds a tar file for firmware updates
 #     	  Add the SKIP_FPGA=1 command-line flag to skip the FPGA files
+#     update-tar-app: builds a tar file with only the ESP32 app (no HTML,
+#         no FPGA files); uploads in well under a minute
+#     ota-app: builds update-tar-app, uploads it over Wi-Fi, and reboots:
+#
+#         make ota-app IP=192.168.1.113
 #
 BOARD ?= trs-io-pp
 PORT ?= /dev/tty.usbserial-0001
+
+# Keep macOS tar from adding "._*" metadata entries; the firmware would write
+# those to the html/fpga partitions as if they were real files.
+export COPYFILE_DISABLE=1
 
 SDKCONFIG_DEFAULTS := sdkconfig.defaults;sdkconfig.trs-io;sdkconfig.$(BOARD)
 
@@ -109,3 +118,24 @@ ifneq ($(SKIP_FPGA),1)
 	tar -r -f $(UPDATE_TAR) $(TAR_OPTS) fpga/*
 endif
 	tar -r -f $(UPDATE_TAR) $(TAR_OPTS) build/trs-io.bin
+
+# Only the ESP32 app. Everything not in the tar stays as it is on the device.
+UPDATE_APP_TAR=update-app.tar
+.PHONY: update-tar-app
+update-tar-app: build
+	rm -f $(UPDATE_APP_TAR)
+	tar -c -f $(UPDATE_APP_TAR) $(TAR_OPTS) build/trs-io.bin
+
+# Over-the-air app update through the web server's /firmware endpoint (the
+# same one the "Upload Firmware" button uses). Note: every successful update
+# makes the ESP reflash the FPGA on the next boot, which takes ~45 seconds.
+.PHONY: ota-app
+ota-app: check-ip update-tar-app
+	curl --fail-with-body -sS -H "Expect:" -H "Content-Type: application/octet-stream" \
+		--data-binary @$(UPDATE_APP_TAR) http://$(IP)/firmware
+	curl --fail-with-body -sS -X POST -d '' http://$(IP)/reboot
+	@echo "Rebooting $(IP); allow about a minute (FPGA reflash). Logs: http://$(IP)/log"
+
+.PHONY: check-ip
+check-ip:
+	@if [ -z "$(IP)" ]; then echo "Set IP, e.g.: make ota-app IP=192.168.1.113"; exit 1; fi
