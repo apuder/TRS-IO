@@ -897,6 +897,11 @@ static char* call_host_handler(struct mg_http_message* message)
  */
 static void handle_log(struct mg_connection *c, struct mg_http_message *hm)
 {
+  if (!logbuf_enabled()) {
+    // The web app shows "no log endpoint" for a 404.
+    mg_http_reply(c, 404, NULL, "Not found\n");
+    return;
+  }
   char since_str[16];
   bool has_since = mg_http_get_var(&hm->query, "since", since_str, sizeof(since_str)) > 0;
   uint32_t since = has_since ? strtoul(since_str, NULL, 10) : 0;

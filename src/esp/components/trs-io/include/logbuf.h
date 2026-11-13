@@ -8,10 +8,12 @@
 //   - Mongoose's MG_xxx log lines (when logbuf_mg_putchar is installed),
 //   - the panic handler's register dump and backtrace on a crash.
 //
-// The buffer lives in a PSRAM section that is not cleared at startup, so the
-// log of the previous run survives a software reset, a panic, or a watchdog
-// reset (but not a power cycle). Every boot appends a "===== Boot" banner
-// with the reset reason.
+// With CONFIG_SPIRAM_ALLOW_NOINIT_SEG_EXTERNAL_MEMORY, the buffer lives in a
+// PSRAM section that is not cleared at startup, so the log of the previous
+// run survives a software reset, a panic, or a watchdog reset (but not a
+// power cycle). Without it, the buffer is allocated from PSRAM and starts
+// over at every boot. Every boot appends a "===== Boot" banner with the reset
+// reason.
 
 #include <stddef.h>
 #include <stdint.h>
@@ -24,8 +26,12 @@ extern "C" {
 // Size of the ring buffer in bytes. Must be a power of two.
 #define LOGBUF_SIZE (128 * 1024)
 
-// Call once, as early as possible in app_main().
+// Call once, as early as possible in app_main(). Until then, and for good if
+// there is no PSRAM, nothing is recorded.
 void init_logbuf(void);
+
+// Whether init_logbuf() set up a buffer (GET /log answers 404 otherwise).
+bool logbuf_enabled(void);
 
 // Append raw text. Safe to call from any task (not from an ISR).
 void logbuf_write(const char* data, size_t len);

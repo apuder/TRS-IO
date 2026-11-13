@@ -2,10 +2,15 @@
 //
 // Log ring buffer in PSRAM. See logbuf.h.
 //
-// Internal SRAM is scarce on this device, so all buffers live in PSRAM:
-//   - the ring itself in .ext_ram_noinit (survives resets),
-//   - the formatting scratch line in .ext_ram.bss.
-// Only a few words of state (and a FreeRTOS mutex) use internal RAM.
+// Internal SRAM is scarce, so all buffers live in PSRAM. Only a few words of
+// state (and a FreeRTOS mutex) use internal RAM.
+//   - With CONFIG_SPIRAM_ALLOW_NOINIT_SEG_EXTERNAL_MEMORY, the ring is in
+//     .ext_ram_noinit and survives software, panic and watchdog resets.
+//   - Without it, init_logbuf() allocates the ring from PSRAM; logs then
+//     start over at every boot.
+//   - Without PSRAM, or before/without init_logbuf(), nothing is recorded
+//     and logbuf_enabled() is false (GET /log answers 404). This keeps
+//     firmware that embeds TRS-IO's components (PocketTRS) building.
 //
 // The ESP32's PSRAM is accessed through a write-back cache. Without a
 // write-back before reset, the last log lines (and the panic dump) would
@@ -26,24 +31,19 @@
 
 #include "sdkconfig.h"
 #include "esp_attr.h"
+#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_private/cache_utils.h"
+#if CONFIG_SPIRAM
 #include "esp_private/esp_psram_extram.h"
+#endif
 #include "esp_private/panic_internal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 
-#if !CONFIG_SPIRAM_ALLOW_NOINIT_SEG_EXTERNAL_MEMORY
-// Without it, EXT_RAM_NOINIT_ATTR silently falls back to internal RAM.
-#error "logbuf needs CONFIG_SPIRAM_ALLOW_NOINIT_SEG_EXTERNAL_MEMORY=y"
-#endif
-#if !CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY
-// Without it, EXT_RAM_BSS_ATTR silently falls back to internal RAM.
-#error "logbuf needs CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y"
-#endif
-
+#define TAG "LOGBUF"
 #define LOGBUF_MAGIC 0x4c4f4721 // "LOG!"
 #define LOGBUF_MASK (LOGBUF_SIZE - 1)
 #define LOGBUF_LINE_MAX 256
@@ -63,9 +63,23 @@ typedef struct {
   char data[LOGBUF_SIZE];
 } logbuf_t;
 
-static EXT_RAM_NOINIT_ATTR logbuf_t s_log;
-static EXT_RAM_BSS_ATTR char s_line[LOGBUF_LINE_MAX];
-static EXT_RAM_BSS_ATTR char s_mg_line[LOGBUF_LINE_MAX];
+typedef struct {
+  // Formatting scratch line for log_vprintf().
+  char line[LOGBUF_LINE_MAX];
+  // Mongoose log line being assembled by logbuf_mg_putchar().
+  char mg_line[LOGBUF_LINE_MAX];
+} logbuf_scratch_t;
+
+#if CONFIG_SPIRAM_ALLOW_NOINIT_SEG_EXTERNAL_MEMORY
+// Only with this option is EXT_RAM_NOINIT_ATTR in PSRAM; without it, it
+// would silently fall back to internal RAM.
+static EXT_RAM_NOINIT_ATTR logbuf_t s_log_noinit;
+#endif
+
+// Both NULL until init_logbuf() has set them up, and NULL for good if there
+// is no PSRAM for them.
+static logbuf_t* s_log;
+static logbuf_scratch_t* s_scratch;
 static size_t s_mg_len;
 
 static SemaphoreHandle_t s_mutex;
@@ -75,23 +89,23 @@ static const char* volatile s_abort_details;
 
 static uint32_t header_check(void)
 {
-  return 0xa5a5a5a5 ^ s_log.magic ^ s_log.size ^ (s_log.head * 2654435761u)
-    ^ (s_log.used << 7) ^ (s_log.boot_count << 13);
+  return 0xa5a5a5a5 ^ s_log->magic ^ s_log->size ^ (s_log->head * 2654435761u)
+    ^ (s_log->used << 7) ^ (s_log->boot_count << 13);
 }
 
 // Caller must hold s_mutex, or be the panic handler (other CPU stalled).
 static void append(const char* p, size_t n)
 {
   while (n > 0) {
-    size_t off = s_log.head & LOGBUF_MASK;
+    size_t off = s_log->head & LOGBUF_MASK;
     size_t chunk = std::min(n, (size_t) LOGBUF_SIZE - off);
-    memcpy(&s_log.data[off], p, chunk);
-    s_log.head += chunk;
-    s_log.used = std::min<uint32_t>(s_log.used + chunk, LOGBUF_SIZE);
+    memcpy(&s_log->data[off], p, chunk);
+    s_log->head += chunk;
+    s_log->used = std::min<uint32_t>(s_log->used + chunk, LOGBUF_SIZE);
     p += chunk;
     n -= chunk;
   }
-  s_log.check = header_check();
+  s_log->check = header_check();
 }
 
 static bool lock(TickType_t timeout)
@@ -117,11 +131,27 @@ void logbuf_write(const char* data, size_t len)
   }
 }
 
-void logbuf_flush(void)
+bool logbuf_enabled(void)
 {
-  if (spi_flash_cache_enabled()) {
+  return s_log != NULL;
+}
+
+// IRAM: also called by __wrap_esp_restart_noos(), possibly with the flash
+// cache disabled (brownout ISR).
+static void IRAM_ATTR writeback(void)
+{
+#if CONFIG_SPIRAM
+  // If the cache is off, PSRAM can't be written back (and a flash operation
+  // may be in progress); skip rather than risk anything.
+  if (s_log != NULL && spi_flash_cache_enabled()) {
     esp_psram_extram_writeback_cache();
   }
+#endif
+}
+
+void logbuf_flush(void)
+{
+  writeback();
 }
 
 static int log_vprintf(const char* fmt, va_list ap)
@@ -131,14 +161,14 @@ static int log_vprintf(const char* fmt, va_list ap)
   int ret = s_orig_vprintf(fmt, ap);
 
   if (lock(pdMS_TO_TICKS(20))) {
-    int n = vsnprintf(s_line, sizeof(s_line), fmt, copy);
+    int n = vsnprintf(s_scratch->line, sizeof(s_scratch->line), fmt, copy);
     if (n > 0) {
-      if ((size_t) n >= sizeof(s_line)) {
+      if ((size_t) n >= sizeof(s_scratch->line)) {
         // Truncated; keep the line terminated.
-        n = sizeof(s_line) - 1;
-        s_line[n - 1] = '\n';
+        n = sizeof(s_scratch->line) - 1;
+        s_scratch->line[n - 1] = '\n';
       }
-      append(s_line, n);
+      append(s_scratch->line, n);
     }
     unlock();
   }
@@ -171,24 +201,52 @@ const char* logbuf_reset_reason(void)
 
 void init_logbuf(void)
 {
-  bool valid = s_log.magic == LOGBUF_MAGIC &&
-    s_log.size == LOGBUF_SIZE &&
-    s_log.used <= LOGBUF_SIZE &&
-    s_log.check == header_check();
-  if (!valid) {
-    s_log.magic = LOGBUF_MAGIC;
-    s_log.size = LOGBUF_SIZE;
-    s_log.head = 0;
-    s_log.used = 0;
-    s_log.boot_count = 0;
+  if (s_log != NULL) {
+    return;
   }
-  s_log.boot_count++;
+
+  logbuf_scratch_t* scratch = (logbuf_scratch_t*) heap_caps_malloc(sizeof(logbuf_scratch_t), MALLOC_CAP_SPIRAM);
+#if CONFIG_SPIRAM_ALLOW_NOINIT_SEG_EXTERNAL_MEMORY
+  logbuf_t* log = &s_log_noinit;
+  const bool persistent = true;
+#else
+  logbuf_t* log = (logbuf_t*) heap_caps_malloc(sizeof(logbuf_t), MALLOC_CAP_SPIRAM);
+  const bool persistent = false;
+  if (log != NULL) {
+    // Fresh memory: make sure the header is not taken for a valid one.
+    log->magic = 0;
+  }
+#endif
+  if (log == NULL || scratch == NULL) {
+    ESP_LOGW(TAG, "No PSRAM for the log buffer; GET /log is disabled");
+    heap_caps_free(scratch);
+#if !CONFIG_SPIRAM_ALLOW_NOINIT_SEG_EXTERNAL_MEMORY
+    heap_caps_free(log);
+#endif
+    return;
+  }
+  s_scratch = scratch;
+  s_log = log;
+
+  bool valid = s_log->magic == LOGBUF_MAGIC &&
+    s_log->size == LOGBUF_SIZE &&
+    s_log->used <= LOGBUF_SIZE &&
+    s_log->check == header_check();
+  if (!valid) {
+    s_log->magic = LOGBUF_MAGIC;
+    s_log->size = LOGBUF_SIZE;
+    s_log->head = 0;
+    s_log->used = 0;
+    s_log->boot_count = 0;
+  }
+  s_log->boot_count++;
 
   char banner[128];
   int n = snprintf(banner, sizeof(banner),
                    "\n===== Boot #%u, reset reason: %s%s =====\n",
-                   (unsigned) s_log.boot_count, logbuf_reset_reason(),
-                   valid ? "" : " (log buffer was empty)");
+                   (unsigned) s_log->boot_count, logbuf_reset_reason(),
+                   !persistent ? " (log does not survive resets)"
+                   : valid ? "" : " (log buffer was empty)");
   // Still single-threaded as far as this buffer is concerned.
   append(banner, std::min((size_t) n, sizeof(banner) - 1));
 
@@ -201,10 +259,10 @@ size_t logbuf_available(uint32_t since, bool has_since)
 {
   size_t n = 0;
   if (lock(pdMS_TO_TICKS(1000))) {
-    if (!has_since || (uint32_t) (s_log.head - since) > s_log.used) {
-      n = s_log.used;
+    if (!has_since || (uint32_t) (s_log->head - since) > s_log->used) {
+      n = s_log->used;
     } else {
-      n = s_log.head - since;
+      n = s_log->head - since;
     }
     unlock();
   }
@@ -222,19 +280,19 @@ size_t logbuf_read(uint32_t since, bool has_since, char* out, size_t out_size,
 
   // Unsigned arithmetic also handles "since" being ahead of head (a stale
   // position from before a power cycle): the difference is then huge.
-  if (!has_since || (uint32_t) (s_log.head - since) > s_log.used) {
-    since = s_log.head - s_log.used;
+  if (!has_since || (uint32_t) (s_log->head - since) > s_log->used) {
+    since = s_log->head - s_log->used;
   }
-  size_t n = std::min((size_t) (s_log.head - since), out_size);
+  size_t n = std::min((size_t) (s_log->head - since), out_size);
 
   size_t off = since & LOGBUF_MASK;
   size_t first = std::min(n, (size_t) LOGBUF_SIZE - off);
-  memcpy(out, &s_log.data[off], first);
-  memcpy(out + first, &s_log.data[0], n - first);
+  memcpy(out, &s_log->data[off], first);
+  memcpy(out + first, &s_log->data[0], n - first);
 
   *start = since;
   *next = since + n;
-  *boot = s_log.boot_count;
+  *boot = s_log->boot_count;
   unlock();
   return n;
 }
@@ -242,12 +300,12 @@ size_t logbuf_read(uint32_t since, bool has_since, char* out, size_t out_size,
 void logbuf_mg_putchar(char c, void* param)
 {
   putchar(c);
-  if (c == '\r') {
+  if (c == '\r' || s_scratch == NULL) {
     return;
   }
-  s_mg_line[s_mg_len++] = c;
-  if (c == '\n' || s_mg_len == sizeof(s_mg_line)) {
-    logbuf_write(s_mg_line, s_mg_len);
+  s_scratch->mg_line[s_mg_len++] = c;
+  if (c == '\n' || s_mg_len == sizeof(s_scratch->mg_line)) {
+    logbuf_write(s_scratch->mg_line, s_mg_len);
     s_mg_len = 0;
   }
 }
@@ -270,11 +328,7 @@ void __real_panic_print_dec(int d);
 // May run with the flash cache disabled (e.g. brownout ISR), hence IRAM.
 void IRAM_ATTR __attribute__((noreturn)) __wrap_esp_restart_noos(void)
 {
-  // If the cache is off, PSRAM can't be written back (and a flash operation
-  // may be in progress); skip rather than risk anything.
-  if (spi_flash_cache_enabled()) {
-    esp_psram_extram_writeback_cache();
-  }
+  writeback();
   __real_esp_restart_noos();
 }
 
@@ -288,7 +342,7 @@ void IRAM_ATTR __attribute__((noreturn)) __wrap_panic_abort(const char* details)
 // used, so append without locking.
 static void panic_capture(const char* p, size_t n)
 {
-  if (s_in_panic && spi_flash_cache_enabled()) {
+  if (s_in_panic && s_log != NULL && spi_flash_cache_enabled()) {
     append(p, n);
   }
 }
