@@ -109,7 +109,7 @@ Text GLabel 8500 8350 2    60   Input ~ 0
 Text GLabel 9300 8250 2    60   Input ~ 0
 /ESP_SEL
 $Comp
-L conn:Conn_02x25_Odd_Even J1
+L Connector_Generic:Conn_02x25_Odd_Even J1
 U 1 1 5C5A156A
 P 1550 6150
 F 0 "J1" H 1600 7450 50  0000 C CNN
@@ -235,7 +235,7 @@ F 3 "" H 3000 2050 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L transistors:2N7000 Q1
+L Transistor_FET:2N7000 Q1
 U 1 1 5C5B476F
 P 13100 2600
 F 0 "Q1" H 13300 2675 50  0000 L CNN
@@ -318,7 +318,7 @@ Text GLabel 9000 3350 0    60   Input ~ 0
 Text GLabel 9000 3150 0    60   Input ~ 0
 /ESP32_INT
 $Comp
-L switches:SW_Push SW1
+L Switch:SW_Push SW1
 U 1 1 5C5CC661
 P 11750 4800
 F 0 "SW1" H 11800 4900 50  0000 L CNN
@@ -475,7 +475,7 @@ F 3 "" H 11150 7200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L transistors:2N7000 Q3
+L Transistor_FET:2N7000 Q3
 U 1 1 5CCC1D78
 P 13100 4450
 F 0 "Q3" H 13300 4525 50  0000 L CNN
@@ -501,7 +501,7 @@ F 3 "" H 13000 4750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L transistors:2N7000 Q2
+L Transistor_FET:2N7000 Q2
 U 1 1 5CCC1E34
 P 13100 3500
 F 0 "Q2" H 13300 3575 50  0000 L CNN
@@ -1144,7 +1144,7 @@ F 3 "" H 8600 5250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L conn:Conn_01x02 J2
+L Connector_Generic:Conn_01x02 J2
 U 1 1 5D04909B
 P 1350 2850
 F 0 "J2" H 1350 2950 50  0000 C CNN
@@ -1185,7 +1185,7 @@ Wire Wire Line
 Wire Wire Line
 	1750 2850 1750 2950
 $Comp
-L conn:Conn_01x02 J3
+L Connector_Generic:Conn_01x02 J3
 U 1 1 5D04AF05
 P 1350 3750
 F 0 "J3" H 1350 3850 50  0000 C CNN
@@ -1215,7 +1215,7 @@ BUTTON
 Wire Wire Line
 	1550 3650 1750 3650
 $Comp
-L conn:Conn_01x04 J4
+L Connector_Generic:Conn_01x04 J4
 U 1 1 5D04CE51
 P 1350 1800
 F 0 "J4" H 1350 2000 50  0000 C CNN
@@ -1280,7 +1280,7 @@ Wire Wire Line
 	8900 4650 8900 5100
 Connection ~ 8900 5100
 $Comp
-L switches:SW_Push SW2
+L Switch:SW_Push SW2
 U 1 1 5D0574E5
 P 11750 5100
 F 0 "SW2" H 11800 5200 50  0000 L CNN
@@ -1340,7 +1340,7 @@ F 3 "" H 12100 8800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L conn:Conn_01x02 J5
+L Connector_Generic:Conn_01x02 J5
 U 1 1 5DE379E9
 P 12300 8600
 F 0 "J5" H 12300 8700 50  0000 C CNN
@@ -1486,7 +1486,7 @@ D1
 Text GLabel 2500 7350 2    60   Input ~ 0
 D0
 $Comp
-L conn:Conn_02x25_Odd_Even J6
+L Connector_Generic:Conn_02x25_Odd_Even J6
 U 1 1 612D58A9
 P 3750 6150
 F 0 "J6" H 3800 7450 50  0000 C CNN
@@ -1782,7 +1782,7 @@ Wire Wire Line
 Wire Wire Line
 	6600 7300 6700 7300
 $Comp
-L microchip:MCP23S08 U5
+L TRSIO:MCP23S08-microchip U5
 U 1 1 612D1A51
 P 7900 10100
 F 0 "U5" H 7550 9400 50  0000 C CNN
